@@ -1,0 +1,71 @@
+package oliweb.nc.oliweb.database.entity;
+
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
+
+/**
+ * Created by orlanth23 on 28/01/2018.
+ */
+
+@Entity(tableName = "photo", foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce"))
+public class PhotoEntity {
+    @NonNull
+    @PrimaryKey(autoGenerate = true)
+    private Long idPhoto;
+    private String UUID;
+    private String cheminLocal;
+    private String firebasePath;
+    private String statut;
+    private Integer idAnnonce;
+
+    @NonNull
+    public Long getIdPhoto() {
+        return idPhoto;
+    }
+
+    public void setIdPhoto(@NonNull Long idPhoto) {
+        this.idPhoto = idPhoto;
+    }
+
+    public String getUUID() {
+        return UUID;
+    }
+
+    public void setUUID(String UUID) {
+        this.UUID = UUID;
+    }
+
+    public String getCheminLocal() {
+        return cheminLocal;
+    }
+
+    public void setCheminLocal(String cheminLocal) {
+        this.cheminLocal = cheminLocal;
+    }
+
+    public String getFirebasePath() {
+        return firebasePath;
+    }
+
+    public void setFirebasePath(String firebasePath) {
+        this.firebasePath = firebasePath;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
+    public Integer getIdAnnonce() {
+        return idAnnonce;
+    }
+
+    public void setIdAnnonce(Integer idAnnonce) {
+        this.idAnnonce = idAnnonce;
+    }
+}
