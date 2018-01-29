@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository;
+package oliweb.nc.oliweb.database.repository.task;
 
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
@@ -15,7 +15,7 @@ public class AbstractRepositoryTask<T> extends AsyncTask<T, Void, Long[]> {
     private AbstractDao<T> dao;
     private OnRespositoryPostExecute postExecute;
 
-    AbstractRepositoryTask(AbstractDao<T> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
+    public AbstractRepositoryTask(AbstractDao<T> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
         this.typeTask = typeTask;
         this.dao = dao;
         this.postExecute = postExecute;

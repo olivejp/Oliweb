@@ -16,8 +16,11 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import oliweb.nc.oliweb.database.OliwebDatabase;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
-import oliweb.nc.oliweb.database.repository.AbstractRepositoryTask;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryTask;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
 
 /**
@@ -34,6 +37,29 @@ public class DatabaseTest {
         categorieEntity.setName("Name");
         categorieEntity.setCouleur("Couleur");
         return categorieEntity;
+    }
+
+    private AnnonceEntity createAnnonce(Long idUtilisateur, Long idCategorie){
+        AnnonceEntity annonceEntity = new AnnonceEntity();
+        annonceEntity.setTitre("Name");
+        annonceEntity.setContactByEmail("1");
+        annonceEntity.setContactByMsg("0");
+        annonceEntity.setContactByTel("1");
+        annonceEntity.setDatePublication(DateConverter.getNowEntity());
+        annonceEntity.setDescription("Description");
+        annonceEntity.setPrix(15000);
+        annonceEntity.setStatut(StatusRemote.TO_SEND);
+        annonceEntity.setUUID("123456");
+        annonceEntity.setIdCategorie(idCategorie);
+        annonceEntity.setIdUtilisateur(idUtilisateur);
+        return annonceEntity;
+    }
+
+    private PhotoEntity createPhoto(){
+        PhotoEntity photoEntity = new PhotoEntity();
+//        photoEntity.setName("Name");
+//        photoEntity.setCouleur("Couleur");
+        return photoEntity;
     }
 
     @Before

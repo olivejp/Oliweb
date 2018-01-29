@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.database.entity;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
 /**
@@ -17,8 +18,9 @@ public class PhotoEntity {
     private String UUID;
     private String cheminLocal;
     private String firebasePath;
-    private String statut;
-    private Integer idAnnonce;
+    @TypeConverters(StatusConverter.class)
+    private StatusRemote statut;
+    private Long idAnnonce;
 
     @NonNull
     public Long getIdPhoto() {
@@ -53,19 +55,19 @@ public class PhotoEntity {
         this.firebasePath = firebasePath;
     }
 
-    public String getStatut() {
+    public StatusRemote getStatut() {
         return statut;
     }
 
-    public void setStatut(String statut) {
+    public void setStatut(StatusRemote statut) {
         this.statut = statut;
     }
 
-    public Integer getIdAnnonce() {
+    public Long getIdAnnonce() {
         return idAnnonce;
     }
 
-    public void setIdAnnonce(Integer idAnnonce) {
+    public void setIdAnnonce(Long idAnnonce) {
         this.idAnnonce = idAnnonce;
     }
 }

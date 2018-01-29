@@ -8,20 +8,23 @@ import java.util.List;
 
 import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
+import oliweb.nc.oliweb.database.dao.AbstractDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryTask;
 
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 
-public class CategorieRepository {
+public class CategorieRepository extends AbstractRepository<CategorieEntity> {
     private static CategorieRepository INSTANCE;
     private CategorieDao categorieDao;
 
-    private CategorieRepository(Context contex) {
-        OliwebDatabase db = OliwebDatabase.getInstance(contex);
+    private CategorieRepository(Context context) {
+        OliwebDatabase db = OliwebDatabase.getInstance(context);
         this.categorieDao = db.categorieDao();
+        setDao(categorieDao);
     }
 
     public static synchronized CategorieRepository getInstance(Context context) {
@@ -31,26 +34,11 @@ public class CategorieRepository {
         return INSTANCE;
     }
 
-    public void insert(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, CategorieEntity... categorieEntities) {
-        AbstractRepositoryTask<CategorieEntity> repositoryTask = new AbstractRepositoryTask<>(this.categorieDao, TypeTask.INSERT, onRespositoryPostExecute);
-        repositoryTask.execute(categorieEntities);
-    }
-
-    public void update(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, CategorieEntity... categorieEntities) {
-        AbstractRepositoryTask<CategorieEntity> repositoryTask = new AbstractRepositoryTask<>(this.categorieDao, TypeTask.UPDATE, onRespositoryPostExecute);
-        repositoryTask.execute(categorieEntities);
-    }
-
-    public void delete(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, CategorieEntity... categorieEntities) {
-        AbstractRepositoryTask<CategorieEntity> repositoryTask = new AbstractRepositoryTask<>(this.categorieDao, TypeTask.DELETE, onRespositoryPostExecute);
-        repositoryTask.execute(categorieEntities);
-    }
-
-    public Maybe<List<CategorieEntity>> getListCategorie(){
+    public Maybe<List<CategorieEntity>> getListCategorie() {
         return this.categorieDao.getListCategorie();
     }
 
-    public LiveData<CategorieEntity> findCategorieById(Long id){
+    public LiveData<CategorieEntity> findCategorieById(Long id) {
         return this.categorieDao.findById(id);
     }
 }

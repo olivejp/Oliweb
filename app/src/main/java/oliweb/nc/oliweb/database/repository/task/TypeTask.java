@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository;
+package oliweb.nc.oliweb.database.repository.task;
 
 /**
  * Created by orlanth23 on 11/01/2018.

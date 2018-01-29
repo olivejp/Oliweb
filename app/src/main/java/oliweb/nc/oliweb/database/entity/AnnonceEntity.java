@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.database.entity;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
 /**
@@ -21,12 +22,13 @@ public class AnnonceEntity {
     private String description;
     private Long datePublication;
     private Integer prix;
-    private String statut;
     private String contactByTel;
     private String contactByEmail;
     private String contactByMsg;
-    private Integer idUtilisateur;
-    private Integer idCategorie;
+    @TypeConverters(StatusConverter.class)
+    private StatusRemote statut;
+    private Long idUtilisateur;
+    private Long idCategorie;
 
     @NonNull
     public Long getIdAnnonce() {
@@ -77,11 +79,11 @@ public class AnnonceEntity {
         this.prix = prix;
     }
 
-    public String getStatut() {
+    public StatusRemote getStatut() {
         return statut;
     }
 
-    public void setStatut(String statut) {
+    public void setStatut(StatusRemote statut) {
         this.statut = statut;
     }
 
@@ -109,19 +111,19 @@ public class AnnonceEntity {
         this.contactByMsg = contactByMsg;
     }
 
-    public Integer getIdUtilisateur() {
+    public Long getIdUtilisateur() {
         return idUtilisateur;
     }
 
-    public void setIdUtilisateur(Integer idUtilisateur) {
+    public void setIdUtilisateur(Long idUtilisateur) {
         this.idUtilisateur = idUtilisateur;
     }
 
-    public Integer getIdCategorie() {
+    public Long getIdCategorie() {
         return idCategorie;
     }
 
-    public void setIdCategorie(Integer idCategorie) {
+    public void setIdCategorie(Long idCategorie) {
         this.idCategorie = idCategorie;
     }
 }
