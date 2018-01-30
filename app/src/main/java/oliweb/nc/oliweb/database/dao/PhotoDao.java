@@ -1,7 +1,13 @@
 package oliweb.nc.oliweb.database.dao;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Transaction;
 
+import java.util.List;
+
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 
 /**
@@ -9,4 +15,15 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
  */
 @Dao
 public interface PhotoDao extends AbstractDao<PhotoEntity> {
+    @Transaction
+    @Query("SELECT * FROM photo")
+    Maybe<List<PhotoEntity>> getListPhoto();
+
+    @Transaction
+    @Query("SELECT * FROM photo WHERE idPhoto = :idPhoto")
+    LiveData<PhotoEntity> findById(Long idPhoto);
+
+    @Transaction
+    @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
+    LiveData<List<PhotoEntity>> findByIdAnnonce(Long idAnnonce);
 }

@@ -1,7 +1,13 @@
 package oliweb.nc.oliweb.database.dao;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Transaction;
 
+import java.util.List;
+
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 
 /**
@@ -9,4 +15,15 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
  */
 @Dao
 public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
+    LiveData<AnnonceEntity> findById(Long idAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE idCategorie = :idCategorie")
+    Maybe<List<AnnonceEntity>> findByIdCategorie(Long idCategorie);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE idUtilisateur = :idUtilisateur")
+    Maybe<List<AnnonceEntity>> findByIdUtilisateur(Long idUtilisateur);
 }

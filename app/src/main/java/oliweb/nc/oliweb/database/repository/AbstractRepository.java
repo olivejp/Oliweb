@@ -3,7 +3,7 @@ package oliweb.nc.oliweb.database.repository;
 import android.support.annotation.Nullable;
 
 import oliweb.nc.oliweb.database.dao.AbstractDao;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryTask;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
 
 /**
@@ -22,18 +22,18 @@ public abstract class AbstractRepository<T> {
         this.dao = dao;
     }
 
-    public void insert(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
-        AbstractRepositoryTask<T> repositoryTask = new AbstractRepositoryTask<>(dao, TypeTask.INSERT, onRespositoryPostExecute);
+    public void insert(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.INSERT, onRespositoryPostExecute);
         repositoryTask.execute(entities);
     }
 
-    public void update(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
-        AbstractRepositoryTask<T> repositoryTask = new AbstractRepositoryTask<>(dao, TypeTask.UPDATE, onRespositoryPostExecute);
+    public void update(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.UPDATE, onRespositoryPostExecute);
         repositoryTask.execute(entities);
     }
 
-    public void delete(@Nullable AbstractRepositoryTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
-        AbstractRepositoryTask<T> repositoryTask = new AbstractRepositoryTask<>(dao, TypeTask.DELETE, onRespositoryPostExecute);
+    public void delete(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.DELETE, onRespositoryPostExecute);
         repositoryTask.execute(entities);
     }
 }

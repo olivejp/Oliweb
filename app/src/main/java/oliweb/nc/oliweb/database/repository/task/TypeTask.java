@@ -7,5 +7,6 @@ package oliweb.nc.oliweb.database.repository.task;
 public enum TypeTask {
     DELETE,
     INSERT,
-    UPDATE
+    UPDATE,
+    QUERY
 }

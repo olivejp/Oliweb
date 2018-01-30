@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.database.repository;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
 
 import oliweb.nc.oliweb.database.OliwebDatabase;
@@ -25,5 +26,9 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
             INSTANCE = new UtilisateurRepository(context);
         }
         return INSTANCE;
+    }
+
+    public LiveData<UtilisateurEntity> findById(Long idUtilisateur){
+        return this.utilisateurDao.findById(idUtilisateur);
     }
 }

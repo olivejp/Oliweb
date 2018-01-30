@@ -4,7 +4,6 @@ import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -20,8 +19,12 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryTask;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
+import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -30,16 +33,31 @@ import oliweb.nc.oliweb.database.repository.CategorieRepository;
 public class DatabaseTest {
     private OliwebDatabase oliwebDatabase;
     private CategorieRepository categorieRepository;
+    private UtilisateurRepository utilisateurRepository;
+    private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
     private Context context;
 
-    private CategorieEntity createCategorie(){
+    private static final String EMAIL = "orlanth23@hotmail.com";
+    private static final String NAME_CATEGORIE = "Automobiles";
+
+    private CategorieEntity createCategorie() {
         CategorieEntity categorieEntity = new CategorieEntity();
-        categorieEntity.setName("Name");
+        categorieEntity.setName(NAME_CATEGORIE);
         categorieEntity.setCouleur("Couleur");
         return categorieEntity;
     }
 
-    private AnnonceEntity createAnnonce(Long idUtilisateur, Long idCategorie){
+    private UtilisateurEntity createUtilisateur() {
+        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
+        utilisateurEntity.setDateCreation(DateConverter.getNowEntity());
+        utilisateurEntity.setTelephone(123456);
+        utilisateurEntity.setEmail(EMAIL);
+        utilisateurEntity.setUUID("UUIDUtilisateur");
+        return utilisateurEntity;
+    }
+
+    private AnnonceEntity createAnnonce(Long idUtilisateur, Long idCategorie) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annonceEntity.setTitre("Name");
         annonceEntity.setContactByEmail("1");
@@ -55,10 +73,13 @@ public class DatabaseTest {
         return annonceEntity;
     }
 
-    private PhotoEntity createPhoto(){
+    private PhotoEntity createPhoto(Long idAnnonce) {
         PhotoEntity photoEntity = new PhotoEntity();
-//        photoEntity.setName("Name");
-//        photoEntity.setCouleur("Couleur");
+        photoEntity.setIdAnnonce(idAnnonce);
+        photoEntity.setCheminLocal("CheminLocal");
+        photoEntity.setStatut(StatusRemote.SEND);
+        photoEntity.setUUID("UUID");
+        photoEntity.setFirebasePath("firebasePath");
         return photoEntity;
     }
 
@@ -67,27 +88,20 @@ public class DatabaseTest {
         context = InstrumentationRegistry.getTargetContext();
         oliwebDatabase = Room.inMemoryDatabaseBuilder(context, OliwebDatabase.class).build();
         categorieRepository = CategorieRepository.getInstance(context);
-    }
-
-    @After
-    public void closeDb() throws IOException {
-        oliwebDatabase.close();
+        utilisateurRepository = UtilisateurRepository.getInstance(context);
+        annonceRepository = AnnonceRepository.getInstance(context);
+        photoRepository = PhotoRepository.getInstance(context);
     }
 
     @Test
     public void writeCategorie() throws Exception {
         final CountDownLatch signal = new CountDownLatch(1);
-        AbstractRepositoryTask.OnRespositoryPostExecute postExecute = new AbstractRepositoryTask.OnRespositoryPostExecute() {
+        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = new AbstractRepositoryCudTask.OnRespositoryPostExecute() {
             @Override
             public void onReposirotyPostExecute(Long[] ids) {
                 if (ids.length > 0) {
-                    Log.d("TEST", "Voici l'ID créé : " + ids[0]);
-
-                    categorieRepository.findCategorieById(ids[0]).getValue();
-
                     Assert.assertTrue(true);
                 } else {
-                    Log.d("TEST", "Insertion échouée");
                     Assert.assertTrue(false);
                 }
                 signal.countDown();
@@ -95,5 +109,29 @@ public class DatabaseTest {
         };
         categorieRepository.insert(postExecute, createCategorie());
         signal.await();
+    }
+
+    @Test
+    public void writeUtilisateur() throws Exception {
+        final CountDownLatch signal = new CountDownLatch(1);
+        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = new AbstractRepositoryCudTask.OnRespositoryPostExecute() {
+            @Override
+            public void onReposirotyPostExecute(Long[] ids) {
+                if (ids.length > 0) {
+                    String email = utilisateurRepository.findById(ids[0]).getValue().getEmail();
+                    Assert.assertEquals(EMAIL, email);
+                } else {
+                    Assert.assertTrue(false);
+                }
+                signal.countDown();
+            }
+        };
+        utilisateurRepository.insert(postExecute, createUtilisateur());
+        signal.await();
+    }
+
+    @After
+    public void closeDb() throws IOException {
+        oliwebDatabase.close();
     }
 }

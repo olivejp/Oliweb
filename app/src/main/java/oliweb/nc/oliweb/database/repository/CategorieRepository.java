@@ -2,16 +2,13 @@ package oliweb.nc.oliweb.database.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
-import android.support.annotation.Nullable;
 
 import java.util.List;
 
 import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
-import oliweb.nc.oliweb.database.dao.AbstractDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryTask;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -38,7 +35,7 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
         return this.categorieDao.getListCategorie();
     }
 
-    public LiveData<CategorieEntity> findCategorieById(Long id) {
+    public LiveData<CategorieEntity> findById(Long id) {
         return this.categorieDao.findById(id);
     }
 }

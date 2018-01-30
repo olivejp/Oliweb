@@ -9,13 +9,13 @@ import oliweb.nc.oliweb.database.dao.AbstractDao;
  * Created by orlanth23 on 28/01/2018.
  */
 
-public class AbstractRepositoryTask<T> extends AsyncTask<T, Void, Long[]> {
+public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, Long[]> {
 
     private TypeTask typeTask;
     private AbstractDao<T> dao;
     private OnRespositoryPostExecute postExecute;
 
-    public AbstractRepositoryTask(AbstractDao<T> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
+    public AbstractRepositoryCudTask(AbstractDao<T> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
         this.typeTask = typeTask;
         this.dao = dao;
         this.postExecute = postExecute;
@@ -37,8 +37,9 @@ public class AbstractRepositoryTask<T> extends AsyncTask<T, Void, Long[]> {
                 nbUpdated = this.dao.update(entities);
                 returnValue[0] = (long) nbUpdated;
                 return returnValue;
+            default:
+                return new Long[0];
         }
-        return null;
     }
 
     @Override
