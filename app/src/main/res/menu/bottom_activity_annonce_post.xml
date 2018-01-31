@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottom_post_add_photo"
+        android:icon="@drawable/ic_add_a_photo_black_48dp"
+        android:title="Ajouter photo" />
+    <item
+        android:id="@+id/bottom_post_save"
+        android:icon="@drawable/ic_mode_edit_black_48dp"
+        android:title="Sauver" />
+</menu>
