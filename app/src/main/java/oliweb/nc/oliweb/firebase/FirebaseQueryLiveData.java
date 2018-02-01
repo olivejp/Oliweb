@@ -1,7 +1,13 @@
 package oliweb.nc.oliweb.firebase;
 
-import android.arch.persistence.room.Query;
+import android.arch.lifecycle.LiveData;
 import android.util.Log;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * Created by orlanth23 on 31/01/2018.
