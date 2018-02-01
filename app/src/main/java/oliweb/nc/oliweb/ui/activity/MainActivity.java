@@ -20,24 +20,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import oliweb.nc.oliweb.NetworkReceiver;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.network.CallLoginUi;
+import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
+import static oliweb.nc.oliweb.network.CallLoginUi.RC_SIGN_IN;
+
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener {
 
-    private static final int RC_SIGN_IN = 1001;
     private static final String TAG = MainActivity.class.getName();
 
     @BindView(R.id.toolbar)
@@ -63,6 +62,7 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
 
     private CatchPhotoFromUrlTask photoTask;
 
@@ -71,6 +71,9 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        defineAuthListener();
 
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -98,12 +101,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -167,20 +165,7 @@ public class MainActivity extends AppCompatActivity
     private void signIn() {
         if (NetworkReceiver.checkConnection(this)) {
             signOut();
-
-            List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
-            listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
-            listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.FACEBOOK_PROVIDER).build());
-            listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build());
-            listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
-
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setIsSmartLockEnabled(false)
-                            .setAvailableProviders(listProviders)
-                            .build(),
-                    RC_SIGN_IN);
+            CallLoginUi.callLoginUi(this);
         } else {
             Snackbar.make(navigationView, "Une connexion est requise pour se connecter", Snackbar.LENGTH_LONG).show();
         }
@@ -195,11 +180,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
 
                 // Call the task to retrieve the photo
-                Uri[] uris = new Uri[]{mFirebaseUser.getPhotoUrl()};
-                photoTask = new CatchPhotoFromUrlTask();
-                photoTask.setContext(getApplicationContext());
-                photoTask.setListener(this);
-                photoTask.execute(uris);
+                callPhotoTask();
 
                 // Refresh data from/to the database here
             }
@@ -214,6 +195,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (mFirebaseAuth != null) {
+            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mFirebaseAuth != null && mAuthStateListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         photoTask.setListener(null);
         photoTask.setContext(null);
@@ -224,5 +221,32 @@ public class MainActivity extends AppCompatActivity
     public Object onSuccess(Drawable drawable) {
         profileImage.setImageDrawable(drawable);
         return null;
+    }
+
+    /**
+     * Try to retrieve the photo via URL
+     */
+    private void callPhotoTask() {
+        Uri[] uris = new Uri[]{mFirebaseUser.getPhotoUrl()};
+        photoTask = new CatchPhotoFromUrlTask();
+        photoTask.setContext(getApplicationContext());
+        photoTask.setListener(this);
+        photoTask.execute(uris);
+    }
+
+    private void defineAuthListener() {
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                mFirebaseUser = firebaseAuth.getCurrentUser();
+                if (mFirebaseUser != null) {
+                    buttonSign.setText("Se déconnecter");
+                    profileName.setText(mFirebaseUser.getDisplayName());
+                    callPhotoTask();
+                } else {
+                    signOut();
+                }
+            }
+        };
     }
 }

@@ -38,7 +38,7 @@ dependencies {
     implementation 'com.firebaseui:firebase-ui-auth:3.1.0'
     implementation 'com.google.firebase:firebase-storage:11.8.0'
     implementation 'com.facebook.android:facebook-android-sdk:4.+'
-    implementation 'com.github.bumptech.glide:glide:4.4.0'
+    implementation 'com.github.bumptech.glide:glide:4.2.0'
     implementation 'com.caverock:androidsvg:1.2.1'
 
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
