@@ -48,17 +48,10 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
-    @BindView(R.id.profileImage)
-    ImageView profileImage;
-
-    @BindView(R.id.profileName)
-    TextView profileName;
-
-    @BindView(R.id.profileEmail)
-    TextView profileEmail;
-
-    @BindView(R.id.buttonSign)
-    Button buttonSign;
+    private ImageView profileImage;
+    private TextView profileName;
+    private TextView profileEmail;
+    private Button buttonSign;
 
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
@@ -72,6 +65,12 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        View viewHeader = navigationView.getHeaderView(0);
+        profileImage = viewHeader.findViewById(R.id.profileImage);
+        profileName = viewHeader.findViewById(R.id.profileName);
+        profileEmail = viewHeader.findViewById(R.id.profileEmail);
+        buttonSign = viewHeader.findViewById(R.id.buttonSign);
+
         mFirebaseAuth = FirebaseAuth.getInstance();
         defineAuthListener();
 
@@ -80,6 +79,14 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        buttonSign.setOnClickListener(view -> {
+            if (mFirebaseUser == null) {
+                signIn();
+            } else {
+                signOut();
+            }
+        });
 
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -138,15 +145,6 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent();
         intent.setClass(this, PostAnnonceActivity.class);
         startActivity(intent);
-    }
-
-    @OnClick(R.id.buttonSign)
-    public void onClickSign(View view) {
-        if (mFirebaseUser == null) {
-            signIn();
-        } else {
-            signOut();
-        }
     }
 
     /**
