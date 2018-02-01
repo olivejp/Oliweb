@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity
     private void signOut() {
         buttonSign.setText("Se connecter");
         profileName.setText(null);
+        profileEmail.setText(null);
         mFirebaseUser = null;
         profileImage.setImageResource(R.drawable.ic_person_white_48dp);
     }
@@ -233,17 +234,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void defineAuthListener() {
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                mFirebaseUser = firebaseAuth.getCurrentUser();
-                if (mFirebaseUser != null) {
-                    buttonSign.setText("Se déconnecter");
-                    profileName.setText(mFirebaseUser.getDisplayName());
-                    callPhotoTask();
-                } else {
-                    signOut();
+        mAuthStateListener = firebaseAuth -> {
+            mFirebaseUser = firebaseAuth.getCurrentUser();
+            if (mFirebaseUser != null) {
+                buttonSign.setText("Se déconnecter");
+                profileName.setText(mFirebaseUser.getDisplayName());
+                if (mFirebaseUser.getEmail() != null) {
+                    profileEmail.setText(mFirebaseUser.getEmail());
                 }
+                callPhotoTask();
+            } else {
+                signOut();
             }
         };
     }
