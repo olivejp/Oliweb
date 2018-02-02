@@ -48,9 +48,11 @@ public class WorkImageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_work_image);
         ButterKnife.bind(this);
 
+        // Creation des variables de retour
         Intent intentRetour = new Intent();
         Bundle bundleRetour = new Bundle();
 

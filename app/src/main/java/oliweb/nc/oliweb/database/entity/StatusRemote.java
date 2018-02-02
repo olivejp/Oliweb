@@ -8,6 +8,7 @@ public enum StatusRemote {
     TO_SEND("TO_SEND"),
     SEND("SEND"),
     TO_DELETE("TO_DELETE"),
+    TO_UPDATE("TO_UPDATE"),
     DELETED("DELETED");
 
     private final String value;
