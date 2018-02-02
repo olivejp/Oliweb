@@ -10,9 +10,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,6 +38,8 @@ import oliweb.nc.oliweb.ui.dialog.PhotoSourceDialog;
 public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourceDialog.PhotoSourceListener {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
+    public static final String PHOTO_SOURCE_DIALOG_TAG = "photoSourceDialogTag";
+
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
@@ -43,10 +48,32 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     private Uri mFileUriTemp;
 
+    private PhotoSourceDialog photoSourcedialog;
+
+    /**
+     * Try to find a PhotoSourceDialog in the fragment manager, if found we remove it
+     */
+    private void dismissPreviousPhotoSourceDialog() {
+        Fragment prev = getSupportFragmentManager().findFragmentByTag(PHOTO_SOURCE_DIALOG_TAG);
+        if (prev != null) {
+            getSupportFragmentManager().beginTransaction().remove(prev).commit();
+        }
+    }
+
+    private View.OnClickListener askForNewPhotoSource = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            dismissPreviousPhotoSourceDialog();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().addToBackStack(null);
+            photoSourcedialog.show(transaction, PHOTO_SOURCE_DIALOG_TAG);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_annonce);
+        this.photoSourcedialog = new PhotoSourceDialog();
     }
 
     private void saveAnnonce() {
@@ -156,7 +183,7 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                 }
                 break;
             case DIALOG_REQUEST_IMAGE:
-                dialogImageChoice.dismiss(); // On ferme la boite de dialogue
+                dismissPreviousPhotoSourceDialog();
                 if (resultCode == RESULT_OK) {
                     callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);  // On va appeler WorkImageActivity
                 } else if (resultCode == RESULT_CANCELED) {
@@ -174,7 +201,7 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
-                dialogImageChoice.dismiss();
+                dismissPreviousPhotoSourceDialog();
                 if (resultCode == RESULT_OK) {
                     // On revient de la galerie où on a choisit une image.
                     Uri uri = data.getData();
@@ -250,6 +277,18 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
             retour = false;
         }
         return retour;
+    }
+
+    /**
+     * Si un fichier temporaire est présent il faut le supprimer
+     */
+    private void deleteTempFile() {
+        File file = new File(String.valueOf(mFileUriTemp));
+        if (file.exists()) {
+            if (!file.delete()) {
+                Log.e("FileDelete", TAG + ":travailImage:Fichier Temporaire non supprimé");
+            }
+        }
     }
 
     /**
