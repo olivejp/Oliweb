@@ -1,0 +1,67 @@
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_centerInParent="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/title_dialog_choose_photo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="24dp"
+        android:text="Envie d'ajouter une nouvelle photo ?"
+        android:theme="@style/TextAppearance.AppCompat.Title"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_dialog_choose_photo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="20dp"
+        android:text="Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre gallerie."
+        android:theme="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_dialog_choose_photo" />
+
+    <Button
+        android:id="@+id/dialog_button_new_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="24dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp"
+        android:text="New picture"
+        android:textColor="@color/colorPrimary"
+        android:theme="@style/TextAppearance.AppCompat.Button"
+        app:layout_constraintRight_toLeftOf="@id/dialog_button_gallery_photo"
+        app:layout_constraintTop_toBottomOf="@id/text_dialog_choose_photo" />
+
+    <Button
+        android:id="@+id/dialog_button_gallery_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp"
+        android:text="From gallery"
+        android:textColor="@color/colorPrimary"
+        android:theme="@style/TextAppearance.AppCompat.Button"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/dialog_button_new_photo" />
+
+</android.support.constraint.ConstraintLayout>

@@ -9,5 +9,5 @@
     <string name="facebook_app_id">1556396067990675</string>
     <string name="fb_login_protocol_scheme">fb1556396067990675</string>
 
-
+    <string name="pref_default_number_car" translatable="false">100</string>
 </resources>
