@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.database.repository;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -39,5 +40,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         } else {
             insert(onRespositoryPostExecute, photoEntity);
         }
+    }
+
+    public Single<PhotoEntity> singleById(long idPhoto) {
+        return this.photoDao.singleById(idPhoto);
     }
 }

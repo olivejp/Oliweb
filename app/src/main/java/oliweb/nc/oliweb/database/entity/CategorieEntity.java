@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
@@ -15,6 +16,15 @@ public class CategorieEntity {
     private Long idCategorie;
     private String name;
     private String couleur;
+
+    public CategorieEntity() {
+    }
+
+    @Ignore
+    public CategorieEntity(String name, String couleur) {
+        this.name = name;
+        this.couleur = couleur;
+    }
 
     @NonNull
     public Long getIdCategorie() {

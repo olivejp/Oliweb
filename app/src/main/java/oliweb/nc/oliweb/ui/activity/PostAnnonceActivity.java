@@ -8,48 +8,40 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.OrientationHelper;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-
-import java.util.ArrayList;
-import java.util.UUID;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
-import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
+import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.dialog.PhotoSourceDialog;
-
-import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
 
 public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourceDialog.PhotoSourceListener {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
     public static final String PHOTO_SOURCE_DIALOG_TAG = "photoSourceDialogTag";
 
-    public static final String BUNDLE_KEY_ANNONCE = "ANNONCE";
-    public static final String BUNDLE_KEY_URI = "URI_TEMP";
+    public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
@@ -60,10 +52,8 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
-    private String uidUtilisateur;
     private PhotoSourceDialog photoSourcedialog;
-    private String mode;
-    private AnnonceEntity annonce;
+    private PhotoAdapter photoAdapter;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -76,6 +66,9 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
+
+    @BindView(R.id.recyclerImages)
+    RecyclerView recyclerImages;
 
     private View.OnClickListener askForNewPhotoSource = new View.OnClickListener() {
         @Override
@@ -94,11 +87,16 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
+        // Préparation du recycler view qui recevra les images de l'annonce
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManager.setOrientation(OrientationHelper.HORIZONTAL);
+        recyclerImages.setLayoutManager(linearLayoutManager);
+        photoAdapter = new PhotoAdapter(getApplicationContext());
+        recyclerImages.setAdapter(photoAdapter);
+
         // Alimentation du spinner avec la liste des catégories
-        viewModel.maybeListCategorie()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(categorieEntities -> {
+        viewModel.getLiveDataListCategorie()
+                .observe(this, categorieEntities -> {
                     if (categorieEntities != null && !categorieEntities.isEmpty()) {
                         SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
                         spinnerCategorie.setAdapter(adapter);
@@ -107,57 +105,58 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
         // Récupération des paramètres
         Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            mode = bundle.getString(BUNDLE_KEY_MODE);
-
+        if (bundle != null && bundle.containsKey(BUNDLE_KEY_MODE)) {
+            String mode = bundle.getString(BUNDLE_KEY_MODE);
             if (mode != null) {
-                switch (mode) {
-                    case Constants.PARAM_CRE:
-                        // On est en mode Création
-                        annonce = new AnnonceEntity();
-                        annonce.setUUIDANO(UUID.randomUUID().toString());
-                        annonce.setStatutANO(StatutAnnonce.ToPost.valeur());
-                        break;
-                    case Constants.PARAM_MAJ:
-                        // On est en mMode Mise à jour, on va récupérer l'annonce qu'on veut mettre à jour
-                        annonce = bundle.getParcelable(BUNDLE_KEY_ANNONCE);
-                        if (annonce != null) {
-                            textViewTitre.setText(annonce.getTitre());
-                            textViewDescription.setText(annonce.getDescription());
-                            textViewPrix.setText(String.valueOf(annonce.getPrix()));
-                            CategorieEntity categorie = ListeCategories.getInstance(this).getCategorieById(annonce.getIdCategorie());
-                            spinnerCategorie.setSelection(ListeCategories.getInstance(this).getIndexByName(categorie.getName()));
+                if (mode.equals(Constants.PARAM_CRE)) {
+                    viewModel.createNewAnnonce();
+                } else if (mode.equals(Constants.PARAM_MAJ)) {
+                    if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
+                        Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
+                        finish();
+                    }
+                    long idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                    viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
+                        if (annonceEntity != null) {
+                            viewModel.setAnnonce(annonceEntity);
+                            displayAnnonce(annonceEntity);
                         }
-                        break;
+                    });
                 }
             }
+        } else {
+            Log.e(TAG, "Aucun mode passé en paramètre");
+            finish();
         }
 
         this.photoSourcedialog = new PhotoSourceDialog();
-        if (FirebaseAuth.getInstance() != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uidUtilisateur = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        } else {
+        if (viewModel.getUidUtilisateur() == null) {
             Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
             finish();
         }
     }
 
-    private void saveAnnonce() {
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.post_annonce_activity_menu, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.bottom_post_save) {
-            saveAnnonce();
-            return true;
+        int idItem = item.getItemId();
+        switch (idItem) {
+            case R.id.menu_post_valid:
+                // ToDo - Valider l'annonce ici
+                finish();
+                return true;
         }
-        return super.onOptionsItemSelected(item);
+        return false;
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -168,21 +167,15 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     @Override
     protected void onActivityResult(int code_request, int resultCode, Intent data) {
-        // if the result is capturing Image
-        int position;
         byte[] byteArray;
         switch (code_request) {
             case CODE_WORK_IMAGE_CREATION:
                 if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
                     if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
                         byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
-                        String path = MediaUtility.saveByteArrayToFile(byteArray, uidUtilisateur);
-                        savePhoto(UUID.randomUUID().toString(), path, annonce);
-                        if (travailImage(byteArray, true, 0)) {
-                            MediaUtility.deleteTempFile(mFileUriTemp);
-                        }
+                        String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
+                        viewModel.insertPhoto(path, ids -> MediaUtility.deleteTempFile(mFileUriTemp));
                     }
-                    presentPhoto();
                 }
                 break;
             case CODE_WORK_IMAGE_MODIFICATION:
@@ -190,26 +183,19 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                     case RESULT_OK:
                         // Récupération de l'ancienne position
                         if (data != null && data.getExtras() != null) {
-                            position = data.getExtras().getInt(WorkImageActivity.BUNDLE_KEY_ID);
-
-                            // Récupération du BITMAP
                             if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
                                 byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
-                                if (travailImage(byteArray, false, position)) {
-                                    MediaUtility.deleteTempFile(mFileUriTemp);
-                                }
+                                String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
+                                viewModel.insertPhoto(path, ids -> MediaUtility.deleteTempFile(mFileUriTemp));
                             }
-                            presentPhoto();
                         }
                         break;
 
                     // On veut supprimer la photo
                     case RESULT_CANCELED:
                         if (data != null && data.getExtras() != null) {
-                            position = data.getExtras().getInt(WorkImageActivity.BUNDLE_KEY_ID);
-                            PhotoEntity photo = mAnnonce.getPhotos().get(position);
-                            photo.setStatutPhoto(StatutPhoto.ToDelete.valeur());
-                            presentPhoto();
+                            long idPhoto = data.getExtras().getLong(WorkImageActivity.BUNDLE_KEY_ID);
+                            viewModel.deletePhoto(idPhoto);
                         }
                 }
                 break;
@@ -219,39 +205,21 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                     callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);  // On va appeler WorkImageActivity
                 } else if (resultCode == RESULT_CANCELED) {
                     // user cancelled Image capture
-                    Toast.makeText(this,
-                            "Annulation de la capture",
-                            Toast.LENGTH_SHORT)
-                            .show();
+                    Toast.makeText(this, "Annulation de la capture", Toast.LENGTH_SHORT).show();
                 } else {
                     // failed to capture image
-                    Toast.makeText(this,
-                            "Echec de la capture",
-                            Toast.LENGTH_SHORT)
-                            .show();
+                    Toast.makeText(this, "Echec de la capture", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
                 dismissPreviousPhotoSourceDialog();
                 if (resultCode == RESULT_OK) {
-                    // On revient de la galerie où on a choisit une image.
                     Uri uri = data.getData();
-
-                    // On va appeler WorkImageActivity avec l'uri récupéré
                     callWorkingImageActivity(uri, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);
-
                 } else if (resultCode == RESULT_CANCELED) {
-                    // user cancelled Image capture
-                    Toast.makeText(getApplicationContext(),
-                            "Annulation de la capture",
-                            Toast.LENGTH_SHORT)
-                            .show();
+                    Toast.makeText(getApplicationContext(), "Annulation de la capture", Toast.LENGTH_SHORT).show();
                 } else {
-                    // failed to capture image
-                    Toast.makeText(getApplicationContext(),
-                            "Echec de la capture",
-                            Toast.LENGTH_SHORT)
-                            .show();
+                    Toast.makeText(getApplicationContext(), "Echec de la capture", Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
@@ -280,26 +248,10 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         startActivityForResult(photoPickerIntent, DIALOG_GALLERY_IMAGE);
     }
 
-    private void savePhoto(String path, boolean nouvelleImg, AnnonceEntity annonceEntity) {
-        if (nouvelleImg) {
-            // On est en mode création
-            // On insère un nouvel enregistrement dans l'arrayList
-            PhotoEntity photo = new PhotoEntity();
-            photo.setUUID(UUID.randomUUID().toString());
-            photo.setCheminLocal(path);
-            photo.setIdAnnonce(annonceEntity.getIdAnnonce());
-            photo.setStatut(TO_SEND);
-        } else {
-            // On est en mode modification
-            // Recherche dans le repository de notre photo par rapport à son id
-            photo.setCheminLocal(path);
-            photo.setStatut(StatusRemote.TO_UPDATE);
-        }
-    }
-
     /**
      * Try to find a PhotoSourceDialog in the fragment manager, if found we remove it
      */
+
     private void dismissPreviousPhotoSourceDialog() {
         Fragment prev = getSupportFragmentManager().findFragmentByTag(PHOTO_SOURCE_DIALOG_TAG);
         if (prev != null) {
@@ -312,7 +264,7 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, uidUtilisateur);
+        mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, viewModel.getUidUtilisateur());
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
@@ -338,5 +290,30 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         bundle.putByteArray(WorkImageActivity.BUNDLE_IN_IMAGE, byteArray);
         intent.putExtras(bundle);
         startActivityForResult(intent, requestCode);
+    }
+
+    /**
+     * Display the different fields of the annonce
+     *
+     * @param annonce that we want to show
+     */
+    private void displayAnnonce(AnnonceEntity annonce) {
+        // Récupération du titre, de la description et du prix
+        textViewTitre.setText(annonce.getTitre());
+        textViewDescription.setText(annonce.getDescription());
+        textViewPrix.setText(String.valueOf(annonce.getPrix()));
+
+        // Récupération et sélection dans le spinner de la bonne catégorie
+        viewModel.getLiveDataListCategorie()
+                .observe(this, categorieEntities -> {
+                    if (categorieEntities != null && annonce.getIdCategorie() != null) {
+                        for (CategorieEntity categorieEntity : categorieEntities) {
+                            if (categorieEntity.getIdCategorie().equals(annonce.getIdCategorie())) {
+                                spinnerCategorie.setSelection(categorieEntities.indexOf(categorieEntity));
+                                break;
+                            }
+                        }
+                    }
+                });
     }
 }

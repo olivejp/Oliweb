@@ -26,12 +26,14 @@ import com.google.firebase.auth.FirebaseUser;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
 import static oliweb.nc.oliweb.network.CallLoginUi.RC_SIGN_IN;
+import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
@@ -143,6 +145,9 @@ public class MainActivity extends AppCompatActivity
     @OnClick(R.id.fab)
     public void onClickFab(View view) {
         Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
+        intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
         startActivity(intent);
     }

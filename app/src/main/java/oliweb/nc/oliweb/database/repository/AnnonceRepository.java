@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.database.repository;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
@@ -39,5 +40,9 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         } else {
             insert(onRespositoryPostExecute, annonceEntity);
         }
+    }
+
+    public LiveData<AnnonceEntity> findById(long idAnnonce) {
+        return this.annonceDao.findById(idAnnonce);
     }
 }

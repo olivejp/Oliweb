@@ -1,9 +1,13 @@
 package oliweb.nc.oliweb.database;
 
+import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
+import android.support.annotation.NonNull;
+
+import java.util.concurrent.Executors;
 
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
@@ -24,9 +28,34 @@ public abstract class OliwebDatabase extends RoomDatabase {
 
     public static synchronized OliwebDatabase getInstance(Context context) {
         if (INSTANCE == null) {
-            INSTANCE = Room.databaseBuilder(context.getApplicationContext(), OliwebDatabase.class, "oliweb-database").fallbackToDestructiveMigration().build();
+            INSTANCE = buildDatabase(context.getApplicationContext());
         }
         return INSTANCE;
+    }
+
+    private static OliwebDatabase buildDatabase(final Context context) {
+        return Room.databaseBuilder(context,
+                OliwebDatabase.class,
+                "oliweb-database")
+                .fallbackToDestructiveMigration()
+                .addCallback(new Callback() {
+                    @Override
+                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                        super.onCreate(db);
+                        Executors.newSingleThreadScheduledExecutor().execute(() -> getInstance(context).categorieDao().insert(populateCategorie()));
+                    }
+                })
+                .build();
+    }
+
+    public static CategorieEntity[] populateCategorie() {
+        return new CategorieEntity[] {
+                new CategorieEntity("Automobile", null),
+                new CategorieEntity("Mobilier", null),
+                new CategorieEntity("Jouet", null),
+                new CategorieEntity("Fleur", null),
+                new CategorieEntity("Sport", null)
+        };
     }
 
     public abstract UtilisateurDao utilisateurDao();
