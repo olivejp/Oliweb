@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -18,7 +18,7 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 public class SpinnerAdapter extends BaseAdapter {
 
     private AppCompatActivity appCompatActivity;
-    private ArrayList<CategorieEntity> navCategorieItems;
+    private List<CategorieEntity> navCategorieItems;
 
     @BindView(R.id.colorCategory)
     TextView txtColorCategory;
@@ -29,7 +29,7 @@ public class SpinnerAdapter extends BaseAdapter {
     @BindView(R.id.titleCategory)
     TextView txtTitle;
 
-    public SpinnerAdapter(AppCompatActivity appCompatActivity, ArrayList<CategorieEntity> navCategorieItems) {
+    public SpinnerAdapter(AppCompatActivity appCompatActivity, List<CategorieEntity> navCategorieItems) {
         super();
         this.appCompatActivity = appCompatActivity;
         this.navCategorieItems = navCategorieItems;

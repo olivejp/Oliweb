@@ -35,6 +35,9 @@ dependencies {
     implementation "android.arch.paging:runtime:1.0.0-alpha4-1"
     implementation 'android.arch.lifecycle:extensions:1.0.0'
     implementation 'android.arch.persistence.room:rxjava2:1.0.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
     implementation 'org.projectlombok:lombok:1.16.18'
     implementation 'com.google.android.gms:play-services-auth:11.8.0'
     implementation 'com.google.firebase:firebase-database:11.8.0'

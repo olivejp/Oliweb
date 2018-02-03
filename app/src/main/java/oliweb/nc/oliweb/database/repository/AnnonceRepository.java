@@ -1,10 +1,12 @@
 package oliweb.nc.oliweb.database.repository;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -25,5 +27,17 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
             INSTANCE = new AnnonceRepository(context);
         }
         return INSTANCE;
+    }
+
+    public boolean exist(AnnonceEntity annonceEntity) {
+        return (this.annonceDao.findById(annonceEntity.getIdAnnonce()) != null);
+    }
+
+    public void save(AnnonceEntity annonceEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        if (exist(annonceEntity)) {
+            update(onRespositoryPostExecute, annonceEntity);
+        } else {
+            insert(onRespositoryPostExecute, annonceEntity);
+        }
     }
 }

@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -21,18 +22,23 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
+import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.dialog.PhotoSourceDialog;
 
 import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
@@ -41,6 +47,10 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     private static final String TAG = PostAnnonceActivity.class.getName();
     public static final String PHOTO_SOURCE_DIALOG_TAG = "photoSourceDialogTag";
+
+    public static final String BUNDLE_KEY_ANNONCE = "ANNONCE";
+    public static final String BUNDLE_KEY_URI = "URI_TEMP";
+    public static final String BUNDLE_KEY_MODE = "MODE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
@@ -52,6 +62,8 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
     private Uri mFileUriTemp;
     private String uidUtilisateur;
     private PhotoSourceDialog photoSourcedialog;
+    private String mode;
+    private AnnonceEntity annonce;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -82,7 +94,44 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
+        // Alimentation du spinner avec la liste des catégories
+        viewModel.maybeListCategorie()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(categorieEntities -> {
+                    if (categorieEntities != null && !categorieEntities.isEmpty()) {
+                        SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
+                        spinnerCategorie.setAdapter(adapter);
+                    }
+                });
 
+        // Récupération des paramètres
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            mode = bundle.getString(BUNDLE_KEY_MODE);
+
+            if (mode != null) {
+                switch (mode) {
+                    case Constants.PARAM_CRE:
+                        // On est en mode Création
+                        annonce = new AnnonceEntity();
+                        annonce.setUUIDANO(UUID.randomUUID().toString());
+                        annonce.setStatutANO(StatutAnnonce.ToPost.valeur());
+                        break;
+                    case Constants.PARAM_MAJ:
+                        // On est en mMode Mise à jour, on va récupérer l'annonce qu'on veut mettre à jour
+                        annonce = bundle.getParcelable(BUNDLE_KEY_ANNONCE);
+                        if (annonce != null) {
+                            textViewTitre.setText(annonce.getTitre());
+                            textViewDescription.setText(annonce.getDescription());
+                            textViewPrix.setText(String.valueOf(annonce.getPrix()));
+                            CategorieEntity categorie = ListeCategories.getInstance(this).getCategorieById(annonce.getIdCategorie());
+                            spinnerCategorie.setSelection(ListeCategories.getInstance(this).getIndexByName(categorie.getName()));
+                        }
+                        break;
+                }
+            }
+        }
 
         this.photoSourcedialog = new PhotoSourceDialog();
         if (FirebaseAuth.getInstance() != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
@@ -282,7 +331,7 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         Intent intent = new Intent();
         intent.setClass(this, WorkImageActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString(WorkImageActivity.BUNDLE_KEY_MODE, mode);
+        bundle.putString(BUNDLE_KEY_MODE, mode);
 
         // Récupération du bitmap à partir de l'Uri qu'on a reçu.
         byte[] byteArray = MediaUtility.uriToByteArray(this, uri);

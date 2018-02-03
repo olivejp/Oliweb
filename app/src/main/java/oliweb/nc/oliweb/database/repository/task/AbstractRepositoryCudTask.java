@@ -45,7 +45,9 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, Long[]> {
     @Override
     protected void onPostExecute(Long[] longs) {
         super.onPostExecute(longs);
-        this.postExecute.onReposirotyPostExecute(longs);
+        if (this.postExecute != null) {
+            this.postExecute.onReposirotyPostExecute(longs);
+        }
     }
 
     public interface OnRespositoryPostExecute {
