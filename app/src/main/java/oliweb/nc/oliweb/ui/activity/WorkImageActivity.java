@@ -26,6 +26,7 @@ public class WorkImageActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_MODE = "MODE";
     public static final String BUNDLE_KEY_ID = "ID";
     public static final String BUNDLE_IN_IMAGE = "BITMAP_IN";
+    public static final String BUNDLE_IN_PATH_IMAGE = "BUNDLE_IN_PATH_IMAGE";
     public static final String BUNDLE_OUT_IMAGE = "BITMAP_OUT";
     public static final String BUNDLE_OUT_MAJ = "MAJ_IMAGE";
 

@@ -277,21 +277,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     }
 
-    /**
-     *
-     */
-    private void callWorkingImageActivity(String path){
-        // On va appeler l'activity avec le bitmap qu'on veut modifier et son numéro dans l'arraylist
-        // qui servira à son retour pour le mettre à jour.
-        Intent intent = new Intent();
-        Bundle bundle = new Bundle();
-        intent.setClass(this, WorkImageActivity.class);
-        bundle.putString(WorkImageActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
-        bundle.putByteArray(WorkImageActivity.BUNDLE_IN_IMAGE, byteArray);
-        bundle.putInt(WorkImageActivity.BUNDLE_KEY_ID, v.getId());
-        intent.putExtras(bundle);
-        startActivityForResult(intent, CODE_WORK_IMAGE_MODIFICATION);
-    }
+
 
     /**
      * Launch activity to take a picture
@@ -324,6 +310,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
         bundle.putByteArray(WorkImageActivity.BUNDLE_IN_IMAGE, byteArray);
         intent.putExtras(bundle);
         startActivityForResult(intent, requestCode);
+    }
+
+    /**
+     * ToDo finir l'implémentation de cette méthode
+     */
+    private void callWorkingImageActivity(String path){
+        // On va appeler l'activity avec le bitmap qu'on veut modifier et son numéro dans l'arraylist
+        // qui servira à son retour pour le mettre à jour.
+        Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        intent.setClass(this, WorkImageActivity.class);
+        bundle.putString(WorkImageActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
+        bundle.putString(WorkImageActivity.BUNDLE_IN_PATH_IMAGE, path);
+        bundle.putInt(WorkImageActivity.BUNDLE_KEY_ID, v.getId());
+        intent.putExtras(bundle);
+        startActivityForResult(intent, CODE_WORK_IMAGE_MODIFICATION);
     }
 
     /**
