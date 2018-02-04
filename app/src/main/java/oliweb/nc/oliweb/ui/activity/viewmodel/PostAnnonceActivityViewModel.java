@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,9 +33,12 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private CategorieRepository categorieRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
-    private MutableLiveData<AnnonceEntity> annonceEntityMutableLiveData;
-    private MutableLiveData<List<CategorieEntity>> liveDataListCategorie;
+
     private AnnonceEntity annonce;
+    private List<PhotoEntity> listPhoto;
+
+    private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
+    private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -52,6 +56,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                 );
     }
 
+    public LiveData<List<PhotoEntity>> getLiveListPhoto() {
+        if (this.liveListPhoto == null) {
+            this.liveListPhoto = new MutableLiveData<>();
+        }
+        return this.liveListPhoto;
+    }
+
     public String getUidUtilisateur() {
         if (FirebaseAuth.getInstance() != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
             return FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -63,27 +74,38 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return liveDataListCategorie;
     }
 
-    public void insertPhoto(String path, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUUID(UUID.randomUUID().toString());
         photoEntity.setCheminLocal(path);
-        photoEntity.setIdAnnonce(annonce.getIdAnnonce());
         photoEntity.setStatut(StatusRemote.TO_SEND);
-        this.photoRepository.save(photoEntity, onRespositoryPostExecute);
+        this.listPhoto.add(photoEntity);
+        this.liveListPhoto.postValue(this.listPhoto);
     }
 
     public void saveAnnonce(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        this.annonceRepository.save(annonce, onRespositoryPostExecute);
+        // Sauvegarde de l'annonce
+        this.annonceRepository.save(annonce, ids -> {
+            // Sauvegarde des photos
+            this.photoRepository.save(listPhoto, null);
+        });
     }
 
     public void createNewAnnonce() {
         this.annonce = new AnnonceEntity();
         this.annonce.setUUID(UUID.randomUUID().toString());
         this.annonce.setStatut(StatusRemote.TO_SEND);
+        this.listPhoto = new ArrayList<>();
+        this.liveListPhoto.setValue(this.listPhoto);
     }
 
     public void setAnnonce(AnnonceEntity annonce) {
         this.annonce = annonce;
+    }
+
+    public void setListPhoto(List<PhotoEntity> list) {
+        this.listPhoto = list;
+        this.liveListPhoto.postValue(list);
     }
 
     public AnnonceEntity getCurrentAnnonce() {
@@ -105,5 +127,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public LiveData<CategorieEntity> findCategorieById(long idCategorie) {
         return this.categorieRepository.findById(idCategorie);
+    }
+
+    public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
+        return this.photoRepository.findAllByIdAnnonce(idAnnonce);
     }
 }

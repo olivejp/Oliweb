@@ -9,8 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
@@ -23,23 +22,26 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
-import oliweb.nc.oliweb.ui.dialog.PhotoSourceDialog;
 
-public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourceDialog.PhotoSourceListener {
+public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
-    public static final String PHOTO_SOURCE_DIALOG_TAG = "photoSourceDialogTag";
 
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
@@ -52,7 +54,6 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
-    private PhotoSourceDialog photoSourcedialog;
     private PhotoAdapter photoAdapter;
 
     @BindView(R.id.spinner_categorie)
@@ -70,13 +71,8 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
     @BindView(R.id.recyclerImages)
     RecyclerView recyclerImages;
 
-    private View.OnClickListener askForNewPhotoSource = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            dismissPreviousPhotoSourceDialog();
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().addToBackStack(null);
-            photoSourcedialog.show(transaction, PHOTO_SOURCE_DIALOG_TAG);
-        }
+    private View.OnClickListener onClickPhoto = v -> {
+        PhotoEntity photoEntity = (PhotoEntity) v.getTag();
     };
 
     @Override
@@ -88,10 +84,10 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         ButterKnife.bind(this);
 
         // Préparation du recycler view qui recevra les images de l'annonce
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(OrientationHelper.HORIZONTAL);
         recyclerImages.setLayoutManager(linearLayoutManager);
-        photoAdapter = new PhotoAdapter(getApplicationContext());
+        photoAdapter = new PhotoAdapter(this);
         recyclerImages.setAdapter(photoAdapter);
 
         // Alimentation du spinner avec la liste des catégories
@@ -102,6 +98,15 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                         spinnerCategorie.setAdapter(adapter);
                     }
                 });
+
+        // Récupération dynamique de la liste des photos
+        viewModel.getLiveListPhoto().observe(this, photoEntities -> {
+            if (photoEntities != null) {
+                List<PhotoEntity> listPhoto = new ArrayList<>();
+                listPhoto.addAll(photoEntities);
+                this.photoAdapter.setListPhotos(listPhoto);
+            }
+        });
 
         // Récupération des paramètres
         Bundle bundle = getIntent().getExtras();
@@ -119,6 +124,16 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                     viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
                         if (annonceEntity != null) {
                             viewModel.setAnnonce(annonceEntity);
+
+                            // Récupération des photos de cette annonce dans l'adapter
+                            viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
+                                    .observe(PostAnnonceActivity.this, photoEntities -> {
+                                        if (photoEntities != null && !photoEntities.isEmpty()) {
+                                            viewModel.setListPhoto(photoEntities);
+                                            photoAdapter.setListPhotos(photoEntities);
+                                        }
+                                    });
+
                             displayAnnonce(annonceEntity);
                         }
                     });
@@ -129,7 +144,6 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
             finish();
         }
 
-        this.photoSourcedialog = new PhotoSourceDialog();
         if (viewModel.getUidUtilisateur() == null) {
             Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
             finish();
@@ -147,7 +161,7 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         int idItem = item.getItemId();
         switch (idItem) {
             case R.id.menu_post_valid:
-                // ToDo - Valider l'annonce ici
+                viewModel.saveAnnonce(null);
                 finish();
                 return true;
         }
@@ -174,7 +188,8 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                     if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
                         byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
                         String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
-                        viewModel.insertPhoto(path, ids -> MediaUtility.deleteTempFile(mFileUriTemp));
+                        viewModel.addPhotoToCurrentList(path);
+                        MediaUtility.deleteTempFile(mFileUriTemp);
                     }
                 }
                 break;
@@ -186,7 +201,8 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                             if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
                                 byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
                                 String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
-                                viewModel.insertPhoto(path, ids -> MediaUtility.deleteTempFile(mFileUriTemp));
+                                viewModel.addPhotoToCurrentList(path);
+                                MediaUtility.deleteTempFile(mFileUriTemp);
                             }
                         }
                         break;
@@ -200,7 +216,6 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                 }
                 break;
             case DIALOG_REQUEST_IMAGE:
-                dismissPreviousPhotoSourceDialog();
                 if (resultCode == RESULT_OK) {
                     callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);  // On va appeler WorkImageActivity
                 } else if (resultCode == RESULT_CANCELED) {
@@ -212,7 +227,6 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
-                dismissPreviousPhotoSourceDialog();
                 if (resultCode == RESULT_OK) {
                     Uri uri = data.getData();
                     callWorkingImageActivity(uri, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);
@@ -225,7 +239,6 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         }
     }
 
-    @Override
     public void onNewPictureClick() {
         // Demande de la permission pour utiliser la camera
         if (Build.VERSION.SDK_INT >= 23) {
@@ -241,22 +254,43 @@ public class PostAnnonceActivity extends AppCompatActivity implements PhotoSourc
         }
     }
 
-    @Override
     public void onGalleryClick() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         startActivityForResult(photoPickerIntent, DIALOG_GALLERY_IMAGE);
     }
 
-    /**
-     * Try to find a PhotoSourceDialog in the fragment manager, if found we remove it
-     */
-
-    private void dismissPreviousPhotoSourceDialog() {
-        Fragment prev = getSupportFragmentManager().findFragmentByTag(PHOTO_SOURCE_DIALOG_TAG);
-        if (prev != null) {
-            getSupportFragmentManager().beginTransaction().remove(prev).commit();
+    @OnClick(R.id.add_photo)
+    public void onClick(View v) {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
+        } else {
+            builder = new AlertDialog.Builder(this);
         }
+        builder.setTitle("Envie d'ajouter une nouvelle image ?")
+                .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
+                .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
+                .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
+                .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                .show();
+
+    }
+
+    /**
+     *
+     */
+    private void callWorkingImageActivity(String path){
+        // On va appeler l'activity avec le bitmap qu'on veut modifier et son numéro dans l'arraylist
+        // qui servira à son retour pour le mettre à jour.
+        Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        intent.setClass(this, WorkImageActivity.class);
+        bundle.putString(WorkImageActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
+        bundle.putByteArray(WorkImageActivity.BUNDLE_IN_IMAGE, byteArray);
+        bundle.putInt(WorkImageActivity.BUNDLE_KEY_ID, v.getId());
+        intent.putExtras(bundle);
+        startActivityForResult(intent, CODE_WORK_IMAGE_MODIFICATION);
     }
 
     /**

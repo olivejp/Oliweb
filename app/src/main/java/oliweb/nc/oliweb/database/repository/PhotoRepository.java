@@ -1,7 +1,10 @@
 package oliweb.nc.oliweb.database.repository;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.support.annotation.Nullable;
+
+import java.util.List;
 
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.OliwebDatabase;
@@ -31,7 +34,11 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     }
 
     public boolean exist(PhotoEntity photoEntity) {
-        return (this.photoDao.findById(photoEntity.getIdPhoto()) != null);
+        if (photoEntity.getIdPhoto() == null) {
+            return false;
+        } else {
+            return this.photoDao.findById(photoEntity.getIdPhoto()) != null;
+        }
     }
 
     public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
@@ -42,7 +49,23 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         }
     }
 
+    public void save(List<PhotoEntity> listPhoto, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        if (listPhoto != null && !listPhoto.isEmpty()) {
+            for (PhotoEntity photoEntity : listPhoto) {
+                if (exist(photoEntity)) {
+                    update(onRespositoryPostExecute, photoEntity);
+                } else {
+                    insert(onRespositoryPostExecute, photoEntity);
+                }
+            }
+        }
+    }
+
     public Single<PhotoEntity> singleById(long idPhoto) {
         return this.photoDao.singleById(idPhoto);
+    }
+
+    public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
+        return this.photoDao.findByIdAnnonce(idAnnonce);
     }
 }

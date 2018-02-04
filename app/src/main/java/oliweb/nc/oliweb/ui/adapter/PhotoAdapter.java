@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.request.RequestOptions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -27,18 +28,20 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
     private List<PhotoEntity> listPhotos;
     private Context context;
 
-    public PhotoAdapter(Context context) {
+    public PhotoAdapter(Context context, View.OnClickListener onClickListener) {
         this.context = context;
+        this.listPhotos = new ArrayList<>();
     }
 
     @Override
     public ViewHolderPhotoAdapter onCreateViewHolder(ViewGroup parent, int viewType) {
-        View rootView = LayoutInflater.from(parent.getContext()).inflate(R.layout.photo_adapter, parent, false);
+        View rootView = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.photo_adapter, parent, false);
         return new ViewHolderPhotoAdapter(rootView);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolderPhotoAdapter holder, int position) {
+    public void onBindViewHolder(final ViewHolderPhotoAdapter holder, int position) {
         holder.photoEntity = listPhotos.get(position);
         GlideApp.with(context)
                 .asDrawable()
@@ -49,12 +52,12 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
 
     @Override
     public int getItemCount() {
-        return this.listPhotos == null ? 0 : this.listPhotos.size();
+        return listPhotos == null ? 0 : listPhotos.size();
     }
 
     public void setListPhotos(final List<PhotoEntity> newListPhotos) {
-        if (this.listPhotos == null) {
-            this.listPhotos = newListPhotos;
+        if (listPhotos == null) {
+            listPhotos = newListPhotos;
             notifyItemRangeInserted(0, newListPhotos.size());
         } else {
             DiffUtil.DiffResult result = DiffUtil.calculateDiff(new DiffUtil.Callback() {
@@ -70,15 +73,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return newListPhotos.get(oldItemPosition).getCheminLocal().equals(newListPhotos.get(newItemPosition).getCheminLocal());
+                    return listPhotos.get(oldItemPosition).getCheminLocal().equals(newListPhotos.get(newItemPosition).getCheminLocal());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                     PhotoEntity newPhoto = newListPhotos.get(newItemPosition);
-                    PhotoEntity oldPhoto = newListPhotos.get(oldItemPosition);
+                    PhotoEntity oldPhoto = listPhotos.get(oldItemPosition);
                     return newPhoto.getCheminLocal().equals(oldPhoto.getCheminLocal())
-                            && newPhoto.getIdAnnonce().equals(oldPhoto.getIdAnnonce())
                             && newPhoto.getStatut().equals(oldPhoto.getStatut());
                 }
             });
@@ -87,13 +89,11 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
         }
     }
 
-    class ViewHolderPhotoAdapter extends RecyclerView.ViewHolder {
-
+    public class ViewHolderPhotoAdapter extends RecyclerView.ViewHolder {
         PhotoEntity photoEntity;
 
         @BindView(R.id.image_photo)
         ImageView imagePhoto;
-
         ViewHolderPhotoAdapter(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
