@@ -87,7 +87,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(OrientationHelper.HORIZONTAL);
         recyclerImages.setLayoutManager(linearLayoutManager);
-        photoAdapter = new PhotoAdapter(this);
+        photoAdapter = new PhotoAdapter(this, onClickPhoto);
         recyclerImages.setAdapter(photoAdapter);
 
         // Alimentation du spinner avec la liste des catégories
@@ -276,8 +276,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .show();
 
     }
-
-
 
     /**
      * Launch activity to take a picture

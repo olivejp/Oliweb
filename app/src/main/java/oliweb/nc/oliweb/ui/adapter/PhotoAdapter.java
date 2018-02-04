@@ -43,6 +43,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
     @Override
     public void onBindViewHolder(final ViewHolderPhotoAdapter holder, int position) {
         holder.photoEntity = listPhotos.get(position);
+        holder.imagePhoto.setTag(holder.photoEntity);
         GlideApp.with(context)
                 .asDrawable()
                 .apply(RequestOptions.circleCropTransform())
