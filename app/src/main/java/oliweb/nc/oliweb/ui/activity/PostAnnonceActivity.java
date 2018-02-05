@@ -39,6 +39,9 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_IN_PATH_IMAGE;
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
+
 public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
@@ -144,10 +147,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
             finish();
         }
 
-        if (viewModel.getUidUtilisateur() == null) {
-            Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
-            finish();
-        }
+        // Comment pour les tests
+        //        if (viewModel.getUidUtilisateur() == null) {
+        //            Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
+        //            finish();
+        //        }
     }
 
     @Override
@@ -210,14 +214,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     // On veut supprimer la photo
                     case RESULT_CANCELED:
                         if (data != null && data.getExtras() != null) {
-                            long idPhoto = data.getExtras().getLong(WorkImageActivity.BUNDLE_KEY_ID);
+                            long idPhoto = data.getExtras().getLong(BUNDLE_KEY_ID);
                             viewModel.deletePhoto(idPhoto);
                         }
                 }
                 break;
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);  // On va appeler WorkImageActivity
+                    callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);  // On va appeler WorkImageActivity
                 } else if (resultCode == RESULT_CANCELED) {
                     // user cancelled Image capture
                     Toast.makeText(this, "Annulation de la capture", Toast.LENGTH_SHORT).show();
@@ -229,7 +233,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             case DIALOG_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
                     Uri uri = data.getData();
-                    callWorkingImageActivity(uri, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION);
+                    callWorkingImageActivity(uri, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
                 } else if (resultCode == RESULT_CANCELED) {
                     Toast.makeText(getApplicationContext(), "Annulation de la capture", Toast.LENGTH_SHORT).show();
                 } else {
@@ -282,48 +286,33 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, viewModel.getUidUtilisateur());
+        mFileUriTemp = MediaUtility.getOutputMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
-
 
     /**
      * Appel de l'activity de travail d'une image
      * Cette activité va nous permettre de faire tourner une image.
      * Passage de l'image à modifier sous forme d'un ByteArray
      *
-     * @param uri         where we can find the image
+     * @param imageUri
      * @param mode
      * @param requestCode
+     * @param position
      */
-    private void callWorkingImageActivity(Uri uri, String mode, int requestCode) {
+    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
         Intent intent = new Intent();
         intent.setClass(this, WorkImageActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, mode);
-
-        // Récupération du bitmap à partir de l'Uri qu'on a reçu.
-        byte[] byteArray = MediaUtility.uriToByteArray(this, uri);
-        bundle.putByteArray(WorkImageActivity.BUNDLE_IN_IMAGE, byteArray);
+        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
+        if (position != -1) {
+            bundle.putInt(BUNDLE_KEY_ID, position);
+        }
         intent.putExtras(bundle);
         startActivityForResult(intent, requestCode);
-    }
-
-    /**
-     * ToDo finir l'implémentation de cette méthode
-     */
-    private void callWorkingImageActivity(String path){
-        // On va appeler l'activity avec le bitmap qu'on veut modifier et son numéro dans l'arraylist
-        // qui servira à son retour pour le mettre à jour.
-        Intent intent = new Intent();
-        Bundle bundle = new Bundle();
-        intent.setClass(this, WorkImageActivity.class);
-        bundle.putString(WorkImageActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
-        bundle.putString(WorkImageActivity.BUNDLE_IN_PATH_IMAGE, path);
-        bundle.putInt(WorkImageActivity.BUNDLE_KEY_ID, v.getId());
-        intent.putExtras(bundle);
-        startActivityForResult(intent, CODE_WORK_IMAGE_MODIFICATION);
     }
 
     /**

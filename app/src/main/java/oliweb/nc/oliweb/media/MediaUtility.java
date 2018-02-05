@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -57,6 +58,13 @@ public class MediaUtility {
         String result = null;
         try {
             String[] proj = {MediaStore.Images.Media.DATA};
+
+            try {
+                context.getContentResolver().openInputStream(contentUri);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
             cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
             int column_index;
             if (cursor != null) {
@@ -107,7 +115,7 @@ public class MediaUtility {
     /**
      * Reçoit un byteArray et va écrire son contenu dans un fichier
      *
-     * @param byteArray to save in a file
+     * @param byteArray      to save in a file
      * @param UidUtilisateur
      * @return path of the file created
      */
@@ -133,7 +141,6 @@ public class MediaUtility {
     }
 
     /**
-     *
      * @param bitmap
      * @param uuidUtilisateur
      * @return path of the file created
@@ -158,6 +165,45 @@ public class MediaUtility {
         }
 
         return retour;
+    }
+
+    /**
+     * Save a bitmap into the specified path
+     *
+     * @param bmp
+     * @param path
+     * @return true if saved, false otherwise
+     */
+    public static boolean saveBitmapToUri(Bitmap bmp, Uri uri) {
+        boolean saved = false;
+        File newFile = new File(uri.getPath());
+        FileOutputStream out = null;
+        if (!newFile.exists()) {
+            try {
+                newFile.createNewFile();
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+
+        try {
+            out = new FileOutputStream(newFile);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                    saved = true;
+                }
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+                saved = false;
+            }
+        }
+        return saved;
     }
 
     /**
@@ -187,6 +233,12 @@ public class MediaUtility {
         return bitmap;
     }
 
+    public static Bitmap getBitmapFromPath(String path) {
+        File image = new File(path);
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        return BitmapFactory.decodeFile(image.getAbsolutePath(), bmOptions);
+    }
+
     /**
      * Créer un URI pour stocker l'image/la video
      *
@@ -194,8 +246,13 @@ public class MediaUtility {
      * @param prefixName
      * @return Uri of the file
      */
-    public static Uri getOutputMediaFileUri(MediaType type, String prefixName) {
-        return Uri.fromFile(getOutputMediaFile(type, prefixName));
+    public static Uri getOutputMediaFileUri(Context context, MediaType type, String prefixName) {
+        File file = getOutputMediaFile(type, prefixName);
+        String authority = context.getApplicationContext().getPackageName() + ".oliweb.nc.oliweb";
+        if (file != null) {
+            return FileProvider.getUriForFile(context, authority, file);
+        }
+        return null;
     }
 
     /**
