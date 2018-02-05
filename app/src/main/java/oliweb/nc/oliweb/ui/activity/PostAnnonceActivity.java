@@ -22,6 +22,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +41,10 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_EXTERNAL_STORAGE;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_IN_PATH_IMAGE;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_OUT_URI_IMAGE;
 
 public class PostAnnonceActivity extends AppCompatActivity {
 
@@ -58,6 +62,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
     private PhotoAdapter photoAdapter;
+    private boolean externalStorage = true;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -188,12 +193,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         byte[] byteArray;
         switch (code_request) {
             case CODE_WORK_IMAGE_CREATION:
-                if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
-                    if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
-                        byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
-                        String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
+                if (resultCode == RESULT_OK) {
+                    if (data.getExtras() != null && data.getExtras().containsKey(BUNDLE_OUT_URI_IMAGE)) {
+                        String path = data.getExtras().getParcelable(BUNDLE_OUT_URI_IMAGE).toString();
                         viewModel.addPhotoToCurrentList(path);
-                        MediaUtility.deleteTempFile(mFileUriTemp);
                     }
                 }
                 break;
@@ -201,14 +204,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 switch (resultCode) {
                     case RESULT_OK:
                         // Récupération de l'ancienne position
-                        if (data != null && data.getExtras() != null) {
-                            if (data.getExtras().getBoolean(WorkImageActivity.BUNDLE_OUT_MAJ)) {
-                                byteArray = data.getExtras().getByteArray(WorkImageActivity.BUNDLE_OUT_IMAGE);
-                                String path = MediaUtility.saveByteArrayToFile(byteArray, viewModel.getUidUtilisateur());
-                                viewModel.addPhotoToCurrentList(path);
-                                MediaUtility.deleteTempFile(mFileUriTemp);
-                            }
-                        }
+                        viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
                         break;
 
                     // On veut supprimer la photo
@@ -233,7 +229,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
             case DIALOG_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
                     Uri uri = data.getData();
-                    callWorkingImageActivity(uri, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
+                    if (uri != null) {
+                        try {
+                            File newFile;
+                            if (externalStorage) {
+                                newFile = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, viewModel.getUidUtilisateur());
+                            } else {
+                                newFile = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+                            }
+
+                            String realPathSrc = MediaUtility.getRealPathFromGaleryUri(this, uri);
+                            MediaUtility.copy(new File(realPathSrc), newFile);
+                            callWorkingImageActivity(Uri.fromFile(newFile), Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 } else if (resultCode == RESULT_CANCELED) {
                     Toast.makeText(getApplicationContext(), "Annulation de la capture", Toast.LENGTH_SHORT).show();
                 } else {
@@ -286,9 +297,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = MediaUtility.getOutputMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+        if (externalStorage) {
+            mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, viewModel.getUidUtilisateur());
+        } else {
+            File file = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+            mFileUriTemp = Uri.fromFile(file);
+        }
+
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
 
@@ -308,6 +326,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, mode);
         bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
+        bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
         if (position != -1) {
             bundle.putInt(BUNDLE_KEY_ID, position);
         }

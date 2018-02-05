@@ -7,15 +7,17 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -29,6 +31,31 @@ import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 public class MediaUtility {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
+
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public static File saveInternalFile(Context context, String fileName) {
+        File file = new File(context.getFilesDir(), fileName);
+        return file;
+    }
 
     /**
      * @param uri
@@ -53,7 +80,7 @@ public class MediaUtility {
         }
     }
 
-    public static String getRealPathFromUri(Context context, Uri contentUri) {
+    public static String getRealPathFromGaleryUri(Context context, Uri contentUri) {
         Cursor cursor = null;
         String result = null;
         try {
@@ -122,7 +149,7 @@ public class MediaUtility {
     public static String saveByteArrayToFile(byte[] byteArray, String UidUtilisateur) {
         String path;
         if (byteArray == null) return null;
-        File f = MediaUtility.getOutputMediaFile(MediaType.IMAGE, UidUtilisateur);
+        File f = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, UidUtilisateur);
         if (f == null) return null;
         try {
             if (f.createNewFile()) {
@@ -150,7 +177,7 @@ public class MediaUtility {
         String retour = null;
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        File f = getOutputMediaFile(MediaType.IMAGE, uuidUtilisateur);
+        File f = saveExternalMediaFile(MediaType.IMAGE, uuidUtilisateur);
         try {
             if (f != null) {
                 if (f.createNewFile()) {
@@ -171,23 +198,26 @@ public class MediaUtility {
      * Save a bitmap into the specified path
      *
      * @param bmp
-     * @param path
-     * @return true if saved, false otherwise
+     * @param uri
+     * @return
      */
     public static boolean saveBitmapToUri(Bitmap bmp, Uri uri) {
         boolean saved = false;
-        File newFile = new File(uri.getPath());
         FileOutputStream out = null;
-        if (!newFile.exists()) {
-            try {
-                newFile.createNewFile();
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
+        File newFile;
+        newFile = new File(uri.getPath());
+        if (newFile.exists()) {
+            newFile.delete();
         }
-
         try {
             out = new FileOutputStream(newFile);
+            if (!newFile.exists()) {
+                try {
+                    newFile.createNewFile();
+                } catch (IOException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
+            }
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
         } catch (Exception e) {
@@ -246,13 +276,9 @@ public class MediaUtility {
      * @param prefixName
      * @return Uri of the file
      */
-    public static Uri getOutputMediaFileUri(Context context, MediaType type, String prefixName) {
-        File file = getOutputMediaFile(type, prefixName);
-        String authority = context.getApplicationContext().getPackageName() + ".oliweb.nc.oliweb";
-        if (file != null) {
-            return FileProvider.getUriForFile(context, authority, file);
-        }
-        return null;
+    @NonNull
+    public static Uri getOutputMediaFileUri(MediaType type, String prefixName) {
+        return Uri.fromFile(saveExternalMediaFile(type, prefixName));
     }
 
     /**
@@ -262,7 +288,7 @@ public class MediaUtility {
      * @param prefixName prefixe qu'on ajoutera au nom de la nouvelle ressource
      * @return File
      */
-    private static File getOutputMediaFile(MediaType type, String prefixName) {
+    public static File saveExternalMediaFile(MediaType type, String prefixName) {
         // External sdcard location
         File mediaStorageDir = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -278,19 +304,27 @@ public class MediaUtility {
         }
 
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         File mediaFile;
         if (type.equals(MediaType.IMAGE)) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator
-                    + String.valueOf(prefixName) + "_IMG_" + timeStamp + ".jpg");
+            mediaFile = new File(mediaStorageDir.getPath() + generatePictureName(type, prefixName));
         } else if (type.equals(MediaType.VIDEO)) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator
-                    + String.valueOf(prefixName) + "_VID_" + timeStamp + ".mp4");
+            mediaFile = new File(mediaStorageDir.getPath() + generatePictureName(type, prefixName));
         } else {
             return null;
         }
 
         return mediaFile;
+    }
+
+    public static String generatePictureName(MediaType type, String prefixName) {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
+        if (type.equals(MediaType.IMAGE)) {
+            return File.separator + String.valueOf(prefixName) + "_IMG_" + timeStamp + ".jpg";
+        } else if (type.equals(MediaType.VIDEO)) {
+            return File.separator + String.valueOf(prefixName) + "_VID_" + timeStamp + ".mp4";
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -302,6 +336,25 @@ public class MediaUtility {
             if (!file.delete()) {
                 Log.e(TAG, "Fichier temporaire non supprimé");
             }
+        }
+    }
+
+    public static void copy(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
         }
     }
 

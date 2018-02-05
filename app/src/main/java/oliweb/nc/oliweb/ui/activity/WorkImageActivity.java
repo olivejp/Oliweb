@@ -28,7 +28,8 @@ public class WorkImageActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_ID = "ID";
     public static final String BUNDLE_IN_PATH_IMAGE = "BUNDLE_IN_PATH_IMAGE";
     public static final String BUNDLE_OUT_IMAGE = "BITMAP_OUT";
-    public static final String BUNDLE_OUT_MAJ = "MAJ_IMAGE";
+    public static final String BUNDLE_EXTERNAL_STORAGE = "EXTERNAL_STORAGE";
+    public static final String BUNDLE_OUT_URI_IMAGE = "BUNDLE_OUT_URI_IMAGE";
 
     @BindView(R.id.work_image_button_delete_image)
     Button onDeleteListener;
@@ -43,6 +44,7 @@ public class WorkImageActivity extends AppCompatActivity {
     private Bitmap pBitmap; // Le bitmap qu'on va travailler et sauver
     private int pIdPhoto; // Id de la photo dans l'arrayList
     private Uri pUriImage; // Uri de l'image à modifier (uniquement dans le cas d'une modification)
+    private boolean pExternalStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +81,14 @@ public class WorkImageActivity extends AppCompatActivity {
             setResult(RESULT_ACTIVITY_ERROR);
             finish();
         }
+
+        if (!bundleOrigine.containsKey(BUNDLE_EXTERNAL_STORAGE)) {
+            Log.e(TAG, "bundleOrigine ne contient pas le paramètre obligatoire BUNDLE_EXTERNAL_STORAGE");
+            setResult(RESULT_ACTIVITY_ERROR);
+            finish();
+        }
+
+        pExternalStorage = bundleOrigine.getBoolean(BUNDLE_EXTERNAL_STORAGE);
 
         pMode = bundleOrigine.getString(BUNDLE_KEY_MODE);
         if (pMode == null) {
@@ -139,8 +149,9 @@ public class WorkImageActivity extends AppCompatActivity {
                     // Pour que le programme appelant puisse faire sa mise à jour
                     if (pMode.equals(Constants.PARAM_MAJ)) {
                         bundleRetour.putInt(BUNDLE_KEY_ID, pIdPhoto);
-                        intentRetour.putExtras(bundleRetour);
                     }
+                    bundleRetour.putParcelable(BUNDLE_OUT_URI_IMAGE, pUriImage);
+                    intentRetour.putExtras(bundleRetour);
                     setResult(Activity.RESULT_OK, intentRetour);
                     finish();
                 }
