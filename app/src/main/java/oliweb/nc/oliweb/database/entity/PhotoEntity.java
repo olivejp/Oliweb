@@ -17,7 +17,7 @@ public class PhotoEntity {
     @PrimaryKey(autoGenerate = true)
     private Long idPhoto;
     private String UUID;
-    private String cheminLocal;
+    private String uriLocal;
     private String firebasePath;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
@@ -40,12 +40,12 @@ public class PhotoEntity {
         this.UUID = UUID;
     }
 
-    public String getCheminLocal() {
-        return cheminLocal;
+    public String getUriLocal() {
+        return uriLocal;
     }
 
-    public void setCheminLocal(String cheminLocal) {
-        this.cheminLocal = cheminLocal;
+    public void setUriLocal(String uriLocal) {
+        this.uriLocal = uriLocal;
     }
 
     public String getFirebasePath() {

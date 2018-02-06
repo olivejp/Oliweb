@@ -27,4 +27,5 @@ public class GlideOliweb extends AppGlideModule {
     public boolean isManifestParsingEnabled() {
         return false;
     }
+
 }

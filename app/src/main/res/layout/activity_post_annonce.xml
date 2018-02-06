@@ -121,6 +121,7 @@
             app:layout_constraintTop_toBottomOf="@id/text_photos" />
 
         <android.support.design.widget.CoordinatorLayout
+            android:id="@+id/coordinator_post_annonce"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"

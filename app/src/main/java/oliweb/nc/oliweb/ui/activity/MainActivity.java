@@ -216,8 +216,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        photoTask.setListener(null);
-        photoTask.setContext(null);
+        if (photoTask != null) {
+            photoTask.setListener(null);
+            photoTask.setContext(null);
+        }
         super.onDestroy();
     }
 

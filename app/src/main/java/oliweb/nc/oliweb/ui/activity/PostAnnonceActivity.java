@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.ui.activity;
 
 import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,7 +22,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,10 +60,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private static final int CODE_WORK_IMAGE_CREATION = 300;
     private static final int CODE_WORK_IMAGE_MODIFICATION = 400;
 
+    private static final String SAVED_CURRENT_PATH = "SAVED_CURRENT_PATH";
+
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
     private PhotoAdapter photoAdapter;
     private boolean externalStorage = true;
+    private String currentPhotoPath;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -79,6 +83,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.recyclerImages)
     RecyclerView recyclerImages;
 
+    @BindView(R.id.coordinator_post_annonce)
+    CoordinatorLayout coordinatorLayout;
+
     private View.OnClickListener onClickPhoto = v -> {
         PhotoEntity photoEntity = (PhotoEntity) v.getTag();
     };
@@ -87,6 +94,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(this).get(PostAnnonceActivityViewModel.class);
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SAVED_CURRENT_PATH)) {
+                currentPhotoPath = savedInstanceState.getString(SAVED_CURRENT_PATH);
+            }
+        }
 
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
@@ -190,7 +203,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int code_request, int resultCode, Intent data) {
-        byte[] byteArray;
         switch (code_request) {
             case CODE_WORK_IMAGE_CREATION:
                 if (resultCode == RESULT_OK) {
@@ -217,40 +229,62 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 break;
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);  // On va appeler WorkImageActivity
-                } else if (resultCode == RESULT_CANCELED) {
-                    // user cancelled Image capture
-                    Toast.makeText(this, "Annulation de la capture", Toast.LENGTH_SHORT).show();
-                } else {
-                    // failed to capture image
-                    Toast.makeText(this, "Echec de la capture", Toast.LENGTH_SHORT).show();
+                    viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
+                    // Insertion simple
                     Uri uri = data.getData();
                     if (uri != null) {
-                        try {
-                            File newFile;
-                            if (externalStorage) {
-                                newFile = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, viewModel.getUidUtilisateur());
-                            } else {
-                                newFile = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+                        insertionFromGallery(uri);
+                    } else {
+                        // Insertion multiple
+                        if (data.getClipData() != null) {
+                            int i = -1;
+                            ClipData.Item item;
+                            while (i++ < data.getClipData().getItemCount() - 1) {
+                                item = data.getClipData().getItemAt(i);
+                                insertionFromGallery(item.getUri());
                             }
-
-                            String realPathSrc = MediaUtility.getRealPathFromGaleryUri(this, uri);
-                            MediaUtility.copy(new File(realPathSrc), newFile);
-                            callWorkingImageActivity(Uri.fromFile(newFile), Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
                         }
                     }
-                } else if (resultCode == RESULT_CANCELED) {
-                    Toast.makeText(getApplicationContext(), "Annulation de la capture", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Echec de la capture", Toast.LENGTH_SHORT).show();
                 }
                 break;
+        }
+    }
+
+    /**
+     * Le paramètre uri représente une image dans la gallerie.
+     * nouvelleUri correspond à l'emplacement de destination de cette image.
+     * car on veut la déplacer dans le répertoire spécifique à Oliweb.
+     * On va donc copier l'image présente dans uri et la mettre dans nouvelleUri.
+     *
+     * @param uri
+     */
+    private void insertionFromGallery(Uri uri) {
+        try {
+            Uri nouvelleUri = generateNewUri();
+            MediaUtility.copyImageFromGallery(getApplicationContext(), uri, nouvelleUri);
+            viewModel.addPhotoToCurrentList(nouvelleUri.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(SAVED_CURRENT_PATH, currentPhotoPath);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SAVED_CURRENT_PATH)) {
+                currentPhotoPath = savedInstanceState.getString(SAVED_CURRENT_PATH);
+            }
         }
     }
 
@@ -272,7 +306,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public void onGalleryClick() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
-        startActivityForResult(photoPickerIntent, DIALOG_GALLERY_IMAGE);
+        photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(photoPickerIntent, "Choisissez les images à importer"), DIALOG_GALLERY_IMAGE);
     }
 
     @OnClick(R.id.add_photo)
@@ -297,17 +333,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (externalStorage) {
-            mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, viewModel.getUidUtilisateur());
-        } else {
-            File file = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
-            mFileUriTemp = Uri.fromFile(file);
-        }
-
+        mFileUriTemp = generateNewUri();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
+    }
+
+    private Uri generateNewUri() {
+        Uri uri;
+        if (externalStorage) {
+            uri = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+        } else {
+            File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+            uri = Uri.fromFile(file);
+        }
+        return uri;
     }
 
     /**
