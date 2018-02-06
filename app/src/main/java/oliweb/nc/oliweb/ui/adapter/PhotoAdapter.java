@@ -1,15 +1,19 @@
 package oliweb.nc.oliweb.ui.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.bumptech.glide.request.RequestOptions;
-
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +21,14 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 /**
  * Created by orlanth23 on 03/02/2018.
  */
 
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPhotoAdapter> {
+
+    private static final String TAG = PhotoAdapter.class.getName();
 
     private List<PhotoEntity> listPhotos;
     private Context context;
@@ -43,12 +48,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
     @Override
     public void onBindViewHolder(final ViewHolderPhotoAdapter holder, int position) {
         holder.photoEntity = listPhotos.get(position);
-        // holder.imagePhoto.setTag(holder.photoEntity);
-        GlideApp.with(context)
-                .asDrawable()
-                .apply(RequestOptions.circleCropTransform())
-                .load(holder.photoEntity.getCheminLocal())
-                .into(holder.imagePhoto);
+
+        try {
+            InputStream in = this.context.getContentResolver().openInputStream(Uri.parse(holder.photoEntity.getUriLocal()));
+            Bitmap bitmap = BitmapFactory.decodeStream(in);
+            holder.imagePhoto.setImageBitmap(bitmap);
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
     }
 
     @Override
@@ -74,14 +81,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listPhotos.get(oldItemPosition).getCheminLocal().equals(newListPhotos.get(newItemPosition).getCheminLocal());
+                    return listPhotos.get(oldItemPosition).getUriLocal().equals(newListPhotos.get(newItemPosition).getUriLocal());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                     PhotoEntity newPhoto = newListPhotos.get(newItemPosition);
                     PhotoEntity oldPhoto = listPhotos.get(oldItemPosition);
-                    return newPhoto.getCheminLocal().equals(oldPhoto.getCheminLocal())
+                    return newPhoto.getUriLocal().equals(oldPhoto.getUriLocal())
                             && newPhoto.getStatut().equals(oldPhoto.getStatut());
                 }
             });
@@ -95,6 +102,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
 
         @BindView(R.id.image_photo)
         ImageView imagePhoto;
+
         ViewHolderPhotoAdapter(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
