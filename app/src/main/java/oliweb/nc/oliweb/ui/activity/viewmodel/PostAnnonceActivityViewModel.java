@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
+import android.app.NotificationChannelGroup;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -35,6 +36,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private PhotoRepository photoRepository;
 
     private AnnonceEntity annonce;
+    private CategorieEntity categorie;
     private List<PhotoEntity> listPhoto;
 
     private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
@@ -123,6 +125,14 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
         return this.annonceRepository.findById(idAnnonce);
+    }
+
+    public void setCurrentCategorie(CategorieEntity categorie) {
+        this.categorie = categorie;
+    }
+
+    public CategorieEntity getCurrentCategorie() {
+        return this.categorie;
     }
 
     public LiveData<CategorieEntity> findCategorieById(long idCategorie) {

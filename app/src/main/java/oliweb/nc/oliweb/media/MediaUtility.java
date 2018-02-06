@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -108,6 +109,33 @@ public class MediaUtility {
     }
 
     /**
+     * Copie un fichier donné dans uriToCopy et renvoie un nouveau fichier
+     * Puis supprime le fichier source temporarire.
+     *
+     * @param context
+     * @param externalStorage
+     * @param prefix
+     * @param uriToCopy
+     * @return
+     * @throws IOException
+     */
+    public static File copyFileAndDelete(Context context, boolean externalStorage, String prefix, Uri uriToCopy) throws IOException {
+        File newFile;
+        if (externalStorage) {
+            newFile = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, prefix);
+        } else {
+            newFile = MediaUtility.saveInternalFile(context, MediaUtility.generatePictureName(MediaType.IMAGE, prefix));
+        }
+        String realPathSrc = MediaUtility.getRealPathFromGaleryUri(context, uriToCopy);
+        File oldFile = new File(realPathSrc);
+        copy(oldFile, newFile);
+        if (!oldFile.delete()) {
+            Log.e(TAG, "Echec de la suppression du fichier source");
+        }
+        return newFile;
+    }
+
+    /**
      * Redimenssionne une image pour qu'elle corresponde aux limitations.
      * On ne fait que de la diminution d'image pas d'agrandissement.
      *
@@ -146,26 +174,26 @@ public class MediaUtility {
      * @param UidUtilisateur
      * @return path of the file created
      */
-    public static String saveByteArrayToFile(byte[] byteArray, String UidUtilisateur) {
-        String path;
-        if (byteArray == null) return null;
-        File f = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, UidUtilisateur);
-        if (f == null) return null;
-        try {
-            if (f.createNewFile()) {
-                FileOutputStream fo = new FileOutputStream(f);
-                fo.write(byteArray);
-                fo.close();
-                path = f.getPath();
-                return path;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            Log.e("IOException", TAG + ":travailImage:" + e.getMessage(), e);
-            return null;
-        }
-    }
+//    public static String saveByteArrayToFile(byte[] byteArray, String UidUtilisateur) {
+//        String path;
+//        if (byteArray == null) return null;
+//        File f = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, UidUtilisateur);
+//        if (f == null) return null;
+//        try {
+//            if (f.createNewFile()) {
+//                FileOutputStream fo = new FileOutputStream(f);
+//                fo.write(byteArray);
+//                fo.close();
+//                path = f.getPath();
+//                return path;
+//            } else {
+//                return null;
+//            }
+//        } catch (IOException e) {
+//            Log.e("IOException", TAG + ":travailImage:" + e.getMessage(), e);
+//            return null;
+//        }
+//    }
 
     /**
      * @param bitmap
@@ -291,7 +319,7 @@ public class MediaUtility {
     public static File saveExternalMediaFile(MediaType type, String prefixName) {
         // External sdcard location
         File mediaStorageDir = new File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
                 MediaConstants.IMAGE_DIRECTORY_NAME);
 
         // Create the storage directory if it does not exist
@@ -357,5 +385,4 @@ public class MediaUtility {
             in.close();
         }
     }
-
 }

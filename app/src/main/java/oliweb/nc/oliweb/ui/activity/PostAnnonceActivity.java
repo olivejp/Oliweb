@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -42,8 +44,9 @@ import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_EXTERNAL_STORAGE;
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_IN_PATH_IMAGE;
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_IN_URI_IMAGE;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
+import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_PATH;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_OUT_URI_IMAGE;
 
 public class PostAnnonceActivity extends AppCompatActivity {
@@ -63,6 +66,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private Uri mFileUriTemp;
     private PhotoAdapter photoAdapter;
     private boolean externalStorage = true;
+    private String mCurrentPhotoPath;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -113,6 +117,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 List<PhotoEntity> listPhoto = new ArrayList<>();
                 listPhoto.addAll(photoEntities);
                 this.photoAdapter.setListPhotos(listPhoto);
+            }
+        });
+
+        // Evenement sur le spinner, dès changement dans le spinner on récupère la valeur
+        spinnerCategorie.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                CategorieEntity categorie = (CategorieEntity) parent.getItemAtPosition(position);
+                viewModel.setCurrentCategorie(categorie);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
 
@@ -170,9 +187,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int idItem = item.getItemId();
         switch (idItem) {
             case R.id.menu_post_valid:
-                viewModel.saveAnnonce(null);
-                finish();
-                return true;
+                if (checkValidation()) {
+                    getAnnonceFromUi();
+                    viewModel.saveAnnonce(null);
+                    finish();
+                    return true;
+                }
         }
         return false;
     }
@@ -189,22 +209,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int code_request, int resultCode, Intent data) {
-        byte[] byteArray;
-        switch (code_request) {
+    protected void onActivityResult(int codeRequest, int resultCode, Intent data) {
+        switch (codeRequest) {
             case CODE_WORK_IMAGE_CREATION:
-                if (resultCode == RESULT_OK) {
-                    if (data.getExtras() != null && data.getExtras().containsKey(BUNDLE_OUT_URI_IMAGE)) {
-                        String path = data.getExtras().getParcelable(BUNDLE_OUT_URI_IMAGE).toString();
-                        viewModel.addPhotoToCurrentList(path);
-                    }
+                if (resultCode == RESULT_OK && data.getExtras() != null && data.getExtras().containsKey(BUNDLE_OUT_URI_IMAGE)) {
+                    String path = data.getExtras().getParcelable(BUNDLE_OUT_URI_IMAGE).toString();
+                    viewModel.addPhotoToCurrentList(path);
                 }
                 break;
             case CODE_WORK_IMAGE_MODIFICATION:
                 switch (resultCode) {
                     case RESULT_OK:
                         // Récupération de l'ancienne position
-                        viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
+                        viewModel.addPhotoToCurrentList(mCurrentPhotoPath);
                         break;
 
                     // On veut supprimer la photo
@@ -213,47 +230,40 @@ public class PostAnnonceActivity extends AppCompatActivity {
                             long idPhoto = data.getExtras().getLong(BUNDLE_KEY_ID);
                             viewModel.deletePhoto(idPhoto);
                         }
+                        break;
+                    default:
+                        break;
                 }
                 break;
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);  // On va appeler WorkImageActivity
-                } else if (resultCode == RESULT_CANCELED) {
-                    // user cancelled Image capture
-                    Toast.makeText(this, "Annulation de la capture", Toast.LENGTH_SHORT).show();
-                } else {
-                    // failed to capture image
-                    Toast.makeText(this, "Echec de la capture", Toast.LENGTH_SHORT).show();
+                    viewModel.addPhotoToCurrentList(mCurrentPhotoPath);
+                    // On tente de ne plus passer par le workImageActivity
+                    // callWorkingImageActivity(mFileUriTemp, Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);  // On va appeler WorkImageActivity
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        try {
-                            File newFile;
-                            if (externalStorage) {
-                                newFile = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, viewModel.getUidUtilisateur());
-                            } else {
-                                newFile = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
-                            }
-
-                            String realPathSrc = MediaUtility.getRealPathFromGaleryUri(this, uri);
-                            MediaUtility.copy(new File(realPathSrc), newFile);
-                            callWorkingImageActivity(Uri.fromFile(newFile), Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    try {
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            File newFile = MediaUtility.copyFileAndDelete(this, externalStorage, viewModel.getUidUtilisateur(), uri);
+                            viewModel.addPhotoToCurrentList(MediaUtility.getRealPathFromGaleryUri(this, uri));
+                            // callWorkingImageActivity(Uri.fromFile(newFile), Constants.PARAM_CRE, CODE_WORK_IMAGE_CREATION, -1);
                         }
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
                     }
-                } else if (resultCode == RESULT_CANCELED) {
-                    Toast.makeText(getApplicationContext(), "Annulation de la capture", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Echec de la capture", Toast.LENGTH_SHORT).show();
                 }
+                break;
+            default:
                 break;
         }
     }
 
+    /**
+     * On veut prendre une nouvelle image, on va au préalable vérifier les permissions.
+     */
     public void onNewPictureClick() {
         // Demande de la permission pour utiliser la camera
         if (Build.VERSION.SDK_INT >= 23) {
@@ -269,6 +279,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Appel de la Galerie Picker
+     */
     public void onGalleryClick() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
@@ -293,14 +306,52 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     /**
+     * Récupération des valeurs dans les champs graphiques pour les insérer dans l'annonce en cours.
+     */
+    private void getAnnonceFromUi() {
+        AnnonceEntity annonceFromUi = viewModel.getCurrentAnnonce();
+        annonceFromUi.setTitre(textViewTitre.getText().toString());
+        annonceFromUi.setDescription(textViewDescription.getText().toString());
+        annonceFromUi.setPrix(Integer.valueOf(textViewPrix.getText().toString()));
+        annonceFromUi.setIdCategorie(viewModel.getCurrentCategorie().getIdCategorie());
+        viewModel.setAnnonce(annonceFromUi);
+    }
+
+    /**
+     * Vérification que les champs obligatoires soient remplis
+     *
+     * @return
+     */
+    private boolean checkValidation() {
+        boolean retour = true;
+        if (textViewTitre.getText().toString().isEmpty()) {
+            textViewTitre.setError("Le titre est obligatoire");
+            retour = false;
+
+        }
+        if (textViewDescription.getText().toString().isEmpty()) {
+            textViewDescription.setError("La description est obligatoire");
+            retour = false;
+        }
+        if (textViewPrix.getText().toString().isEmpty()) {
+            textViewPrix.setError("Le prix est obligatoire");
+            retour = false;
+        }
+        return retour;
+    }
+
+    /**
      * Launch activity to take a picture
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (externalStorage) {
-            mFileUriTemp = MediaUtility.getOutputMediaFileUri(MediaType.IMAGE, viewModel.getUidUtilisateur());
+            File newFile = MediaUtility.saveExternalMediaFile(MediaType.IMAGE, viewModel.getUidUtilisateur());
+            mCurrentPhotoPath = "file:" + newFile.getAbsolutePath();
+            mFileUriTemp = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", newFile);
         } else {
             File file = MediaUtility.saveInternalFile(this, MediaUtility.generatePictureName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+            mCurrentPhotoPath = "file:" + file.getAbsolutePath();
             mFileUriTemp = Uri.fromFile(file);
         }
 
@@ -315,17 +366,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * Cette activité va nous permettre de faire tourner une image.
      * Passage de l'image à modifier sous forme d'un ByteArray
      *
-     * @param imageUri
+     * @param uriImage
      * @param mode
      * @param requestCode
      * @param position
      */
-    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
+    private void callWorkingImageActivity(Uri uriImage, String mode, int requestCode, int position) {
         Intent intent = new Intent();
         intent.setClass(this, WorkImageActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, mode);
-        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
+        bundle.putString(BUNDLE_KEY_PATH, mCurrentPhotoPath);
+        bundle.putParcelable(BUNDLE_IN_URI_IMAGE, uriImage);
         bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
         if (position != -1) {
             bundle.putInt(BUNDLE_KEY_ID, position);

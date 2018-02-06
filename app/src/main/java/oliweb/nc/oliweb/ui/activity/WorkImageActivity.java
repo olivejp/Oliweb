@@ -12,6 +12,10 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.Constants;
@@ -26,8 +30,9 @@ public class WorkImageActivity extends AppCompatActivity {
 
     public static final String BUNDLE_KEY_MODE = "MODE";
     public static final String BUNDLE_KEY_ID = "ID";
-    public static final String BUNDLE_IN_PATH_IMAGE = "BUNDLE_IN_PATH_IMAGE";
+    public static final String BUNDLE_IN_URI_IMAGE = "BUNDLE_IN_URI_IMAGE";
     public static final String BUNDLE_OUT_IMAGE = "BITMAP_OUT";
+    public static final String BUNDLE_KEY_PATH = "BUNDLE_KEY_PATH";
     public static final String BUNDLE_EXTERNAL_STORAGE = "EXTERNAL_STORAGE";
     public static final String BUNDLE_OUT_URI_IMAGE = "BUNDLE_OUT_URI_IMAGE";
 
@@ -43,8 +48,10 @@ public class WorkImageActivity extends AppCompatActivity {
     private String pMode; // Le mode Création/Modification qu'on a reçu en paramètre
     private Bitmap pBitmap; // Le bitmap qu'on va travailler et sauver
     private int pIdPhoto; // Id de la photo dans l'arrayList
-    private Uri pUriImage; // Uri de l'image à modifier (uniquement dans le cas d'une modification)
+    private Uri pUriImage; // Path de l'image à modifier (uniquement dans le cas d'une modification)
+    private String pPathImage; // Path de l'image à modifier (uniquement dans le cas d'une modification)
     private boolean pExternalStorage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,10 +118,15 @@ public class WorkImageActivity extends AppCompatActivity {
         }
 
         // On récupère TOUJOURS le path d'une image qu'on veut modifier
-        if (bundleOrigine.containsKey(BUNDLE_IN_PATH_IMAGE)) {
-            pUriImage = bundleOrigine.getParcelable(BUNDLE_IN_PATH_IMAGE);
+        if (bundleOrigine.containsKey(BUNDLE_IN_URI_IMAGE)) {
+            pUriImage = bundleOrigine.getParcelable(BUNDLE_IN_URI_IMAGE);
             pBitmap = MediaUtility.getBitmapFromUri(this, pUriImage);
             workimageview.setImageBitmap(pBitmap);
+        }
+
+        // On récupère TOUJOURS le path d'une image qu'on veut modifier
+        if (bundleOrigine.containsKey(BUNDLE_KEY_PATH)) {
+            pPathImage = bundleOrigine.getString(BUNDLE_KEY_PATH);
         }
 
         // Creation des variables de retour
@@ -128,6 +140,7 @@ public class WorkImageActivity extends AppCompatActivity {
                 matrix.postRotate(90);
                 Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap, pBitmap.getWidth(), pBitmap.getHeight(), true);
                 pBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+                scaledBitmap.recycle();
                 workimageview.setImageBitmap(pBitmap);
             }
         });
