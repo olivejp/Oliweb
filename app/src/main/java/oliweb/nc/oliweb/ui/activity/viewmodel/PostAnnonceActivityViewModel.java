@@ -61,6 +61,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public LiveData<List<PhotoEntity>> getLiveListPhoto() {
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
+            this.liveListPhoto.setValue(listPhoto);
         }
         return this.liveListPhoto;
     }
@@ -97,7 +98,12 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce = new AnnonceEntity();
         this.annonce.setUUID(UUID.randomUUID().toString());
         this.annonce.setStatut(StatusRemote.TO_SEND);
-        this.listPhoto = new ArrayList<>();
+        if (this.listPhoto == null) {
+            this.listPhoto = new ArrayList<>();
+        }
+        if (this.liveListPhoto == null) {
+            this.liveListPhoto = new MutableLiveData<>();
+        }
         this.liveListPhoto.setValue(this.listPhoto);
     }
 

@@ -90,32 +90,32 @@ public class MediaUtility {
      * Redimenssionne une image pour qu'elle corresponde aux limitations.
      * On ne fait que de la diminution d'image pas d'agrandissement.
      *
-     * @param p_bitmap La bitmap a redimenssionné
-     * @param maxPx    Nombre de pixel maximum de l'image (autant en largeur ou hauteur)
+     * @param bitmap La bitmap a redimenssionné
+     * @param maxPx  Nombre de pixel maximum de l'image (autant en largeur ou hauteur)
      * @return Bitmap redimenssionné
      */
-    public static Bitmap resizeBitmap(Bitmap p_bitmap, int maxPx) {
+    @Nullable
+    public static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
         int newWidth;
         int newHeight;
 
         // L'image est trop grande il faut la réduire
-        if ((p_bitmap.getWidth() > maxPx) || (p_bitmap.getHeight() > maxPx)) {
+        if ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx)) {
             int max;
-            if (p_bitmap.getWidth() > maxPx) {
-                max = p_bitmap.getWidth();
+            if (bitmap.getWidth() > maxPx) {
+                max = bitmap.getWidth();
             } else {
-                max = p_bitmap.getHeight();
+                max = bitmap.getHeight();
             }
 
             double prorata = (double) maxPx / max;
 
-            newWidth = (int) (p_bitmap.getWidth() * prorata);
-            newHeight = (int) (p_bitmap.getHeight() * prorata);
+            newWidth = (int) (bitmap.getWidth() * prorata);
+            newHeight = (int) (bitmap.getHeight() * prorata);
+            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
         } else {
-            return p_bitmap;
+            return bitmap;
         }
-
-        return Bitmap.createScaledBitmap(p_bitmap, newWidth, newHeight, true);
     }
 
     /**
@@ -265,37 +265,37 @@ public class MediaUtility {
         }
     }
 
-
     /**
      * Copie un fichier dans un autre
      *
+     * @param context
      * @param src
      * @param dst
+     * @return false si le fichier source n'a pas pu être lu
      * @throws IOException
      */
-    public static void copyImageFromGallery(Context context, Uri src, Uri dst) throws IOException {
-
-
-        // ToDo finir le resize de l'image avant de l'enregistrer.
+    public static boolean copyAndResizeUriImages(Context context, Uri src, Uri dst) throws IOException {
         Bitmap bitmapSrc = getBitmapFromUri(context, src);
-        resizeBitmap(bitmapSrc, Constants.MAX_SIZE);
+        if (bitmapSrc == null) {
+            Log.e(TAG, "L'image avec l'uri : " + src.toString() + " n'a pas pu être récupérée.");
+            return false;
+        }
 
-        String pathSrc = getRealPathFromGaleryUri(context, src);
-        InputStream in = new FileInputStream(pathSrc);
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, Constants.MAX_SIZE);
+        if (bitmapDst == null) {
+            Log.e(TAG, "Le retaillage de l'image a échoué.");
+            return false;
+        }
+
+        OutputStream out = context.getContentResolver().openOutputStream(dst);
         try {
-            OutputStream out = context.getContentResolver().openOutputStream(dst);
-            try {
-                // Transfer bytes from in to out
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-            } finally {
+            bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
+        } finally {
+            if (out != null) {
+                out.flush();
                 out.close();
             }
-        } finally {
-            in.close();
         }
+        return true;
     }
 }

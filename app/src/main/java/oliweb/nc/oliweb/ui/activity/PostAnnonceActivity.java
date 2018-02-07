@@ -5,12 +5,14 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -42,8 +44,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_EXTERNAL_STORAGE;
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_IN_PATH_IMAGE;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
 import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_OUT_URI_IMAGE;
 
@@ -66,7 +66,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private Uri mFileUriTemp;
     private PhotoAdapter photoAdapter;
     private boolean externalStorage = true;
-    private String currentPhotoPath;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -94,12 +93,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(this).get(PostAnnonceActivityViewModel.class);
-
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(SAVED_CURRENT_PATH)) {
-                currentPhotoPath = savedInstanceState.getString(SAVED_CURRENT_PATH);
-            }
-        }
 
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
@@ -131,38 +124,36 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Récupération des paramètres
         Bundle bundle = getIntent().getExtras();
-        if (bundle != null && bundle.containsKey(BUNDLE_KEY_MODE)) {
-            String mode = bundle.getString(BUNDLE_KEY_MODE);
-            if (mode != null) {
-                if (mode.equals(Constants.PARAM_CRE)) {
-                    viewModel.createNewAnnonce();
-                } else if (mode.equals(Constants.PARAM_MAJ)) {
-                    if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
-                        Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
-                        finish();
-                    }
-                    long idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
-                    viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
-                        if (annonceEntity != null) {
-                            viewModel.setAnnonce(annonceEntity);
-
-                            // Récupération des photos de cette annonce dans l'adapter
-                            viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                                    .observe(PostAnnonceActivity.this, photoEntities -> {
-                                        if (photoEntities != null && !photoEntities.isEmpty()) {
-                                            viewModel.setListPhoto(photoEntities);
-                                            photoAdapter.setListPhotos(photoEntities);
-                                        }
-                                    });
-
-                            displayAnnonce(annonceEntity);
-                        }
-                    });
-                }
-            }
-        } else {
+        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
             Log.e(TAG, "Aucun mode passé en paramètre");
             finish();
+        } else {
+            String mode = bundle.getString(BUNDLE_KEY_MODE);
+            if (mode.equals(Constants.PARAM_CRE)) {
+                viewModel.createNewAnnonce();
+            } else if (mode.equals(Constants.PARAM_MAJ)) {
+                if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
+                    Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
+                    finish();
+                }
+                long idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
+                    if (annonceEntity != null) {
+                        viewModel.setAnnonce(annonceEntity);
+
+                        // Récupération des photos de cette annonce dans l'adapter
+                        viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
+                                .observe(PostAnnonceActivity.this, photoEntities -> {
+                                    if (photoEntities != null && !photoEntities.isEmpty()) {
+                                        viewModel.setListPhoto(photoEntities);
+                                        photoAdapter.setListPhotos(photoEntities);
+                                    }
+                                });
+
+                        displayAnnonce(annonceEntity);
+                    }
+                });
+            }
         }
 
         // Comment pour les tests
@@ -229,24 +220,32 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 break;
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
+                    try {
+                        if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
+                            viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
+                        } else {
+                            Snackbar.make(coordinatorLayout, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }
                 break;
             case DIALOG_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
-                    // Insertion simple
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        insertionFromGallery(uri);
+                    // Insertion multiple
+                    if (data.getClipData() != null) {
+                        int i = -1;
+                        ClipData.Item item;
+                        while (i++ < data.getClipData().getItemCount() - 1) {
+                            item = data.getClipData().getItemAt(i);
+                            insertionFromGallery(item.getUri());
+                        }
                     } else {
-                        // Insertion multiple
-                        if (data.getClipData() != null) {
-                            int i = -1;
-                            ClipData.Item item;
-                            while (i++ < data.getClipData().getItemCount() - 1) {
-                                item = data.getClipData().getItemAt(i);
-                                insertionFromGallery(item.getUri());
-                            }
+                        // Insertion simple
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            insertionFromGallery(uri);
                         }
                     }
                 }
@@ -265,26 +264,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private void insertionFromGallery(Uri uri) {
         try {
             Uri nouvelleUri = generateNewUri();
-            MediaUtility.copyImageFromGallery(getApplicationContext(), uri, nouvelleUri);
-            viewModel.addPhotoToCurrentList(nouvelleUri.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(SAVED_CURRENT_PATH, currentPhotoPath);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(SAVED_CURRENT_PATH)) {
-                currentPhotoPath = savedInstanceState.getString(SAVED_CURRENT_PATH);
+            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, nouvelleUri)) {
+                viewModel.addPhotoToCurrentList(nouvelleUri.toString());
+            } else {
+                Snackbar.make(coordinatorLayout, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -361,19 +347,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * @param requestCode
      * @param position
      */
-    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
-        Intent intent = new Intent();
-        intent.setClass(this, WorkImageActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(BUNDLE_KEY_MODE, mode);
-        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
-        bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
-        if (position != -1) {
-            bundle.putInt(BUNDLE_KEY_ID, position);
-        }
-        intent.putExtras(bundle);
-        startActivityForResult(intent, requestCode);
-    }
+//    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
+//        Intent intent = new Intent();
+//        intent.setClass(this, WorkImageActivity.class);
+//        Bundle bundle = new Bundle();
+//        bundle.putString(BUNDLE_KEY_MODE, mode);
+//        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
+//        bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
+//        if (position != -1) {
+//            bundle.putInt(BUNDLE_KEY_ID, position);
+//        }
+//        intent.putExtras(bundle);
+//        startActivityForResult(intent, requestCode);
+//    }
 
     /**
      * Display the different fields of the annonce

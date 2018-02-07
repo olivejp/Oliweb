@@ -19,6 +19,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.hdodenhof.circleimageview.CircleImageView;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 
@@ -101,7 +102,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolderPh
         PhotoEntity photoEntity;
 
         @BindView(R.id.image_photo)
-        ImageView imagePhoto;
+        CircleImageView imagePhoto;
 
         ViewHolderPhotoAdapter(View itemView) {
             super(itemView);
