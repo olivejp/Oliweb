@@ -47,6 +47,10 @@ public class AnnonceAdapterSingle extends RecyclerView.Adapter<AnnonceAdapterSin
         AnnonceEntity annonce = listAnnonces.get(position);
         viewHolder.singleAnnonce = annonce;
 
+        viewHolder.textTitreAnnonce.setText(annonce.getTitre());
+        viewHolder.textDescriptionAnnonce.setText(annonce.getDescription());
+        viewHolder.textPrixAnnonce.setText(annonce.getPrix());
+
 //        Categorie categorie = ListeCategories.getInstance(mContext).getCategorieById(annonce.getIdCategorieANO());
 //        int color = Color.parseColor(categorie.getCouleurCAT());        // Récupération de la couleur
 //

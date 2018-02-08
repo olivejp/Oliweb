@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import java.util.concurrent.Executors;
 
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
+import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
@@ -65,4 +66,6 @@ public abstract class OliwebDatabase extends RoomDatabase {
     public abstract AnnonceDao AnnonceDao();
 
     public abstract PhotoDao PhotoDao();
+
+    public abstract AnnonceWithPhotosDao AnnonceWithPhotosDao();
 }
