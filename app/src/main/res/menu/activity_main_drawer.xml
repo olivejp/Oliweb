@@ -3,35 +3,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
-    </group>
-
-    <item android:title="Communicate">
+    <item android:title="Mes informations">
         <menu>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:id="@+id/nav_profile"
+                android:icon="@drawable/ic_person_grey_900_48dp"
+                android:title="Mon profil" />
             <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:id="@+id/nav_annonces"
+                android:icon="@drawable/ic_assistant_photo_grey_900_48dp"
+                android:title="Mes annonces" />
+            <item
+                android:id="@+id/nav_favorites"
+                android:icon="@drawable/ic_favorite_grey_900_48dp"
+                android:title="Mes favoris" />
+        </menu>
+    </item>
+
+    <item android:title="Paramètres">
+        <menu>
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/ic_settings_grey_900_48dp"
+                android:title="Paramètres" />
+
+        </menu>
+    </item>
+
+    <item android:title="Connexion">
+        <menu>
+            <item
+                android:id="@+id/nav_connect"
+                android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
+                android:title="Se connecter" />
         </menu>
     </item>
 

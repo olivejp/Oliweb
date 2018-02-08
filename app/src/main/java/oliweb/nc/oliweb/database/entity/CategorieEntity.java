@@ -5,6 +5,9 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */

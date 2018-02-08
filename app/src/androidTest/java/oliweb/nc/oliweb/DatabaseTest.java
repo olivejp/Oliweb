@@ -76,7 +76,7 @@ public class DatabaseTest {
     private PhotoEntity createPhoto(Long idAnnonce) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setIdAnnonce(idAnnonce);
-        photoEntity.setCheminLocal("CheminLocal");
+        photoEntity.setUriLocal("CheminLocal");
         photoEntity.setStatut(StatusRemote.SEND);
         photoEntity.setUUID("UUID");
         photoEntity.setFirebasePath("firebasePath");
