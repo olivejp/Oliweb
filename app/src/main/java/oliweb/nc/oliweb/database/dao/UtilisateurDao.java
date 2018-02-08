@@ -8,6 +8,7 @@ import android.arch.persistence.room.Transaction;
 import java.util.List;
 
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 
 /**
@@ -20,6 +21,11 @@ public interface UtilisateurDao extends AbstractDao<UtilisateurEntity> {
     Maybe<List<UtilisateurEntity>> getListUtilisateur();
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE idUtilisateur = :idUtilisateur")
-    LiveData<UtilisateurEntity> findById(Long idUtilisateur);
+    @Query("SELECT * FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    LiveData<UtilisateurEntity> findByUuid(String UuidUtilisateur);
+
+    @Transaction
+    @Query("SELECT * FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    Single<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
+
 }

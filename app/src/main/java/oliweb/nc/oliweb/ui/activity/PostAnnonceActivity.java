@@ -5,7 +5,6 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,6 +37,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
@@ -51,8 +51,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
 
+    public static final int RC_POST_ANNONCE = 881;
+
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
+    public static final String BUNDLE_POST_ANNONCE_ID = "BUNDLE_POST_ANNONCE_ID";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
@@ -155,12 +158,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 });
             }
         }
-
-        // Comment pour les tests
-        //        if (viewModel.getUidUtilisateur() == null) {
-        //            Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
-        //            finish();
-        //        }
     }
 
     @Override
@@ -174,11 +171,44 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int idItem = item.getItemId();
         switch (idItem) {
             case R.id.menu_post_valid:
-                viewModel.saveAnnonce(null);
-                finish();
-                return true;
+                if (isValidAnnonce()) {
+
+                    // Get annonce from the ui
+                    AnnonceEntity annonceEntity = new AnnonceEntity();
+                    annonceEntity.setTitre(textViewTitre.getText().toString());
+                    annonceEntity.setDescription(textViewDescription.getText().toString());
+                    annonceEntity.setPrix(Integer.valueOf(textViewPrix.getText().toString()));
+                    annonceEntity.setStatut(StatusRemote.TO_SEND);
+                    viewModel.setAnnonce(annonceEntity);
+
+                    // Save the annonce
+                    viewModel.saveAnnonce(ids -> {
+                        if (ids.length > 0) {
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+                    });
+                    return true;
+                }
         }
         return false;
+    }
+
+    private boolean isValidAnnonce() {
+        boolean isValid = true;
+        if (textViewTitre.getText().toString().isEmpty()) {
+            textViewTitre.setError("Le titre est obligatoire.");
+            isValid = false;
+        }
+        if (textViewDescription.getText().toString().isEmpty()) {
+            textViewDescription.setError("La description est obligatoire.");
+            isValid = false;
+        }
+        if (textViewPrix.getText().toString().isEmpty()) {
+            textViewPrix.setError("Le prix est obligatoire.");
+            isValid = false;
+        }
+        return isValid;
     }
 
     @Override

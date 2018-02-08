@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import android.app.NotificationChannelGroup;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -87,11 +86,24 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public void saveAnnonce(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+
+        // Récupération de l'utilisateur en cours
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            this.annonce.setUuidUtilisateur(auth.getCurrentUser().getUid());
+        }
+
         // Sauvegarde de l'annonce
-        this.annonceRepository.save(annonce, ids -> {
-            // Sauvegarde des photos
-            this.photoRepository.save(listPhoto, null);
-        });
+        if (listPhoto.isEmpty()) {
+            this.annonceRepository.save(annonce, onRespositoryPostExecute);
+        } else {
+            this.annonceRepository.save(annonce, ids -> {
+                if (ids.length > 0) {
+                    // Sauvegarde des photos
+                    this.photoRepository.save(listPhoto, onRespositoryPostExecute);
+                }
+            });
+        }
     }
 
     public void createNewAnnonce() {
@@ -147,5 +159,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
         return this.photoRepository.findAllByIdAnnonce(idAnnonce);
+    }
+
+    private void postToFireabse() {
+
     }
 }
