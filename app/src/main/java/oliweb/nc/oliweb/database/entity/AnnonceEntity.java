@@ -33,6 +33,7 @@ public class AnnonceEntity {
     private StatusRemote statut;
     private Long idUtilisateur;
     private Long idCategorie;
+    private String debattre;
 
     @NonNull
     public Long getIdAnnonce() {
@@ -83,14 +84,6 @@ public class AnnonceEntity {
         this.prix = prix;
     }
 
-    public StatusRemote getStatut() {
-        return statut;
-    }
-
-    public void setStatut(StatusRemote statut) {
-        this.statut = statut;
-    }
-
     public String getContactByTel() {
         return contactByTel;
     }
@@ -115,6 +108,14 @@ public class AnnonceEntity {
         this.contactByMsg = contactByMsg;
     }
 
+    public StatusRemote getStatut() {
+        return statut;
+    }
+
+    public void setStatut(StatusRemote statut) {
+        this.statut = statut;
+    }
+
     public Long getIdUtilisateur() {
         return idUtilisateur;
     }
@@ -129,5 +130,13 @@ public class AnnonceEntity {
 
     public void setIdCategorie(Long idCategorie) {
         this.idCategorie = idCategorie;
+    }
+
+    public String getDebattre() {
+        return debattre;
+    }
+
+    public void setDebattre(String debattre) {
+        this.debattre = debattre;
     }
 }

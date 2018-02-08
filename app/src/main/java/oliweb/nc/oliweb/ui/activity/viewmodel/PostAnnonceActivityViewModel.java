@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
+import android.app.NotificationChannelGroup;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -35,6 +36,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private PhotoRepository photoRepository;
 
     private AnnonceEntity annonce;
+    private CategorieEntity categorie;
     private List<PhotoEntity> listPhoto;
 
     private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
@@ -59,6 +61,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public LiveData<List<PhotoEntity>> getLiveListPhoto() {
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
+            this.liveListPhoto.setValue(listPhoto);
         }
         return this.liveListPhoto;
     }
@@ -77,7 +80,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUUID(UUID.randomUUID().toString());
-        photoEntity.setCheminLocal(path);
+        photoEntity.setUriLocal(path);
         photoEntity.setStatut(StatusRemote.TO_SEND);
         this.listPhoto.add(photoEntity);
         this.liveListPhoto.postValue(this.listPhoto);
@@ -95,7 +98,12 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce = new AnnonceEntity();
         this.annonce.setUUID(UUID.randomUUID().toString());
         this.annonce.setStatut(StatusRemote.TO_SEND);
-        this.listPhoto = new ArrayList<>();
+        if (this.listPhoto == null) {
+            this.listPhoto = new ArrayList<>();
+        }
+        if (this.liveListPhoto == null) {
+            this.liveListPhoto = new MutableLiveData<>();
+        }
         this.liveListPhoto.setValue(this.listPhoto);
     }
 
@@ -123,6 +131,14 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
         return this.annonceRepository.findById(idAnnonce);
+    }
+
+    public void setCurrentCategorie(CategorieEntity categorie) {
+        this.categorie = categorie;
+    }
+
+    public CategorieEntity getCurrentCategorie() {
+        return this.categorie;
     }
 
     public LiveData<CategorieEntity> findCategorieById(long idCategorie) {

@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity
     private ImageView profileImage;
     private TextView profileName;
     private TextView profileEmail;
-    private Button buttonSign;
+    private Menu navigationViewMenu;
 
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
-        buttonSign = viewHeader.findViewById(R.id.buttonSign);
+        navigationViewMenu = navigationView.getMenu();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         defineAuthListener();
@@ -81,14 +81,6 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
-        buttonSign.setOnClickListener(view -> {
-            if (mFirebaseUser == null) {
-                signIn();
-            } else {
-                signOut();
-            }
-        });
 
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -124,17 +116,17 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_connect) {
+            if (mFirebaseUser == null) {
+                signIn();
+            } else {
+                signOut();
+            }
+        } else if (id == R.id.nav_settings) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_profile) {
 
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_annonces) {
 
         }
 
@@ -156,7 +148,8 @@ public class MainActivity extends AppCompatActivity
      * Remise à blanc des champs spécifiques à la connexion
      */
     private void signOut() {
-        buttonSign.setText("Se connecter");
+        MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
+        item.setTitle("Se connecter");
         profileName.setText(null);
         profileEmail.setText(null);
         mFirebaseUser = null;
@@ -179,7 +172,8 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
-                buttonSign.setText("Se déconnecter");
+                MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
+                item.setTitle("Se déconnecter");
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
 
@@ -216,8 +210,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        photoTask.setListener(null);
-        photoTask.setContext(null);
+        if (photoTask != null) {
+            photoTask.setListener(null);
+            photoTask.setContext(null);
+        }
         super.onDestroy();
     }
 
@@ -242,7 +238,8 @@ public class MainActivity extends AppCompatActivity
         mAuthStateListener = firebaseAuth -> {
             mFirebaseUser = firebaseAuth.getCurrentUser();
             if (mFirebaseUser != null) {
-                buttonSign.setText("Se déconnecter");
+                MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
+                item.setTitle("Se déconnecter");
                 profileName.setText(mFirebaseUser.getDisplayName());
                 if (mFirebaseUser.getEmail() != null) {
                     profileEmail.setText(mFirebaseUser.getEmail());
