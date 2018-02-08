@@ -182,8 +182,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     viewModel.setAnnonce(annonceEntity);
 
                     // Save the annonce
-                    viewModel.saveAnnonce(ids -> {
-                        if (ids.length > 0) {
+                    viewModel.saveAnnonce(dataReturn -> {
+                        if (dataReturn.getNb() > 0) {
                             setResult(RESULT_OK);
                             finish();
                         }

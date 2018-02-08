@@ -28,6 +28,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.repository.task.TypeTask;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -194,8 +195,8 @@ public class MainActivity extends AppCompatActivity
                 item.setTitle("Se déconnecter");
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
-                viewModel.createUtilisateur(mFirebaseUser, ids -> {
-                    if (ids.length > 0) {
+                viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
+                    if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
                         Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
                     }
                 });

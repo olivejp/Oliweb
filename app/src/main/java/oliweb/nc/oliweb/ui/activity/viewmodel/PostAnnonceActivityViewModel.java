@@ -23,6 +23,7 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
+import oliweb.nc.oliweb.database.repository.task.TypeTask;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -95,15 +96,30 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
         // Sauvegarde de l'annonce
         if (listPhoto.isEmpty()) {
+            // On a pas de photo, on sauvegarde uniquement l'annonce
             this.annonceRepository.save(annonce, onRespositoryPostExecute);
         } else {
-            this.annonceRepository.save(annonce, ids -> {
-                if (ids.length > 0) {
-                    // Sauvegarde des photos
-                    this.photoRepository.save(listPhoto, onRespositoryPostExecute);
+            // On a des photos on va les insérer/modifier également
+            this.annonceRepository.save(annonce, dataReturn -> {
+                if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
+                    if (dataReturn.getIds().length > 0) {
+                        long idAnnonceInserted = dataReturn.getIds()[0];
+                        updataPhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
+                    }
+                } else {
+                    if (dataReturn.getTypeTask() == TypeTask.UPDATE && dataReturn.getNb() > 0) {
+                        updataPhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                    }
                 }
             });
         }
+    }
+
+    private void updataPhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        for (PhotoEntity photo : listPhoto) {
+            photo.setIdAnnonce(idAnnonce);
+        }
+        this.photoRepository.save(listPhoto, onRespositoryPostExecute);
     }
 
     public void createNewAnnonce() {
