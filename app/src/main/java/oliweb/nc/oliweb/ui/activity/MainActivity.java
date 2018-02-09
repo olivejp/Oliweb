@@ -136,7 +136,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_profile) {
 
         } else if (id == R.id.nav_annonces) {
-
+            Intent intent = new Intent();
+            intent.setClass(this, MyAnnoncesActivity.class);
+            startActivity(intent);
         }
 
         drawer.closeDrawer(GravityCompat.START);
