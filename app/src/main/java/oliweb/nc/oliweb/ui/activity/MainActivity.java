@@ -184,10 +184,26 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void createUser(){
+        Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
+        viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
+            if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
+                Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // On s'est signé dans le but de pouvoir poster une annonce
         if (requestCode == RC_SIGN_IN_FOR_POST && resultCode == RESULT_OK) {
+            mFirebaseUser = mFirebaseAuth.getCurrentUser();
+            createUser();
+
+            // Call the task to retrieve the photo
+            callPhotoTask();
+
+            // Refresh data from/to the database here
             launchPostAnnonce();
         }
 
@@ -195,12 +211,7 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
-                viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
-                    if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
-                        Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
-                    }
-                });
+                createUser();
 
                 // Call the task to retrieve the photo
                 callPhotoTask();

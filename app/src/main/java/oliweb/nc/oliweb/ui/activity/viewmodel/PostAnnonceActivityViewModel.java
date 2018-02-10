@@ -86,7 +86,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.liveListPhoto.postValue(this.listPhoto);
     }
 
-    public void saveAnnonce(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void saveAnnonce(String titre, String description, int prix, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+
+        this.annonce.setTitre(titre);
+        this.annonce.setDescription(description);
+        this.annonce.setPrix(prix);
+        this.annonce.setIdCategorie(categorie.getIdCategorie());
+        this.annonce.setStatut(StatusRemote.TO_SEND);
 
         // Récupération de l'utilisateur en cours
         FirebaseAuth auth = FirebaseAuth.getInstance();

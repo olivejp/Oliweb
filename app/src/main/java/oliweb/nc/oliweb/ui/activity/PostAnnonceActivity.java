@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
 
@@ -37,7 +38,6 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
@@ -53,14 +53,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
+    public static final String SAVED_KEY_ID_ANNONCE = "SAVED_KEY_ID_ANNONCE";
+
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
     private PhotoAdapter photoAdapter;
     private boolean externalStorage = true;
+    private long idAnnonce = 0;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -82,6 +86,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private View.OnClickListener onClickPhoto = v -> {
         PhotoEntity photoEntity = (PhotoEntity) v.getTag();
+    };
+
+    // Evenement sur le spinner
+    private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener()
+    {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            viewModel.setCurrentCategorie((CategorieEntity) parent.getItemAtPosition(position));
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
     };
 
     @Override
@@ -108,6 +125,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     }
                 });
 
+        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+
         // Récupération dynamique de la liste des photos
         viewModel.getLiveListPhoto().observe(this, photoEntities -> {
             if (photoEntities != null) {
@@ -131,7 +150,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
                     finish();
                 }
-                long idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
                 viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
                     if (annonceEntity != null) {
                         viewModel.setAnnonce(annonceEntity);
@@ -165,16 +184,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
             case R.id.menu_post_valid:
                 if (isValidAnnonce()) {
 
-                    // Get annonce from the ui
-                    AnnonceEntity annonceEntity = new AnnonceEntity();
-                    annonceEntity.setTitre(textViewTitre.getText().toString());
-                    annonceEntity.setDescription(textViewDescription.getText().toString());
-                    annonceEntity.setPrix(Integer.valueOf(textViewPrix.getText().toString()));
-                    annonceEntity.setStatut(StatusRemote.TO_SEND);
-                    viewModel.setAnnonce(annonceEntity);
+                    // Retrieve datas from the ui
+                    String titre = textViewTitre.getText().toString();
+                    String description = textViewDescription.getText().toString();
+                    int prix = Integer.valueOf(textViewPrix.getText().toString());
 
                     // Save the annonce
-                    viewModel.saveAnnonce(dataReturn -> {
+                    viewModel.saveAnnonce(titre, description, prix, dataReturn -> {
                         if (dataReturn.getNb() > 0) {
                             setResult(RESULT_OK);
                             finish();
@@ -210,6 +226,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CAMERA_PERMISSION_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 callCaptureIntent();
+            }
+        }
+        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                callGalleryIntent();
             }
         }
     }
@@ -252,6 +273,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putLong(SAVED_KEY_ID_ANNONCE, idAnnonce);
+        super.onSaveInstanceState(outState);
+    }
+
     /**
      * Le paramètre uri représente une image dans la gallerie.
      * nouvelleUri correspond à l'emplacement de destination de cette image.
@@ -288,14 +315,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    public void onGalleryClick() {
-        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-        photoPickerIntent.setType("image/*");
-        photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(photoPickerIntent, "Choisissez les images à importer"), DIALOG_GALLERY_IMAGE);
-    }
-
     @OnClick(R.id.add_photo)
     public void onClick(View v) {
         AlertDialog.Builder builder;
@@ -311,6 +330,30 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                 .show();
 
+    }
+
+    public void onGalleryClick() {
+        // Demande de la permission pour utiliser la camera
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
+            } else {
+                callGalleryIntent();
+            }
+        } else {
+            callGalleryIntent();
+        }
+
+
+    }
+
+    private void callGalleryIntent() {
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(photoPickerIntent, "Choisissez les images à importer"), DIALOG_GALLERY_IMAGE);
     }
 
     /**
