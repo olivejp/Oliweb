@@ -4,6 +4,7 @@ import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
+import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
@@ -23,7 +24,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 5, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
+@Database(version = 6, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
     private static OliwebDatabase INSTANCE;
 
@@ -46,6 +47,7 @@ public abstract class OliwebDatabase extends RoomDatabase {
                         Executors.newSingleThreadScheduledExecutor().execute(() -> getInstance(context).categorieDao().insert(populateCategorie()));
                     }
                 })
+                .addMigrations(MIGRATION_1_6)
                 .build();
     }
 
@@ -58,6 +60,13 @@ public abstract class OliwebDatabase extends RoomDatabase {
                 new CategorieEntity("Sport", null)
         };
     }
+
+    static final Migration MIGRATION_1_6 = new Migration(1, 6) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("INSERT INTO categorie (name) VALUES('Automobile'), ('Mobilier'), ('Jouet'), ('Fleur'), ('Sport')");
+        }
+    };
 
     public abstract UtilisateurDao utilisateurDao();
 

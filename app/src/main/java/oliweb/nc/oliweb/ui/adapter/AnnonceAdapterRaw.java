@@ -1,12 +1,12 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -44,8 +44,8 @@ public class AnnonceAdapterRaw extends
         AnnonceWithPhotos annonceWithPhotos = listAnnonces.get(position);
         viewHolder.singleAnnonce = annonceWithPhotos.getAnnonceEntity();
 
-        viewHolder.relativeLayout.setTag(viewHolder.singleAnnonce);
-        viewHolder.relativeLayout.setOnClickListener(this.onClickListener);
+        viewHolder.normalLayoutRaw.setTag(viewHolder.singleAnnonce);
+        viewHolder.normalLayoutRaw.setOnClickListener(this.onClickListener);
 
         // Attribution des données au valeurs graphiques
         viewHolder.textIdAnnonce.setText(String.valueOf(viewHolder.singleAnnonce.getUUID()));
@@ -106,7 +106,7 @@ public class AnnonceAdapterRaw extends
         return listAnnonces.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.text_id_annonce_raw)
         TextView textIdAnnonce;
@@ -126,14 +126,29 @@ public class AnnonceAdapterRaw extends
         @BindView(R.id.img_photo_raw)
         ImageView imgPhoto;
 
-        @BindView(R.id.relative_layout_raw)
-        RelativeLayout relativeLayout;
+        @BindView(R.id.normal_layout_raw)
+        ConstraintLayout normalLayoutRaw;
+
+        @BindView(R.id.deleted_layout_raw)
+        ConstraintLayout deletedLayoutRaw;
 
         AnnonceEntity singleAnnonce;
 
         ViewHolder(View itemLayoutView) {
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
+        }
+
+        public ConstraintLayout getNormalConstraint() {
+            return this.normalLayoutRaw;
+        }
+
+        public ConstraintLayout getDeleteConstraint() {
+            return this.deletedLayoutRaw;
+        }
+
+        public AnnonceEntity getSingleAnnonce() {
+            return this.singleAnnonce;
         }
     }
 }

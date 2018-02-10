@@ -52,7 +52,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
     }
 
     public interface OnRespositoryPostExecute {
-        void onReposirotyPostExecute(DataReturn ids);
+        void onReposirotyPostExecute(DataReturn dataReturn);
     }
 
     public static class DataReturn {

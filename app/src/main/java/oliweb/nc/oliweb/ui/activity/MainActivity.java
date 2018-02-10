@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -193,8 +194,6 @@ public class MainActivity extends AppCompatActivity
         // Authentification simple
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
-                MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
-                item.setTitle("Se déconnecter");
                 mFirebaseUser = mFirebaseAuth.getCurrentUser();
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
                 viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
@@ -271,22 +270,26 @@ public class MainActivity extends AppCompatActivity
     private void defineAuthListener() {
         mAuthStateListener = firebaseAuth -> {
             mFirebaseUser = firebaseAuth.getCurrentUser();
+            prepareNavigationMenu();
             if (mFirebaseUser != null) {
-                MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
-                item.setTitle("Se déconnecter");
                 profileName.setText(mFirebaseUser.getDisplayName());
                 if (mFirebaseUser.getEmail() != null) {
                     profileEmail.setText(mFirebaseUser.getEmail());
                 }
                 callPhotoTask();
             } else {
-                MenuItem item = navigationViewMenu.findItem(R.id.nav_connect);
-                item.setTitle("Se connecter");
                 profileName.setText(null);
                 profileEmail.setText(null);
                 mFirebaseUser = null;
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
             }
         };
+    }
+
+    private void prepareNavigationMenu() {
+        navigationView.getMenu().findItem(R.id.nav_annonces).setEnabled(mFirebaseUser != null);
+        navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
+        navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
+        navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
     }
 }
