@@ -1,12 +1,12 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import android.support.v4.view.ViewPager;
 import android.support.v7.util.DiffUtil;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -14,50 +14,56 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import me.relex.circleindicator.CircleIndicator;
+import oliweb.nc.oliweb.DateConverter;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 
-/**
- * Created by orlanth23 on 07/02/2018.
- */
+public class AnnonceAdapterRaw extends
+        RecyclerView.Adapter<AnnonceAdapterRaw.ViewHolder> {
 
-public class AnnonceAdapterSingle extends RecyclerView.Adapter<AnnonceAdapterSingle.AnnonceAdapterSingleViewHolder> {
-
-    private static final String TAG = AnnonceAdapterSingle.class.getName();
+    public static final String TAG = AnnonceAdapterRaw.class.getName();
 
     private List<AnnonceWithPhotos> listAnnonces;
     private View.OnClickListener onClickListener;
 
-    public AnnonceAdapterSingle(View.OnClickListener onClickListener) {
+    public AnnonceAdapterRaw(View.OnClickListener onClickListener) {
         this.onClickListener = onClickListener;
         this.listAnnonces = new ArrayList<>();
     }
 
     @Override
-    public AnnonceAdapterSingleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
-        return new AnnonceAdapterSingleViewHolder(itemLayoutView);
+        View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_raw, parent, false);
+        return new ViewHolder(itemLayoutView);
     }
 
     @Override
-    public void onBindViewHolder(AnnonceAdapterSingleViewHolder viewHolder, int position) {
-        AnnonceEntity annonce = listAnnonces.get(position).getAnnonceEntity();
-        viewHolder.singleAnnonce = listAnnonces.get(position);
+    public void onBindViewHolder(ViewHolder viewHolder, int position) {
+        AnnonceWithPhotos annonceWithPhotos = listAnnonces.get(position);
+        viewHolder.singleAnnonce = annonceWithPhotos.getAnnonceEntity();
 
-        viewHolder.cardView.setTag(viewHolder.singleAnnonce);
-        viewHolder.cardView.setOnClickListener(this.onClickListener);
+        viewHolder.relativeLayout.setTag(viewHolder.singleAnnonce);
+        viewHolder.relativeLayout.setOnClickListener(this.onClickListener);
 
-        viewHolder.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolder.textDescriptionAnnonce.setText(annonce.getDescription());
-        viewHolder.textPrixAnnonce.setText(String.valueOf(annonce.getPrix() + " XPF"));
-    }
+        // Attribution des données au valeurs graphiques
+        viewHolder.textIdAnnonce.setText(String.valueOf(viewHolder.singleAnnonce.getUUID()));
+        viewHolder.textTitreAnnonce.setText(viewHolder.singleAnnonce.getTitre());
+        viewHolder.textPrixAnnonce.setText(String.valueOf(viewHolder.singleAnnonce.getPrix()));
+        String description = viewHolder.singleAnnonce.getDescription();
+        int nb_caractere = (150 > description.length()) ? description.length() : 150;
+        viewHolder.textDescriptionAnnonce.setText(description.substring(0, nb_caractere).concat("..."));
 
-    @Override
-    public int getItemCount() {
-        return listAnnonces.size();
+        // Récupération de la date de publication
+        viewHolder.textDatePublicationAnnonce.setText(DateConverter.convertDateEntityToUi(viewHolder.singleAnnonce.getDatePublication()));
+
+        // On fait apparaitre une petite photo seulement si l'annonceWithPhotos a une photo
+        if (!annonceWithPhotos.getPhotos().isEmpty()) {
+            viewHolder.imgPhoto.setVisibility(View.VISIBLE);
+        } else {
+            viewHolder.imgPhoto.setVisibility(View.GONE);
+        }
     }
 
     public void setListAnnonces(final List<AnnonceWithPhotos> newListAnnonces) {
@@ -95,32 +101,37 @@ public class AnnonceAdapterSingle extends RecyclerView.Adapter<AnnonceAdapterSin
         }
     }
 
-    class AnnonceAdapterSingleViewHolder extends RecyclerView.ViewHolder {
+    @Override
+    public int getItemCount() {
+        return listAnnonces.size();
+    }
 
-        @BindView(R.id.text_titre_annonce)
+    class ViewHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.text_id_annonce_raw)
+        TextView textIdAnnonce;
+
+        @BindView(R.id.text_titre_annonce_raw)
         TextView textTitreAnnonce;
 
-        @BindView(R.id.text_description_annonce)
+        @BindView(R.id.text_description_annonce_raw)
         TextView textDescriptionAnnonce;
 
-        @BindView(R.id.text_prix_annonce)
+        @BindView(R.id.text_prix_annonce_raw)
         TextView textPrixAnnonce;
 
-        @BindView(R.id.text_date_publication_annonce)
+        @BindView(R.id.text_date_publication_annonce_raw)
         TextView textDatePublicationAnnonce;
 
-        @BindView(R.id.card_view)
-        CardView cardView;
+        @BindView(R.id.img_photo_raw)
+        ImageView imgPhoto;
 
-        @BindView(R.id.view_pager)
-        ViewPager viewPager;
+        @BindView(R.id.relative_layout_raw)
+        RelativeLayout relativeLayout;
 
-        @BindView(R.id.indicator)
-        CircleIndicator indicator;
+        AnnonceEntity singleAnnonce;
 
-        AnnonceWithPhotos singleAnnonce;
-
-        AnnonceAdapterSingleViewHolder(View itemLayoutView) {
+        ViewHolder(View itemLayoutView) {
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
         }

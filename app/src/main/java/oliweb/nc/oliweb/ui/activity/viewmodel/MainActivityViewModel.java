@@ -2,17 +2,13 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseUser;
 
-import java.util.List;
-
 import io.reactivex.Single;
 import oliweb.nc.oliweb.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
@@ -49,7 +45,5 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
     }
 
-    public LiveData<List<AnnonceWithPhotos>> findByUuidUtilisateur(String uuidUtilisateur) {
-        return annonceWithPhotosRepository.findAllAnnoncesByUuidUtilisateur(uuidUtilisateur);
-    }
+
 }

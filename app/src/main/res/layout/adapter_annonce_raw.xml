@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <RelativeLayout
+        android:id="@+id/relative_layout_raw"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp">
+
+        <TextView
+            android:id="@+id/text_id_annonce_raw"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="invisible" />
+
+        <LinearLayout
+            android:id="@+id/linear_titre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/text_titre_annonce_raw"
+                style="@style/TextAppearance.AppCompat.Body2"
+                android:layout_width="0dp"
+                android:layout_height="25dp"
+                android:layout_weight="0.9"
+                android:gravity="center_vertical"
+                android:text="Test titre" />
+
+            <ImageView
+                android:id="@+id/img_photo_raw"
+                android:layout_width="0dp"
+                android:layout_height="25dp"
+                android:layout_weight="0.1"
+                app:srcCompat="@drawable/ic_photo_camera_grey_900_48dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_description_annonce_raw"
+            style="@style/Base.TextAppearance.AppCompat.Body1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/linear_titre"
+            android:gravity="center_vertical"
+            android:text="Test Description surper longue qui va durer un maximum de temps à ce que je l'écrive." />
+
+        <TextView
+            android:id="@+id/text_date_publication_annonce_raw"
+            style="@style/TextAppearance.AppCompat.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:layout_below="@+id/text_description_annonce_raw"
+            android:gravity="center"
+            android:text="23/03/2016" />
+
+        <TextView
+            android:id="@+id/text_prix_annonce_raw"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/text_description_annonce_raw"
+            android:gravity="center"
+            android:text="400 000" />
+    </RelativeLayout>
+</LinearLayout>

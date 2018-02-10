@@ -5,6 +5,7 @@ package oliweb.nc.oliweb.ui.adapter;
  */
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
@@ -12,22 +13,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class AnnonceViewPagerAdapter extends PagerAdapter {
 
-    private ArrayList<String> images;
+    private List<PhotoEntity> photos;
     private LayoutInflater inflater;
-    private Context mContext;
+    private Context context;
 
-    AnnonceViewPagerAdapter(Context context, List<String> images) {
-        this.images = (ArrayList<String>) images;
-        this.mContext = context;
+    AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos) {
+        this.photos = photos;
         this.inflater = LayoutInflater.from(context);
+        this.context = context;
     }
 
     @Override
@@ -37,18 +38,24 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return images.size();
+        return photos.size();
     }
 
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup view, int position) {
-        View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
+        View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, true);
         ImageView myImage = myImageLayout.findViewById(R.id.image);
 
-        GlideApp.with(mContext)
-                .load(images.get(position))
-                .into(myImage);
+        if (photos.get(position).getUriLocal() != null) {
+            myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
+        } else {
+            if (photos.get(position).getFirebasePath() != null) {
+                GlideApp.with(this.context)
+                        .load(photos.get(position))
+                        .into(myImage);
+            }
+        }
 
         view.addView(myImageLayout, 0);
         return myImageLayout;

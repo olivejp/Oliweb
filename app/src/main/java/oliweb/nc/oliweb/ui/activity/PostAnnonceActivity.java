@@ -44,9 +44,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_OUT_URI_IMAGE;
-
 public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
@@ -55,15 +52,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
-    public static final String BUNDLE_POST_ANNONCE_ID = "BUNDLE_POST_ANNONCE_ID";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
-    private static final int CODE_WORK_IMAGE_CREATION = 300;
-    private static final int CODE_WORK_IMAGE_MODIFICATION = 400;
-
-    private static final String SAVED_CURRENT_PATH = "SAVED_CURRENT_PATH";
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
@@ -225,29 +217,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int code_request, int resultCode, Intent data) {
         switch (code_request) {
-            case CODE_WORK_IMAGE_CREATION:
-                if (resultCode == RESULT_OK) {
-                    if (data.getExtras() != null && data.getExtras().containsKey(BUNDLE_OUT_URI_IMAGE)) {
-                        String path = data.getExtras().getParcelable(BUNDLE_OUT_URI_IMAGE).toString();
-                        viewModel.addPhotoToCurrentList(path);
-                    }
-                }
-                break;
-            case CODE_WORK_IMAGE_MODIFICATION:
-                switch (resultCode) {
-                    case RESULT_OK:
-                        // Récupération de l'ancienne position
-                        viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
-                        break;
-
-                    // On veut supprimer la photo
-                    case RESULT_CANCELED:
-                        if (data != null && data.getExtras() != null) {
-                            long idPhoto = data.getExtras().getLong(BUNDLE_KEY_ID);
-                            viewModel.deletePhoto(idPhoto);
-                        }
-                }
-                break;
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
                     try {
@@ -366,30 +335,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
         return uri;
     }
-
-    /**
-     * Appel de l'activity de travail d'une image
-     * Cette activité va nous permettre de faire tourner une image.
-     * Passage de l'image à modifier sous forme d'un ByteArray
-     *
-     * @param imageUri
-     * @param mode
-     * @param requestCode
-     * @param position
-     */
-//    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
-//        Intent intent = new Intent();
-//        intent.setClass(this, WorkImageActivity.class);
-//        Bundle bundle = new Bundle();
-//        bundle.putString(BUNDLE_KEY_MODE, mode);
-//        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
-//        bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
-//        if (position != -1) {
-//            bundle.putInt(BUNDLE_KEY_ID, position);
-//        }
-//        intent.putExtras(bundle);
-//        startActivityForResult(intent, requestCode);
-//    }
 
     /**
      * Display the different fields of the annonce
