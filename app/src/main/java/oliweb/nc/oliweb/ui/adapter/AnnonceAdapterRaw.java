@@ -92,6 +92,7 @@ public class AnnonceAdapterRaw extends
                     AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
                     AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
                     return newAnnonce.getIdAnnonce().equals(oldAnnonce.getIdAnnonce())
+                            && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
                             && newAnnonce.getPrix().equals(oldAnnonce.getPrix());
                 }
