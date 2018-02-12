@@ -54,7 +54,6 @@ public class MediaUtility {
         return false;
     }
 
-
     public static File saveInternalFile(Context context, String fileName) {
         return new File(context.getFilesDir(), fileName);
     }
@@ -204,6 +203,8 @@ public class MediaUtility {
     public static File createExternalMediaFile(String fileName) {
         // External sdcard location
         File mediaStorageDir = new File(
+                // ToDO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                // Suivre lien https://developer.android.com/training/data-storage/files.html#java
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 MediaConstants.IMAGE_DIRECTORY_NAME);
 

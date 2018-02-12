@@ -5,6 +5,8 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,10 +25,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +67,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
-    private PhotoAdapter photoAdapter;
     private boolean externalStorage = true;
     private long idAnnonce = 0;
 
@@ -78,19 +82,25 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
 
-    @BindView(R.id.recyclerImages)
-    RecyclerView recyclerImages;
-
     @BindView(R.id.coordinator_post_annonce)
     CoordinatorLayout coordinatorLayout;
 
-    private View.OnClickListener onClickPhoto = v -> {
-        PhotoEntity photoEntity = (PhotoEntity) v.getTag();
-    };
+    @BindView(R.id.photo_1)
+    ImageView photo1;
+
+    @BindView(R.id.photo_2)
+    ImageView photo2;
+
+    @BindView(R.id.photo_3)
+    ImageView photo3;
+
+    @BindView(R.id.photo_4)
+    ImageView photo4;
+
+    ImageView[] arrayImageViews = new ImageView[4];
 
     // Evenement sur le spinner
-    private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener()
-    {
+    private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             viewModel.setCurrentCategorie((CategorieEntity) parent.getItemAtPosition(position));
@@ -109,12 +119,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
-        // Préparation du recycler view qui recevra les images de l'annonce
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(OrientationHelper.HORIZONTAL);
-        recyclerImages.setLayoutManager(linearLayoutManager);
-        photoAdapter = new PhotoAdapter(this, onClickPhoto);
-        recyclerImages.setAdapter(photoAdapter);
+        arrayImageViews[0] = photo1;
+        arrayImageViews[1] = photo2;
+        arrayImageViews[2] = photo3;
+        arrayImageViews[3] = photo4;
 
         // Alimentation du spinner avec la liste des catégories
         viewModel.getLiveDataListCategorie()
@@ -128,13 +136,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
 
         // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, photoEntities -> {
-            if (photoEntities != null) {
-                List<PhotoEntity> listPhoto = new ArrayList<>();
-                listPhoto.addAll(photoEntities);
-                this.photoAdapter.setListPhotos(listPhoto);
-            }
-        });
+        viewModel.getLiveListPhoto().observe(this, this::initPhotos);
 
         // Récupération des paramètres
         Bundle bundle = getIntent().getExtras();
@@ -146,6 +148,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else if (mode.equals(Constants.PARAM_MAJ)) {
+                // On a une annonce à mettre à jour
                 if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
                     Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
                     finish();
@@ -157,18 +160,54 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
                         // Récupération des photos de cette annonce dans l'adapter
                         viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                                .observe(PostAnnonceActivity.this, photoEntities -> {
-                                    if (photoEntities != null && !photoEntities.isEmpty()) {
-                                        viewModel.setListPhoto(photoEntities);
-                                        photoAdapter.setListPhotos(photoEntities);
-                                    }
-                                });
+                                .observe(PostAnnonceActivity.this, this::initPhotos);
 
                         displayAnnonce(annonceEntity);
                     }
                 });
             }
         }
+    }
+
+    /**
+     * Try to drop photos in the correct imageView
+     *
+     * @param photoEntities
+     */
+    private void initPhotos(List<PhotoEntity> photoEntities) {
+        if (photoEntities != null && !photoEntities.isEmpty()) {
+            viewModel.setListPhoto(photoEntities);
+            for (PhotoEntity photo : photoEntities) {
+                boolean insertion = false;
+                int i = 0;
+                while (!insertion && i < 4) {
+                    insertion = insertPhotoInImageView(arrayImageViews[i], photo);
+                    i++;
+                }
+            }
+        }
+    }
+
+    /**
+     * If the imageView has no tag then insert photo and return True, return False otherwise.
+     *
+     * @param imageView
+     * @param photoEntity
+     * @return
+     */
+    private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
+        if (imageView.getTag() == null) {
+            imageView.setTag(photoEntity);
+            try {
+                InputStream in = getContentResolver().openInputStream(Uri.parse(photoEntity.getUriLocal()));
+                Bitmap bitmap = BitmapFactory.decodeStream(in);
+                imageView.setImageBitmap(bitmap);
+                return true;
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+        return false;
     }
 
     @Override
@@ -187,7 +226,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     // Retrieve datas from the ui
                     String titre = textViewTitre.getText().toString();
                     String description = textViewDescription.getText().toString();
-                    int prix = Integer.valueOf(textViewPrix.getText().toString());
+                    int prix = Integer.parseInt(textViewPrix.getText().toString());
 
                     // Save the annonce
                     viewModel.saveAnnonce(titre, description, prix, dataReturn -> {
@@ -235,9 +274,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("squid:S3776")
     @Override
-    protected void onActivityResult(int code_request, int resultCode, Intent data) {
-        switch (code_request) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
                     try {
@@ -315,21 +355,26 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    @OnClick(R.id.add_photo)
+    @OnClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
     public void onClick(View v) {
-        AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
-        } else {
-            builder = new AlertDialog.Builder(this);
-        }
-        builder.setTitle("Envie d'ajouter une nouvelle image ?")
-                .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
-                .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
-                .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
-                .setIcon(R.drawable.ic_add_a_photo_black_48dp)
-                .show();
+        if (v.getTag() != null) {
+            // Mode mise à jour
 
+        } else {
+            // Mode création d'une nouvelle photo
+            AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
+            } else {
+                builder = new AlertDialog.Builder(this);
+            }
+            builder.setTitle("Envie d'ajouter une nouvelle image ?")
+                    .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
+                    .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
+                    .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
+                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                    .show();
+        }
     }
 
     public void onGalleryClick() {

@@ -110,15 +110,51 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@id/scroll_view" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerImages"
-            android:layout_width="0dp"
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/linear_photos"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
+            android:orientation="horizontal"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_photos" />
+            app:layout_constraintTop_toBottomOf="@id/text_photos">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/photo_1"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/photo_2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/photo_2"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintLeft_toRightOf="@+id/photo_1"
+                app:layout_constraintRight_toLeftOf="@+id/photo_3"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/photo_3"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintLeft_toRightOf="@+id/photo_2"
+                app:layout_constraintRight_toLeftOf="@+id/photo_4"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/photo_4"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintLeft_toRightOf="@+id/photo_3"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+        </android.support.constraint.ConstraintLayout>
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/coordinator_post_annonce"
