@@ -14,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -81,9 +82,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
-
-    @BindView(R.id.coordinator_post_annonce)
-    CoordinatorLayout coordinatorLayout;
 
     @BindView(R.id.photo_1)
     ImageView photo1;
@@ -284,7 +282,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                         if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
                             viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
                         } else {
-                            Snackbar.make(coordinatorLayout, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
                         }
                     } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
@@ -333,7 +331,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, nouvelleUri)) {
                 viewModel.addPhotoToCurrentList(nouvelleUri.toString());
             } else {
-                Snackbar.make(coordinatorLayout, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }
         } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
@@ -414,9 +412,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private Uri generateNewUri() {
-        Uri uri;
+        Uri uri = null;
         if (externalStorage) {
-            uri = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+            Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+            if (pair != null) {
+                uri = pair.first;
+            } else {
+                Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            }
         } else {
             File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
             uri = Uri.fromFile(file);

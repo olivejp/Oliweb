@@ -80,6 +80,11 @@ public class WorkImageFragment extends Fragment {
 
     @OnClick(R.id.frag_work_image_button_delete_photo)
     public void deleteImage(View v) {
-        getContext().deleteFile(uriPhoto)
+        // TODO : Do something here to delete the Image.
+    }
+
+    @OnClick(R.id.frag_work_image_button_valid_photo)
+    public void validateImage(View v) {
+        // TODO : Do something here to delete the Image.
     }
 }
