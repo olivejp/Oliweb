@@ -12,14 +12,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.OrientationHelper;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,12 +29,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import de.hdodenhof.circleimageview.CircleImageView;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -47,8 +43,8 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class PostAnnonceActivity extends AppCompatActivity {
 
@@ -84,18 +80,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
     EditText textViewPrix;
 
     @BindView(R.id.photo_1)
-    ImageView photo1;
+    CircleImageView photo1;
 
     @BindView(R.id.photo_2)
-    ImageView photo2;
+    CircleImageView photo2;
 
     @BindView(R.id.photo_3)
-    ImageView photo3;
+    CircleImageView photo3;
 
     @BindView(R.id.photo_4)
-    ImageView photo4;
+    CircleImageView photo4;
 
-    ImageView[] arrayImageViews = new ImageView[4];
+    CircleImageView[] arrayImageViews = new CircleImageView[4];
 
     // Evenement sur le spinner
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
@@ -173,6 +169,15 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * @param photoEntities
      */
     private void initPhotos(List<PhotoEntity> photoEntities) {
+
+        // Init default photos icon
+        for (CircleImageView circleImageView : arrayImageViews) {
+            GlideApp.with(this)
+                    .asDrawable()
+                    .load(R.drawable.ic_add_a_photo_grey_900_48dp)
+                    .into(circleImageView);
+        }
+
         if (photoEntities != null && !photoEntities.isEmpty()) {
             viewModel.setListPhoto(photoEntities);
             for (PhotoEntity photo : photoEntities) {
