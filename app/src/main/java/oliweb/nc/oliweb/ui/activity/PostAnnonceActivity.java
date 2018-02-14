@@ -37,6 +37,7 @@ import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -52,6 +53,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     public static final int RC_POST_ANNONCE = 881;
 
+    public static final String BUNDLE_KEY_UID_USER = "BUNDLE_KEY_UID_USER";
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
@@ -64,8 +66,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
-    private boolean externalStorage = true;
     private long idAnnonce = 0;
+    private boolean externalStorage = true;
+    private String uidUser;
+    private String mode;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -108,10 +112,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ViewModel creation
         viewModel = ViewModelProviders.of(this).get(PostAnnonceActivityViewModel.class);
 
+        // View creation
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
+
+        // Catch preferences
+        externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
 
         arrayImageViews[0] = photo1;
         arrayImageViews[1] = photo2;
@@ -133,12 +143,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
         viewModel.getLiveListPhoto().observe(this, this::initPhotos);
 
         // Récupération des paramètres
-        Bundle bundle = getIntent().getExtras();
-        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
-            Log.e(TAG, "Aucun mode passé en paramètre");
+        Bundle bundle;
+        if (savedInstanceState != null) {
+            bundle = savedInstanceState;
+        } else {
+            bundle = getIntent().getExtras();
+        }
+        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || !bundle.containsKey(BUNDLE_KEY_UID_USER) || bundle.getString(BUNDLE_KEY_MODE) == null || bundle.getString(BUNDLE_KEY_UID_USER) == null) {
+            Log.e(TAG, "Missing mandatory parameter");
             finish();
         } else {
-            String mode = bundle.getString(BUNDLE_KEY_MODE);
+            mode = bundle.getString(BUNDLE_KEY_MODE);
+            uidUser = bundle.getString(BUNDLE_KEY_UID_USER);
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else if (mode.equals(Constants.PARAM_MAJ)) {
@@ -200,8 +216,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
         if (imageView.getTag() == null) {
-            imageView.setTag(photoEntity);
             try {
+                imageView.setTag(photoEntity);
                 InputStream in = getContentResolver().openInputStream(Uri.parse(photoEntity.getUriLocal()));
                 Bitmap bitmap = BitmapFactory.decodeStream(in);
                 imageView.setImageBitmap(bitmap);
@@ -232,7 +248,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     int prix = Integer.parseInt(textViewPrix.getText().toString());
 
                     // Save the annonce
-                    viewModel.saveAnnonce(titre, description, prix, dataReturn -> {
+                    viewModel.saveAnnonce(titre, description, prix, uidUser, dataReturn -> {
                         if (dataReturn.getNb() > 0) {
                             setResult(RESULT_OK);
                             finish();
@@ -319,6 +335,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putLong(SAVED_KEY_ID_ANNONCE, idAnnonce);
+        outState.putString(BUNDLE_KEY_UID_USER, uidUser);
+        outState.putString(BUNDLE_KEY_MODE, mode);
         super.onSaveInstanceState(outState);
     }
 
@@ -419,14 +437,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private Uri generateNewUri() {
         Uri uri = null;
         if (externalStorage) {
-            Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+            Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, uidUser);
             if (pair != null) {
                 uri = pair.first;
             } else {
                 Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
             }
         } else {
-            File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
+            File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, uidUser));
             uri = Uri.fromFile(file);
         }
         return uri;

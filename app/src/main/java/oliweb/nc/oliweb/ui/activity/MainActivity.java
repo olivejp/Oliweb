@@ -25,8 +25,6 @@ import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
 import oliweb.nc.oliweb.network.CallLoginUi;
@@ -34,7 +32,7 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
-import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
+import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -42,7 +40,6 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener {
 
     public static final int RC_SIGN_IN = 1001;
-    public static final int RC_SIGN_IN_FOR_POST = 1002;
 
     private static final String TAG = MainActivity.class.getName();
 
@@ -119,7 +116,6 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -139,30 +135,12 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
+            intent.putExtra(ARG_UID_USER, mFirebaseUser.getUid());
             startActivity(intent);
         }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    private void launchPostAnnonce() {
-        Intent intent = new Intent();
-        Bundle bundle = new Bundle();
-        bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
-        intent.putExtras(bundle);
-        intent.setClass(this, PostAnnonceActivity.class);
-        startActivityForResult(intent, RC_POST_ANNONCE);
-    }
-
-    @OnClick(R.id.fab)
-    public void onClickFab(View view) {
-        if (mFirebaseAuth.getCurrentUser() == null) {
-            signIn(RC_SIGN_IN_FOR_POST);
-        } else {
-            launchPostAnnonce();
-        }
-
     }
 
     /**
@@ -184,7 +162,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void createUser(){
+    private void createUser() {
         Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
         viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
             if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
@@ -195,18 +173,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // On s'est signé dans le but de pouvoir poster une annonce
-        if (requestCode == RC_SIGN_IN_FOR_POST && resultCode == RESULT_OK) {
-            mFirebaseUser = mFirebaseAuth.getCurrentUser();
-            createUser();
-
-            // Call the task to retrieve the photo
-            callPhotoTask();
-
-            // Refresh data from/to the database here
-            launchPostAnnonce();
-        }
-
         // Authentification simple
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {

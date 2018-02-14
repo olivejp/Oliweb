@@ -7,8 +7,6 @@ import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -66,13 +64,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
-    public String getUidUtilisateur() {
-        if (FirebaseAuth.getInstance() != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
-            return FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-        return null;
-    }
-
     public LiveData<List<CategorieEntity>> getLiveDataListCategorie() {
         return liveDataListCategorie;
     }
@@ -86,19 +77,14 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.liveListPhoto.postValue(this.listPhoto);
     }
 
-    public void saveAnnonce(String titre, String description, int prix, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void saveAnnonce(String titre, String description, int prix, String uidUser, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
 
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
         this.annonce.setPrix(prix);
         this.annonce.setIdCategorie(categorie.getIdCategorie());
         this.annonce.setStatut(StatusRemote.TO_SEND);
-
-        // Récupération de l'utilisateur en cours
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
-            this.annonce.setUuidUtilisateur(auth.getCurrentUser().getUid());
-        }
+        this.annonce.setUuidUtilisateur(uidUser);
 
         // Sauvegarde de l'annonce
         if (listPhoto.isEmpty()) {

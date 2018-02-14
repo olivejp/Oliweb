@@ -9,13 +9,20 @@ import android.content.SharedPreferences;
 
 public class SharedPreferencesHelper {
 
-    private static SharedPreferencesHelper INSTANCE;
-    private static SharedPreferences sharedPreferences;
-    private static SharedPreferences.Editor editor;
+    private static final String SHARED_PREFERENCE_NAME = "OLIWEB";
+    private static final String PREF_DISPLAY_MODE = "DISPLAY_MODE";
+    private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
+    public static final int PREF_VALUE_DISPLAY_MODE_RAW = 500;
+    public static final int PREF_VALUE_DISPLAY_MODE_BEAUTY = 600;
 
-    public static SharedPreferencesHelper getInstance(Context context, String sharedPreferenceName){
+
+    private static SharedPreferencesHelper INSTANCE;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+
+    public static SharedPreferencesHelper getInstance(Context context){
         if (INSTANCE == null) {
-            INSTANCE = new SharedPreferencesHelper(context, sharedPreferenceName);
+            INSTANCE = new SharedPreferencesHelper(context, SHARED_PREFERENCE_NAME);
         }
         return INSTANCE;
     }
@@ -31,5 +38,21 @@ public class SharedPreferencesHelper {
 
     public SharedPreferences.Editor getEditor() {
         return editor;
+    }
+
+    public int getDisplayMode(){
+        return sharedPreferences.getInt(PREF_DISPLAY_MODE, PREF_VALUE_DISPLAY_MODE_RAW);
+    }
+
+    public boolean getUseExternalStorage(){
+        return sharedPreferences.getBoolean(PREF_USE_EXTERNAL_STORAGE, false);
+    }
+
+    public boolean setDisplayMode(int value){
+        return editor.putInt(PREF_DISPLAY_MODE, value).commit();
+    }
+
+    public boolean setUseExternalStorage(boolean useExternalStorage){
+        return editor.putBoolean(PREF_USE_EXTERNAL_STORAGE, useExternalStorage).commit();
     }
 }
