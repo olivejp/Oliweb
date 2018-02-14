@@ -76,6 +76,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             intent.setClass(this, PostAnnonceActivity.class);
             bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
             bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
+            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_USER, uidUser);
             intent.putExtras(bundle);
             startActivity(intent);
         };
