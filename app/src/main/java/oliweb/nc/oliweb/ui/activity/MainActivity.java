@@ -129,7 +129,9 @@ public class MainActivity extends AppCompatActivity
                 signOut();
             }
         } else if (id == R.id.nav_settings) {
-
+            Intent intent = new Intent();
+            intent.setClass(this, SettingsActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_profile) {
 
         } else if (id == R.id.nav_annonces) {

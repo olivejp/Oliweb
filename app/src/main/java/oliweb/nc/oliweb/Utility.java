@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -46,6 +47,25 @@ public class Utility {
         } else {
             return false;
         }
+    }
+
+    /**
+     * @param fragmentManager Get from the context
+     * @param message         The message to be send
+     * @param type            From NoticeDialogFragment
+     * @param idDrawable      From NoticeDialogFragment
+     * @param tag             A text to be a tag
+     */
+    public static void sendDialogByFragmentManagerWithRes(FragmentManager fragmentManager, String message, int type, @DrawableRes int idDrawable, @Nullable String tag, @Nullable Bundle bundlePar, NoticeDialogFragment.DialogListener listener) {
+        NoticeDialogFragment dialogErreur = new NoticeDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(NoticeDialogFragment.P_MESSAGE, message);
+        bundle.putInt(NoticeDialogFragment.P_TYPE, type);
+        bundle.putInt(NoticeDialogFragment.P_IMG, idDrawable);
+        bundle.putBundle(NoticeDialogFragment.P_BUNDLE, bundlePar);
+        dialogErreur.setListener(listener);
+        dialogErreur.setArguments(bundle);
+        dialogErreur.show(fragmentManager, tag);
     }
 
     /**

@@ -19,7 +19,7 @@ import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.RecyclerItemTouchHelper;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
-import oliweb.nc.oliweb.Utilities;
+import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
@@ -122,7 +122,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
             if (direction == ItemTouchHelper.LEFT) {
                 // Appel d'un fragment qui va demander à l'utilisateur s'il est sûr de vouloir supprimer le colis.
-                Utilities.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(),
+                Utility.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(),
                         String.format("Supprimer l'annonce %s ?\n\nLe numéro de suivi ainsi que toutes ses étapes seront perdues.", annonce.getTitre()),
                         NoticeDialogFragment.TYPE_BOUTON_YESNO,
                         R.drawable.ic_delete_grey_900_24dp,

@@ -35,7 +35,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private AnnonceEntity annonce;
     private CategorieEntity categorie;
-    private List<PhotoEntity> listPhoto;
+    private List<PhotoEntity> listPhoto = new ArrayList<>();
 
     private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
     private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
@@ -87,7 +87,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setUuidUtilisateur(uidUser);
 
         // Sauvegarde de l'annonce
-        if (listPhoto.isEmpty()) {
+        if (listPhoto == null || listPhoto.isEmpty()) {
             // On a pas de photo, on sauvegarde uniquement l'annonce
             this.annonceRepository.save(annonce, onRespositoryPostExecute);
         } else {
@@ -118,9 +118,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce = new AnnonceEntity();
         this.annonce.setUUID(UUID.randomUUID().toString());
         this.annonce.setStatut(StatusRemote.TO_SEND);
-        if (this.listPhoto == null) {
-            this.listPhoto = new ArrayList<>();
-        }
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
         }
