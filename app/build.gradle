@@ -30,13 +30,14 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.0.2'
     implementation 'com.android.support:design:27.0.2'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0-beta5'
     implementation 'com.jakewharton:butterknife:8.8.1'
     implementation "android.arch.persistence.room:runtime:1.0.0"
     implementation "android.arch.paging:runtime:1.0.0-alpha4-1"
-    implementation 'android.arch.lifecycle:extensions:1.0.0'
+    implementation 'android.arch.lifecycle:extensions:1.1.0'
     implementation 'android.arch.persistence.room:rxjava2:1.0.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
+    implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
     implementation 'org.projectlombok:lombok:1.16.20'
@@ -45,24 +46,25 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:11.8.0'
     implementation 'com.firebaseui:firebase-ui-auth:3.1.0'
     implementation 'com.google.firebase:firebase-storage:11.8.0'
-    implementation 'com.facebook.android:facebook-android-sdk:4.+'
-    implementation 'com.github.bumptech.glide:glide:4.2.0'
+    implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
+    implementation 'com.github.bumptech.glide:glide:4.6.1'
     implementation 'com.caverock:androidsvg:1.2.1'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
 
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    androidTestImplementation 'android.arch.core:core-testing:1.0.0'
+    androidTestImplementation 'android.arch.core:core-testing:1.1.0'
 
-    testImplementation "android.arch.core:core-testing:1.0.0"
+    testImplementation "android.arch.core:core-testing:1.1.0"
     testImplementation "android.arch.persistence.room:testing:1.0.0"
     testImplementation 'junit:junit:4.12'
 
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.1.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.6.1'
     annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
-    annotationProcessor "android.arch.lifecycle:compiler:1.0.0"
+    annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     annotationProcessor "org.projectlombok:lombok:1.16.20"
 }
+
 
 apply plugin: 'com.google.gms.google-services'

@@ -11,37 +11,27 @@ import android.support.annotation.NonNull;
 @Entity(tableName = "utilisateur")
 public class UtilisateurEntity {
     @NonNull
-    @PrimaryKey(autoGenerate = true)
-    private Long idUtilisateur;
-    private String UUID;
-    private Integer telephone;
+    @PrimaryKey
+    private String UuidUtilisateur;
+    private String telephone;
     private String email;
     private Long dateCreation;
     private Long dateLastConnexion;
-    private String statut;
 
     @NonNull
-    public Long getIdUtilisateur() {
-        return idUtilisateur;
+    public String getUuidUtilisateur() {
+        return UuidUtilisateur;
     }
 
-    public void setIdUtilisateur(@NonNull Long idUtilisateur) {
-        this.idUtilisateur = idUtilisateur;
+    public void setUuidUtilisateur(@NonNull String uuidUtilisateur) {
+        UuidUtilisateur = uuidUtilisateur;
     }
 
-    public String getUUID() {
-        return UUID;
-    }
-
-    public void setUUID(String UUID) {
-        this.UUID = UUID;
-    }
-
-    public Integer getTelephone() {
+    public String getTelephone() {
         return telephone;
     }
 
-    public void setTelephone(Integer telephone) {
+    public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
 
@@ -67,13 +57,5 @@ public class UtilisateurEntity {
 
     public void setDateLastConnexion(Long dateLastConnexion) {
         this.dateLastConnexion = dateLastConnexion;
-    }
-
-    public String getStatut() {
-        return statut;
-    }
-
-    public void setStatut(String statut) {
-        this.statut = statut;
     }
 }

@@ -12,10 +12,6 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.Constants;

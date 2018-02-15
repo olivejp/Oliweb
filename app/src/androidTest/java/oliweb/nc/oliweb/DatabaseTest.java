@@ -40,6 +40,7 @@ public class DatabaseTest {
 
     private static final String EMAIL = "orlanth23@hotmail.com";
     private static final String NAME_CATEGORIE = "Automobiles";
+    private static final String UUID_UTILISATEUR = "UUIDUtilisateur";
 
     private CategorieEntity createCategorie() {
         CategorieEntity categorieEntity = new CategorieEntity();
@@ -51,13 +52,13 @@ public class DatabaseTest {
     private UtilisateurEntity createUtilisateur() {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setDateCreation(DateConverter.getNowEntity());
-        utilisateurEntity.setTelephone(123456);
+        utilisateurEntity.setTelephone("123456");
         utilisateurEntity.setEmail(EMAIL);
-        utilisateurEntity.setUUID("UUIDUtilisateur");
+        utilisateurEntity.setUuidUtilisateur(UUID_UTILISATEUR);
         return utilisateurEntity;
     }
 
-    private AnnonceEntity createAnnonce(Long idUtilisateur, Long idCategorie) {
+    private AnnonceEntity createAnnonce(String uuidUtilisateur, Long idCategorie) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annonceEntity.setTitre("Name");
         annonceEntity.setContactByEmail("1");
@@ -69,7 +70,7 @@ public class DatabaseTest {
         annonceEntity.setStatut(StatusRemote.TO_SEND);
         annonceEntity.setUUID("123456");
         annonceEntity.setIdCategorie(idCategorie);
-        annonceEntity.setIdUtilisateur(idUtilisateur);
+        annonceEntity.setUuidUtilisateur(uuidUtilisateur);
         return annonceEntity;
     }
 
@@ -96,16 +97,13 @@ public class DatabaseTest {
     @Test
     public void writeCategorie() throws Exception {
         final CountDownLatch signal = new CountDownLatch(1);
-        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = new AbstractRepositoryCudTask.OnRespositoryPostExecute() {
-            @Override
-            public void onReposirotyPostExecute(Long[] ids) {
-                if (ids.length > 0) {
-                    Assert.assertTrue(true);
-                } else {
-                    Assert.assertTrue(false);
-                }
-                signal.countDown();
+        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = dataReturn -> {
+            if (dataReturn.getIds().length > 0) {
+                Assert.assertTrue(true);
+            } else {
+                Assert.assertTrue(false);
             }
+            signal.countDown();
         };
         categorieRepository.insert(postExecute, createCategorie());
         signal.await();
@@ -114,17 +112,14 @@ public class DatabaseTest {
     @Test
     public void writeUtilisateur() throws Exception {
         final CountDownLatch signal = new CountDownLatch(1);
-        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = new AbstractRepositoryCudTask.OnRespositoryPostExecute() {
-            @Override
-            public void onReposirotyPostExecute(Long[] ids) {
-                if (ids.length > 0) {
-                    String email = utilisateurRepository.findById(ids[0]).getValue().getEmail();
-                    Assert.assertEquals(EMAIL, email);
-                } else {
-                    Assert.assertTrue(false);
-                }
-                signal.countDown();
+        AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = dataReturn -> {
+            if (dataReturn.getIds().length > 0) {
+                String email = utilisateurRepository.findById(UUID_UTILISATEUR).getValue().getEmail();
+                Assert.assertEquals(EMAIL, email);
+            } else {
+                Assert.assertTrue(false);
             }
+            signal.countDown();
         };
         utilisateurRepository.insert(postExecute, createUtilisateur());
         signal.await();

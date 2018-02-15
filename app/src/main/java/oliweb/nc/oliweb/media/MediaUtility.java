@@ -10,10 +10,10 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -55,10 +55,6 @@ public class MediaUtility {
     }
 
 
-    public static File saveInternalFile(Context context, String fileName) {
-        return new File(context.getFilesDir(), fileName);
-    }
-
     /**
      * Force a refresh of media content provider for specific item
      *
@@ -95,7 +91,7 @@ public class MediaUtility {
      * @return Bitmap redimenssionné
      */
     @Nullable
-    public static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
+    private static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
         int newWidth;
         int newHeight;
 
@@ -166,6 +162,7 @@ public class MediaUtility {
      * @return
      */
     public static Bitmap getBitmapFromUri(Context context, Uri uri) {
+        Log.d(TAG, "getBitmapFromUri uri = " + uri.toString());
         InputStream imageStream;
         Bitmap bitmap = null;
         try {
@@ -186,14 +183,31 @@ public class MediaUtility {
      * @return
      */
     @Nullable
-    public static Uri createNewMediaFileUri(Context context, MediaType type, String prefixName) {
+    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type, String prefixName) {
         String fileName = generateMediaName(type, prefixName);
-        File newFile = createExternalMediaFile(fileName);
+        File newFile;
+        if (externalStorage) {
+            newFile = createExternalMediaFile(fileName);
+        } else {
+            newFile = createInternalMediaFile(context, fileName);
+        }
         if (newFile != null) {
-            return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile);
+            return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
         }
         return null;
     }
+
+    /**
+     * Create new internal file
+     *
+     * @param context
+     * @param fileName
+     * @return
+     */
+    public static File createInternalMediaFile(Context context, String fileName) {
+        return new File(context.getFilesDir(), fileName);
+    }
+
 
     /**
      * Retourne le nom d'une nouvelle image / d'une video
@@ -201,9 +215,11 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    public static File createExternalMediaFile(String fileName) {
+    private static File createExternalMediaFile(String fileName) {
         // External sdcard location
         File mediaStorageDir = new File(
+                // TODO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                // Suivre lien https://developer.android.com/training/data-storage/files.html#java
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 MediaConstants.IMAGE_DIRECTORY_NAME);
 

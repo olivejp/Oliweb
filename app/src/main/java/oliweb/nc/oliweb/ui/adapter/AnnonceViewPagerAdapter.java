@@ -1,0 +1,68 @@
+package oliweb.nc.oliweb.ui.adapter;
+
+/**
+ * Created by 2761oli on 21/12/2017.
+ */
+
+import android.content.Context;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.v4.view.PagerAdapter;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+
+import java.util.List;
+
+import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
+
+public class AnnonceViewPagerAdapter extends PagerAdapter {
+
+    private List<PhotoEntity> photos;
+    private LayoutInflater inflater;
+    private Context context;
+
+    AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos) {
+        this.photos = photos;
+        this.inflater = LayoutInflater.from(context);
+        this.context = context;
+    }
+
+    @Override
+    public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+        container.removeView((View) object);
+    }
+
+    @Override
+    public int getCount() {
+        return photos.size();
+    }
+
+    @NonNull
+    @Override
+    public Object instantiateItem(@NonNull ViewGroup view, int position) {
+        View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, true);
+        ImageView myImage = myImageLayout.findViewById(R.id.image);
+
+        if (photos.get(position).getUriLocal() != null) {
+            myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
+        } else {
+            if (photos.get(position).getFirebasePath() != null) {
+                GlideApp.with(this.context)
+                        .load(photos.get(position))
+                        .into(myImage);
+            }
+        }
+
+        view.addView(myImageLayout, 0);
+        return myImageLayout;
+    }
+
+    @Override
+    public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+        return view.equals(object);
+    }
+}

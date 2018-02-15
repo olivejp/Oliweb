@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import java.util.List;
 
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -33,39 +35,55 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return INSTANCE;
     }
 
-    public boolean exist(PhotoEntity photoEntity) {
-        if (photoEntity.getIdPhoto() == null) {
-            return false;
-        } else {
-            return this.photoDao.findById(photoEntity.getIdPhoto()) != null;
-        }
-    }
-
     public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        if (exist(photoEntity)) {
-            update(onRespositoryPostExecute, photoEntity);
+        if (photoEntity.getIdPhoto() != null) {
+            this.photoDao.findSingleById(photoEntity.getIdPhoto())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe((photoEntity1, throwable) -> {
+                        if (throwable != null) {
+                            // This user don't exists already, create it
+                            insert(onRespositoryPostExecute, photoEntity);
+                        } else {
+                            if (photoEntity1 != null) {
+                                // User exists, just update it
+                                update(onRespositoryPostExecute, photoEntity);
+                            }
+                        }
+                    });
         } else {
             insert(onRespositoryPostExecute, photoEntity);
         }
     }
 
+    /**
+     * Attention le postExecute de l'interface OnRespositoryPostExecute sera appelé autant de fois qu'il y aura de photos supprimées.
+     *
+     * @param listPhoto
+     * @param onRespositoryPostExecute
+     */
     public void save(List<PhotoEntity> listPhoto, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        if (listPhoto != null && !listPhoto.isEmpty()) {
-            for (PhotoEntity photoEntity : listPhoto) {
-                if (exist(photoEntity)) {
-                    update(onRespositoryPostExecute, photoEntity);
-                } else {
-                    insert(onRespositoryPostExecute, photoEntity);
-                }
-            }
+        for (PhotoEntity photoEntity : listPhoto) {
+            save(photoEntity, onRespositoryPostExecute);
         }
     }
 
     public Single<PhotoEntity> singleById(long idPhoto) {
-        return this.photoDao.singleById(idPhoto);
+        return this.photoDao.findSingleById(idPhoto);
     }
 
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
         return this.photoDao.findByIdAnnonce(idAnnonce);
+    }
+
+    public void deleteByIdAnnonce(long idAnnonce) {
+        this.photoDao.findAllSingleByIdAnnonce(idAnnonce)
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
+                .subscribe(photoEntities -> {
+                    if (photoEntities != null && !photoEntities.isEmpty()) {
+                        this.photoDao.delete(photoEntities);
+                    }
+                });
     }
 }

@@ -13,9 +13,9 @@ import android.support.annotation.NonNull;
 
 @Entity(tableName = "annonce", foreignKeys = {
         @ForeignKey(entity = CategorieEntity.class, parentColumns = "idCategorie", childColumns = "idCategorie"),
-        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "idUtilisateur", childColumns = "idUtilisateur")},
+        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "UuidUtilisateur", childColumns = "UuidUtilisateur")},
         indices = {
-                @Index("idUtilisateur"),
+                @Index("UuidUtilisateur"),
                 @Index("idCategorie")})
 public class AnnonceEntity {
     @NonNull
@@ -31,7 +31,7 @@ public class AnnonceEntity {
     private String contactByMsg;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
-    private Long idUtilisateur;
+    private String UuidUtilisateur;
     private Long idCategorie;
     private String debattre;
 
@@ -116,12 +116,12 @@ public class AnnonceEntity {
         this.statut = statut;
     }
 
-    public Long getIdUtilisateur() {
-        return idUtilisateur;
+    public String getUuidUtilisateur() {
+        return UuidUtilisateur;
     }
 
-    public void setIdUtilisateur(Long idUtilisateur) {
-        this.idUtilisateur = idUtilisateur;
+    public void setUuidUtilisateur(String uuidUtilisateur) {
+        UuidUtilisateur = uuidUtilisateur;
     }
 
     public Long getIdCategorie() {

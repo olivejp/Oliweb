@@ -1,14 +1,11 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import android.app.NotificationChannelGroup;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +21,7 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
+import oliweb.nc.oliweb.database.repository.task.TypeTask;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -66,13 +64,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
-    public String getUidUtilisateur() {
-        if (FirebaseAuth.getInstance() != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
-            return FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-        return null;
-    }
-
     public LiveData<List<CategorieEntity>> getLiveDataListCategorie() {
         return liveDataListCategorie;
     }
@@ -86,12 +77,41 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.liveListPhoto.postValue(this.listPhoto);
     }
 
-    public void saveAnnonce(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void saveAnnonce(String titre, String description, int prix, String uidUser, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+
+        this.annonce.setTitre(titre);
+        this.annonce.setDescription(description);
+        this.annonce.setPrix(prix);
+        this.annonce.setIdCategorie(categorie.getIdCategorie());
+        this.annonce.setStatut(StatusRemote.TO_SEND);
+        this.annonce.setUuidUtilisateur(uidUser);
+
         // Sauvegarde de l'annonce
-        this.annonceRepository.save(annonce, ids -> {
-            // Sauvegarde des photos
-            this.photoRepository.save(listPhoto, null);
-        });
+        if (listPhoto.isEmpty()) {
+            // On a pas de photo, on sauvegarde uniquement l'annonce
+            this.annonceRepository.save(annonce, onRespositoryPostExecute);
+        } else {
+            // On a des photos on va les insérer/modifier également
+            this.annonceRepository.save(annonce, dataReturn -> {
+                if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
+                    if (dataReturn.getIds().length > 0) {
+                        long idAnnonceInserted = dataReturn.getIds()[0];
+                        updataPhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
+                    }
+                } else {
+                    if (dataReturn.getTypeTask() == TypeTask.UPDATE && dataReturn.getNb() > 0) {
+                        updataPhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                    }
+                }
+            });
+        }
+    }
+
+    private void updataPhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        for (PhotoEntity photo : listPhoto) {
+            photo.setIdAnnonce(idAnnonce);
+        }
+        this.photoRepository.save(listPhoto, onRespositoryPostExecute);
     }
 
     public void createNewAnnonce() {
@@ -147,5 +167,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
         return this.photoRepository.findAllByIdAnnonce(idAnnonce);
+    }
+
+    private void postToFireabse() {
+
     }
 }

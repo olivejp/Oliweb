@@ -8,6 +8,7 @@ import android.arch.persistence.room.Transaction;
 import java.util.List;
 
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 
 /**
@@ -20,10 +21,14 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     LiveData<AnnonceEntity> findById(Long idAnnonce);
 
     @Transaction
+    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
+    Single<AnnonceEntity> findSingleById(Long idAnnonce);
+
+    @Transaction
     @Query("SELECT * FROM annonce WHERE idCategorie = :idCategorie")
     Maybe<List<AnnonceEntity>> findByIdCategorie(Long idCategorie);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE idUtilisateur = :idUtilisateur")
-    Maybe<List<AnnonceEntity>> findByIdUtilisateur(Long idUtilisateur);
+    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :UuidUtilisateur")
+    Maybe<List<AnnonceEntity>> findByUuidUtilisateur(String UuidUtilisateur);
 }

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <android.support.v7.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="50dp"
+        app:cardCornerRadius="2dp">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/frag_work_image_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:src="@drawable/ic_settings_grey_900_48dp" />
+
+            <ImageButton
+                android:id="@+id/frag_work_image_button_delete_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/frag_work_image_button_rotate_photo"
+                app:srcCompat="@drawable/ic_delete_grey_900_48dp" />
+
+            <ImageButton
+                android:id="@+id/frag_work_image_button_rotate_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/frag_work_image_button_delete_photo"
+                app:layout_constraintRight_toLeftOf="@+id/frag_work_image_button_valid_photo"
+                app:srcCompat="@drawable/ic_rotate_left_grey_900_48dp" />
+
+            <ImageButton
+                android:id="@+id/frag_work_image_button_valid_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/frag_work_image_button_rotate_photo"
+                app:layout_constraintRight_toRightOf="parent"
+                app:srcCompat="@drawable/ic_check_grey_900_48dp" />
+
+        </android.support.constraint.ConstraintLayout>
+
+
+    </android.support.v7.widget.CardView>
+</FrameLayout>

@@ -32,10 +32,11 @@
         </activity>
         <activity
             android:name=".ui.activity.PostAnnonceActivity"
-            android:parentActivityName=".ui.activity.MainActivity">
+            android:label="Ajouter une annonce"
+            android:parentActivityName=".ui.activity.MyAnnoncesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.activity.MainActivity" />
+                android:value=".ui.activity.MyAnnoncesActivity" />
         </activity>
         <activity
             android:name=".ui.activity.WorkImageActivity"
@@ -50,6 +51,14 @@
             android:value="@string/facebook_app_id"
             tools:replace="android:value" />
 
+        <activity
+            android:name=".ui.activity.MyAnnoncesActivity"
+            android:label="Mes annonces"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -74,8 +83,9 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths"/>
+                android:resource="@xml/provider_paths" />
         </provider>
+
 
     </application>
 

@@ -12,4 +12,5 @@ public class Constants {
     public static final String PROTOCOL_HTTPS = "https://";
     public static final int MAX_SIZE = 500;
     static final String CURRENCY = "xpf";
+
 }

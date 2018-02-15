@@ -13,9 +13,7 @@ import java.util.List;
 
 public class CallLoginUi {
 
-    public static final int RC_SIGN_IN = 1001;
-
-    public static void callLoginUi(AppCompatActivity activityCaller) {
+    public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
         listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
         listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.FACEBOOK_PROVIDER).build());
@@ -28,6 +26,6 @@ public class CallLoginUi {
                         .setIsSmartLockEnabled(false)
                         .setAvailableProviders(listProviders)
                         .build(),
-                RC_SIGN_IN);
+                requestCode);
     }
 }

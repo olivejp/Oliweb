@@ -4,6 +4,9 @@ import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -30,19 +33,28 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return INSTANCE;
     }
 
-    public boolean exist(AnnonceEntity annonceEntity) {
-        return (this.annonceDao.findById(annonceEntity.getIdAnnonce()) != null);
-    }
-
     public void save(AnnonceEntity annonceEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        if (exist(annonceEntity)) {
-            update(onRespositoryPostExecute, annonceEntity);
-        } else {
-            insert(onRespositoryPostExecute, annonceEntity);
-        }
+        this.annonceDao.findSingleById(annonceEntity.getIdAnnonce())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe((annonceEntity1, throwable) -> {
+                    if (throwable != null) {
+                        // This annonce don't exists already, create it
+                        insert(onRespositoryPostExecute, annonceEntity);
+                    } else {
+                        if (annonceEntity1 != null) {
+                            // Annonce exists, just update it
+                            update(onRespositoryPostExecute, annonceEntity);
+                        }
+                    }
+                });
     }
 
     public LiveData<AnnonceEntity> findById(long idAnnonce) {
         return this.annonceDao.findById(idAnnonce);
+    }
+
+    public Single<AnnonceEntity> findSingleById(long idAnnonce) {
+        return this.annonceDao.findSingleById(idAnnonce);
     }
 }

@@ -5,29 +5,28 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.OrientationHelper;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
+
+import com.bumptech.glide.request.RequestOptions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -35,37 +34,39 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.PhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
-
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_KEY_ID;
-import static oliweb.nc.oliweb.ui.activity.WorkImageActivity.BUNDLE_OUT_URI_IMAGE;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
 
+    public static final int RC_POST_ANNONCE = 881;
+
+    public static final String BUNDLE_KEY_UID_USER = "BUNDLE_KEY_UID_USER";
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
+
+    public static final String SAVED_KEY_ID_ANNONCE = "SAVED_KEY_ID_ANNONCE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
-    private static final int CODE_WORK_IMAGE_CREATION = 300;
-    private static final int CODE_WORK_IMAGE_MODIFICATION = 400;
-
-    private static final String SAVED_CURRENT_PATH = "SAVED_CURRENT_PATH";
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
-    private PhotoAdapter photoAdapter;
+    private long idAnnonce = 0;
     private boolean externalStorage = true;
+    private String uidUser;
+    private String mode;
 
     @BindView(R.id.spinner_categorie)
     Spinner spinnerCategorie;
@@ -79,30 +80,50 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
 
-    @BindView(R.id.recyclerImages)
-    RecyclerView recyclerImages;
+    @BindView(R.id.photo_1)
+    ImageView photo1;
 
-    @BindView(R.id.coordinator_post_annonce)
-    CoordinatorLayout coordinatorLayout;
+    @BindView(R.id.photo_2)
+    ImageView photo2;
 
-    private View.OnClickListener onClickPhoto = v -> {
-        PhotoEntity photoEntity = (PhotoEntity) v.getTag();
+    @BindView(R.id.photo_3)
+    ImageView photo3;
+
+    @BindView(R.id.photo_4)
+    ImageView photo4;
+
+    ImageView[] arrayImageViews = new ImageView[4];
+
+    // Evenement sur le spinner
+    private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            viewModel.setCurrentCategorie((CategorieEntity) parent.getItemAtPosition(position));
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ViewModel creation
         viewModel = ViewModelProviders.of(this).get(PostAnnonceActivityViewModel.class);
 
+        // View creation
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
-        // Préparation du recycler view qui recevra les images de l'annonce
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(OrientationHelper.HORIZONTAL);
-        recyclerImages.setLayoutManager(linearLayoutManager);
-        photoAdapter = new PhotoAdapter(this, onClickPhoto);
-        recyclerImages.setAdapter(photoAdapter);
+        // Catch preferences
+        externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
+
+        arrayImageViews[0] = photo1;
+        arrayImageViews[1] = photo2;
+        arrayImageViews[2] = photo3;
+        arrayImageViews[3] = photo4;
 
         // Alimentation du spinner avec la liste des catégories
         viewModel.getLiveDataListCategorie()
@@ -113,54 +134,95 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     }
                 });
 
+        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+
         // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, photoEntities -> {
-            if (photoEntities != null) {
-                List<PhotoEntity> listPhoto = new ArrayList<>();
-                listPhoto.addAll(photoEntities);
-                this.photoAdapter.setListPhotos(listPhoto);
-            }
-        });
+        viewModel.getLiveListPhoto().observe(this, this::initPhotos);
+
+        // Récupération du Uid de l'utilisateur connecté
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        if (uidUser == null || uidUser.isEmpty()) {
+            Log.e(TAG, "Missing UID parameter");
+            finish();
+        }
 
         // Récupération des paramètres
-        Bundle bundle = getIntent().getExtras();
+        Bundle bundle;
+        if (savedInstanceState != null) {
+            bundle = savedInstanceState;
+        } else {
+            bundle = getIntent().getExtras();
+        }
         if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
-            Log.e(TAG, "Aucun mode passé en paramètre");
+            Log.e(TAG, "Missing mandatory parameter");
             finish();
         } else {
-            String mode = bundle.getString(BUNDLE_KEY_MODE);
+            mode = bundle.getString(BUNDLE_KEY_MODE);
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else if (mode.equals(Constants.PARAM_MAJ)) {
+                // On a une annonce à mettre à jour
                 if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
                     Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
                     finish();
                 }
-                long idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
                 viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
                     if (annonceEntity != null) {
                         viewModel.setAnnonce(annonceEntity);
 
                         // Récupération des photos de cette annonce dans l'adapter
                         viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                                .observe(PostAnnonceActivity.this, photoEntities -> {
-                                    if (photoEntities != null && !photoEntities.isEmpty()) {
-                                        viewModel.setListPhoto(photoEntities);
-                                        photoAdapter.setListPhotos(photoEntities);
-                                    }
-                                });
+                                .observe(PostAnnonceActivity.this, this::initPhotos);
 
                         displayAnnonce(annonceEntity);
                     }
                 });
             }
         }
+    }
 
-        // Comment pour les tests
-        //        if (viewModel.getUidUtilisateur() == null) {
-        //            Log.e(TAG, "impossible de lancer PostAnnonceActivity sans être connecté");
-        //            finish();
-        //        }
+    /**
+     * Try to drop photos in the correct imageView
+     *
+     * @param photoEntities
+     */
+    private void initPhotos(List<PhotoEntity> photoEntities) {
+
+        // Init all default Tag to null
+        for (ImageView imageView : arrayImageViews) {
+            imageView.setTag(null);
+        }
+
+        if (photoEntities != null && !photoEntities.isEmpty()) {
+            viewModel.setListPhoto(photoEntities);
+            for (PhotoEntity photo : photoEntities) {
+                boolean insertion = false;
+                int i = 0;
+                while (!insertion && i < 4) {
+                    insertion = insertPhotoInImageView(arrayImageViews[i], photo);
+                    i++;
+                }
+            }
+        }
+    }
+
+    /**
+     * If the imageView has no tag then insert photo and return True, return False otherwise.
+     *
+     * @param imageView
+     * @param photoEntity
+     * @return
+     */
+    private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
+        if (imageView.getTag() == null) {
+            GlideApp.with(this)
+                    .applyDefaultRequestOptions(RequestOptions.circleCropTransform())
+                    .load(photoEntity.getUriLocal())
+                    .into(imageView);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -174,11 +236,41 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int idItem = item.getItemId();
         switch (idItem) {
             case R.id.menu_post_valid:
-                viewModel.saveAnnonce(null);
-                finish();
-                return true;
+                if (isValidAnnonce()) {
+
+                    // Retrieve datas from the ui
+                    String titre = textViewTitre.getText().toString();
+                    String description = textViewDescription.getText().toString();
+                    int prix = Integer.parseInt(textViewPrix.getText().toString());
+
+                    // Save the annonce
+                    viewModel.saveAnnonce(titre, description, prix, uidUser, dataReturn -> {
+                        if (dataReturn.getNb() > 0) {
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+                    });
+                    return true;
+                }
         }
         return false;
+    }
+
+    private boolean isValidAnnonce() {
+        boolean isValid = true;
+        if (textViewTitre.getText().toString().isEmpty()) {
+            textViewTitre.setError("Le titre est obligatoire.");
+            isValid = false;
+        }
+        if (textViewDescription.getText().toString().isEmpty()) {
+            textViewDescription.setError("La description est obligatoire.");
+            isValid = false;
+        }
+        if (textViewPrix.getText().toString().isEmpty()) {
+            textViewPrix.setError("Le prix est obligatoire.");
+            isValid = false;
+        }
+        return isValid;
     }
 
     @Override
@@ -190,41 +282,24 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 callCaptureIntent();
             }
         }
+        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                callGalleryIntent();
+            }
+        }
     }
 
+    @SuppressWarnings("squid:S3776")
     @Override
-    protected void onActivityResult(int code_request, int resultCode, Intent data) {
-        switch (code_request) {
-            case CODE_WORK_IMAGE_CREATION:
-                if (resultCode == RESULT_OK) {
-                    if (data.getExtras() != null && data.getExtras().containsKey(BUNDLE_OUT_URI_IMAGE)) {
-                        String path = data.getExtras().getParcelable(BUNDLE_OUT_URI_IMAGE).toString();
-                        viewModel.addPhotoToCurrentList(path);
-                    }
-                }
-                break;
-            case CODE_WORK_IMAGE_MODIFICATION:
-                switch (resultCode) {
-                    case RESULT_OK:
-                        // Récupération de l'ancienne position
-                        viewModel.addPhotoToCurrentList(mFileUriTemp.getPath());
-                        break;
-
-                    // On veut supprimer la photo
-                    case RESULT_CANCELED:
-                        if (data != null && data.getExtras() != null) {
-                            long idPhoto = data.getExtras().getLong(BUNDLE_KEY_ID);
-                            viewModel.deletePhoto(idPhoto);
-                        }
-                }
-                break;
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
                     try {
                         if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
                             viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
                         } else {
-                            Snackbar.make(coordinatorLayout, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
                         }
                     } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
@@ -253,6 +328,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putLong(SAVED_KEY_ID_ANNONCE, idAnnonce);
+        outState.putString(BUNDLE_KEY_MODE, mode);
+        super.onSaveInstanceState(outState);
+    }
+
     /**
      * Le paramètre uri représente une image dans la gallerie.
      * nouvelleUri correspond à l'emplacement de destination de cette image.
@@ -267,7 +349,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, nouvelleUri)) {
                 viewModel.addPhotoToCurrentList(nouvelleUri.toString());
             } else {
-                Snackbar.make(coordinatorLayout, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }
         } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
@@ -289,29 +371,50 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    @OnClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
+    public void onClick(View v) {
+        if (v.getTag() != null) {
+            // Mode mise à jour
+
+        } else {
+            // Mode création d'une nouvelle photo
+            AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
+            } else {
+                builder = new AlertDialog.Builder(this);
+            }
+            builder.setTitle("Envie d'ajouter une nouvelle image ?")
+                    .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
+                    .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
+                    .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
+                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                    .show();
+        }
+    }
+
     public void onGalleryClick() {
+        // Demande de la permission pour utiliser la camera
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
+            } else {
+                callGalleryIntent();
+            }
+        } else {
+            callGalleryIntent();
+        }
+
+
+    }
+
+    private void callGalleryIntent() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(photoPickerIntent, "Choisissez les images à importer"), DIALOG_GALLERY_IMAGE);
-    }
-
-    @OnClick(R.id.add_photo)
-    public void onClick(View v) {
-        AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
-        } else {
-            builder = new AlertDialog.Builder(this);
-        }
-        builder.setTitle("Envie d'ajouter une nouvelle image ?")
-                .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
-                .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
-                .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
-                .setIcon(R.drawable.ic_add_a_photo_black_48dp)
-                .show();
-
     }
 
     /**
@@ -327,39 +430,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private Uri generateNewUri() {
-        Uri uri;
-        if (externalStorage) {
-            uri = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, viewModel.getUidUtilisateur());
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaType.IMAGE, uidUser);
+        if (pair != null && pair.first != null) {
+            return pair.first;
         } else {
-            File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, viewModel.getUidUtilisateur()));
-            uri = Uri.fromFile(file);
+            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            return null;
         }
-        return uri;
     }
-
-    /**
-     * Appel de l'activity de travail d'une image
-     * Cette activité va nous permettre de faire tourner une image.
-     * Passage de l'image à modifier sous forme d'un ByteArray
-     *
-     * @param imageUri
-     * @param mode
-     * @param requestCode
-     * @param position
-     */
-//    private void callWorkingImageActivity(Uri imageUri, String mode, int requestCode, int position) {
-//        Intent intent = new Intent();
-//        intent.setClass(this, WorkImageActivity.class);
-//        Bundle bundle = new Bundle();
-//        bundle.putString(BUNDLE_KEY_MODE, mode);
-//        bundle.putParcelable(BUNDLE_IN_PATH_IMAGE, imageUri);
-//        bundle.putBoolean(BUNDLE_EXTERNAL_STORAGE, externalStorage);
-//        if (position != -1) {
-//            bundle.putInt(BUNDLE_KEY_ID, position);
-//        }
-//        intent.putExtras(bundle);
-//        startActivityForResult(intent, requestCode);
-//    }
 
     /**
      * Display the different fields of the annonce
