@@ -54,9 +54,6 @@ public class MediaUtility {
         return false;
     }
 
-    public static File saveInternalFile(Context context, String fileName) {
-        return new File(context.getFilesDir(), fileName);
-    }
 
     /**
      * Force a refresh of media content provider for specific item
@@ -165,6 +162,7 @@ public class MediaUtility {
      * @return
      */
     public static Bitmap getBitmapFromUri(Context context, Uri uri) {
+        Log.d(TAG, "getBitmapFromUri uri = " + uri.toString());
         InputStream imageStream;
         Bitmap bitmap = null;
         try {
@@ -185,14 +183,31 @@ public class MediaUtility {
      * @return
      */
     @Nullable
-    public static Pair<Uri,File> createNewMediaFileUri(Context context, MediaType type, String prefixName) {
+    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type, String prefixName) {
         String fileName = generateMediaName(type, prefixName);
-        File newFile = createExternalMediaFile(fileName);
+        File newFile;
+        if (externalStorage) {
+            newFile = createExternalMediaFile(fileName);
+        } else {
+            newFile = createInternalMediaFile(context, fileName);
+        }
         if (newFile != null) {
             return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
         }
         return null;
     }
+
+    /**
+     * Create new internal file
+     *
+     * @param context
+     * @param fileName
+     * @return
+     */
+    public static File createInternalMediaFile(Context context, String fileName) {
+        return new File(context.getFilesDir(), fileName);
+    }
+
 
     /**
      * Retourne le nom d'une nouvelle image / d'une video

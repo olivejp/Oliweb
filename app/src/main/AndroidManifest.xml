@@ -32,10 +32,11 @@
         </activity>
         <activity
             android:name=".ui.activity.PostAnnonceActivity"
-            android:parentActivityName=".ui.activity.MainActivity">
+            android:label="Ajouter une annonce"
+            android:parentActivityName=".ui.activity.MyAnnoncesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.activity.MainActivity" />
+                android:value=".ui.activity.MyAnnoncesActivity" />
         </activity>
         <activity
             android:name=".ui.activity.WorkImageActivity"
@@ -52,6 +53,7 @@
 
         <activity
             android:name=".ui.activity.MyAnnoncesActivity"
+            android:label="Mes annonces"
             android:parentActivityName=".ui.activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

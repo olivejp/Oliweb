@@ -4,17 +4,15 @@
     android:id="@+id/relative_list_category"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:background="@android:color/transparent">
+    android:background="@color/colorAccentDark">
 
     <TextView
         android:id="@+id/colorCategory"
         android:layout_width="25dp"
         android:layout_height="48dp"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="12dp"
-        android:layout_marginRight="12dp" />
+        android:layout_marginEnd="12dp"/>
 
     <TextView
         android:id="@+id/idCategory"
@@ -28,11 +26,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_toEndOf="@id/colorCategory"
-        android:layout_toRightOf="@id/colorCategory"
         android:gravity="center_vertical"
         android:minHeight="?android:attr/listPreferredItemHeightSmall"
         android:paddingEnd="40dp"
-        android:paddingRight="40dp"
         android:textAppearance="?android:attr/textAppearanceListItemSmall"
         tools:text="Automobiles"/>
 
@@ -41,9 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
         tools:text="5"/>
 </RelativeLayout>

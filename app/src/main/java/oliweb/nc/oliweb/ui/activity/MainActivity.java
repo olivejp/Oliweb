@@ -26,13 +26,13 @@ import com.google.firebase.auth.FirebaseUser;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
-import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -135,7 +135,6 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
-            intent.putExtra(ARG_UID_USER, mFirebaseUser.getUid());
             startActivity(intent);
         }
 
@@ -148,6 +147,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void signOut() {
         mFirebaseAuth.signOut();
+        SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
     }
 
     /**
@@ -163,7 +163,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void createUser() {
-        Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
         viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
             if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
                 Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
@@ -175,20 +174,15 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Authentification simple
         if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
-                createUser();
-
-                // Call the task to retrieve the photo
-                callPhotoTask();
-
-                // Refresh data from/to the database here
-            }
             if (resultCode == RESULT_CANCELED) {
                 // Sign in was canceled by the user, finish the activity
                 Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
                 finish();
 
+            }
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
+                // All the rest is done in defineAuthListener()
             }
         }
 
@@ -249,12 +243,19 @@ public class MainActivity extends AppCompatActivity
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
+                SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
                 profileName.setText(mFirebaseUser.getDisplayName());
                 if (mFirebaseUser.getEmail() != null) {
                     profileEmail.setText(mFirebaseUser.getEmail());
                 }
+
+                // Create user in local Db
+                createUser();
+
+                // Call the task to retrieve the photo
                 callPhotoTask();
             } else {
+                SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
                 profileName.setText(null);
                 profileEmail.setText(null);
                 mFirebaseUser = null;

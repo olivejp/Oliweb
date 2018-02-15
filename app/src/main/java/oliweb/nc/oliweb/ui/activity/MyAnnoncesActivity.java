@@ -28,7 +28,6 @@ import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 import static oliweb.nc.oliweb.SharedPreferencesHelper.PREF_VALUE_DISPLAY_MODE_RAW;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
-import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerItemTouchHelper.SwipeListener, NoticeDialogFragment.DialogListener {
@@ -40,7 +39,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
     public static final String ARG_NOTICE_BUNDLE_ID_ANNONCE = "ARG_NOTICE_BUNDLE_ID_ANNONCE";
     public static final String ARG_NOTICE_BUNDLE_POSITION = "ARG_NOTICE_BUNDLE_POSITION";
-    public static final String ARG_UID_USER = "ARG_UID_USER";
     public static final String DIALOG_TAG_DELETE = "DIALOG_TAG_DELETE";
 
     private MyAnnoncesViewModel viewModel;
@@ -59,16 +57,13 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         ButterKnife.bind(this);
 
         // Récupération du UID de l'utilisateur connecté.
-        if (savedInstanceState != null) {
-            uidUser = savedInstanceState.getString(ARG_UID_USER);
-        } else {
-            uidUser = getIntent().getStringExtra(ARG_UID_USER);
-        }
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (uidUser == null || uidUser.isEmpty()) {
-            Log.e(TAG, "Aucun UID utilisateur envoyé en paramètre");
+            Log.e(TAG, "Missing mandatory parameter");
+            finish();
         }
 
-        // Ouvre l'activité pour modifier l'annonce.
+        // Ouvre l'activité PostAnnonceActivity en mode Modification
         View.OnClickListener onClickListener = v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
             Intent intent = new Intent();
@@ -76,7 +71,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             intent.setClass(this, PostAnnonceActivity.class);
             bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
             bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
-            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_USER, uidUser);
             intent.putExtras(bundle);
             startActivity(intent);
         };
@@ -168,12 +162,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
-        startActivityForResult(intent, RC_POST_ANNONCE);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putString(ARG_UID_USER, uidUser);
-        super.onSaveInstanceState(outState);
+        startActivity(intent);
     }
 }

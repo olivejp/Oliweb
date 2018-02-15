@@ -5,8 +5,6 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,16 +23,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
+import com.bumptech.glide.request.RequestOptions;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import de.hdodenhof.circleimageview.CircleImageView;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
@@ -84,18 +81,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
     EditText textViewPrix;
 
     @BindView(R.id.photo_1)
-    CircleImageView photo1;
+    ImageView photo1;
 
     @BindView(R.id.photo_2)
-    CircleImageView photo2;
+    ImageView photo2;
 
     @BindView(R.id.photo_3)
-    CircleImageView photo3;
+    ImageView photo3;
 
     @BindView(R.id.photo_4)
-    CircleImageView photo4;
+    ImageView photo4;
 
-    CircleImageView[] arrayImageViews = new CircleImageView[4];
+    ImageView[] arrayImageViews = new ImageView[4];
 
     // Evenement sur le spinner
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
@@ -142,6 +139,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // Récupération dynamique de la liste des photos
         viewModel.getLiveListPhoto().observe(this, this::initPhotos);
 
+        // Récupération du Uid de l'utilisateur connecté
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        if (uidUser == null || uidUser.isEmpty()) {
+            Log.e(TAG, "Missing UID parameter");
+            finish();
+        }
+
         // Récupération des paramètres
         Bundle bundle;
         if (savedInstanceState != null) {
@@ -149,12 +153,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
         } else {
             bundle = getIntent().getExtras();
         }
-        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || !bundle.containsKey(BUNDLE_KEY_UID_USER) || bundle.getString(BUNDLE_KEY_MODE) == null || bundle.getString(BUNDLE_KEY_UID_USER) == null) {
+        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
             Log.e(TAG, "Missing mandatory parameter");
             finish();
         } else {
             mode = bundle.getString(BUNDLE_KEY_MODE);
-            uidUser = bundle.getString(BUNDLE_KEY_UID_USER);
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else if (mode.equals(Constants.PARAM_MAJ)) {
@@ -186,12 +189,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void initPhotos(List<PhotoEntity> photoEntities) {
 
-        // Init default photos icon
-        for (CircleImageView circleImageView : arrayImageViews) {
-            GlideApp.with(this)
-                    .asDrawable()
-                    .load(R.drawable.ic_add_a_photo_grey_900_48dp)
-                    .into(circleImageView);
+        // Init all default Tag to null
+        for (ImageView imageView : arrayImageViews) {
+            imageView.setTag(null);
         }
 
         if (photoEntities != null && !photoEntities.isEmpty()) {
@@ -216,15 +216,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
         if (imageView.getTag() == null) {
-            try {
-                imageView.setTag(photoEntity);
-                InputStream in = getContentResolver().openInputStream(Uri.parse(photoEntity.getUriLocal()));
-                Bitmap bitmap = BitmapFactory.decodeStream(in);
-                imageView.setImageBitmap(bitmap);
-                return true;
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
+            GlideApp.with(this)
+                    .applyDefaultRequestOptions(RequestOptions.circleCropTransform())
+                    .load(photoEntity.getUriLocal())
+                    .into(imageView);
+            return true;
         }
         return false;
     }
@@ -335,7 +331,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putLong(SAVED_KEY_ID_ANNONCE, idAnnonce);
-        outState.putString(BUNDLE_KEY_UID_USER, uidUser);
         outState.putString(BUNDLE_KEY_MODE, mode);
         super.onSaveInstanceState(outState);
     }
@@ -435,19 +430,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private Uri generateNewUri() {
-        Uri uri = null;
-        if (externalStorage) {
-            Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, MediaType.IMAGE, uidUser);
-            if (pair != null) {
-                uri = pair.first;
-            } else {
-                Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
-            }
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaType.IMAGE, uidUser);
+        if (pair != null && pair.first != null) {
+            return pair.first;
         } else {
-            File file = MediaUtility.saveInternalFile(this, MediaUtility.generateMediaName(MediaType.IMAGE, uidUser));
-            uri = Uri.fromFile(file);
+            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            return null;
         }
-        return uri;
     }
 
     /**
