@@ -5,6 +5,7 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -32,6 +33,10 @@ public class AnnonceWithPhotosRepository extends AbstractRepository<AnnonceEntit
 
     public LiveData<List<AnnonceWithPhotos>> findAllAnnoncesByUuidUtilisateur(String uuidUtilisateur) {
         return this.annonceWithPhotosDao.findByUuidUtilisateur(uuidUtilisateur);
+    }
+
+    public Maybe<List<AnnonceWithPhotos>> getAllAnnonceByStatus(String status) {
+        return this.annonceWithPhotosDao.getAllAnnonceByStatus(status);
     }
 
 }

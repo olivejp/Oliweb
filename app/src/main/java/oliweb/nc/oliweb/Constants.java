@@ -13,4 +13,14 @@ public class Constants {
     public static final int MAX_SIZE = 1024;
     static final String CURRENCY = "xpf";
 
+    /**
+     * Minutes we will wait before launch the sync
+     */
+    public static final long PERIODIC_SYNC_JOB_MINS = 15;
+
+    /**
+     * How close to the end of the period the job should run
+     */
+    public static final long INTERVAL_SYNC_JOB_MINS = 5;
+
 }

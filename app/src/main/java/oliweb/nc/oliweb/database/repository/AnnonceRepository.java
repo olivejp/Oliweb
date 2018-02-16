@@ -4,6 +4,9 @@ import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import java.util.List;
+
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -56,5 +59,9 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     public Single<AnnonceEntity> findSingleById(long idAnnonce) {
         return this.annonceDao.findSingleById(idAnnonce);
+    }
+
+    public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status){
+        return this.annonceDao.getAllAnnonceByStatus(status);
     }
 }

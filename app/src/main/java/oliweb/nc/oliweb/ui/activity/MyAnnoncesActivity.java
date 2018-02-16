@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.RecyclerItemTouchHelper;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.job.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
@@ -40,6 +41,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     public static final String ARG_NOTICE_BUNDLE_ID_ANNONCE = "ARG_NOTICE_BUNDLE_ID_ANNONCE";
     public static final String ARG_NOTICE_BUNDLE_POSITION = "ARG_NOTICE_BUNDLE_POSITION";
     public static final String DIALOG_TAG_DELETE = "DIALOG_TAG_DELETE";
+
+    public static final int REQUEST_CODE_POST = 548;
 
     private MyAnnoncesViewModel viewModel;
     private AnnonceAdapterRaw annonceAdapterRaw;
@@ -72,7 +75,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
             bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
             intent.putExtras(bundle);
-            startActivity(intent);
+            startActivityForResult(intent, REQUEST_CODE_POST);
         };
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -107,6 +110,17 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                         annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
                     }
                 });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_POST:
+                if (resultCode == RESULT_OK) {
+                    SyncService.launchSynchroForAll(getApplicationContext());
+                }
+                break;
+        }
     }
 
     @Override
@@ -162,6 +176,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_CODE_POST);
     }
 }

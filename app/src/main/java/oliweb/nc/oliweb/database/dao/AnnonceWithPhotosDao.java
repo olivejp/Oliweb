@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 
 /**
@@ -21,4 +22,9 @@ public interface AnnonceWithPhotosDao {
     @Transaction
     @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur")
     LiveData<List<AnnonceWithPhotos>> findByUuidUtilisateur(String uuidUtilisateur);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE statut = :statut")
+    Maybe<List<AnnonceWithPhotos>> getAllAnnonceByStatus(String statut);
+
 }

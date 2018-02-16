@@ -145,6 +145,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (uidUser == null || uidUser.isEmpty()) {
             Log.e(TAG, "Missing UID parameter");
+            setResult(RESULT_CANCELED);
             finish();
         }
 
@@ -157,6 +158,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
         if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
             Log.e(TAG, "Missing mandatory parameter");
+            setResult(RESULT_CANCELED);
             finish();
         } else {
             mode = bundle.getString(BUNDLE_KEY_MODE);
@@ -166,6 +168,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 // On a une annonce à mettre à jour
                 if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
                     Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
+                    setResult(RESULT_CANCELED);
                     finish();
                 }
                 idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
