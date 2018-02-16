@@ -36,7 +36,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private AnnonceEntity annonce;
     private CategorieEntity categorie;
     private List<PhotoEntity> listPhoto = new ArrayList<>();
-
+    private PhotoEntity photoEntityUpdated;
     private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
     private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
@@ -75,6 +75,19 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         photoEntity.setStatut(StatusRemote.TO_SEND);
         this.listPhoto.add(photoEntity);
         this.liveListPhoto.postValue(this.listPhoto);
+    }
+
+    public boolean canHandleAnotherPhoto() {
+        return this.listPhoto.size() < 4;
+    }
+
+    public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
+        boolean retour = false;
+        if (this.listPhoto.contains(photoEntity)) {
+            retour = this.listPhoto.remove(photoEntity);
+            this.liveListPhoto.postValue(this.listPhoto);
+        }
+        return retour;
     }
 
     public void saveAnnonce(String titre, String description, int prix, String uidUser, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
@@ -131,6 +144,14 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public void setListPhoto(List<PhotoEntity> list) {
         this.listPhoto = list;
         this.liveListPhoto.postValue(list);
+    }
+
+    public void setUpdatedPhoto(PhotoEntity photo) {
+        this.photoEntityUpdated = photo;
+    }
+
+    public PhotoEntity getUpdatedPhoto() {
+        return this.photoEntityUpdated;
     }
 
     public AnnonceEntity getCurrentAnnonce() {

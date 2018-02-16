@@ -10,7 +10,7 @@ public class Constants {
     public static final String PARAM_CRE = "CRE";
     public static final String PROTOCOL_HTTP = "http://";
     public static final String PROTOCOL_HTTPS = "https://";
-    public static final int MAX_SIZE = 500;
+    public static final int MAX_SIZE = 1024;
     static final String CURRENCY = "xpf";
 
 }

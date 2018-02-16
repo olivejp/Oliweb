@@ -2,6 +2,7 @@ package oliweb.nc.oliweb;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 /**
  * Created by orlanth23 on 10/02/2018.
@@ -9,7 +10,6 @@ import android.content.SharedPreferences;
 
 public class SharedPreferencesHelper {
 
-    private static final String SHARED_PREFERENCE_NAME = "OLIWEB";
     private static final String PREF_DISPLAY_MODE = "DISPLAY_MODE";
     private static final String PREF_FIREBASE_USER_UID = "DISPLAY_FIREBASE_USER_UID";
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
@@ -23,14 +23,14 @@ public class SharedPreferencesHelper {
 
     public static SharedPreferencesHelper getInstance(Context context) {
         if (INSTANCE == null) {
-            INSTANCE = new SharedPreferencesHelper(context, SHARED_PREFERENCE_NAME);
+            INSTANCE = new SharedPreferencesHelper(context);
         }
         return INSTANCE;
     }
 
-    private SharedPreferencesHelper(Context context, String sharedPreferenceName) {
-        sharedPreferences = context.getSharedPreferences(sharedPreferenceName, Context.MODE_PRIVATE);
-        editor = context.getSharedPreferences(sharedPreferenceName, Context.MODE_PRIVATE).edit();
+    private SharedPreferencesHelper(Context context) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
     }
 
     public SharedPreferences getSharedPreferences() {

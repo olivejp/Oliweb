@@ -5,12 +5,15 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -23,15 +26,16 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.bumptech.glide.request.RequestOptions;
-
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
@@ -42,7 +46,7 @@ import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
-import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 
 public class PostAnnonceActivity extends AppCompatActivity {
 
@@ -50,11 +54,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     public static final int RC_POST_ANNONCE = 881;
 
-    public static final String BUNDLE_KEY_UID_USER = "BUNDLE_KEY_UID_USER";
+    public static final String TAG_WORKING_IMAGE = "TAG_WORKING_IMAGE";
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
-
-    public static final String SAVED_KEY_ID_ANNONCE = "SAVED_KEY_ID_ANNONCE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
@@ -64,7 +66,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
     private long idAnnonce = 0;
-    private boolean externalStorage = true;
+    private boolean externalStorage;
     private String uidUser;
     private String mode;
 
@@ -180,6 +182,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 });
             }
         }
+
+        // S'il y avait un fragment, je le remet
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
+            Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
+            getSupportFragmentManager().beginTransaction().replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE).addToBackStack(null).commit();
+        }
     }
 
     /**
@@ -192,6 +200,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // Init all default Tag to null
         for (ImageView imageView : arrayImageViews) {
             imageView.setTag(null);
+            imageView.setImageResource(R.drawable.ic_add_a_photo_grey_900_48dp);
         }
 
         if (photoEntities != null && !photoEntities.isEmpty()) {
@@ -216,11 +225,15 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
         if (imageView.getTag() == null) {
-            GlideApp.with(this)
-                    .applyDefaultRequestOptions(RequestOptions.circleCropTransform())
-                    .load(photoEntity.getUriLocal())
-                    .into(imageView);
-            return true;
+            try {
+                imageView.setTag(photoEntity);
+                InputStream in = getContentResolver().openInputStream(Uri.parse(photoEntity.getUriLocal()));
+                Bitmap bitmap = BitmapFactory.decodeStream(in);
+                imageView.setImageBitmap(bitmap);
+                return true;
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
         }
         return false;
     }
@@ -313,8 +326,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
                         int i = -1;
                         ClipData.Item item;
                         while (i++ < data.getClipData().getItemCount() - 1) {
-                            item = data.getClipData().getItemAt(i);
-                            insertionFromGallery(item.getUri());
+                            if (viewModel.canHandleAnotherPhoto()) {
+                                item = data.getClipData().getItemAt(i);
+                                insertionFromGallery(item.getUri());
+                            }
                         }
                     } else {
                         // Insertion simple
@@ -330,8 +345,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putLong(SAVED_KEY_ID_ANNONCE, idAnnonce);
+        outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
         outState.putString(BUNDLE_KEY_MODE, mode);
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(TAG_WORKING_IMAGE);
+        if (frag != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_WORKING_IMAGE, frag);
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -373,10 +392,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @OnClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
     public void onClick(View v) {
-        if (v.getTag() != null) {
-            // Mode mise à jour
-
-        } else {
+        if (v.getTag() == null) {
             // Mode création d'une nouvelle photo
             AlertDialog.Builder builder;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -390,7 +406,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                     .show();
+        } else {
+            // Mode mise à jour
+            PhotoEntity photoEntity = (PhotoEntity) v.getTag();
+            viewModel.setUpdatedPhoto(photoEntity);
+            WorkImageFragment workImageFragment = new WorkImageFragment();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
+                    .addToBackStack(null)
+                    .commit();
         }
+    }
+
+    @OnLongClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
+    public boolean onLongClick(View v) {
+        return v.getTag() != null && viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag());
     }
 
     public void onGalleryClick() {
