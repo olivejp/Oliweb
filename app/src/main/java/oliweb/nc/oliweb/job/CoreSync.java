@@ -4,11 +4,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -65,13 +62,7 @@ class CoreSync {
         return INSTANCE;
     }
 
-    /**
-     * Création d'un Observable interval qui va envoyer un élément toutes les 10 secondes.
-     * Cet élément sera synchronisé avec un élément de la liste de colis présents dans la DB.
-     * Pour ce colis qui sera présent toutes les 10 secondes, on va appeler le service CoreSync.callOptTracking()
-     * L'interval de temps nous permet de ne pas saturer le réseau avec des requêtes quand on a trop de colis dans la DB.
-     */
-    void createOrUpdateAnnonce() {
+    private void sendAnnonce() {
         AnnonceWithPhotosRepository.getInstance(context)
                 .getAllAnnonceByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
@@ -79,26 +70,11 @@ class CoreSync {
                 .subscribe(annoncesWithPhoto -> {
                     for (AnnonceWithPhotos annonceWithPhoto : annoncesWithPhoto) {
 
-                        // Envoi des photos sur FirebaseStorage
-                        for (PhotoEntity photo : annonceWithPhoto.getPhotos()) {
-                            File file = new File(photo.getUriLocal());
-                            String fileName = file.getName();
-                            StorageReference storageReference = fireStorage.child(fileName);
-                            storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                                    .addOnSuccessListener(taskSnapshot -> {
-                                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                                        photoRepository.save(photo, null);
-                                    })
-                                    .addOnFailureListener(e -> Log.e(TAG, "Failed to upload image"));
-                        }
-
-
                         // On est sur le point d'envoyer l'annonce, on change son statut
                         annonceWithPhoto.getAnnonceEntity().setStatut(StatusRemote.SEND);
 
                         // Création ou mise à jour de l'annonce
                         if (annonceWithPhoto.getAnnonceEntity().getUUID() != null) {
-
                             // Mise à jour de l'annonce
                             fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
                                     .child(annonceWithPhoto.getAnnonceEntity().getUUID())
@@ -108,18 +84,32 @@ class CoreSync {
                             DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
                             annonceWithPhoto.getAnnonceEntity().setUUID(dbRef.getKey());
                             dbRef.setValue(annonceWithPhoto);
-                            dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
                         }
+                    }
+                });
+    }
+
+    /**
+     * First send the photo to catch the URL Download link, then onAfterTerminate send the annonces
+     */
+    void createOrUpdateAnnonce() {
+        PhotoRepository.getInstance(context)
+                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .doAfterTerminate(this::sendAnnonce)
+                .subscribe(photoEntities -> {
+                    // Envoi des photos sur FirebaseStorage
+                    for (PhotoEntity photo : photoEntities) {
+                        File file = new File(photo.getUriLocal());
+                        String fileName = file.getName();
+                        StorageReference storageReference = fireStorage.child(fileName);
+                        storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                                .addOnSuccessListener(taskSnapshot -> {
+                                    photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
+                                    photoRepository.save(photo, null);
+                                })
+                                .addOnFailureListener(e -> Log.e(TAG, "Failed to upload image"));
                     }
                 });
     }

@@ -7,6 +7,8 @@ import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
+import com.google.firebase.database.Exclude;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
@@ -18,6 +20,7 @@ import android.support.annotation.NonNull;
                 @Index("UuidUtilisateur"),
                 @Index("idCategorie")})
 public class AnnonceEntity {
+    @Exclude
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idAnnonce;
@@ -29,6 +32,7 @@ public class AnnonceEntity {
     private String contactByTel;
     private String contactByEmail;
     private String contactByMsg;
+    @Exclude
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
     private String UuidUtilisateur;

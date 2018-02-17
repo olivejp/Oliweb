@@ -35,4 +35,8 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     @Transaction
     @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
     Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM photo WHERE statut = :statut")
+    Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
 }

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -85,5 +86,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                         this.photoDao.delete(photoEntities);
                     }
                 });
+    }
+
+    public Maybe<List<PhotoEntity>> getAllPhotosByStatus(String status) {
+        return this.photoDao.getAllPhotosByStatus(status);
     }
 }

@@ -7,6 +7,8 @@ import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
+import com.google.firebase.database.Exclude;
+
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 /**
@@ -17,14 +19,18 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
         foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce", onDelete = CASCADE),
         indices = @Index(value = "idAnnonce"))
 public class PhotoEntity {
+    @Exclude
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idPhoto;
     private String UUID;
+    @Exclude
     private String uriLocal;
     private String firebasePath;
+    @Exclude
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
+    @Exclude
     private Long idAnnonce;
 
     @NonNull
