@@ -39,6 +39,17 @@ public class WorkImageFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         this.activity = (AppCompatActivity) context;
+        if (this.activity.getSupportActionBar() != null) {
+            this.activity.getSupportActionBar().hide();
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        if (this.activity.getSupportActionBar() != null) {
+            this.activity.getSupportActionBar().show();
+        }
     }
 
     @Override
@@ -51,9 +62,7 @@ public class WorkImageFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        if (this.activity.getSupportActionBar() != null) {
-            this.activity.getSupportActionBar().hide();
-        }
+
         View rootView = inflater.inflate(R.layout.fragment_work_image, container, false);
         ButterKnife.bind(this, rootView);
         pBitmap = MediaUtility.getBitmapFromUri(getContext(), Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));

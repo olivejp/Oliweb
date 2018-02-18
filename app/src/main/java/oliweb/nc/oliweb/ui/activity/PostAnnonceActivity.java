@@ -5,8 +5,6 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,13 +21,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
+import com.bumptech.glide.request.RequestOptions;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -47,6 +47,7 @@ import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class PostAnnonceActivity extends AppCompatActivity {
 
@@ -94,7 +95,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.photo_4)
     ImageView photo4;
 
-    ImageView[] arrayImageViews = new ImageView[4];
+    @BindView(R.id.view_1)
+    FrameLayout view1;
+
+    @BindView(R.id.view_2)
+    FrameLayout view2;
+
+    @BindView(R.id.view_3)
+    FrameLayout view3;
+
+    @BindView(R.id.view_4)
+    FrameLayout view4;
+
+    List<Pair<ImageView, FrameLayout>> arrayImageViews = new ArrayList<>();
 
     // Evenement sur le spinner
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
@@ -122,10 +135,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // Catch preferences
         externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
 
-        arrayImageViews[0] = photo1;
-        arrayImageViews[1] = photo2;
-        arrayImageViews[2] = photo3;
-        arrayImageViews[3] = photo4;
+        arrayImageViews.add(new Pair<>(photo1, view1));
+        arrayImageViews.add(new Pair<>(photo2, view2));
+        arrayImageViews.add(new Pair<>(photo3, view3));
+        arrayImageViews.add(new Pair<>(photo4, view4));
 
         // Alimentation du spinner avec la liste des catégories
         viewModel.getLiveDataListCategorie()
@@ -201,8 +214,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private void initPhotos(List<PhotoEntity> photoEntities) {
 
         // Init all default Tag to null
-        for (ImageView imageView : arrayImageViews) {
-            imageView.setTag(null);
+        for (Pair pair : arrayImageViews) {
+            ImageView imageView = (ImageView) pair.first;
+            FrameLayout frame = (FrameLayout) pair.second;
+
+            frame.setTag(null);
             imageView.setImageResource(R.drawable.ic_add_a_photo_grey_900_48dp);
         }
 
@@ -212,7 +228,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 boolean insertion = false;
                 int i = 0;
                 while (!insertion && i < 4) {
-                    insertion = insertPhotoInImageView(arrayImageViews[i], photo);
+                    insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
                     i++;
                 }
             }
@@ -226,17 +242,25 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * @param photoEntity
      * @return
      */
-    private boolean insertPhotoInImageView(ImageView imageView, PhotoEntity photoEntity) {
-        if (imageView.getTag() == null) {
-            try {
-                imageView.setTag(photoEntity);
-                InputStream in = getContentResolver().openInputStream(Uri.parse(photoEntity.getUriLocal()));
-                Bitmap bitmap = BitmapFactory.decodeStream(in);
-                imageView.setImageBitmap(bitmap);
-                return true;
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
+    private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
+        ImageView imageView = pair.first;
+        FrameLayout frameLayout = pair.second;
+        if (frameLayout.getTag() == null) {
+//            try {
+            frameLayout.setTag(photoEntity);
+            GlideApp.with(this)
+                    .applyDefaultRequestOptions(RequestOptions.circleCropTransform())
+                    .load(Uri.parse(photoEntity.getUriLocal()))
+                    .placeholder(R.drawable.ic_add_a_photo_grey_900_48dp)
+                    .into(imageView);
+
+//                InputStream in = getContentResolver().openInputStream();
+//                Bitmap bitmap = BitmapFactory.decodeStream(in);
+//                imageView.setImageBitmap(bitmap);
+            return true;
+//            } catch (FileNotFoundException e) {
+//                Log.e(TAG, e.getMessage(), e);
+//            }
         }
         return false;
     }
@@ -393,7 +417,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    @OnClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
+    @OnClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
     public void onClick(View v) {
         if (v.getTag() == null) {
             // Mode création d'une nouvelle photo
@@ -422,7 +446,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    @OnLongClick(value = {R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4})
+    @OnLongClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
     public boolean onLongClick(View v) {
         return v.getTag() != null && viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag());
     }

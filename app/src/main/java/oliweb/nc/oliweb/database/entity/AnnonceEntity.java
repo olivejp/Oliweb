@@ -20,7 +20,6 @@ import com.google.firebase.database.Exclude;
                 @Index("UuidUtilisateur"),
                 @Index("idCategorie")})
 public class AnnonceEntity {
-    @Exclude
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idAnnonce;
@@ -32,13 +31,13 @@ public class AnnonceEntity {
     private String contactByTel;
     private String contactByEmail;
     private String contactByMsg;
-    @Exclude
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
     private String UuidUtilisateur;
     private Long idCategorie;
     private String debattre;
 
+    @Exclude
     @NonNull
     public Long getIdAnnonce() {
         return idAnnonce;
@@ -112,6 +111,7 @@ public class AnnonceEntity {
         this.contactByMsg = contactByMsg;
     }
 
+    @Exclude
     public StatusRemote getStatut() {
         return statut;
     }

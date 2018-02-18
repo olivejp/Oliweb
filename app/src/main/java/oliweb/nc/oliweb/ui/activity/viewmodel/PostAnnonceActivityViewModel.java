@@ -70,7 +70,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
-        photoEntity.setUUID(UUID.randomUUID().toString());
         photoEntity.setUriLocal(path);
         photoEntity.setStatut(StatusRemote.TO_SEND);
         this.listPhoto.add(photoEntity);

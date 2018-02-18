@@ -20,8 +20,11 @@
 
             <android.support.v7.widget.SearchView
                 android:id="@+id/search_view"
+                app:queryBackground="@color/colorAccentDark"
+                app:queryHint="Rechercher annonce..."
+                android:imeOptions="actionSearch"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="35dp" />
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>

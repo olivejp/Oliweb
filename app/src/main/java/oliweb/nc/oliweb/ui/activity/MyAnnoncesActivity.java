@@ -27,7 +27,6 @@ import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
-import static oliweb.nc.oliweb.SharedPreferencesHelper.PREF_VALUE_DISPLAY_MODE_RAW;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -83,9 +82,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        int displayMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayMode();
+        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
 
-        if (displayMode == PREF_VALUE_DISPLAY_MODE_RAW) {
+        if (displayBeautyMode) {
             // En mode Raw
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
             annonceAdapterRaw = new AnnonceAdapterRaw(onClickListener);
@@ -104,7 +103,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
         viewModel.findByUuidUtilisateur(uidUser)
                 .observe(this, annonceWithPhotos -> {
-                    if (displayMode == PREF_VALUE_DISPLAY_MODE_RAW) {
+                    if (displayBeautyMode) {
                         annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
                     } else {
                         annonceAdapterSingle.setListAnnonces(annonceWithPhotos);

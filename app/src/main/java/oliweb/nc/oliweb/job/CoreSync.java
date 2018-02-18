@@ -10,6 +10,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
+import java.util.List;
 
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
@@ -18,6 +19,8 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 
 /**
  * Created by orlanth23 on 18/12/2017.
@@ -34,9 +37,7 @@ class CoreSync {
     private static FirebaseDatabase fireDb;
     private static StorageReference fireStorage;
     private static PhotoRepository photoRepository;
-    private static final String FIREBASE_DB_ANNONCE_REF = "annonces";
-    private static final String FIREBASE_DB_PHOTO_REF = "photos";
-    private static final String FIREBASE_STORAGE_PHOTO = "photos";
+
 
     /**
      * Private constructor
@@ -49,7 +50,7 @@ class CoreSync {
             this.context = context;
         }
         this.sendNotification = sendNotification;
-        this.consThrowable = throwable -> Log.e(TAG, "Erreur sur l'API AfterShip : " + throwable.getMessage() + " Localized message : " + throwable.getLocalizedMessage(), throwable);
+        this.consThrowable = throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable);
     }
 
     public static CoreSync getInstance(Context context, boolean sendNotification) {
@@ -90,6 +91,25 @@ class CoreSync {
     }
 
     /**
+     * Envoi des photos sur FirebaseStorage
+     * @param listPhoto
+     */
+    private void sendPhotos(List<PhotoEntity> listPhoto) {
+        for (PhotoEntity photo : listPhoto) {
+            File file = new File(photo.getUriLocal());
+            String fileName = file.getName();
+            StorageReference storageReference = fireStorage.child(fileName);
+            storageReference.delete().addOnCompleteListener(task ->
+                    storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                            .addOnSuccessListener(taskSnapshot -> {
+                                photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
+                                photoRepository.save(photo, null);
+                            })
+                            .addOnFailureListener(e -> Log.e(TAG, "Failed to upload image")));
+        }
+    }
+
+    /**
      * First send the photo to catch the URL Download link, then onAfterTerminate send the annonces
      */
     void createOrUpdateAnnonce() {
@@ -98,19 +118,6 @@ class CoreSync {
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .doAfterTerminate(this::sendAnnonce)
-                .subscribe(photoEntities -> {
-                    // Envoi des photos sur FirebaseStorage
-                    for (PhotoEntity photo : photoEntities) {
-                        File file = new File(photo.getUriLocal());
-                        String fileName = file.getName();
-                        StorageReference storageReference = fireStorage.child(fileName);
-                        storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                                .addOnSuccessListener(taskSnapshot -> {
-                                    photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                                    photoRepository.save(photo, null);
-                                })
-                                .addOnFailureListener(e -> Log.e(TAG, "Failed to upload image"));
-                    }
-                });
+                .subscribe(this::sendPhotos);
     }
 }

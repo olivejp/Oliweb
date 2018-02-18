@@ -30,14 +30,33 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <meta-data
+                android:name="android.app.default_searchable"
+                android:value="oliweb.nc.oliweb.ui.activity.SearchActivity" />
         </activity>
         <activity
-            android:name=".ui.activity.PostAnnonceActivity"
+            android:name="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
             android:parentActivityName=".ui.activity.MyAnnoncesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MyAnnoncesActivity" />
+        </activity>
+        <activity
+            android:name=".ui.activity.SearchActivity"
+            android:label="Recherche annonce"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
         </activity>
         <activity
             android:name=".ui.activity.WorkImageActivity"
@@ -95,10 +114,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.MainActivity" />
         </activity>
+
         <service
             android:name=".job.SyncService"
             android:exported="false" />
-
     </application>
 
 </manifest>

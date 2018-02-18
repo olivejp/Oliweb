@@ -13,6 +13,9 @@ public class Constants {
     public static final int MAX_SIZE = 1024;
     static final String CURRENCY = "xpf";
 
+    public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
+    public static final String FIREBASE_DB_PHOTO_REF = "photos";
+    public static final String FIREBASE_STORAGE_PHOTO = "photos";
     /**
      * Minutes we will wait before launch the sync
      */

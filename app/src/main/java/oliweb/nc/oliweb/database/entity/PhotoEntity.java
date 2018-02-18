@@ -19,20 +19,16 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
         foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce", onDelete = CASCADE),
         indices = @Index(value = "idAnnonce"))
 public class PhotoEntity {
-    @Exclude
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idPhoto;
-    private String UUID;
-    @Exclude
     private String uriLocal;
     private String firebasePath;
-    @Exclude
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
-    @Exclude
     private Long idAnnonce;
 
+    @Exclude
     @NonNull
     public Long getIdPhoto() {
         return idPhoto;
@@ -42,14 +38,7 @@ public class PhotoEntity {
         this.idPhoto = idPhoto;
     }
 
-    public String getUUID() {
-        return UUID;
-    }
-
-    public void setUUID(String UUID) {
-        this.UUID = UUID;
-    }
-
+    @Exclude
     public String getUriLocal() {
         return uriLocal;
     }
@@ -66,6 +55,7 @@ public class PhotoEntity {
         this.firebasePath = firebasePath;
     }
 
+    @Exclude
     public StatusRemote getStatut() {
         return statut;
     }
@@ -74,6 +64,7 @@ public class PhotoEntity {
         this.statut = statut;
     }
 
+    @Exclude
     public Long getIdAnnonce() {
         return idAnnonce;
     }

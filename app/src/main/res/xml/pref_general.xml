@@ -6,6 +6,14 @@
         android:summary="Utilisation de la carte SD pour mémoriser les photos prises avec l'application."
         android:title="Utilisation carte SD" />
 
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="PREF_DISPLAY_MODE"
+        android:summary="Affichage avancé nécessitant plus de mémoire et plus de bande passante"
+        android:title="Affichage en mode Beauty" />
+
+
+
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <EditTextPreference
