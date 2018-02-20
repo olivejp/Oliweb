@@ -5,8 +5,7 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.google.firebase.database.Exclude;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -29,6 +28,7 @@ public class CategorieEntity {
         this.couleur = couleur;
     }
 
+    @Exclude
     @NonNull
     public Long getIdCategorie() {
         return idCategorie;

@@ -4,6 +4,8 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.google.firebase.database.Exclude;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
@@ -18,6 +20,7 @@ public class UtilisateurEntity {
     private Long dateCreation;
     private Long dateLastConnexion;
 
+    @Exclude
     @NonNull
     public String getUuidUtilisateur() {
         return UuidUtilisateur;
@@ -43,6 +46,7 @@ public class UtilisateurEntity {
         this.email = email;
     }
 
+    @Exclude
     public Long getDateCreation() {
         return dateCreation;
     }
@@ -51,6 +55,7 @@ public class UtilisateurEntity {
         this.dateCreation = dateCreation;
     }
 
+    @Exclude
     public Long getDateLastConnexion() {
         return dateLastConnexion;
     }

@@ -8,6 +8,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -17,6 +18,7 @@ import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.retrofit.RetrofitElasticClient;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
@@ -69,19 +71,28 @@ public class SearchActivity extends AppCompatActivity {
         // Get the intent, verify the action and get the query
         Intent intent = getIntent();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            String query = intent.getStringExtra(SearchManager.QUERY);
 
-            // Call Elasticsearch to get the annonce DTO list
-            RetrofitElasticClient.searchText(query)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(annoncesWithPhotos -> {
-                if (displayBeautyMode) {
-                    annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);
-                } else {
-                    annonceAdapterSingle.setListAnnonces(annoncesWithPhotos);
-                }
-            });
+            if (NetworkReceiver.checkConnection(this)) {
+                String query = intent.getStringExtra(SearchManager.QUERY);
+
+                // Call Elasticsearch to get the annonce DTO list
+                RetrofitElasticClient.searchText(query)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(annoncesWithPhotos -> {
+                            if (annoncesWithPhotos.isEmpty()) {
+
+                            } else {
+                                if (displayBeautyMode) {
+                                    annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);
+                                } else {
+                                    annonceAdapterSingle.setListAnnonces(annoncesWithPhotos);
+                                }
+                            }
+                        });
+            } else {
+                Toast.makeText(this, "Impossible de rechercher sans connexion", Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

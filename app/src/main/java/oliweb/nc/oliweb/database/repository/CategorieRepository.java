@@ -6,6 +6,7 @@ import android.content.Context;
 import java.util.List;
 
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 
@@ -32,6 +33,10 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
 
     public Maybe<List<CategorieEntity>> getListCategorie() {
         return this.categorieDao.getListCategorie();
+    }
+
+    public Single<CategorieEntity> findSingleById(long idCategorie) {
+        return this.categorieDao.findSingleById(idCategorie);
     }
 
     public LiveData<CategorieEntity> findById(Long id) {

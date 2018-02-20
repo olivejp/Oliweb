@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import java.util.concurrent.Executors;
 
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
+import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
@@ -24,7 +25,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 7, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
+@Database(version = 8, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
     private static OliwebDatabase INSTANCE;
 
@@ -77,4 +78,6 @@ public abstract class OliwebDatabase extends RoomDatabase {
     public abstract PhotoDao PhotoDao();
 
     public abstract AnnonceWithPhotosDao AnnonceWithPhotosDao();
+
+    public abstract AnnonceFullDao AnnonceFullDao();
 }

@@ -8,6 +8,7 @@ import android.arch.persistence.room.Transaction;
 import java.util.List;
 
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 
 /**
@@ -22,4 +23,9 @@ public interface CategorieDao extends AbstractDao<CategorieEntity> {
     @Transaction
     @Query("SELECT * FROM categorie")
     Maybe<List<CategorieEntity>> getListCategorie();
+
+    @Transaction
+    @Query("SELECT * FROM categorie WHERE idCategorie = :idCategorie")
+    Single<CategorieEntity> findSingleById(Long idCategorie);
+
 }

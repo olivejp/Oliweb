@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -14,10 +15,11 @@ import java.util.List;
 
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
+import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
@@ -37,6 +39,7 @@ class CoreSync {
     private static FirebaseDatabase fireDb;
     private static StorageReference fireStorage;
     private static PhotoRepository photoRepository;
+    private static AnnonceRepository annonceRepository;
 
 
     /**
@@ -59,32 +62,37 @@ class CoreSync {
             fireDb = FirebaseDatabase.getInstance();
             fireStorage = FirebaseStorage.getInstance().getReference();
             photoRepository = PhotoRepository.getInstance(context);
+            annonceRepository = AnnonceRepository.getInstance(context);
         }
         return INSTANCE;
     }
 
     private void sendAnnonce() {
-        AnnonceWithPhotosRepository.getInstance(context)
-                .getAllAnnonceByStatus(StatusRemote.TO_SEND.getValue())
+        AnnonceFullRepository.getInstance(context)
+                .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(annoncesWithPhoto -> {
-                    for (AnnonceWithPhotos annonceWithPhoto : annoncesWithPhoto) {
+                .subscribe(annoncesFulls -> {
+                    for (AnnonceFull annonceFull : annoncesFulls) {
 
-                        // On est sur le point d'envoyer l'annonce, on change son statut
-                        annonceWithPhoto.getAnnonceEntity().setStatut(StatusRemote.SEND);
+                        // SuccessListener qui permettra de changer le statut de l'annonce après envoi à Firebase.
+                        OnSuccessListener<Void> onSuccessListener = o -> {
+                            annonceFull.getAnnonceEntity().setStatut(StatusRemote.SEND);
+                            annonceRepository.update(null, annonceFull.getAnnonceEntity());
+                        };
 
                         // Création ou mise à jour de l'annonce
-                        if (annonceWithPhoto.getAnnonceEntity().getUUID() != null) {
+                        if (annonceFull.getAnnonceEntity().getUUID() != null) {
                             // Mise à jour de l'annonce
                             fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
-                                    .child(annonceWithPhoto.getAnnonceEntity().getUUID())
-                                    .setValue(annonceWithPhoto);
+                                    .child(annonceFull.getAnnonceEntity().getUUID())
+                                    .setValue(annonceFull)
+                                    .addOnSuccessListener(onSuccessListener);
                         } else {
                             // Création d'une annonce
                             DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
-                            annonceWithPhoto.getAnnonceEntity().setUUID(dbRef.getKey());
-                            dbRef.setValue(annonceWithPhoto);
+                            annonceFull.getAnnonceEntity().setUUID(dbRef.getKey());
+                            dbRef.setValue(annonceFull).addOnSuccessListener(onSuccessListener);
                         }
                     }
                 });
@@ -99,13 +107,13 @@ class CoreSync {
             File file = new File(photo.getUriLocal());
             String fileName = file.getName();
             StorageReference storageReference = fireStorage.child(fileName);
-            storageReference.delete().addOnCompleteListener(task ->
+            storageReference.delete()
+                    .addOnCompleteListener(task ->
                     storageReference.putFile(Uri.parse(photo.getUriLocal()))
                             .addOnSuccessListener(taskSnapshot -> {
                                 photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
                                 photoRepository.save(photo, null);
-                            })
-                            .addOnFailureListener(e -> Log.e(TAG, "Failed to upload image")));
+                            }).addOnFailureListener(e -> Log.e(TAG, "Failed to upload image")));
         }
     }
 

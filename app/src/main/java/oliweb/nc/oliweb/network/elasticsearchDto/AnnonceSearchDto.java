@@ -7,13 +7,22 @@ import java.util.List;
  */
 
 public class AnnonceSearchDto {
+    private UtilisateurSearchDto utilisateurSearchDto;
+    private List<PhotoSearchDto> photos;
+    private CategorieSearchDto categorie;
     private String uuid;
-    private long idCategorie;
     private String titre;
     private String description;
     private int prix;
-    private List<PhotoSearchDto> photos;
     private long datePublication;
+
+    public UtilisateurSearchDto getUtilisateurSearchDto() {
+        return utilisateurSearchDto;
+    }
+
+    public void setUtilisateurSearchDto(UtilisateurSearchDto utilisateurSearchDto) {
+        this.utilisateurSearchDto = utilisateurSearchDto;
+    }
 
     public String getUuid() {
         return uuid;
@@ -23,12 +32,12 @@ public class AnnonceSearchDto {
         this.uuid = uuid;
     }
 
-    public long getIdCategorie() {
-        return idCategorie;
+    public CategorieSearchDto getCategorie() {
+        return categorie;
     }
 
-    public void setIdCategorie(long idCategorie) {
-        this.idCategorie = idCategorie;
+    public void setCategorie(CategorieSearchDto categorie) {
+        this.categorie = categorie;
     }
 
     public String getTitre() {

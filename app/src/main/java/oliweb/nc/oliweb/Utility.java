@@ -15,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.TextView;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -23,8 +22,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
@@ -34,24 +31,10 @@ import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 public class Utility {
 
-    public static final String DIALOG_TAG_UNREGISTER = "UNREGISTER";
-
     //Email Pattern
     private static final String EMAIL_PATTERN =
             "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                     + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-
-    public static boolean isTextViewOnError(boolean condition, TextView textView, String msgError, boolean requestFocus) {
-        if (condition) {
-            textView.setError(msgError);
-            if (requestFocus) {
-                textView.requestFocus();
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * @param fragmentManager Get from the context
@@ -70,33 +53,6 @@ public class Utility {
         dialogErreur.setListener(listener);
         dialogErreur.setArguments(bundle);
         dialogErreur.show(fragmentManager, tag);
-    }
-
-    /**
-     * Only check if the string contains an @
-     *
-     * @param email to check
-     * @return false if password valid, true otherwise
-     */
-    public static boolean validateEmail(String email) {
-        Pattern pattern = Pattern.compile(EMAIL_PATTERN);
-        Matcher matcher = pattern.matcher(email);
-
-        return matcher.matches() && email.contains("@");
-    }
-
-    /**
-     * Password should contains at least 6 caracters
-     *
-     * @param password to check
-     * @return false if password valid, true otherwise
-     */
-    public static boolean isPasswordValid(String password) {
-        return password.length() >= 6;
-    }
-
-    public static boolean isNotNull(String txt) {
-        return txt != null && txt.trim().length() > 0;
     }
 
     /**
@@ -218,7 +174,7 @@ public class Utility {
         annonceEntity.setUUID(annonceSearchDto.getUuid());
         annonceEntity.setTitre(annonceSearchDto.getTitre());
         annonceEntity.setDescription(annonceSearchDto.getDescription());
-        annonceEntity.setIdCategorie(annonceSearchDto.getIdCategorie());
+        annonceEntity.setIdCategorie(annonceSearchDto.getCategorie().getId());
         annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
         annonceEntity.setPrix(annonceSearchDto.getPrix());
 

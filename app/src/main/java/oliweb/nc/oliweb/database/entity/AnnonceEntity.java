@@ -34,7 +34,7 @@ public class AnnonceEntity {
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
     private String UuidUtilisateur;
-    private Long idCategorie;
+    private long idCategorie;
     private String debattre;
 
     @Exclude
@@ -120,6 +120,7 @@ public class AnnonceEntity {
         this.statut = statut;
     }
 
+    @Exclude
     public String getUuidUtilisateur() {
         return UuidUtilisateur;
     }
@@ -128,6 +129,7 @@ public class AnnonceEntity {
         UuidUtilisateur = uuidUtilisateur;
     }
 
+    @Exclude
     public Long getIdCategorie() {
         return idCategorie;
     }
