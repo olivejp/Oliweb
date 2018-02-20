@@ -2,50 +2,38 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * The Result of a Complex ES query
- * This object contains both the query results and the aggregations results
- * Hits : Query results contains IDs, source objects and total items
- * Aggregations : results contain a map of all aggregations which keys represent the names of the aggs queries
- * @param <T> The domain object being queried (results will be serialized to this type)
- */
 public class Result<T> {
 
-    private Hits<T> hits = new Hits<>();
+    @SerializedName("took")
+    private long millisecondResponse;
 
-    private Map<String, Object> aggregations = new HashMap<>();
+    @SerializedName("time_out")
+    private boolean timeOut;
 
-    /**
-     * @return The list of results for the ES query
-     */
     @SerializedName("hits")
+    private Hits<T> hits;
+
+    public long getMillisecondResponse() {
+        return millisecondResponse;
+    }
+
+    public void setMillisecondResponse(long millisecondResponse) {
+        this.millisecondResponse = millisecondResponse;
+    }
+
+    public boolean isTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(boolean timeOut) {
+        this.timeOut = timeOut;
+    }
+
     public Hits<T> getHits() {
         return hits;
     }
 
     public void setHits(Hits<T> hits) {
         this.hits = hits;
-    }
-
-    /**
-     * @return The list of aggregations for the ES query
-     */
-    @SerializedName("aggregations")
-    public Map<String, Object> getAggregations() {
-        return aggregations;
-    }
-
-    public void setAggregations(Map<String, Object> aggregations) {
-        this.aggregations = aggregations;
-    }
-    @Override
-    public String toString() {
-        return "Result{" +
-            "hits=" + hits +
-            ", aggregations=" + aggregations +
-            '}';
     }
 }

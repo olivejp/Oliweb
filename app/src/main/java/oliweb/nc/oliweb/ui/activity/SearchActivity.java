@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
@@ -45,6 +48,10 @@ public class SearchActivity extends AppCompatActivity {
             startActivity(intent);
         };
 
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
         // Recherche du mode display actuellement dans les préférences.
         boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         if (displayBeautyMode) {
@@ -65,7 +72,10 @@ public class SearchActivity extends AppCompatActivity {
             String query = intent.getStringExtra(SearchManager.QUERY);
 
             // Call Elasticsearch to get the annonce DTO list
-            RetrofitElasticClient.searchText(query).subscribe(annoncesWithPhotos -> {
+            RetrofitElasticClient.searchText(query)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(annoncesWithPhotos -> {
                 if (displayBeautyMode) {
                     annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);
                 } else {

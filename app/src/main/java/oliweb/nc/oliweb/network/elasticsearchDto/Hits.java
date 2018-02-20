@@ -11,14 +11,15 @@ import java.util.List;
  */
 public class Hits<T> {
 
-    private long total = 0;
-    private Float maxScore = 0F;
-    private List<Element<T>> rawResults = new ArrayList<>();
-
-    /**
-     * @return The total number of results (and not on this single page)
-     */
     @SerializedName("total")
+    private long total;
+
+    @SerializedName("max_score")
+    private Float maxScore;
+
+    @SerializedName("hits")
+    private List<Element<T>> hits = new ArrayList<>();
+
     public long getTotal() {
         return total;
     }
@@ -27,10 +28,6 @@ public class Hits<T> {
         this.total = total;
     }
 
-    /**
-     * @return The maximum score reached by the results
-     */
-    @SerializedName("max_score")
     public Float getMaxScore() {
         return maxScore;
     }
@@ -39,24 +36,11 @@ public class Hits<T> {
         this.maxScore = maxScore;
     }
 
-    /**
-     * @return The ES raw results of the query (with their ES properties)
-     */
-    @SerializedName("hits")
-    public List<Element<T>> getRawResults() {
-        return rawResults;
+    public List<Element<T>> getHits() {
+        return hits;
     }
 
-    public void setRawResults(List<Element<T>> results) {
-        this.rawResults = results;
-    }
-
-    @Override
-    public String toString() {
-        return "Hits{" +
-            "total=" + total +
-            ", maxScore=" + maxScore +
-            ", rawResults=" + rawResults +
-            '}';
+    public void setHits(List<Element<T>> hits) {
+        this.hits = hits;
     }
 }

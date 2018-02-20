@@ -3,25 +3,23 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Map;
-
-/**
- * Element represent a document as a result of a search
- * @param <T> The domain object being queried (results will be serialized to this type)
- */
 public class Element<T> {
 
-    private String index;
-    private String type;
-    private Float score;
-    private String id;
-    private T source;
-    private Map<String, Object> elementAsMap;
-
-    /**
-     * @return The ES index name containing the document
-     */
     @SerializedName("_index")
+    private String index;
+
+    @SerializedName("_type")
+    private String type;
+
+    @SerializedName("_score")
+    private Float score;
+
+    @SerializedName("_id")
+    private String id;
+
+    @SerializedName("_source")
+    private T source;
+
     public String getIndex() {
         return index;
     }
@@ -30,10 +28,6 @@ public class Element<T> {
         this.index = index;
     }
 
-    /**
-     * @return The ES type inside the index containing the document
-     */
-    @SerializedName("_type")
     public String getType() {
         return type;
     }
@@ -42,10 +36,6 @@ public class Element<T> {
         this.type = type;
     }
 
-    /**
-     * @return The score of this document regarding the search
-     */
-    @SerializedName("_score")
     public Float getScore() {
         return score;
     }
@@ -54,10 +44,6 @@ public class Element<T> {
         this.score = score;
     }
 
-    /**
-     * @return The ES id of the document
-     */
-    @SerializedName("_id")
     public String getId() {
         return id;
     }
@@ -66,37 +52,11 @@ public class Element<T> {
         this.id = id;
     }
 
-    /**
-     * @return The ES document serialized in the domain object type
-     */
     public T getSource() {
         return source;
     }
 
-    public void setSource(T element) {
-        this.source = element;
-    }
-
-    /**
-     * @return The raw ES document as a Map object
-     */
-    @SerializedName("_source")
-    public Map<String, Object> getElementAsMap() {
-        return elementAsMap;
-    }
-
-    public void setElementAsMap(Map<String, Object> elementAsMap) {
-        this.elementAsMap = elementAsMap;
-    }
-
-    @Override
-    public String toString() {
-        return "Element{" +
-            "index='" + index + '\'' +
-            ", type='" + type + '\'' +
-            ", score=" + score +
-            ", id='" + id + '\'' +
-            ", source=" + source +
-            '}';
+    public void setSource(T source) {
+        this.source = source;
     }
 }

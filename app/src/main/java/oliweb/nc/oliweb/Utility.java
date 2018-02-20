@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -206,13 +207,13 @@ public class Utility {
     }
 
     /**
-     *
      * @param annonceSearchDto
      * @return
      */
-    public static AnnonceWithPhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto){
+    public static AnnonceWithPhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto) {
         AnnonceWithPhotos annonceWithPhotos = new AnnonceWithPhotos();
         AnnonceEntity annonceEntity = new AnnonceEntity();
+        annonceWithPhotos.setPhotos(new ArrayList<>());
 
         annonceEntity.setUUID(annonceSearchDto.getUuid());
         annonceEntity.setTitre(annonceSearchDto.getTitre());

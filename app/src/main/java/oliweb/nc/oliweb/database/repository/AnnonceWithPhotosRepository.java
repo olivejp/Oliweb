@@ -8,14 +8,13 @@ import java.util.List;
 import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 
 /**
  * Created by 2761oli on 29/01/2018.
  */
 
-public class AnnonceWithPhotosRepository extends AbstractRepository<AnnonceEntity> {
+public class AnnonceWithPhotosRepository {
     private static AnnonceWithPhotosRepository INSTANCE;
     private AnnonceWithPhotosDao annonceWithPhotosDao;
 
