@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class AnnonceFull {
     @Embedded
-    public AnnonceEntity annonceEntity;
+    public AnnonceEntity annonce;
 
     @Relation(parentColumn = "idAnnonce", entityColumn = "idAnnonce")
     public List<PhotoEntity> photos;
@@ -21,14 +21,14 @@ public class AnnonceFull {
     public Set<CategorieEntity> categorie;
 
     @Relation(parentColumn = "UuidUtilisateur", entityColumn = "UuidUtilisateur")
-    public Set<UtilisateurEntity> utilisateurEntity;
+    public Set<UtilisateurEntity> utilisateur;
 
-    public AnnonceEntity getAnnonceEntity() {
-        return annonceEntity;
+    public AnnonceEntity getAnnonce() {
+        return annonce;
     }
 
-    public void setAnnonceEntity(AnnonceEntity annonceEntity) {
-        this.annonceEntity = annonceEntity;
+    public void setAnnonce(AnnonceEntity annonce) {
+        this.annonce = annonce;
     }
 
     public List<PhotoEntity> getPhotos() {
@@ -47,11 +47,11 @@ public class AnnonceFull {
         this.categorie = categorie;
     }
 
-    public Set<UtilisateurEntity> getUtilisateurEntity() {
-        return utilisateurEntity;
+    public Set<UtilisateurEntity> getUtilisateur() {
+        return utilisateur;
     }
 
-    public void setUtilisateurEntity(Set<UtilisateurEntity> utilisateurEntity) {
-        this.utilisateurEntity = utilisateurEntity;
+    public void setUtilisateur(Set<UtilisateurEntity> utilisateur) {
+        this.utilisateur = utilisateur;
     }
 }

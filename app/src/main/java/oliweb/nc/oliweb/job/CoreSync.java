@@ -77,21 +77,21 @@ class CoreSync {
 
                         // SuccessListener qui permettra de changer le statut de l'annonce après envoi à Firebase.
                         OnSuccessListener<Void> onSuccessListener = o -> {
-                            annonceFull.getAnnonceEntity().setStatut(StatusRemote.SEND);
-                            annonceRepository.update(null, annonceFull.getAnnonceEntity());
+                            annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
+                            annonceRepository.update(null, annonceFull.getAnnonce());
                         };
 
                         // Création ou mise à jour de l'annonce
-                        if (annonceFull.getAnnonceEntity().getUUID() != null) {
+                        if (annonceFull.getAnnonce().getUUID() != null) {
                             // Mise à jour de l'annonce
                             fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
-                                    .child(annonceFull.getAnnonceEntity().getUUID())
+                                    .child(annonceFull.getAnnonce().getUUID())
                                     .setValue(annonceFull)
                                     .addOnSuccessListener(onSuccessListener);
                         } else {
                             // Création d'une annonce
                             DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
-                            annonceFull.getAnnonceEntity().setUUID(dbRef.getKey());
+                            annonceFull.getAnnonce().setUUID(dbRef.getKey());
                             dbRef.setValue(annonceFull).addOnSuccessListener(onSuccessListener);
                         }
                     }
