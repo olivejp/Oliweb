@@ -1,7 +1,9 @@
 package oliweb.nc.oliweb.database.repository;
 
+import android.content.Context;
 import android.support.annotation.Nullable;
 
+import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AbstractDao;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
@@ -11,7 +13,12 @@ import oliweb.nc.oliweb.database.repository.task.TypeTask;
  * T : Entity
  */
 public abstract class AbstractRepository<T> {
-    private AbstractDao<T> dao;
+    protected AbstractDao<T> dao;
+    protected OliwebDatabase db;
+
+    AbstractRepository(Context context) {
+        db = OliwebDatabase.getInstance(context);
+    }
 
     /**
      * Cette méthode doit absolument être appelée dans le constructeur des classes filles

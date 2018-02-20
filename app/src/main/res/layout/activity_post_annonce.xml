@@ -139,7 +139,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:elevation="5dp"
-                    app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+                    app:srcCompat="@drawable/ic_add_grey_900_48dp" />
             </FrameLayout>
 
             <FrameLayout
@@ -156,7 +156,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:elevation="5dp"
-                    app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+                    app:srcCompat="@drawable/ic_add_grey_900_48dp" />
             </FrameLayout>
 
             <FrameLayout
@@ -173,7 +173,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:elevation="5dp"
-                    app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+                    app:srcCompat="@drawable/ic_add_grey_900_48dp" />
             </FrameLayout>
 
             <FrameLayout
@@ -190,7 +190,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:elevation="5dp"
-                    app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
+                    app:srcCompat="@drawable/ic_add_grey_900_48dp" />
             </FrameLayout>
         </android.support.constraint.ConstraintLayout>
     </android.support.constraint.ConstraintLayout>

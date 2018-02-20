@@ -10,7 +10,6 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -24,9 +23,9 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
-        OliwebDatabase db = OliwebDatabase.getInstance(context);
-        this.annonceDao = db.AnnonceDao();
-        setDao(annonceDao);
+        super(context);
+        this.dao = this.db.AnnonceDao();
+        this.annonceDao = (AnnonceDao) this.dao;
     }
 
     public static synchronized AnnonceRepository getInstance(Context context) {

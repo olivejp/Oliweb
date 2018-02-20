@@ -16,7 +16,12 @@ public class Constants {
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
     public static final String FIREBASE_DB_PHOTO_REF = "photos";
     public static final String FIREBASE_STORAGE_PHOTO = "photos";
+
+    public static final String URL_AFTERSHIP_BASE_URL = "http://35.201.25.32/elasticsearch/annonces/";
+
     /**
+     *
+     *
      * Minutes we will wait before launch the sync
      */
     public static final long PERIODIC_SYNC_JOB_MINS = 15;

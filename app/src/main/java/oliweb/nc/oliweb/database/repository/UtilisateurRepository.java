@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -20,9 +19,9 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
     private UtilisateurDao utilisateurDao;
 
     private UtilisateurRepository(Context context) {
-        OliwebDatabase db = OliwebDatabase.getInstance(context);
-        this.utilisateurDao = db.utilisateurDao();
-        setDao(utilisateurDao);
+        super(context);
+        this.utilisateurDao = this.db.utilisateurDao();
+        this.dao = utilisateurDao;
     }
 
     public static synchronized UtilisateurRepository getInstance(Context context) {

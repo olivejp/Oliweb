@@ -6,7 +6,6 @@ import android.content.Context;
 import java.util.List;
 
 import io.reactivex.Maybe;
-import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 
@@ -19,9 +18,9 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
     private CategorieDao categorieDao;
 
     private CategorieRepository(Context context) {
-        OliwebDatabase db = OliwebDatabase.getInstance(context);
+        super(context);
         this.categorieDao = db.categorieDao();
-        setDao(categorieDao);
+        this.dao = categorieDao;
     }
 
     public static synchronized CategorieRepository getInstance(Context context) {

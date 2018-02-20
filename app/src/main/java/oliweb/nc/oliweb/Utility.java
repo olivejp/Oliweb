@@ -25,6 +25,9 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 
@@ -200,5 +203,26 @@ public class Utility {
             return;
 
         inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    /**
+     *
+     * @param annonceSearchDto
+     * @return
+     */
+    public static AnnonceWithPhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto){
+        AnnonceWithPhotos annonceWithPhotos = new AnnonceWithPhotos();
+        AnnonceEntity annonceEntity = new AnnonceEntity();
+
+        annonceEntity.setUUID(annonceSearchDto.getUuid());
+        annonceEntity.setTitre(annonceSearchDto.getTitre());
+        annonceEntity.setDescription(annonceSearchDto.getDescription());
+        annonceEntity.setIdCategorie(annonceSearchDto.getIdCategorie());
+        annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
+        annonceEntity.setPrix(annonceSearchDto.getPrix());
+
+        annonceWithPhotos.setAnnonceEntity(annonceEntity);
+
+        return annonceWithPhotos;
     }
 }

@@ -10,7 +10,6 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -24,9 +23,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     private PhotoDao photoDao;
 
     private PhotoRepository(Context context) {
-        OliwebDatabase db = OliwebDatabase.getInstance(context);
-        this.photoDao = db.PhotoDao();
-        setDao(photoDao);
+        super(context);
+        this.photoDao = this.db.PhotoDao();
+        this.dao = this.photoDao;
     }
 
     public static synchronized PhotoRepository getInstance(Context context) {
