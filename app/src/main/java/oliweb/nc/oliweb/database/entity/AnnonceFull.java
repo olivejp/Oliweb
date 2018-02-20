@@ -4,7 +4,6 @@ import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Relation;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by orlanth23 on 08/02/2018.
@@ -18,10 +17,10 @@ public class AnnonceFull {
     public List<PhotoEntity> photos;
 
     @Relation(parentColumn = "idCategorie", entityColumn = "idCategorie")
-    public Set<CategorieEntity> categorie;
+    public List<CategorieEntity> categorie;
 
     @Relation(parentColumn = "UuidUtilisateur", entityColumn = "UuidUtilisateur")
-    public Set<UtilisateurEntity> utilisateur;
+    public List<UtilisateurEntity> utilisateur;
 
     public AnnonceEntity getAnnonce() {
         return annonce;
@@ -39,19 +38,19 @@ public class AnnonceFull {
         this.photos = photos;
     }
 
-    public Set<CategorieEntity> getCategorie() {
+    public List<CategorieEntity> getCategorie() {
         return categorie;
     }
 
-    public void setCategorie(Set<CategorieEntity> categorie) {
+    public void setCategorie(List<CategorieEntity> categorie) {
         this.categorie = categorie;
     }
 
-    public Set<UtilisateurEntity> getUtilisateur() {
+    public List<UtilisateurEntity> getUtilisateur() {
         return utilisateur;
     }
 
-    public void setUtilisateur(Set<UtilisateurEntity> utilisateur) {
+    public void setUtilisateur(List<UtilisateurEntity> utilisateur) {
         this.utilisateur = utilisateur;
     }
 }
