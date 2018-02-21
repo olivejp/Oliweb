@@ -81,7 +81,7 @@ public class SearchActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(annoncesWithPhotos -> {
                             if (annoncesWithPhotos.isEmpty()) {
-
+                                // ToDo afficher un message comme quoi la recherche n'a rien retourné
                             } else {
                                 if (displayBeautyMode) {
                                     annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);

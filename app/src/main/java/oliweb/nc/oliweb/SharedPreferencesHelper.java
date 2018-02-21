@@ -42,7 +42,7 @@ public class SharedPreferencesHelper {
     }
 
     public boolean getDisplayBeautyMode() {
-        return sharedPreferences.getBoolean(PREF_DISPLAY_MODE, false);
+        return sharedPreferences.getBoolean(PREF_DISPLAY_MODE, true);
     }
 
     public boolean getUseExternalStorage() {

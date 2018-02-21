@@ -17,6 +17,7 @@ public class UtilisateurEntity {
     private String UuidUtilisateur;
     private String telephone;
     private String email;
+    private String profile;
     private Long dateCreation;
     private Long dateLastConnexion;
 
@@ -28,6 +29,14 @@ public class UtilisateurEntity {
 
     public void setUuidUtilisateur(@NonNull String uuidUtilisateur) {
         UuidUtilisateur = uuidUtilisateur;
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public String getTelephone() {

@@ -64,6 +64,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
+    public void updatePhotos(){
+        this.liveListPhoto.postValue(this.listPhoto);
+    }
+
     public LiveData<List<CategorieEntity>> getLiveDataListCategorie() {
         return liveDataListCategorie;
     }
@@ -145,25 +149,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.liveListPhoto.postValue(list);
     }
 
+
     public void setUpdatedPhoto(PhotoEntity photo) {
         this.photoEntityUpdated = photo;
     }
 
     public PhotoEntity getUpdatedPhoto() {
         return this.photoEntityUpdated;
-    }
-
-    public AnnonceEntity getCurrentAnnonce() {
-        return annonce;
-    }
-
-    public void deletePhoto(long idPhoto) {
-        this.photoRepository.singleById(idPhoto)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(photoEntity -> {
-                    if (photoEntity != null) this.photoRepository.delete(null, photoEntity);
-                });
     }
 
     public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
@@ -174,19 +166,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.categorie = categorie;
     }
 
-    public CategorieEntity getCurrentCategorie() {
-        return this.categorie;
-    }
-
-    public LiveData<CategorieEntity> findCategorieById(long idCategorie) {
-        return this.categorieRepository.findById(idCategorie);
-    }
-
     public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
         return this.photoRepository.findAllByIdAnnonce(idAnnonce);
-    }
-
-    private void postToFireabse() {
-
     }
 }

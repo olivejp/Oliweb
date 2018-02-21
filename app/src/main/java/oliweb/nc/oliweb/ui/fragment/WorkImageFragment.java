@@ -14,11 +14,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 
@@ -62,11 +64,11 @@ public class WorkImageFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-
         View rootView = inflater.inflate(R.layout.fragment_work_image, container, false);
         ButterKnife.bind(this, rootView);
         pBitmap = MediaUtility.getBitmapFromUri(getContext(), Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
         photo.setImageBitmap(pBitmap);
+        Utility.hideKeyboard(this.activity);
         return rootView;
     }
 
@@ -84,7 +86,13 @@ public class WorkImageFragment extends Fragment {
 
     @OnClick(R.id.frag_work_image_button_valid_photo)
     public void onValid(View v) {
-
+        if (MediaUtility.saveBitmapToUri(pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
+            Toast.makeText(this.activity, "Image mise à jour", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this.activity, "Mise à jour échouée", Toast.LENGTH_LONG).show();
+        }
+        this.viewModel.updatePhotos();
+        this.activity.getSupportFragmentManager().popBackStackImmediate();
     }
 
     @OnClick(R.id.frag_work_image_button_delete_photo)

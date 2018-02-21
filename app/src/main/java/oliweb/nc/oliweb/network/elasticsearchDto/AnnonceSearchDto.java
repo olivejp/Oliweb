@@ -7,21 +7,21 @@ import java.util.List;
  */
 
 public class AnnonceSearchDto {
-    private UtilisateurSearchDto utilisateurSearchDto;
-    private List<PhotoSearchDto> photos;
-    private CategorieSearchDto categorie;
+    private UtilisateurSearchDto utilisateur;
+    private List<String> photos;
+    private String categorie;
     private String uuid;
     private String titre;
     private String description;
     private int prix;
     private long datePublication;
 
-    public UtilisateurSearchDto getUtilisateurSearchDto() {
-        return utilisateurSearchDto;
+    public UtilisateurSearchDto getUtilisateur() {
+        return utilisateur;
     }
 
-    public void setUtilisateurSearchDto(UtilisateurSearchDto utilisateurSearchDto) {
-        this.utilisateurSearchDto = utilisateurSearchDto;
+    public void setUtilisateur(UtilisateurSearchDto utilisateur) {
+        this.utilisateur = utilisateur;
     }
 
     public String getUuid() {
@@ -32,11 +32,11 @@ public class AnnonceSearchDto {
         this.uuid = uuid;
     }
 
-    public CategorieSearchDto getCategorie() {
+    public String getCategorie() {
         return categorie;
     }
 
-    public void setCategorie(CategorieSearchDto categorie) {
+    public void setCategorie(String categorie) {
         this.categorie = categorie;
     }
 
@@ -64,11 +64,11 @@ public class AnnonceSearchDto {
         this.prix = prix;
     }
 
-    public List<PhotoSearchDto> getPhotos() {
+    public List<String> getPhotos() {
         return photos;
     }
 
-    public void setPhotos(List<PhotoSearchDto> photos) {
+    public void setPhotos(List<String> photos) {
         this.photos = photos;
     }
 

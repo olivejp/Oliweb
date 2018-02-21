@@ -21,11 +21,16 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurSearchDto;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 
@@ -174,12 +179,39 @@ public class Utility {
         annonceEntity.setUUID(annonceSearchDto.getUuid());
         annonceEntity.setTitre(annonceSearchDto.getTitre());
         annonceEntity.setDescription(annonceSearchDto.getDescription());
-        annonceEntity.setIdCategorie(annonceSearchDto.getCategorie().getId());
+        // annonceEntity.setIdCategorie(annonceSearchDto.getCategorie().getId());
         annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
         annonceEntity.setPrix(annonceSearchDto.getPrix());
 
         annonceWithPhotos.setAnnonceEntity(annonceEntity);
 
         return annonceWithPhotos;
+    }
+
+    /**
+     * @param annonceFull
+     * @return
+     */
+    public static AnnonceSearchDto convertEntityToDto(AnnonceFull annonceFull) {
+        AnnonceSearchDto annonceSearchDto = new AnnonceSearchDto();
+        UtilisateurEntity utilisateurEntity = annonceFull.getUtilisateur().get(0);
+        UtilisateurSearchDto utilisateurSearchDto = new UtilisateurSearchDto(utilisateurEntity.getProfile(), utilisateurEntity.getUuidUtilisateur(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());
+        annonceSearchDto.setUtilisateur(utilisateurSearchDto);
+
+        annonceSearchDto.setCategorie(annonceFull.getCategorie().get(0).getName());
+
+        annonceSearchDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
+        annonceSearchDto.setDescription(annonceFull.getAnnonce().getDescription());
+        annonceSearchDto.setTitre(annonceFull.getAnnonce().getTitre());
+        annonceSearchDto.setPrix(annonceFull.getAnnonce().getPrix());
+        annonceSearchDto.setUuid(annonceFull.getAnnonce().getUUID());
+
+        List<String> listPhotoDto = new ArrayList<>();
+        for (PhotoEntity photo : annonceFull.getPhotos()) {
+            listPhotoDto.add(photo.getFirebasePath());
+        }
+        annonceSearchDto.setPhotos(listPhotoDto);
+
+        return annonceSearchDto;
     }
 }

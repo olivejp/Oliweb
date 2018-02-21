@@ -5,14 +5,24 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
  */
 
 public class UtilisateurSearchDto {
+    private String profile;
     private String uuid;
     private String telephone;
     private String email;
 
-    public UtilisateurSearchDto(String uuid, String telephone, String email) {
+    public UtilisateurSearchDto(String profile, String uuid, String telephone, String email) {
+        this.profile = profile;
         this.uuid = uuid;
         this.telephone = telephone;
         this.email = email;
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public String getUuid() {

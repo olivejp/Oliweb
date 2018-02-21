@@ -15,6 +15,7 @@ import java.util.List;
 
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -86,13 +87,13 @@ class CoreSync {
                             // Mise à jour de l'annonce
                             fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
                                     .child(annonceFull.getAnnonce().getUUID())
-                                    .setValue(annonceFull)
+                                    .setValue(Utility.convertEntityToDto(annonceFull))
                                     .addOnSuccessListener(onSuccessListener);
                         } else {
                             // Création d'une annonce
                             DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
                             annonceFull.getAnnonce().setUUID(dbRef.getKey());
-                            dbRef.setValue(annonceFull).addOnSuccessListener(onSuccessListener);
+                            dbRef.setValue(Utility.convertEntityToDto(annonceFull)).addOnSuccessListener(onSuccessListener);
                         }
                     }
                 });

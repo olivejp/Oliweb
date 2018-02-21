@@ -215,11 +215,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Init all default Tag to null
         for (Pair pair : arrayImageViews) {
-            ImageView imageView = (ImageView) pair.first;
             FrameLayout frame = (FrameLayout) pair.second;
-
             frame.setTag(null);
-            imageView.setImageResource(R.drawable.ic_add_a_photo_grey_900_48dp);
         }
 
         if (photoEntities != null && !photoEntities.isEmpty()) {
@@ -227,7 +224,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             for (PhotoEntity photo : photoEntities) {
                 boolean insertion = false;
                 int i = 0;
-                while (!insertion && i < 4) {
+                while (!insertion && i < arrayImageViews.size()) {
                     insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
                     i++;
                 }
@@ -238,29 +235,21 @@ public class PostAnnonceActivity extends AppCompatActivity {
     /**
      * If the imageView has no tag then insert photo and return True, return False otherwise.
      *
-     * @param imageView
+     * @param pair
      * @param photoEntity
      * @return
      */
     private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
         ImageView imageView = pair.first;
         FrameLayout frameLayout = pair.second;
-        if (frameLayout.getTag() == null) {
-//            try {
+        if (imageView != null && frameLayout != null && frameLayout.getTag() == null) {
             frameLayout.setTag(photoEntity);
             GlideApp.with(this)
-                    .applyDefaultRequestOptions(RequestOptions.circleCropTransform())
                     .load(Uri.parse(photoEntity.getUriLocal()))
-                    .placeholder(R.drawable.ic_add_a_photo_grey_900_48dp)
+                    .apply(RequestOptions.circleCropTransform())
+                    .placeholder(R.drawable.ic_add_grey_900_48dp)
                     .into(imageView);
-
-//                InputStream in = getContentResolver().openInputStream();
-//                Bitmap bitmap = BitmapFactory.decodeStream(in);
-//                imageView.setImageBitmap(bitmap);
             return true;
-//            } catch (FileNotFoundException e) {
-//                Log.e(TAG, e.getMessage(), e);
-//            }
         }
         return false;
     }
@@ -317,15 +306,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CAMERA_PERMISSION_CODE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                callCaptureIntent();
-            }
+        if (requestCode == REQUEST_CAMERA_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            callCaptureIntent();
         }
-        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                callGalleryIntent();
-            }
+
+        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            callGalleryIntent();
         }
     }
 
