@@ -1,13 +1,11 @@
 package oliweb.nc.oliweb.media;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v4.util.Pair;
@@ -221,13 +219,13 @@ public class MediaUtility {
                 // TODO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
                 // Suivre lien https://developer.android.com/training/data-storage/files.html#java
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                MediaConstants.IMAGE_DIRECTORY_NAME);
+                Constants.IMAGE_DIRECTORY_NAME);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d(TAG, "Oops! Failed create "
-                        + MediaConstants.IMAGE_DIRECTORY_NAME + " directory");
+                        + Constants.IMAGE_DIRECTORY_NAME + " directory");
                 return null;
             }
         }
@@ -251,33 +249,6 @@ public class MediaUtility {
             return File.separator + String.valueOf(prefixName) + "_VID_" + timeStamp + ".mp4";
         } else {
             return null;
-        }
-    }
-
-    public static String getRealPathFromGaleryUri(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        String result = null;
-        try {
-            String[] proj = {MediaStore.Images.Media.DATA};
-
-            try {
-                context.getContentResolver().openInputStream(contentUri);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-            int column_index;
-            if (cursor != null) {
-                column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                result = cursor.getString(column_index);
-            }
-            return result;
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
     }
 
