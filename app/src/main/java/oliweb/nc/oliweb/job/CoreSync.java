@@ -68,6 +68,7 @@ class CoreSync {
         return INSTANCE;
     }
 
+    // ToDo décalage possible lors de l'envoi des photos. Il faut attendre que toutes les photos aient été envoyées avant de lancer la synchro de l'annonce.
     private void sendAnnonce() {
         AnnonceFullRepository.getInstance(context)
                 .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())

@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,6 +37,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
     @BindView(R.id.recycler_annonces)
     RecyclerView recyclerView;
+
+    @BindView(R.id.empty_linear)
+    LinearLayout linearLayout;
 
     public static final String ARG_NOTICE_BUNDLE_ID_ANNONCE = "ARG_NOTICE_BUNDLE_ID_ANNONCE";
     public static final String ARG_NOTICE_BUNDLE_POSITION = "ARG_NOTICE_BUNDLE_POSITION";
@@ -103,22 +107,22 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
         viewModel.findByUuidUtilisateur(uidUser)
                 .observe(this, annonceWithPhotos -> {
-                    if (displayBeautyMode) {
-                        annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
+                    if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
+                        linearLayout.setVisibility(View.VISIBLE);
                     } else {
-                        annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
+                        if (displayBeautyMode) {
+                            annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
+                        } else {
+                            annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
+                        }
                     }
                 });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE_POST:
-                if (resultCode == RESULT_OK) {
-                    SyncService.launchSynchroForAll(getApplicationContext());
-                }
-                break;
+        if (requestCode == REQUEST_CODE_POST && resultCode == RESULT_OK) {
+            SyncService.launchSynchroForAll(getApplicationContext());
         }
     }
 
@@ -136,7 +140,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             if (direction == ItemTouchHelper.LEFT) {
                 // Appel d'un fragment qui va demander à l'utilisateur s'il est sûr de vouloir supprimer le colis.
                 Utility.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(),
-                        String.format("Supprimer l'annonce %s ?\n\nLe numéro de suivi ainsi que toutes ses étapes seront perdues.", annonce.getTitre()),
+                        String.format("Supprimer l'annonce %s ?%n%nLe numéro de suivi ainsi que toutes ses étapes seront perdues.", annonce.getTitre()),
                         NoticeDialogFragment.TYPE_BOUTON_YESNO,
                         R.drawable.ic_delete_grey_900_24dp,
                         DIALOG_TAG_DELETE,

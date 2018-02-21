@@ -58,13 +58,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MainActivity" />
         </activity>
-        <activity
-            android:name=".ui.activity.WorkImageActivity"
-            android:parentActivityName=".ui.activity.PostAnnonceActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.activity.PostAnnonceActivity" />
-        </activity>
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"

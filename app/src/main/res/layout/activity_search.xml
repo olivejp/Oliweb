@@ -9,4 +9,23 @@
         android:id="@+id/recycler_search_annonce"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <LinearLayout
+        android:id="@+id/empty_search_linear"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="50dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            android:text="Votre recherche n'a retourné aucun résultat.\nEssayer la recherche avancée pour pouvoir rentrer plus de paramètres." />
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>

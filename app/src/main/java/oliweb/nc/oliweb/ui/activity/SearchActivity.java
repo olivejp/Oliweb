@@ -8,6 +8,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import butterknife.BindView;
@@ -27,6 +28,9 @@ public class SearchActivity extends AppCompatActivity {
 
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
+
+    @BindView(R.id.empty_search_linear)
+    LinearLayout linearLayout;
 
     private AnnonceAdapterRaw annonceAdapterRaw;
     private AnnonceAdapterSingle annonceAdapterSingle;
@@ -81,7 +85,7 @@ public class SearchActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(annoncesWithPhotos -> {
                             if (annoncesWithPhotos.isEmpty()) {
-                                // ToDo afficher un message comme quoi la recherche n'a rien retourné
+                                linearLayout.setVisibility(View.VISIBLE);
                             } else {
                                 if (displayBeautyMode) {
                                     annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);

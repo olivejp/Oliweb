@@ -12,6 +12,22 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <LinearLayout
+        android:id="@+id/empty_linear"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="50dp"
+            android:gravity="center"
+            android:text="Vous n'avez encore posté aucune annonce.\nAppuyez sur le + pour saisir une annonce." />
+    </LinearLayout>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_post_annonce"
         android:layout_width="wrap_content"
