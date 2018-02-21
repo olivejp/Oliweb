@@ -110,6 +110,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                     if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                         linearLayout.setVisibility(View.VISIBLE);
                     } else {
+                        linearLayout.setVisibility(View.GONE);
                         if (displayBeautyMode) {
                             annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
                         } else {

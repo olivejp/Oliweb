@@ -102,6 +102,7 @@ class CoreSync {
 
     /**
      * Envoi des photos sur FirebaseStorage
+     *
      * @param listPhoto
      */
     private void sendPhotos(List<PhotoEntity> listPhoto) {
@@ -109,13 +110,11 @@ class CoreSync {
             File file = new File(photo.getUriLocal());
             String fileName = file.getName();
             StorageReference storageReference = fireStorage.child(fileName);
-            storageReference.delete()
-                    .addOnCompleteListener(task ->
-                    storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                            .addOnSuccessListener(taskSnapshot -> {
-                                photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                                photoRepository.save(photo, null);
-                            }).addOnFailureListener(e -> Log.e(TAG, "Failed to upload image")));
+            storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                    .addOnSuccessListener(taskSnapshot -> {
+                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
+                        photoRepository.save(photo, null);
+                    }).addOnFailureListener(e -> Log.e(TAG, "Failed to upload image"));
         }
     }
 

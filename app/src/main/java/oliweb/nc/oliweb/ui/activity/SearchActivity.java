@@ -87,6 +87,7 @@ public class SearchActivity extends AppCompatActivity {
                             if (annoncesWithPhotos.isEmpty()) {
                                 linearLayout.setVisibility(View.VISIBLE);
                             } else {
+                                linearLayout.setVisibility(View.GONE);
                                 if (displayBeautyMode) {
                                     annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);
                                 } else {

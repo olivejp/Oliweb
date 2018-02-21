@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -98,6 +99,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
         this.annonce.setPrix(prix);
+        this.annonce.setDatePublication(DateConverter.getNowEntity());
         this.annonce.setIdCategorie(categorie.getIdCategorie());
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setUuidUtilisateur(uidUser);
