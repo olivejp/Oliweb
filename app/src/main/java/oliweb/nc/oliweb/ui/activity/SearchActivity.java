@@ -11,18 +11,31 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
+import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.network.retrofit.RetrofitElasticClient;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
+
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
+import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -79,24 +92,44 @@ public class SearchActivity extends AppCompatActivity {
             if (NetworkReceiver.checkConnection(this)) {
                 String query = intent.getStringExtra(SearchManager.QUERY);
 
-                // Call Elasticsearch to get the annonce DTO list
-                RetrofitElasticClient.searchText(query)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(annoncesWithPhotos -> {
-                            if (annoncesWithPhotos.isEmpty()) {
-                                linearLayout.setVisibility(View.VISIBLE);
-                            } else {
-                                linearLayout.setVisibility(View.GONE);
+                ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query);
+
+                // Création d'une nouvelle request dans la table request
+                DatabaseReference newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
+                newRequestRef.setValue(request);
+
+                // Ensuite on va écouter les changements pour cette nouvelle requête
+                newRequestRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child("results").exists()) {
+
+                            // Récupération des données
+                            List<AnnonceSearchDto> listAnnonceReturned = (List<AnnonceSearchDto>) dataSnapshot.child("results").getValue();
+                            if (listAnnonceReturned != null) {
+                                List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
+                                for (AnnonceSearchDto dto : listAnnonceReturned) {
+                                    listAnnonceWithPhoto.add(Utility.convertDtoToEntity(dto));
+                                }
                                 if (displayBeautyMode) {
-                                    annonceAdapterRaw.setListAnnonces(annoncesWithPhotos);
+                                    annonceAdapterRaw.setListAnnonces(listAnnonceWithPhoto);
                                 } else {
-                                    annonceAdapterSingle.setListAnnonces(annoncesWithPhotos);
+                                    annonceAdapterSingle.setListAnnonces(listAnnonceWithPhoto);
                                 }
                             }
-                        });
+
+                            // After the data has been received we delete the request.
+                            newRequestRef.removeValue();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // Do nothing here
+                    }
+                });
             } else {
-                Toast.makeText(this, "Impossible de rechercher sans connexion", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
             }
         }
     }

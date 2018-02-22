@@ -6,7 +6,11 @@ public class Constants {
     public static final String PARAM_MAJ = "MAJ";
     public static final String PARAM_CRE = "CRE";
     public static final int MAX_SIZE = 1024;
+
+    public static final int PER_PAGE_REQUEST = 20;
+
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
+    public static final String FIREBASE_DB_REQUEST_REF = "requests";
     public static final String FIREBASE_DB_PHOTO_REF = "photos";
     public static final String FIREBASE_STORAGE_PHOTO = "photos";
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";
