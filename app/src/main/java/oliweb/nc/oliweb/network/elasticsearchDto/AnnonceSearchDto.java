@@ -1,5 +1,7 @@
 package oliweb.nc.oliweb.network.elasticsearchDto;
 
+import com.google.firebase.database.PropertyName;
+
 import java.util.List;
 
 /**
@@ -9,11 +11,13 @@ import java.util.List;
 public class AnnonceSearchDto {
     private UtilisateurSearchDto utilisateur;
     private List<String> photos;
-    private String categorie;
+    private CategorieSearchDto categorie;
     private String uuid;
     private String titre;
     private String description;
     private int prix;
+
+    @PropertyName("date_publication")
     private long datePublication;
 
     public UtilisateurSearchDto getUtilisateur() {
@@ -32,11 +36,11 @@ public class AnnonceSearchDto {
         this.uuid = uuid;
     }
 
-    public String getCategorie() {
+    public CategorieSearchDto getCategorie() {
         return categorie;
     }
 
-    public void setCategorie(String categorie) {
+    public void setCategorie(CategorieSearchDto categorie) {
         this.categorie = categorie;
     }
 

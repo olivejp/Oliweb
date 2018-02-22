@@ -15,9 +15,11 @@ import java.util.List;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.CategorieSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurSearchDto;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
@@ -88,7 +90,8 @@ public class Utility {
         UtilisateurSearchDto utilisateurSearchDto = new UtilisateurSearchDto(utilisateurEntity.getProfile(), utilisateurEntity.getUuidUtilisateur(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());
         annonceSearchDto.setUtilisateur(utilisateurSearchDto);
 
-        annonceSearchDto.setCategorie(annonceFull.getCategorie().get(0).getName());
+        CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
+        annonceSearchDto.setCategorie(new CategorieSearchDto(categorieEntity.getIdCategorie(), categorieEntity.getName()) );
 
         annonceSearchDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
         annonceSearchDto.setDescription(annonceFull.getAnnonce().getDescription());

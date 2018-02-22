@@ -107,6 +107,7 @@ public class SearchActivity extends AppCompatActivity {
                             // Récupération des données
                             List<AnnonceSearchDto> listAnnonceReturned = (List<AnnonceSearchDto>) dataSnapshot.child("results").getValue();
                             if (listAnnonceReturned != null) {
+                                linearLayout.setVisibility(View.GONE);
                                 List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
                                 for (AnnonceSearchDto dto : listAnnonceReturned) {
                                     listAnnonceWithPhoto.add(Utility.convertDtoToEntity(dto));
@@ -116,6 +117,8 @@ public class SearchActivity extends AppCompatActivity {
                                 } else {
                                     annonceAdapterSingle.setListAnnonces(listAnnonceWithPhoto);
                                 }
+                            } else {
+                                linearLayout.setVisibility(View.VISIBLE);
                             }
 
                             // After the data has been received we delete the request.
