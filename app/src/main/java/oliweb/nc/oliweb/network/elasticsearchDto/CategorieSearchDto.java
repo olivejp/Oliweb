@@ -13,6 +13,9 @@ public class CategorieSearchDto {
     @PropertyName("libelle_categorie")
     private String libelle;
 
+    public CategorieSearchDto() {
+    }
+
     public CategorieSearchDto(long id, String libelle) {
         this.id = id;
         this.libelle = libelle;

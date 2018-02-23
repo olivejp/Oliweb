@@ -37,6 +37,10 @@ public class AnnonceEntity {
     private long idCategorie;
     private String debattre;
 
+    public AnnonceEntity() {
+        this.idAnnonce = -1L;
+    }
+
     @Exclude
     @NonNull
     public Long getIdAnnonce() {

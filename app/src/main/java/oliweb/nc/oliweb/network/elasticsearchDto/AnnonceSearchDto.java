@@ -20,6 +20,9 @@ public class AnnonceSearchDto {
     @PropertyName("date_publication")
     private long datePublication;
 
+    public AnnonceSearchDto() {
+    }
+
     public UtilisateurSearchDto getUtilisateur() {
         return utilisateur;
     }

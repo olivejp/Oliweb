@@ -41,6 +41,7 @@ class CoreSync {
     private static StorageReference fireStorage;
     private static PhotoRepository photoRepository;
     private static AnnonceRepository annonceRepository;
+    private static int nbPhotoUploaded = 0;
 
 
     /**
@@ -106,11 +107,13 @@ class CoreSync {
      * @param listPhoto
      */
     private void sendPhotos(List<PhotoEntity> listPhoto) {
+        nbPhotoUploaded = 0;
         for (PhotoEntity photo : listPhoto) {
             File file = new File(photo.getUriLocal());
             String fileName = file.getName();
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                    .addOnCompleteListener(task -> nbPhotoUploaded++)
                     .addOnSuccessListener(taskSnapshot -> {
                         photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
                         photoRepository.save(photo, null);

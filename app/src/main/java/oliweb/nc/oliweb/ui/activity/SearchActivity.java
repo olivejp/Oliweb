@@ -15,6 +15,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
+import oliweb.nc.oliweb.network.elasticsearchDto.ResultElasticSearchDto;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
 
@@ -47,6 +49,56 @@ public class SearchActivity extends AppCompatActivity {
 
     private AnnonceAdapterRaw annonceAdapterRaw;
     private AnnonceAdapterSingle annonceAdapterSingle;
+    private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>> genericClass = new GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>>(){};
+    private DatabaseReference newRequestRef;
+    private boolean displayBeautyMode;
+
+    private ValueEventListener listener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if (dataSnapshot.child("results").exists()) {
+                List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
+
+                if (list != null && !list.isEmpty()) {
+                    List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
+
+                    for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
+                        listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
+                    }
+
+                    if (!listAnnonceWithPhoto.isEmpty()) {
+                        linearLayout.setVisibility(View.GONE);
+                        if (displayBeautyMode) {
+                            annonceAdapterRaw.setListAnnonces(listAnnonceWithPhoto);
+                        } else {
+                            annonceAdapterSingle.setListAnnonces(listAnnonceWithPhoto);
+                        }
+                    } else {
+                        linearLayout.setVisibility(View.VISIBLE);
+                    }
+                }
+                // After the data has been received we delete the request.
+                newRequestRef.removeValue();
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Do nothing here
+        }
+    };
+
+    @Override
+    protected void onPause() {
+        newRequestRef.removeEventListener(listener);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        newRequestRef.removeEventListener(listener);
+        super.onDestroy();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +107,7 @@ public class SearchActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        // Ouvre l'activité PostAnnonceActivity en mode Modification
+        // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
             Intent intent = new Intent();
@@ -72,7 +124,7 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         if (displayBeautyMode) {
             // En mode Raw
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
@@ -95,42 +147,11 @@ public class SearchActivity extends AppCompatActivity {
                 ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query);
 
                 // Création d'une nouvelle request dans la table request
-                DatabaseReference newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
+                newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
                 newRequestRef.setValue(request);
 
                 // Ensuite on va écouter les changements pour cette nouvelle requête
-                newRequestRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.child("results").exists()) {
-
-                            // Récupération des données
-                            List<AnnonceSearchDto> listAnnonceReturned = (List<AnnonceSearchDto>) dataSnapshot.child("results").getValue();
-                            if (listAnnonceReturned != null) {
-                                linearLayout.setVisibility(View.GONE);
-                                List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
-                                for (AnnonceSearchDto dto : listAnnonceReturned) {
-                                    listAnnonceWithPhoto.add(Utility.convertDtoToEntity(dto));
-                                }
-                                if (displayBeautyMode) {
-                                    annonceAdapterRaw.setListAnnonces(listAnnonceWithPhoto);
-                                } else {
-                                    annonceAdapterSingle.setListAnnonces(listAnnonceWithPhoto);
-                                }
-                            } else {
-                                linearLayout.setVisibility(View.VISIBLE);
-                            }
-
-                            // After the data has been received we delete the request.
-                            newRequestRef.removeValue();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // Do nothing here
-                    }
-                });
+                newRequestRef.addValueEventListener(listener);
             } else {
                 Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
             }

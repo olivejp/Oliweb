@@ -10,6 +10,9 @@ public class UtilisateurSearchDto {
     private String telephone;
     private String email;
 
+    public UtilisateurSearchDto() {
+    }
+
     public UtilisateurSearchDto(String profile, String uuid, String telephone, String email) {
         this.profile = profile;
         this.uuid = uuid;
