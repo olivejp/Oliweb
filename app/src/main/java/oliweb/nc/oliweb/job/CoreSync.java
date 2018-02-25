@@ -105,17 +105,6 @@ class CoreSync {
                         createNotification("Oliweb - Envoi de vos annonces", "Téléchargement en cours");
                         notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
 
-                        // Read all annonces with TO_SEND status, when reach 0, then cancel the notification
-                        AnnonceRepository.getInstance(context)
-                                .countAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(Schedulers.io())
-                                .subscribe(countAnnoncesToSend -> {
-                                    if (countAnnoncesToSend == null || countAnnoncesToSend == 0) {
-                                        notificationManager.cancel(notificationSyncAnnonceId);
-                                    }
-                                });
-
                         // Parcours de la liste des annonces
                         for (AnnonceFull annonceFull : annoncesFulls) {
                             DatabaseReference dbRef;
@@ -129,20 +118,56 @@ class CoreSync {
                             }
 
                             dbRef.setValue(Utility.convertEntityToDto(annonceFull))
-                                    .addOnCompleteListener(task -> {
-                                        nbAnnonceCompletedTask++;
-                                        mBuilder.setProgress(annoncesFulls.size(), nbAnnonceCompletedTask, false);
-                                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-                                    })
                                     .addOnSuccessListener(o -> {
                                         annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
                                         annonceRepository.update(null, annonceFull.getAnnonce());
+
+                                        nbAnnonceCompletedTask++;
+                                        mBuilder.setProgress(annoncesFulls.size(), nbAnnonceCompletedTask, false);
+                                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+
+                                        checkAnotherAnnonceToSend();
                                     })
                                     .addOnFailureListener(e -> {
                                         annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
                                         annonceRepository.update(null, annonceFull.getAnnonce());
+
+                                        nbAnnonceCompletedTask++;
+                                        mBuilder.setProgress(annoncesFulls.size(), nbAnnonceCompletedTask, false);
+                                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+
+                                        checkAnotherAnnonceToSend();
                                     });
                         }
+                    }
+                });
+    }
+
+    private void checkAnotherAnnonceToSend() {
+        // Read all annonces with TO_SEND status, when reach 0, then cancel the notification
+        AnnonceRepository.getInstance(context)
+                .countAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(countAnnoncesToSend -> {
+                    if (countAnnoncesToSend == null || countAnnoncesToSend == 0) {
+                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                    }
+                });
+    }
+
+    private void checkAnotherPhotoToSend() {
+        // Read all photos with TO_SEND status, when reach 0, then cancel the notification and sync the annonces
+        PhotoRepository.getInstance(context)
+                .countAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(countPhotosToSend -> {
+                    if (countPhotosToSend == null || countPhotosToSend == 0) {
+                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                        notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+                        syncAnnonce();
                     }
                 });
     }
@@ -161,38 +186,32 @@ class CoreSync {
             mBuilder.setProgress(listPhoto.size(), 0, false);
             notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
 
-            // Read all photos with TO_SEND status, when reach 0, then cancel the notification and sync the annonces
-            PhotoRepository.getInstance(context)
-                    .countAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(countPhotosToSend -> {
-                        if (countPhotosToSend == null || countPhotosToSend == 0) {
-                            notificationManager.cancel(notificationSyncPhotoId);
-                            syncAnnonce();
-                        }
-                    });
-
             for (PhotoEntity photo : listPhoto) {
                 File file = new File(photo.getUriLocal());
                 String fileName = file.getName();
                 StorageReference storageReference = fireStorage.child(fileName);
                 storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                        .addOnCompleteListener(task -> {
-                            // increase notification loading
-                            nbPhotoCompletedTask++;
-                            mBuilder.setProgress(listPhoto.size(), nbPhotoCompletedTask, false);
-                            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-                        })
                         .addOnSuccessListener(taskSnapshot -> {
                             photo.setStatut(StatusRemote.SEND);
                             photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
                             photoRepository.save(photo, null);
+
+                            nbPhotoCompletedTask++;
+                            mBuilder.setProgress(listPhoto.size(), nbPhotoCompletedTask, false);
+                            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+
+                            checkAnotherPhotoToSend();
                         })
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Failed to upload image");
                             photo.setStatut(StatusRemote.FAILED_TO_SEND);
                             photoRepository.save(photo, null);
+
+                            nbPhotoCompletedTask++;
+                            mBuilder.setProgress(listPhoto.size(), nbPhotoCompletedTask, false);
+                            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+
+                            checkAnotherPhotoToSend();
                         });
             }
         }
