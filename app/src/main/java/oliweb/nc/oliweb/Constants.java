@@ -14,6 +14,8 @@ public class Constants {
     public static final String FIREBASE_DB_PHOTO_REF = "photos";
     public static final String FIREBASE_STORAGE_PHOTO = "photos";
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";
+    public static final String CHANNEL_ID = "OLIWEB_CHANNEL_ID";
+
 
     public static final String URL_AFTERSHIP_BASE_URL = "http://35.201.25.32/";
 

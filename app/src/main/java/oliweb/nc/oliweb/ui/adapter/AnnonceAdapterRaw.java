@@ -20,7 +20,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 
 public class AnnonceAdapterRaw extends
-        RecyclerView.Adapter<AnnonceAdapterRaw.ViewHolder> {
+        RecyclerView.Adapter<AnnonceAdapterRaw.ViewHolder> implements AnnonceAdapter {
 
     public static final String TAG = AnnonceAdapterRaw.class.getName();
 

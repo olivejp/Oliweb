@@ -52,7 +52,7 @@ public class SyncService extends IntentService {
 
 
     private void handleActionSyncAll(boolean sendNotification) {
-        CoreSync.getInstance(this.getApplicationContext(), sendNotification).createOrUpdateAnnonce();
+        CoreSync.getInstance(this.getApplicationContext(), sendNotification).synchronize();
     }
 
     @Override

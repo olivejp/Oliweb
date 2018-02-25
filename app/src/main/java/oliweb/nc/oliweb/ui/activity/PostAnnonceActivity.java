@@ -202,7 +202,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // S'il y avait un fragment, je le remet
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
             Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
-            getSupportFragmentManager().beginTransaction().replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE).addToBackStack(null).commit();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
+                    .commit();
         }
     }
 

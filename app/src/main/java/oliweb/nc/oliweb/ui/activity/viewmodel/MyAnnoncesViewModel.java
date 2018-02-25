@@ -5,14 +5,18 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.List;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
@@ -21,13 +25,17 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 public class MyAnnoncesViewModel extends AndroidViewModel {
 
+    private static final String TAG = MyAnnoncesViewModel.class.getName();
+
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
     }
 
     public LiveData<List<AnnonceWithPhotos>> findByUuidUtilisateur(String uuidUtilisateur) {
@@ -38,10 +46,37 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         this.annonceRepository.delete(onRespositoryPostExecute, annonceEntity);
     }
 
+    /**
+     * Update annonce and photo status to TO_DELETE
+     * CoreSync will do the trick.
+     *
+     * @param idAnnonce
+     * @param onRespositoryPostExecute
+     */
     public void deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         this.annonceRepository.findSingleById(idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(annonceEntity ->this.annonceRepository.delete(onRespositoryPostExecute, annonceEntity));
+                .subscribe(annonceEntity -> {
+
+                    // Update annonce status
+                    annonceEntity.setStatut(StatusRemote.TO_DELETE);
+                    this.annonceRepository.update(onRespositoryPostExecute, annonceEntity);
+
+                    // Update photo status
+                    this.photoRepository.findAllSingleByIdAnnonce(annonceEntity.getIdAnnonce())
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .subscribe(photoEntities -> {
+                                for (PhotoEntity photoEntity : photoEntities) {
+                                    photoEntity.setStatut(StatusRemote.TO_DELETE);
+                                    photoRepository.update(dataReturn -> {
+                                        if (dataReturn.getNb() != 0) {
+                                            Log.d(TAG, "PhotoEntity successfully updated TO_DELETE");
+                                        }
+                                    }, photoEntity);
+                                }
+                            });
+                });
     }
 }

@@ -63,4 +63,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status){
         return this.annonceDao.getAllAnnonceByStatus(status);
     }
+
+    public Maybe<Integer> countAllAnnoncesByStatus(String status){
+        return this.annonceDao.countAllAnnoncesByStatus(status);
+    }
 }

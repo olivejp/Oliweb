@@ -27,6 +27,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
         dataReturn.setTypeTask(this.typeTask);
         switch (this.typeTask) {
             case DELETE:
+                dataReturn.setIds(null);
                 dataReturn.setNb(this.dao.delete(entities));
                 break;
             case INSERT:
@@ -35,6 +36,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
                 dataReturn.setIds(ids);
                 break;
             case UPDATE:
+                dataReturn.setIds(null);
                 dataReturn.setNb(this.dao.update(entities));
                 break;
             default:

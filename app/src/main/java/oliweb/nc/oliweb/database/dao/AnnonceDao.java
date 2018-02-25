@@ -35,4 +35,10 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut = :status")
     Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status);
+
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
+    Maybe<Integer> countAllAnnoncesByStatus(String status);
+
 }

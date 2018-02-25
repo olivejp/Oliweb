@@ -23,7 +23,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
  * Created by orlanth23 on 07/02/2018.
  */
 
-public class AnnonceAdapterSingle extends RecyclerView.Adapter<AnnonceAdapterSingle.AnnonceAdapterSingleViewHolder> {
+public class AnnonceAdapterSingle extends RecyclerView.Adapter<AnnonceAdapterSingle.AnnonceAdapterSingleViewHolder> implements AnnonceAdapter {
 
     private static final String TAG = AnnonceAdapterSingle.class.getName();
 

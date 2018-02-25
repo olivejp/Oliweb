@@ -68,26 +68,19 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         }
     }
 
-    public Single<PhotoEntity> singleById(long idPhoto) {
-        return this.photoDao.findSingleById(idPhoto);
-    }
-
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
         return this.photoDao.findByIdAnnonce(idAnnonce);
     }
 
-    public void deleteByIdAnnonce(long idAnnonce) {
-        this.photoDao.findAllSingleByIdAnnonce(idAnnonce)
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
-                .subscribe(photoEntities -> {
-                    if (photoEntities != null && !photoEntities.isEmpty()) {
-                        this.photoDao.delete(photoEntities);
-                    }
-                });
-    }
-
     public Maybe<List<PhotoEntity>> getAllPhotosByStatus(String status) {
         return this.photoDao.getAllPhotosByStatus(status);
+    }
+
+    public Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce) {
+        return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
+    }
+
+    public Maybe<Integer> countAllPhotosByStatus(String status) {
+        return this.photoDao.countAllPhotosByStatus(status);
     }
 }

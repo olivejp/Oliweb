@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.app.SearchManager;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,35 +10,18 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
-
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
-import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
-import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
-import oliweb.nc.oliweb.network.elasticsearchDto.ResultElasticSearchDto;
+import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
-
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
-import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -47,58 +31,15 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
+
+    private SearchActivityViewModel searchActivityViewModel;
     private AnnonceAdapterRaw annonceAdapterRaw;
     private AnnonceAdapterSingle annonceAdapterSingle;
-    private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>> genericClass = new GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>>(){};
-    private DatabaseReference newRequestRef;
+
+
     private boolean displayBeautyMode;
-
-    private ValueEventListener listener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot.child("results").exists()) {
-                List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
-
-                if (list != null && !list.isEmpty()) {
-                    List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
-
-                    for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
-                        listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
-                    }
-
-                    if (!listAnnonceWithPhoto.isEmpty()) {
-                        linearLayout.setVisibility(View.GONE);
-                        if (displayBeautyMode) {
-                            annonceAdapterRaw.setListAnnonces(listAnnonceWithPhoto);
-                        } else {
-                            annonceAdapterSingle.setListAnnonces(listAnnonceWithPhoto);
-                        }
-                    } else {
-                        linearLayout.setVisibility(View.VISIBLE);
-                    }
-                }
-                // After the data has been received we delete the request.
-                newRequestRef.removeValue();
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            // Do nothing here
-        }
-    };
-
-    @Override
-    protected void onPause() {
-        newRequestRef.removeEventListener(listener);
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        newRequestRef.removeEventListener(listener);
-        super.onDestroy();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +47,8 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
 
         ButterKnife.bind(this);
+
+        searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
@@ -137,21 +80,26 @@ public class SearchActivity extends AppCompatActivity {
             recyclerView.setAdapter(annonceAdapterSingle);
         }
 
+        // On écoute les changements sur la liste des annonces retournées par la recherche
+        searchActivityViewModel.getListAnnonce().observe(this, annonceWithPhotos -> {
+            progressBar.setVisibility(View.GONE);
+            if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
+                linearLayout.setVisibility(View.GONE);
+                if (displayBeautyMode) {
+                    annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
+                } else {
+                    annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
+                }
+            } else {
+                linearLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
         // Get the intent, verify the action and get the query
         Intent intent = getIntent();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-
-            if (NetworkReceiver.checkConnection(this)) {
-                String query = intent.getStringExtra(SearchManager.QUERY);
-
-                ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query);
-
-                // Création d'une nouvelle request dans la table request
-                newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
-                newRequestRef.setValue(request);
-
-                // Ensuite on va écouter les changements pour cette nouvelle requête
-                newRequestRef.addValueEventListener(listener);
+            if (searchActivityViewModel.makeASearch(intent.getStringExtra(SearchManager.QUERY))) {
+                progressBar.setVisibility(View.VISIBLE);
             } else {
                 Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
             }

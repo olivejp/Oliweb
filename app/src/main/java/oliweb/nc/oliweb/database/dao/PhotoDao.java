@@ -17,10 +17,6 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 @Dao
 public interface PhotoDao extends AbstractDao<PhotoEntity> {
     @Transaction
-    @Query("SELECT * FROM photo")
-    Maybe<List<PhotoEntity>> getListPhoto();
-
-    @Transaction
     @Query("SELECT * FROM photo WHERE idPhoto = :idPhoto")
     LiveData<PhotoEntity> findById(long idPhoto);
 
@@ -39,4 +35,8 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     @Transaction
     @Query("SELECT * FROM photo WHERE statut = :statut")
     Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM photo WHERE statut = :statut")
+    Maybe<Integer> countAllPhotosByStatus(String statut);
 }
