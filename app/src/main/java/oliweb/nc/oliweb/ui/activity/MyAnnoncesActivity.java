@@ -64,28 +64,19 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             finish();
         }
 
-        // Ouvre l'activité PostAnnonceActivity en mode Modification
-        View.OnClickListener onClickListener = v -> {
+        // Recherche du mode display actuellement dans les préférences.
+        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+
+        AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-            Intent intent = new Intent();
-            Bundle bundle = new Bundle();
-            intent.setClass(this, PostAnnonceActivity.class);
-            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
-            bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
-            intent.putExtras(bundle);
-            startActivityForResult(intent, REQUEST_CODE_POST);
-        };
+            callPostAnnonceUpdate(annonce);
+        });
+        recyclerView.setAdapter(annonceAdapter);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(linearLayoutManager);
-
-        // Recherche du mode display actuellement dans les préférences.
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
-
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
-        recyclerView.setAdapter(annonceAdapter);
-
         if (!displayBeautyMode) {
             // En mode Raw
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
@@ -97,7 +88,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             itemTouchHelper.attachToRecyclerView(recyclerView);
         }
 
-        viewModel.findByUuidUtilisateur(uidUser)
+        viewModel.findActiveAnnonceByUidUtilisateur(uidUser)
                 .observe(this, annonceWithPhotos -> {
                     if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                         linearLayout.setVisibility(View.VISIBLE);
@@ -115,6 +106,13 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         }
     }
 
+    /**
+     * This method is only available for AnnonceAdapter in Raw mode.
+     * In Beauty mode we can't swipe to delete element.
+     *
+     * @param view
+     * @param direction
+     */
     @Override
     public void onSwipe(RecyclerView.ViewHolder view, int direction) {
         try {
@@ -137,7 +135,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                         this);
             }
         } catch (ClassCastException e) {
-            Log.e(TAG, "La vue doit contenir un ColisEntity comme Tag");
+            Log.e(TAG, "Cette méthode n'est applicable que pour le mode Display Raw et devrait donc contenir un AnnonceAdapter.ViewHolderRaw");
         }
     }
 
@@ -161,12 +159,22 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     }
 
     @OnClick(R.id.fab_post_annonce)
-    public void callPostAnnonce(View v) {
+    public void callPostAnnonceCreate(View v) {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_POST);
+    }
+
+    private void callPostAnnonceUpdate(AnnonceEntity annonce) {
+        Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        intent.setClass(this, PostAnnonceActivity.class);
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
+        bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
+        intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CODE_POST);
     }
 }
