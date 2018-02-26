@@ -39,6 +39,6 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
-    Maybe<Integer> countAllAnnoncesByStatus(String status);
+    Single<Integer> countAllAnnoncesByStatus(String status);
 
 }

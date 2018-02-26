@@ -24,7 +24,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     private AnnonceRepository(Context context) {
         super(context);
-        this.dao = this.db.AnnonceDao();
+        this.dao = this.db.getAnnonceDao();
         this.annonceDao = (AnnonceDao) this.dao;
     }
 
@@ -64,7 +64,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.getAllAnnonceByStatus(status);
     }
 
-    public Maybe<Integer> countAllAnnoncesByStatus(String status){
+    public Single<Integer> countAllAnnoncesByStatus(String status){
         return this.annonceDao.countAllAnnoncesByStatus(status);
     }
 }

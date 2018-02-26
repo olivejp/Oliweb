@@ -24,8 +24,7 @@ import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.job.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
+import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
@@ -48,10 +47,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     public static final int REQUEST_CODE_POST = 548;
 
     private MyAnnoncesViewModel viewModel;
-    private AnnonceAdapterRaw annonceAdapterRaw;
-    private AnnonceAdapterSingle annonceAdapterSingle;
-
-    private String uidUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +58,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         ButterKnife.bind(this);
 
         // Récupération du UID de l'utilisateur connecté.
-        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (uidUser == null || uidUser.isEmpty()) {
             Log.e(TAG, "Missing mandatory parameter");
             finish();
@@ -88,21 +83,18 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         // Recherche du mode display actuellement dans les préférences.
         boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
 
-        if (displayBeautyMode) {
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
+        recyclerView.setAdapter(annonceAdapter);
+
+        if (!displayBeautyMode) {
             // En mode Raw
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-            annonceAdapterRaw = new AnnonceAdapterRaw(onClickListener);
-            recyclerView.setAdapter(annonceAdapterRaw);
             recyclerView.addItemDecoration(itemDecoration);
 
             // Ajout d'un swipe listener pour pouvoir supprimer l'annonce
             RecyclerItemTouchHelper recyclerItemTouchHelper = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
             ItemTouchHelper itemTouchHelper = new ItemTouchHelper(recyclerItemTouchHelper);
             itemTouchHelper.attachToRecyclerView(recyclerView);
-        } else {
-            // En mode Beauty
-            annonceAdapterSingle = new AnnonceAdapterSingle(onClickListener);
-            recyclerView.setAdapter(annonceAdapterSingle);
         }
 
         viewModel.findByUuidUtilisateur(uidUser)
@@ -111,11 +103,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                         linearLayout.setVisibility(View.VISIBLE);
                     } else {
                         linearLayout.setVisibility(View.GONE);
-                        if (displayBeautyMode) {
-                            annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
-                        } else {
-                            annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
-                        }
+                        annonceAdapter.setListAnnonces(annonceWithPhotos);
                     }
                 });
     }
@@ -130,13 +118,13 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     @Override
     public void onSwipe(RecyclerView.ViewHolder view, int direction) {
         try {
-            AnnonceAdapterRaw.ViewHolder viewHolder = (AnnonceAdapterRaw.ViewHolder) view;
-            AnnonceEntity annonce = viewHolder.getSingleAnnonce();
+            AnnonceAdapter.ViewHolderRaw viewHolderRaw = (AnnonceAdapter.ViewHolderRaw) view;
+            AnnonceEntity annonce = viewHolderRaw.getSingleAnnonce();
 
             // Création d'un bundle dans lequel on va passer nos items
             Bundle bundle = new Bundle();
             bundle.putLong(ARG_NOTICE_BUNDLE_ID_ANNONCE, annonce.getIdAnnonce());
-            bundle.putInt(ARG_NOTICE_BUNDLE_POSITION, viewHolder.getAdapterPosition());
+            bundle.putInt(ARG_NOTICE_BUNDLE_POSITION, viewHolderRaw.getAdapterPosition());
 
             if (direction == ItemTouchHelper.LEFT) {
                 // Appel d'un fragment qui va demander à l'utilisateur s'il est sûr de vouloir supprimer le colis.
@@ -155,22 +143,21 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
     @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_DELETE)) {
-            if (dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
-                long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
-                if (idAnnonce != 0) {
-                    viewModel.deleteAnnonceById(idAnnonce, dataReturn -> {
-                        if (dataReturn.getNb() > 0)
-                            Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
-                    });
-                }
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_DELETE)
+                && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
+            long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
+            if (idAnnonce != 0) {
+                viewModel.deleteAnnonceById(idAnnonce, dataReturn -> {
+                    if (dataReturn.getNb() > 0)
+                        Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
+                });
             }
         }
     }
 
     @Override
     public void onDialogNegativeClick(NoticeDialogFragment dialog) {
-
+        // Do nothing
     }
 
     @OnClick(R.id.fab_post_annonce)

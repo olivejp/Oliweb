@@ -26,6 +26,7 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 
@@ -38,17 +39,18 @@ class CoreSync {
     private static final String TAG = CoreSync.class.getName();
 
     private static CoreSync INSTANCE;
-    private Context context;
-    private Consumer<Throwable> consThrowable;
-    private boolean sendNotification;
     private static FirebaseDatabase fireDb;
     private static StorageReference fireStorage;
     private static PhotoRepository photoRepository;
     private static AnnonceRepository annonceRepository;
-    private static int nbPhotoCompletedTask = 0;
-    private static int nbAnnonceCompletedTask = 0;
     private static int notificationSyncPhotoId = 123456;
     private static int notificationSyncAnnonceId = 654321;
+
+    private Context context;
+    private Consumer<Throwable> consThrowable;
+    private boolean sendNotification;
+    private int nbPhotoCompletedTask = 0;
+    private int nbAnnonceCompletedTask = 0;
     private NotificationCompat.Builder mBuilder;
     private NotificationManagerCompat notificationManager;
 
@@ -77,18 +79,30 @@ class CoreSync {
         return INSTANCE;
     }
 
-    private void createNotification(String title, String content) {
-        notificationManager = NotificationManagerCompat.from(context);
-        mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
-        mBuilder.setContentTitle(title)
-                .setContentText(content)
-                .setSmallIcon(R.drawable.ic_sync_black_48dp)
-                .setPriority(NotificationCompat.PRIORITY_LOW);
+    /**
+     * First send the photo to catch the URL Download link, then send the annonces
+     */
+    void synchronize() {
+        // Read all photos with TO_SEND status to send them
+        PhotoRepository.getInstance(context)
+                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(this::syncPhotos);
 
-        // Issue the initial notification with zero progress
-        int PROGRESS_MAX = 100;
-        int PROGRESS_CURRENT = 0;
-        mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+        // Read all photos with TO_DELETE status to delete them on remote and local
+        PhotoRepository.getInstance(context)
+                .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(this::syncDeletedPhotos);
+
+        // Read all annonces with TO_DELETE status to delete them on remote and local
+        AnnonceRepository.getInstance(context)
+                .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(this::syncDeletedAnnonces);
     }
 
     private void syncAnnonce() {
@@ -103,7 +117,7 @@ class CoreSync {
                         nbAnnonceCompletedTask = 0;
 
                         createNotification("Oliweb - Envoi de vos annonces", "Téléchargement en cours");
-                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                        updateProgressBar(annoncesFulls.size(), 0, notificationSyncAnnonceId);
 
                         // Parcours de la liste des annonces
                         for (AnnonceFull annonceFull : annoncesFulls) {
@@ -117,57 +131,22 @@ class CoreSync {
                                 annonceFull.getAnnonce().setUUID(dbRef.getKey());
                             }
 
-                            dbRef.setValue(Utility.convertEntityToDto(annonceFull))
+                            // Conversion de notre annonce en DTO
+                            AnnonceSearchDto annonceSearchDto = Utility.convertEntityToDto(annonceFull);
+                            Log.d(TAG, annonceSearchDto.toString());
+
+                            dbRef.setValue(annonceSearchDto)
                                     .addOnSuccessListener(o -> {
                                         annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                                        annonceRepository.update(null, annonceFull.getAnnonce());
-
-                                        nbAnnonceCompletedTask++;
-                                        mBuilder.setProgress(annoncesFulls.size(), nbAnnonceCompletedTask, false);
-                                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-
-                                        checkAnotherAnnonceToSend();
+                                        annonceRepository.update(dataReturn -> checkAnotherAnnonceToSend(), annonceFull.getAnnonce());
+                                        updateProgressBar(annoncesFulls.size(), nbAnnonceCompletedTask++, notificationSyncAnnonceId);
                                     })
                                     .addOnFailureListener(e -> {
                                         annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
-                                        annonceRepository.update(null, annonceFull.getAnnonce());
-
-                                        nbAnnonceCompletedTask++;
-                                        mBuilder.setProgress(annoncesFulls.size(), nbAnnonceCompletedTask, false);
-                                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-
-                                        checkAnotherAnnonceToSend();
+                                        annonceRepository.update(dataReturn -> checkAnotherAnnonceToSend(), annonceFull.getAnnonce());
+                                        updateProgressBar(annoncesFulls.size(), nbAnnonceCompletedTask++, notificationSyncAnnonceId);
                                     });
                         }
-                    }
-                });
-    }
-
-    private void checkAnotherAnnonceToSend() {
-        // Read all annonces with TO_SEND status, when reach 0, then cancel the notification
-        AnnonceRepository.getInstance(context)
-                .countAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(countAnnoncesToSend -> {
-                    if (countAnnoncesToSend == null || countAnnoncesToSend == 0) {
-                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-                    }
-                });
-    }
-
-    private void checkAnotherPhotoToSend() {
-        // Read all photos with TO_SEND status, when reach 0, then cancel the notification and sync the annonces
-        PhotoRepository.getInstance(context)
-                .countAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(countPhotosToSend -> {
-                    if (countPhotosToSend == null || countPhotosToSend == 0) {
-                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-                        notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-                        syncAnnonce();
                     }
                 });
     }
@@ -183,8 +162,7 @@ class CoreSync {
             nbPhotoCompletedTask = 0;
 
             createNotification("Oliweb - Envoi de vos photos", "Téléchargement en cours");
-            mBuilder.setProgress(listPhoto.size(), 0, false);
-            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+            updateProgressBar(listPhoto.size(), 0, notificationSyncPhotoId);
 
             for (PhotoEntity photo : listPhoto) {
                 File file = new File(photo.getUriLocal());
@@ -194,24 +172,14 @@ class CoreSync {
                         .addOnSuccessListener(taskSnapshot -> {
                             photo.setStatut(StatusRemote.SEND);
                             photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                            photoRepository.save(photo, null);
-
-                            nbPhotoCompletedTask++;
-                            mBuilder.setProgress(listPhoto.size(), nbPhotoCompletedTask, false);
-                            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-
-                            checkAnotherPhotoToSend();
+                            photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
+                            updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
                         })
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Failed to upload image");
                             photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                            photoRepository.save(photo, null);
-
-                            nbPhotoCompletedTask++;
-                            mBuilder.setProgress(listPhoto.size(), nbPhotoCompletedTask, false);
-                            notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-
-                            checkAnotherPhotoToSend();
+                            photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
+                            updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
                         });
             }
         }
@@ -285,29 +253,51 @@ class CoreSync {
         }
     }
 
-    /**
-     * First send the photo to catch the URL Download link, then send the annonces
-     */
-    void synchronize() {
-        // Read all photos with TO_SEND status to send them
-        PhotoRepository.getInstance(context)
-                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(this::syncPhotos);
+    private void createNotification(String title, String content) {
+        notificationManager = NotificationManagerCompat.from(context);
+        mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
+        mBuilder.setContentTitle(title)
+                .setContentText(content)
+                .setSmallIcon(R.drawable.ic_sync_black_48dp)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
 
-        // Read all photos with TO_DELETE status to delete them on remote and local
-        PhotoRepository.getInstance(context)
-                .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(this::syncDeletedPhotos);
+        // Issue the initial notification with zero progress
+        int progressMax = 100;
+        int progressCurrent = 0;
+        mBuilder.setProgress(progressMax, progressCurrent, false);
+    }
 
-        // Read all annonces with TO_DELETE status to delete them on remote and local
+    private void updateProgressBar(int max, int current, int notificationId) {
+        mBuilder.setProgress(max, current, false);
+        notificationManager.notify(notificationId, mBuilder.build());
+    }
+
+    private void checkAnotherAnnonceToSend() {
+        // Read all annonces with TO_SEND status, when reach 0, then cancel the notification
         AnnonceRepository.getInstance(context)
-                .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
+                .countAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(this::syncDeletedAnnonces);
+                .subscribe(countAnnoncesToSend -> {
+                    if (countAnnoncesToSend == null || countAnnoncesToSend == 0) {
+                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                    }
+                });
+    }
+
+    private void checkAnotherPhotoToSend() {
+        // Read all photos with TO_SEND status, when reach 0, then cancel the notification and sync the annonces
+        PhotoRepository.getInstance(context)
+                .countAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(countPhotosToSend -> {
+                    if (countPhotosToSend == null || countPhotosToSend == 0) {
+                        mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                        notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+                        syncAnnonce();
+                    }
+                });
     }
 }

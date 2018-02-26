@@ -20,7 +20,7 @@ public class AnnonceFullRepository {
 
     private AnnonceFullRepository(Context context) {
         OliwebDatabase db = OliwebDatabase.getInstance(context);
-        this.annonceFullDao = db.AnnonceFullDao();
+        this.annonceFullDao = db.getAnnonceFullDao();
     }
 
     public static synchronized AnnonceFullRepository getInstance(Context context) {

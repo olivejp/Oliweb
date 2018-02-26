@@ -36,6 +36,7 @@ public class AnnonceEntity {
     private String UuidUtilisateur;
     private long idCategorie;
     private String debattre;
+    private Integer favorite;
 
     public AnnonceEntity() {
         this.idAnnonce = -1L;
@@ -148,5 +149,13 @@ public class AnnonceEntity {
 
     public void setDebattre(String debattre) {
         this.debattre = debattre;
+    }
+
+    public Integer getFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(Integer favorite) {
+        this.favorite = favorite;
     }
 }

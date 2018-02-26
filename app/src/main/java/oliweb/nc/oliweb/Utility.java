@@ -14,7 +14,7 @@ import java.util.List;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
@@ -56,17 +56,19 @@ public class Utility {
         if (v == null)
             return;
 
-        inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        if (inputManager != null) {
+            inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
     }
 
     /**
      * @param annonceSearchDto
      * @return
      */
-    public static AnnonceWithPhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto) {
-        AnnonceWithPhotos annonceWithPhotos = new AnnonceWithPhotos();
+    public static AnnoncePhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto) {
+        AnnoncePhotos annoncePhotos = new AnnoncePhotos();
         AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceWithPhotos.setPhotos(new ArrayList<>());
+        annoncePhotos.setPhotos(new ArrayList<>());
 
         annonceEntity.setUUID(annonceSearchDto.getUuid());
         annonceEntity.setTitre(annonceSearchDto.getTitre());
@@ -75,9 +77,9 @@ public class Utility {
         annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
         annonceEntity.setPrix(annonceSearchDto.getPrix());
 
-        annonceWithPhotos.setAnnonceEntity(annonceEntity);
+        annoncePhotos.setAnnonceEntity(annonceEntity);
 
-        return annonceWithPhotos;
+        return annoncePhotos;
     }
 
     /**

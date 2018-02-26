@@ -24,7 +24,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
 
     private PhotoRepository(Context context) {
         super(context);
-        this.photoDao = this.db.PhotoDao();
+        this.photoDao = this.db.getPhotoDao();
         this.dao = this.photoDao;
     }
 

@@ -5,7 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
+import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 
 
 /**
@@ -34,7 +34,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     @Override
     public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
         if (viewHolder != null) {
-            final View foregroundView = ((AnnonceAdapterRaw.ViewHolder) viewHolder).getNormalConstraint();
+            final View foregroundView = ((AnnonceAdapter.ViewHolderRaw) viewHolder).getNormalConstraint();
             getDefaultUIUtil().onSelected(foregroundView);
         }
     }
@@ -48,7 +48,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 
     @Override
     public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-        final View foregroundView = ((AnnonceAdapterRaw.ViewHolder) viewHolder).getNormalConstraint();
+        final View foregroundView = ((AnnonceAdapter.ViewHolderRaw) viewHolder).getNormalConstraint();
         getDefaultUIUtil().clearView(foregroundView);
     }
 
@@ -56,7 +56,7 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     public void onChildDraw(Canvas c, RecyclerView recyclerView,
                             RecyclerView.ViewHolder viewHolder, float dX, float dY,
                             int actionState, boolean isCurrentlyActive) {
-        final View foregroundView = ((AnnonceAdapterRaw.ViewHolder) viewHolder).getNormalConstraint();
+        final View foregroundView = ((AnnonceAdapter.ViewHolderRaw) viewHolder).getNormalConstraint();
         getDefaultUIUtil().onDraw(c, recyclerView, foregroundView, dX, dY, actionState, isCurrentlyActive);
     }
 

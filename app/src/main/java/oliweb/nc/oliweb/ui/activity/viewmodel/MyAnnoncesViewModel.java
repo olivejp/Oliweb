@@ -11,7 +11,7 @@ import java.util.List;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
@@ -38,7 +38,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
     }
 
-    public LiveData<List<AnnonceWithPhotos>> findByUuidUtilisateur(String uuidUtilisateur) {
+    public LiveData<List<AnnoncePhotos>> findByUuidUtilisateur(String uuidUtilisateur) {
         return annonceWithPhotosRepository.findAllAnnoncesByUuidUtilisateur(uuidUtilisateur);
     }
 

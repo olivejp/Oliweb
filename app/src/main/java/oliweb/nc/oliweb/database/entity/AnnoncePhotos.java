@@ -9,7 +9,7 @@ import java.util.List;
  * Created by orlanth23 on 08/02/2018.
  */
 
-public class AnnonceWithPhotos {
+public class AnnoncePhotos {
     @Embedded
     public AnnonceEntity annonceEntity;
 

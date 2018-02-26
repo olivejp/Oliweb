@@ -86,4 +86,18 @@ public class AnnonceSearchDto {
     public void setDatePublication(long datePublication) {
         this.datePublication = datePublication;
     }
+
+    @Override
+    public String toString() {
+        return "AnnonceSearchDto{" +
+                "utilisateur=" + utilisateur +
+                ", photos=" + photos +
+                ", categorie=" + categorie +
+                ", uuid='" + uuid + '\'' +
+                ", titre='" + titre + '\'' +
+                ", description='" + description + '\'' +
+                ", prix=" + prix +
+                ", datePublication=" + datePublication +
+                '}';
+    }
 }

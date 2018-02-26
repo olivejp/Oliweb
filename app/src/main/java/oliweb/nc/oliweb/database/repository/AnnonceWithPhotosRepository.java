@@ -8,7 +8,7 @@ import java.util.List;
 import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -20,7 +20,7 @@ public class AnnonceWithPhotosRepository {
 
     private AnnonceWithPhotosRepository(Context context) {
         OliwebDatabase db = OliwebDatabase.getInstance(context);
-        this.annonceWithPhotosDao = db.AnnonceWithPhotosDao();
+        this.annonceWithPhotosDao = db.getAnnonceWithPhotosDao();
     }
 
     public static synchronized AnnonceWithPhotosRepository getInstance(Context context) {
@@ -30,11 +30,11 @@ public class AnnonceWithPhotosRepository {
         return INSTANCE;
     }
 
-    public LiveData<List<AnnonceWithPhotos>> findAllAnnoncesByUuidUtilisateur(String uuidUtilisateur) {
+    public LiveData<List<AnnoncePhotos>> findAllAnnoncesByUuidUtilisateur(String uuidUtilisateur) {
         return this.annonceWithPhotosDao.findByUuidUtilisateur(uuidUtilisateur);
     }
 
-    public Maybe<List<AnnonceWithPhotos>> getAllAnnonceByStatus(String status) {
+    public Maybe<List<AnnoncePhotos>> getAllAnnonceByStatus(String status) {
         return this.annonceWithPhotosDao.getAllAnnonceByStatus(status);
     }
 

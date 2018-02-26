@@ -25,7 +25,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 10, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
+@Database(version = 11, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
     private static OliwebDatabase INSTANCE;
 
@@ -48,11 +48,11 @@ public abstract class OliwebDatabase extends RoomDatabase {
                         Executors.newSingleThreadScheduledExecutor().execute(() -> getInstance(context).categorieDao().insert(populateCategorie()));
                     }
                 })
-                .addMigrations(MIGRATION_1_6)
+                .addMigrations(MIGRATION_1_11)
                 .build();
     }
 
-    public static CategorieEntity[] populateCategorie() {
+    private static CategorieEntity[] populateCategorie() {
         return new CategorieEntity[] {
                 new CategorieEntity("Automobile", null),
                 new CategorieEntity("Mobilier", null),
@@ -62,9 +62,9 @@ public abstract class OliwebDatabase extends RoomDatabase {
         };
     }
 
-    static final Migration MIGRATION_1_6 = new Migration(1, 6) {
+    private static final Migration MIGRATION_1_11 = new Migration(1, 11) {
         @Override
-        public void migrate(SupportSQLiteDatabase database) {
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("INSERT INTO categorie (name) VALUES('Automobile'), ('Mobilier'), ('Jouet'), ('Fleur'), ('Sport')");
         }
     };
@@ -73,11 +73,11 @@ public abstract class OliwebDatabase extends RoomDatabase {
 
     public abstract CategorieDao categorieDao();
 
-    public abstract AnnonceDao AnnonceDao();
+    public abstract AnnonceDao getAnnonceDao();
 
-    public abstract PhotoDao PhotoDao();
+    public abstract PhotoDao getPhotoDao();
 
-    public abstract AnnonceWithPhotosDao AnnonceWithPhotosDao();
+    public abstract AnnonceWithPhotosDao getAnnonceWithPhotosDao();
 
-    public abstract AnnonceFullDao AnnonceFullDao();
+    public abstract AnnonceFullDao getAnnonceFullDao();
 }

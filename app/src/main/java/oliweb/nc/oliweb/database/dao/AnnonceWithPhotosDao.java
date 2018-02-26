@@ -8,7 +8,7 @@ import android.arch.persistence.room.Transaction;
 import java.util.List;
 
 import io.reactivex.Maybe;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -17,14 +17,14 @@ import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
 public interface AnnonceWithPhotosDao {
     @Transaction
     @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    LiveData<AnnonceWithPhotos> findById(Long idAnnonce);
+    LiveData<AnnoncePhotos> findById(Long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur")
-    LiveData<List<AnnonceWithPhotos>> findByUuidUtilisateur(String uuidUtilisateur);
+    LiveData<List<AnnoncePhotos>> findByUuidUtilisateur(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut = :statut")
-    Maybe<List<AnnonceWithPhotos>> getAllAnnonceByStatus(String statut);
+    Maybe<List<AnnoncePhotos>> getAllAnnonceByStatus(String statut);
 
 }

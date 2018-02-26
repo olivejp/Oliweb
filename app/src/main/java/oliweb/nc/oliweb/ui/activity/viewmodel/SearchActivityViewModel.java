@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import oliweb.nc.oliweb.Utility;
-import oliweb.nc.oliweb.database.entity.AnnonceWithPhotos;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
@@ -33,7 +33,7 @@ import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
 public class SearchActivityViewModel extends AndroidViewModel {
 
     private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>> genericClass;
-    private MutableLiveData<List<AnnonceWithPhotos>> listAnnonce;
+    private MutableLiveData<List<AnnoncePhotos>> listAnnonce;
     private DatabaseReference newRequestRef;
 
     public SearchActivityViewModel(@NonNull Application application) {
@@ -42,7 +42,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         };
     }
 
-    public LiveData<List<AnnonceWithPhotos>> getListAnnonce() {
+    public LiveData<List<AnnoncePhotos>> getListAnnonce() {
         if (listAnnonce == null) {
             listAnnonce = new MutableLiveData<>();
             listAnnonce.setValue(new ArrayList<>());
@@ -56,7 +56,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
             if (dataSnapshot.child("results").exists()) {
                 List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
                 if (list != null && !list.isEmpty()) {
-                    List<AnnonceWithPhotos> listAnnonceWithPhoto = new ArrayList<>();
+                    List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
                     for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
                         listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
                     }

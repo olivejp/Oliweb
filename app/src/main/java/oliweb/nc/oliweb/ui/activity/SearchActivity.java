@@ -20,9 +20,9 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterRaw;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapterSingle;
+import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
 
     @BindView(R.id.recycler_search_annonce)
@@ -34,13 +34,6 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
 
-    private SearchActivityViewModel searchActivityViewModel;
-    private AnnonceAdapterRaw annonceAdapterRaw;
-    private AnnonceAdapterSingle annonceAdapterSingle;
-
-
-    private boolean displayBeautyMode;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +41,7 @@ public class SearchActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
+        SearchActivityViewModel searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
@@ -67,17 +60,13 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
+        recyclerView.setAdapter(annonceAdapter);
         if (displayBeautyMode) {
-            // En mode Raw
+            // En mode Raw uniquement
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-            annonceAdapterRaw = new AnnonceAdapterRaw(onClickListener);
-            recyclerView.setAdapter(annonceAdapterRaw);
             recyclerView.addItemDecoration(itemDecoration);
-        } else {
-            // En mode Beauty
-            annonceAdapterSingle = new AnnonceAdapterSingle(onClickListener);
-            recyclerView.setAdapter(annonceAdapterSingle);
         }
 
         // On écoute les changements sur la liste des annonces retournées par la recherche
@@ -86,9 +75,7 @@ public class SearchActivity extends AppCompatActivity {
             if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
                 linearLayout.setVisibility(View.GONE);
                 if (displayBeautyMode) {
-                    annonceAdapterRaw.setListAnnonces(annonceWithPhotos);
-                } else {
-                    annonceAdapterSingle.setListAnnonces(annonceWithPhotos);
+                    annonceAdapter.setListAnnonces(annonceWithPhotos);
                 }
             } else {
                 linearLayout.setVisibility(View.VISIBLE);
