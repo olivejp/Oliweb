@@ -92,8 +92,10 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                 .observe(this, annonceWithPhotos -> {
                     if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                         linearLayout.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
                     } else {
                         linearLayout.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
                         annonceAdapter.setListAnnonces(annonceWithPhotos);
                     }
                 });
@@ -146,8 +148,10 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
             if (idAnnonce != 0) {
                 viewModel.deleteAnnonceById(idAnnonce, dataReturn -> {
-                    if (dataReturn.getNb() > 0)
+                    if (dataReturn.getNb() > 0) {
                         Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
+                        SyncService.launchSynchroForAll(getApplicationContext());
+                    }
                 });
             }
         }

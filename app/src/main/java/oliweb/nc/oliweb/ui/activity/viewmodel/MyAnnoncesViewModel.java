@@ -72,6 +72,8 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                                     }, photoEntity);
                                 }
                             });
+
+
                 });
     }
 }

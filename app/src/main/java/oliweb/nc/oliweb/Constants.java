@@ -5,7 +5,7 @@ public class Constants {
     public static final String PARAM_VIS = "VIS";
     public static final String PARAM_MAJ = "MAJ";
     public static final String PARAM_CRE = "CRE";
-    public static final int MAX_SIZE = 1024;
+    public static final int MAX_SIZE = 512;
 
     public static final int PER_PAGE_REQUEST = 20;
 
@@ -16,6 +16,9 @@ public class Constants {
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";
     public static final String CHANNEL_ID = "OLIWEB_CHANNEL_ID";
 
+
+    public static int notificationSyncPhotoId = 123456;
+    public static int notificationSyncAnnonceId = 654321;
 
     public static final String URL_AFTERSHIP_BASE_URL = "http://35.201.25.32/";
 

@@ -14,7 +14,6 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.List;
 
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
@@ -26,16 +25,19 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
+import static oliweb.nc.oliweb.Constants.notificationSyncPhotoId;
 
 /**
  * Created by orlanth23 on 18/12/2017.
  * <p>
  * This class contains the series of network calls to make to sync local db with firebase
  */
-class CoreSync {
+class CoreSync implements NetworkReceiver.NetworkChangeListener {
     private static final String TAG = CoreSync.class.getName();
 
     private static CoreSync INSTANCE;
@@ -43,34 +45,28 @@ class CoreSync {
     private static StorageReference fireStorage;
     private static PhotoRepository photoRepository;
     private static AnnonceRepository annonceRepository;
-    private static int notificationSyncPhotoId = 123456;
-    private static int notificationSyncAnnonceId = 654321;
 
     private Context context;
-    private Consumer<Throwable> consThrowable;
-    private boolean sendNotification;
     private int nbPhotoCompletedTask = 0;
     private int nbAnnonceCompletedTask = 0;
     private NotificationCompat.Builder mBuilder;
     private NotificationManagerCompat notificationManager;
+    private boolean syncInProgress;
 
     /**
      * Private constructor
      *
      * @param context
-     * @param sendNotification
      */
-    private CoreSync(Context context, boolean sendNotification) {
+    private CoreSync(Context context) {
         if (context != null) {
             this.context = context;
         }
-        this.sendNotification = sendNotification;
-        this.consThrowable = throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable);
     }
 
-    public static CoreSync getInstance(Context context, boolean sendNotification) {
+    public static CoreSync getInstance(Context context) {
         if (INSTANCE == null) {
-            INSTANCE = new CoreSync(context, sendNotification);
+            INSTANCE = new CoreSync(context);
             fireDb = FirebaseDatabase.getInstance();
             fireStorage = FirebaseStorage.getInstance().getReference();
             photoRepository = PhotoRepository.getInstance(context);
@@ -83,26 +79,23 @@ class CoreSync {
      * First send the photo to catch the URL Download link, then send the annonces
      */
     void synchronize() {
-        // Read all photos with TO_SEND status to send them
-        PhotoRepository.getInstance(context)
-                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(this::syncPhotos);
+        syncPhotos();
 
         // Read all photos with TO_DELETE status to delete them on remote and local
         PhotoRepository.getInstance(context)
                 .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
                 .subscribeOn(Schedulers.io())
+                .doAfterTerminate(() -> {
+                    // La suppression des annonces doit se faire après, pour cause de contrainte d'intégrité avec les photos.
+                    // Read all annonces with TO_DELETE status to delete them on remote and local
+                    AnnonceRepository.getInstance(context)
+                            .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .subscribe(this::syncDeletedAnnonces);
+                })
                 .observeOn(Schedulers.io())
                 .subscribe(this::syncDeletedPhotos);
-
-        // Read all annonces with TO_DELETE status to delete them on remote and local
-        AnnonceRepository.getInstance(context)
-                .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(this::syncDeletedAnnonces);
     }
 
     private void syncAnnonce() {
@@ -110,10 +103,12 @@ class CoreSync {
                 .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
+                .doAfterTerminate(() -> syncInProgress = false)
                 .subscribe(annoncesFulls -> {
 
                     // On a des annonces à envoyer, on affiche une notification de téléchargement
                     if (annoncesFulls != null && !annoncesFulls.isEmpty()) {
+                        syncInProgress = true;
                         nbAnnonceCompletedTask = 0;
 
                         createNotification("Oliweb - Envoi de vos annonces", "Téléchargement en cours");
@@ -153,36 +148,43 @@ class CoreSync {
 
     /**
      * Envoi des photos sur FirebaseStorage
-     *
-     * @param listPhoto
      */
-    private void syncPhotos(List<PhotoEntity> listPhoto) {
-        // On a des annonces à envoyer, on affiche une notification de téléchargement
-        if (listPhoto != null && !listPhoto.isEmpty()) {
-            nbPhotoCompletedTask = 0;
+    private void syncPhotos() {
+        // Read all photos with TO_SEND status to send them
+        PhotoRepository.getInstance(context)
+                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(listPhoto -> {
 
-            createNotification("Oliweb - Envoi de vos photos", "Téléchargement en cours");
-            updateProgressBar(listPhoto.size(), 0, notificationSyncPhotoId);
+                    // On a des annonces à envoyer, on affiche une notification de téléchargement
+                    if (listPhoto != null && !listPhoto.isEmpty()) {
+                        syncInProgress = true;
+                        nbPhotoCompletedTask = 0;
 
-            for (PhotoEntity photo : listPhoto) {
-                File file = new File(photo.getUriLocal());
-                String fileName = file.getName();
-                StorageReference storageReference = fireStorage.child(fileName);
-                storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                        .addOnSuccessListener(taskSnapshot -> {
-                            photo.setStatut(StatusRemote.SEND);
-                            photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                            photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
-                            updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Failed to upload image");
-                            photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                            photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
-                            updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
-                        });
-            }
-        }
+                        createNotification("Oliweb - Envoi de vos photos", "Téléchargement en cours");
+                        updateProgressBar(listPhoto.size(), 0, notificationSyncPhotoId);
+
+                        for (PhotoEntity photo : listPhoto) {
+                            File file = new File(photo.getUriLocal());
+                            String fileName = file.getName();
+                            StorageReference storageReference = fireStorage.child(fileName);
+                            storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                                    .addOnSuccessListener(taskSnapshot -> {
+                                        photo.setStatut(StatusRemote.SEND);
+                                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
+                                        photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
+                                        updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to upload image");
+                                        photo.setStatut(StatusRemote.FAILED_TO_SEND);
+                                        photoRepository.save(photo, dataReturn -> checkAnotherPhotoToSend());
+                                        updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
+                                    });
+                        }
+                    }
+                });
     }
 
     private void deleteLocalAndDbPhoto(PhotoEntity photo) {
@@ -208,18 +210,14 @@ class CoreSync {
             for (PhotoEntity photo : listPhotoToDelete) {
                 // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
                 if (photo.getFirebasePath() != null) {
-                    // Suppression firebase
+                    // Suppression firebase ... puis suppression dans la DB
                     File file = new File(photo.getUriLocal());
                     String fileName = file.getName();
                     StorageReference storageReference = fireStorage.child(fileName);
                     storageReference.delete()
-                            .addOnSuccessListener(taskSnapshot -> {
-                                Log.d(TAG, "Successful deleting photo on Firebase Storage");
-                                deleteLocalAndDbPhoto(photo);
-                            })
-                            .addOnFailureListener(e ->
-                                    Log.e(TAG, "Failed to delete image on Firebase Storage")
-                            );
+                            .addOnCompleteListener(task -> deleteLocalAndDbPhoto(photo))
+                            .addOnSuccessListener(taskSnapshot -> Log.d(TAG, "Successful deleting photo on Firebase Storage"))
+                            .addOnFailureListener(e -> Log.e(TAG, "Failed to delete image on Firebase Storage : " + e.getMessage()));
                 } else {
                     deleteLocalAndDbPhoto(photo);
                 }
@@ -258,7 +256,7 @@ class CoreSync {
         mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
         mBuilder.setContentTitle(title)
                 .setContentText(content)
-                .setSmallIcon(R.drawable.ic_sync_black_48dp)
+                .setSmallIcon(R.drawable.ic_sync_white_48dp)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
 
         // Issue the initial notification with zero progress
@@ -282,6 +280,7 @@ class CoreSync {
                     if (countAnnoncesToSend == null || countAnnoncesToSend == 0) {
                         mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
                         notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                        notificationManager.cancel(notificationSyncAnnonceId);
                     }
                 });
     }
@@ -296,8 +295,21 @@ class CoreSync {
                     if (countPhotosToSend == null || countPhotosToSend == 0) {
                         mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
                         notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+                        notificationManager.cancel(notificationSyncPhotoId);
                         syncAnnonce();
                     }
                 });
+    }
+
+    @Override
+    public void onNetworkEnable() {
+
+    }
+
+    @Override
+    public void onNetworkDisable() {
+        if (notificationManager != null) {
+            notificationManager.cancel(notificationSyncPhotoId);
+        }
     }
 }

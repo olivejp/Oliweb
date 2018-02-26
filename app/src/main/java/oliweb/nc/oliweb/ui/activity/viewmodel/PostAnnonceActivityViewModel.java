@@ -148,7 +148,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void setListPhoto(List<PhotoEntity> list) {
         this.listPhoto = list;
-        this.liveListPhoto.postValue(list);
     }
 
 

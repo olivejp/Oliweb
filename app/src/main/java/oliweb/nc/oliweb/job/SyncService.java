@@ -20,7 +20,6 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_ANNONCE = "ARG_ACTION_SYNC_ANNONCE";
     public static final String ARG_ACTION_SYNC_ALL = "ARG_ACTION_SYNC_ALL";
     public static final String ARG_ACTION_SYNC_ALL_FROM_SCHEDULER = "ARG_ACTION_SYNC_ALL_FROM_SCHEDULER";
-    public static final String ARG_NOTIFICATION = "ARG_NOTIFICATION";
 
     public SyncService() {
         super("SyncService");
@@ -34,7 +33,6 @@ public class SyncService extends IntentService {
     public static void launchSynchroForAll(@NonNull Context context) {
         Intent syncService = new Intent(context, SyncService.class);
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_ALL);
-        syncService.putExtra(SyncService.ARG_NOTIFICATION, false);
         context.startService(syncService);
     }
 
@@ -46,13 +44,12 @@ public class SyncService extends IntentService {
     public static void launchSynchroFromScheduler(@NonNull Context context) {
         Intent syncService = new Intent(context, SyncService.class);
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_ALL_FROM_SCHEDULER);
-        syncService.putExtra(SyncService.ARG_NOTIFICATION, true);
         context.startService(syncService);
     }
 
 
-    private void handleActionSyncAll(boolean sendNotification) {
-        CoreSync.getInstance(this.getApplicationContext(), sendNotification).synchronize();
+    private void handleActionSyncAll() {
+        CoreSync.getInstance(this.getApplicationContext()).synchronize();
     }
 
     @Override
@@ -61,16 +58,15 @@ public class SyncService extends IntentService {
             Bundle bundle = intent.getExtras();
             if (bundle != null && bundle.containsKey(ARG_ACTION)) {
                 String action = bundle.getString(ARG_ACTION);
-                boolean sendNotification = (bundle.containsKey(ARG_NOTIFICATION)) && bundle.getBoolean(ARG_NOTIFICATION);
                 if (action != null) {
                     switch (action) {
                         case ARG_ACTION_SYNC_ALL:
                             Log.d(TAG, "Lancement du batch interactif pour toutes les annonces");
-                            handleActionSyncAll(sendNotification);
+                            handleActionSyncAll();
                             break;
                         case ARG_ACTION_SYNC_ALL_FROM_SCHEDULER:
                             Log.d(TAG, "Lancement du batch par le Scheduler");
-                            handleActionSyncAll(sendNotification);
+                            handleActionSyncAll();
                             break;
                         default:
                             break;

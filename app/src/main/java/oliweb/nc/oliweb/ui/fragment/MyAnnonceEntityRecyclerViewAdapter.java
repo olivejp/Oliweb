@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.OnListFragmentInteractionListener;
 import oliweb.nc.oliweb.ui.fragment.dummy.DummyContent.DummyItem;
 
