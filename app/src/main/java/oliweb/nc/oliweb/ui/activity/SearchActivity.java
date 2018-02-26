@@ -31,7 +31,7 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
-    @BindView(R.id.progress_bar)
+    @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
     @Override
