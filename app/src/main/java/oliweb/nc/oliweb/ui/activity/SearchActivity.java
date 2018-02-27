@@ -69,14 +69,16 @@ public class SearchActivity extends AppCompatActivity {
             recyclerView.addItemDecoration(itemDecoration);
         }
 
+        // Fait apparaitre un spinner pendant l'attente
+        searchActivityViewModel.getLoading().observe(this, atomicBoolean ->
+                progressBar.setVisibility((atomicBoolean != null && atomicBoolean.get()) ? View.VISIBLE : View.GONE)
+        );
+
         // On écoute les changements sur la liste des annonces retournées par la recherche
         searchActivityViewModel.getListAnnonce().observe(this, annonceWithPhotos -> {
-            progressBar.setVisibility(View.GONE);
             if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
                 linearLayout.setVisibility(View.GONE);
-                if (displayBeautyMode) {
-                    annonceAdapter.setListAnnonces(annonceWithPhotos);
-                }
+                annonceAdapter.setListAnnonces(annonceWithPhotos);
             } else {
                 linearLayout.setVisibility(View.VISIBLE);
             }
@@ -85,9 +87,7 @@ public class SearchActivity extends AppCompatActivity {
         // Get the intent, verify the action and get the query
         Intent intent = getIntent();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            if (searchActivityViewModel.makeASearch(intent.getStringExtra(SearchManager.QUERY))) {
-                progressBar.setVisibility(View.VISIBLE);
-            } else {
+            if (!searchActivityViewModel.makeASearch(intent.getStringExtra(SearchManager.QUERY))) {
                 Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
             }
         }

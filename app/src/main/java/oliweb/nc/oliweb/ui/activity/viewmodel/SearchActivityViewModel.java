@@ -15,6 +15,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -35,6 +36,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>> genericClass;
     private MutableLiveData<List<AnnoncePhotos>> listAnnonce;
     private DatabaseReference newRequestRef;
+    private MutableLiveData<AtomicBoolean> loading;
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
@@ -50,26 +52,41 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return listAnnonce;
     }
 
+    public LiveData<AtomicBoolean> getLoading(){
+        if (loading == null) {
+            loading = new MutableLiveData<>();
+            loading.setValue(new AtomicBoolean(false));
+        }
+        return loading;
+    }
+
     private ValueEventListener listener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot.child("results").exists()) {
-                List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
-                if (list != null && !list.isEmpty()) {
-                    List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
-                    for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
-                        listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
-                    }
-                    listAnnonce.postValue(listAnnonceWithPhoto);
-                }
-                // After the data has been received we delete the request.
+            List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
+            if (dataSnapshot.child("no_results").exists()) {
+                listAnnonce.postValue(listAnnonceWithPhoto);
+                newRequestRef.removeEventListener(this);
                 newRequestRef.removeValue();
+            } else {
+                if (dataSnapshot.child("results").exists()) {
+                    List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
+                    if (list != null && !list.isEmpty()) {
+                        for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
+                            listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
+                        }
+                        listAnnonce.postValue(listAnnonceWithPhoto);
+                    }
+                    newRequestRef.removeEventListener(this);
+                    newRequestRef.removeValue();
+                }
             }
+            loading.postValue(new AtomicBoolean(false));
         }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-            // Do nothing here
+            loading.postValue(new AtomicBoolean(false));
         }
     };
 
@@ -89,6 +106,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
             // Ensuite on va écouter les changements pour cette nouvelle requête
             newRequestRef.addValueEventListener(listener);
+            loading.postValue(new AtomicBoolean(true));
             return true;
         } else {
             return false;
