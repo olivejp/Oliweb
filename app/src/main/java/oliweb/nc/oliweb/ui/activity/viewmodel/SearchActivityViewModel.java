@@ -73,6 +73,12 @@ public class SearchActivityViewModel extends AndroidViewModel {
         }
     };
 
+    /**
+     * Launch a search with the Query
+     *
+     * @param query
+     * @return true if the search has been launched, false otherwise
+     */
     public boolean makeASearch(String query) {
         if (NetworkReceiver.checkConnection(getApplication().getApplicationContext())) {
             ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query);
