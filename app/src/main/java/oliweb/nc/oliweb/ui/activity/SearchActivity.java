@@ -34,6 +34,8 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
+    private String query;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +44,14 @@ public class SearchActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         SearchActivityViewModel searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
+
+        // Get the intent, verify the action and get the query string
+        Intent intentParam = getIntent();
+        if (Intent.ACTION_SEARCH.equals(intentParam.getAction())) {
+            query = intentParam.getStringExtra(SearchManager.QUERY);
+        }
+
+        setTitle("Recherche :\"" + query + "\"");
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
@@ -70,6 +80,7 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         // Fait apparaitre un spinner pendant l'attente
+        progressBar.setIndeterminate(true);
         searchActivityViewModel.getLoading().observe(this, atomicBoolean ->
                 progressBar.setVisibility((atomicBoolean != null && atomicBoolean.get()) ? View.VISIBLE : View.GONE)
         );
@@ -84,12 +95,8 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
 
-        // Get the intent, verify the action and get the query
-        Intent intent = getIntent();
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            if (!searchActivityViewModel.makeASearch(intent.getStringExtra(SearchManager.QUERY))) {
-                Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
-            }
+        if (!searchActivityViewModel.makeASearch(query)) {
+            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
         }
     }
 }
