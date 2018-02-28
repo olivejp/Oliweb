@@ -81,9 +81,18 @@ public class SearchActivity extends AppCompatActivity {
 
         // Fait apparaitre un spinner pendant l'attente
         // ToDo ne marche pas pour le moment
-        progressBar.setIndeterminate(true);
-        searchActivityViewModel.getLoading().observe(this, atomicBoolean ->
-                progressBar.setVisibility((atomicBoolean != null && atomicBoolean.get()) ? View.VISIBLE : View.GONE)
+        searchActivityViewModel.getLoading().observe(this, atomicBoolean -> {
+                    if (atomicBoolean != null){
+                        if (atomicBoolean.get()){
+                            progressBar.setVisibility(View.VISIBLE);
+                            linearLayout.setVisibility(View.GONE);
+                            recyclerView.setVisibility(View.GONE);
+                        } else {
+                            progressBar.setVisibility(View.GONE);
+                            recyclerView.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
         );
 
         // On écoute les changements sur la liste des annonces retournées par la recherche
