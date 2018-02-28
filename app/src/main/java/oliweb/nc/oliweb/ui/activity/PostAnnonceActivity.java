@@ -152,7 +152,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
 
         // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, this::initPhotos);
+        viewModel.getLiveListPhoto().observe(this, this::putPhotosInCorrectView);
 
         // Récupération du Uid de l'utilisateur connecté
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
@@ -191,7 +191,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
                         // Récupération des photos de cette annonce dans l'adapter
                         viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                                .observe(PostAnnonceActivity.this, this::initPhotos);
+                                .observe(PostAnnonceActivity.this, this::putPhotosInCorrectView);
 
                         displayAnnonce(annonceEntity);
                     }
@@ -209,17 +209,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Try to drop photos in the correct imageView
-     *
-     * @param photoEntities
-     */
-    private void initPhotos(List<PhotoEntity> photoEntities) {
-
-        // Init all default Tag to null
+    private void putPhotosInCorrectView(List<PhotoEntity> photoEntities) {
         for (Pair pair : arrayImageViews) {
+            ImageView imageView = (ImageView) pair.first;
             FrameLayout frame = (FrameLayout) pair.second;
-            frame.setTag(null);
+            if (imageView != null) {
+                imageView.setImageResource(R.drawable.ic_add_a_photo_grey_900_48dp);
+            }
+            if (frame != null) {
+                frame.setTag(null);
+            }
         }
 
         if (photoEntities != null && !photoEntities.isEmpty()) {
@@ -250,7 +249,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             GlideApp.with(this)
                     .load(Uri.parse(photoEntity.getUriLocal()))
                     .apply(RequestOptions.circleCropTransform())
-                    .placeholder(R.drawable.ic_add_grey_900_48dp)
                     .into(imageView);
             return true;
         }
