@@ -52,7 +52,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return listAnnonce;
     }
 
-    public LiveData<AtomicBoolean> getLoading(){
+    public LiveData<AtomicBoolean> getLoading() {
         if (loading == null) {
             loading = new MutableLiveData<>();
             loading.setValue(new AtomicBoolean(false));
@@ -81,12 +81,16 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     newRequestRef.removeValue();
                 }
             }
-            loading.postValue(new AtomicBoolean(false));
+            if (loading != null) {
+                loading.postValue(new AtomicBoolean(false));
+            }
         }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-            loading.postValue(new AtomicBoolean(false));
+            if (loading != null) {
+                loading.postValue(new AtomicBoolean(false));
+            }
         }
     };
 
@@ -106,7 +110,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
             // Ensuite on va écouter les changements pour cette nouvelle requête
             newRequestRef.addValueEventListener(listener);
-            loading.postValue(new AtomicBoolean(true));
+            if (loading != null) {
+                loading.postValue(new AtomicBoolean(true));
+            }
             return true;
         } else {
             return false;

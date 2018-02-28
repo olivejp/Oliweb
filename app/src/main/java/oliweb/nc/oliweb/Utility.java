@@ -77,6 +77,12 @@ public class Utility {
         annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
         annonceEntity.setPrix(annonceSearchDto.getPrix());
 
+        for (String photoUrl : annonceSearchDto.getPhotos()) {
+            PhotoEntity photoEntity = new PhotoEntity();
+            photoEntity.setFirebasePath(photoUrl);
+            annoncePhotos.getPhotos().add(photoEntity);
+        }
+
         annoncePhotos.setAnnonceEntity(annonceEntity);
 
         return annoncePhotos;
@@ -93,7 +99,7 @@ public class Utility {
         annonceSearchDto.setUtilisateur(utilisateurSearchDto);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
-        annonceSearchDto.setCategorie(new CategorieSearchDto(categorieEntity.getIdCategorie(), categorieEntity.getName()) );
+        annonceSearchDto.setCategorie(new CategorieSearchDto(categorieEntity.getIdCategorie(), categorieEntity.getName()));
 
         annonceSearchDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
         annonceSearchDto.setDescription(annonceFull.getAnnonce().getDescription());

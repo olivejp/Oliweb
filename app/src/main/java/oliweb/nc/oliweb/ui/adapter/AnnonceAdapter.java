@@ -59,6 +59,7 @@ public class AnnonceAdapter extends
         } else if (displayType.equals(DisplayType.BEAUTY)) {
             itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
             viewHolderResult = new ViewHolderBeauty(itemLayoutView);
+            ((ViewHolderBeauty) viewHolderResult).parent = parent;
         }
         return viewHolderResult;
     }
@@ -108,7 +109,7 @@ public class AnnonceAdapter extends
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
-        viewHolderBeauty.singleAnnonce = annoncePhotos;
+        viewHolderBeauty.singleAnnonce = annonce;
 
         viewHolderBeauty.cardView.setTag(viewHolderBeauty.singleAnnonce);
         viewHolderBeauty.cardView.setOnClickListener(this.onClickListener);
@@ -116,6 +117,8 @@ public class AnnonceAdapter extends
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textDescriptionAnnonce.setText(annonce.getDescription());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(annonce.getPrix() + " XPF"));
+        viewHolderBeauty.viewPager.setAdapter(new AnnonceViewPagerAdapter(viewHolderBeauty.parent.getContext(), annoncePhotos.getPhotos()));
+        viewHolderBeauty.indicator.setViewPager(viewHolderBeauty.viewPager);
     }
 
     public void setListAnnonces(final List<AnnoncePhotos> newListAnnonces) {
@@ -222,7 +225,9 @@ public class AnnonceAdapter extends
         @BindView(R.id.indicator)
         CircleIndicator indicator;
 
-        AnnoncePhotos singleAnnonce;
+        AnnonceEntity singleAnnonce;
+
+        ViewGroup parent;
 
         ViewHolderBeauty(View itemLayoutView) {
             super(itemLayoutView);

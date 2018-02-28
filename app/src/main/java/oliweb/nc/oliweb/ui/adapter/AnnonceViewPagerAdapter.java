@@ -44,7 +44,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup view, int position) {
-        View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, true);
+        View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
         ImageView myImage = myImageLayout.findViewById(R.id.image);
 
         if (photos.get(position).getUriLocal() != null) {
@@ -52,7 +52,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
         } else {
             if (photos.get(position).getFirebasePath() != null) {
                 GlideApp.with(this.context)
-                        .load(photos.get(position))
+                        .load(photos.get(position).getFirebasePath())
                         .into(myImage);
             }
         }

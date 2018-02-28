@@ -51,7 +51,7 @@ public class SearchActivity extends AppCompatActivity {
             query = intentParam.getStringExtra(SearchManager.QUERY);
         }
 
-        setTitle("Recherche :\"" + query + "\"");
+        setTitle("Recherche \"" + query + "\"");
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
@@ -73,13 +73,14 @@ public class SearchActivity extends AppCompatActivity {
         boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
         recyclerView.setAdapter(annonceAdapter);
-        if (displayBeautyMode) {
+        if (!displayBeautyMode) {
             // En mode Raw uniquement
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
             recyclerView.addItemDecoration(itemDecoration);
         }
 
         // Fait apparaitre un spinner pendant l'attente
+        // ToDo ne marche pas pour le moment
         progressBar.setIndeterminate(true);
         searchActivityViewModel.getLoading().observe(this, atomicBoolean ->
                 progressBar.setVisibility((atomicBoolean != null && atomicBoolean.get()) ? View.VISIBLE : View.GONE)

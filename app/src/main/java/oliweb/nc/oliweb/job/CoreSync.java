@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.job;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
@@ -39,48 +40,48 @@ import static oliweb.nc.oliweb.Constants.notificationSyncPhotoId;
 class CoreSync {
     private static final String TAG = CoreSync.class.getName();
 
-    private static CoreSync INSTANCE;
+    private static CoreSync instance;
     private static FirebaseDatabase fireDb;
     private static StorageReference fireStorage;
-    private static PhotoRepository photoRepository;
-    private static AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
+    private AnnonceRepository annonceRepository;
+    private AnnonceFullRepository annonceFullRepository;
 
-    private Context context;
     private int nbPhotoCompletedTask = 0;
     private int nbAnnonceCompletedTask = 0;
     private NotificationCompat.Builder mBuilder;
     private NotificationManagerCompat notificationManager;
+    private ContentResolver contentResolver;
 
-    /**
-     * Private constructor
-     *
-     * @param context
-     */
-    private CoreSync(Context context) {
-        if (context != null) {
-            this.context = context;
-        }
+    private CoreSync() {
     }
 
     public static CoreSync getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new CoreSync(context);
+        if (instance == null) {
+            instance = new CoreSync();
             fireDb = FirebaseDatabase.getInstance();
             fireStorage = FirebaseStorage.getInstance().getReference();
-            photoRepository = PhotoRepository.getInstance(context);
-            annonceRepository = AnnonceRepository.getInstance(context);
+            instance.photoRepository = PhotoRepository.getInstance(context);
+            instance.annonceRepository = AnnonceRepository.getInstance(context);
+            instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
+            instance.notificationManager = NotificationManagerCompat.from(context);
+            instance.mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
+            instance.contentResolver = context.getContentResolver();
         }
-        return INSTANCE;
+        return instance;
     }
 
     /**
      * First send the photo to catch the URL Download link, then send the annonces
      */
     void synchronize() {
+        Log.d(TAG, "Launch synchronyse");
         syncPhotosToSend();
 
         isAnotherPhotoWithStatus(StatusRemote.TO_SEND, count -> {
             if (count == null || count.equals(0)) {
+                // No more photos to send, we can send annonce
+                Log.d(TAG, "No more photos to send, synchronyze annonces");
                 syncAnnoncesToSend();
             }
         });
@@ -89,7 +90,7 @@ class CoreSync {
     }
 
     private void syncAnnoncesToSend() {
-        AnnonceFullRepository.getInstance(context)
+        annonceFullRepository
                 .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -99,46 +100,50 @@ class CoreSync {
                     if (annoncesFulls != null && !annoncesFulls.isEmpty()) {
                         nbAnnonceCompletedTask = 0;
 
-                        createNotification("Oliweb - Envoi de vos annonces", "Téléchargement en cours");
+                        createNotification("Oliweb - Envoi de vos annonces");
                         updateProgressBar(annoncesFulls.size(), 0, notificationSyncAnnonceId);
 
                         // Parcours de la liste des annonces
                         for (AnnonceFull annonceFull : annoncesFulls) {
-                            DatabaseReference dbRef;
-
-                            // Création ou mise à jour de l'annonce
-                            if (annonceFull.getAnnonce().getUUID() != null) {
-                                dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).child(annonceFull.getAnnonce().getUUID());
-                            } else {
-                                dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
-                                annonceFull.getAnnonce().setUUID(dbRef.getKey());
-                            }
-
-                            // Conversion de notre annonce en DTO
-                            AnnonceSearchDto annonceSearchDto = Utility.convertEntityToDto(annonceFull);
-                            Log.d(TAG, annonceSearchDto.toString());
-
-                            OnCheckedListener onCheckedListener = count -> {
-                                if (count == null || count == 0) {
-                                    mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-                                    notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-                                    notificationManager.cancel(notificationSyncAnnonceId);
-                                } else {
-                                    updateProgressBar(annoncesFulls.size(), nbAnnonceCompletedTask++, notificationSyncAnnonceId);
-                                }
-                            };
-
-                            dbRef.setValue(annonceSearchDto)
-                                    .addOnSuccessListener(o -> {
-                                        annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                                        annonceRepository.update(dataReturn -> isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, onCheckedListener), annonceFull.getAnnonce());
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
-                                        annonceRepository.update(dataReturn -> isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, onCheckedListener), annonceFull.getAnnonce());
-                                    });
+                            sendAnnonceToFireabaseDatabase(annonceFull, annoncesFulls.size());
                         }
                     }
+                });
+    }
+
+    private void sendAnnonceToFireabaseDatabase(AnnonceFull annonceFull, int totalSize) {
+        DatabaseReference dbRef;
+
+        // Création ou mise à jour de l'annonce
+        if (annonceFull.getAnnonce().getUUID() != null) {
+            dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).child(annonceFull.getAnnonce().getUUID());
+        } else {
+            dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
+            annonceFull.getAnnonce().setUUID(dbRef.getKey());
+        }
+
+        // Conversion de notre annonce en DTO
+        AnnonceSearchDto annonceSearchDto = Utility.convertEntityToDto(annonceFull);
+        Log.d(TAG, annonceSearchDto.toString());
+
+        OnCheckedListener onCheckedListener = count -> {
+            if (count == null || count == 0) {
+                mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                notificationManager.cancel(notificationSyncAnnonceId);
+            } else {
+                updateProgressBar(totalSize, nbAnnonceCompletedTask++, notificationSyncAnnonceId);
+            }
+        };
+
+        dbRef.setValue(annonceSearchDto)
+                .addOnSuccessListener(o -> {
+                    annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
+                    annonceRepository.update(dataReturn -> isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, onCheckedListener), annonceFull.getAnnonce());
+                })
+                .addOnFailureListener(e -> {
+                    annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
+                    annonceRepository.update(dataReturn -> isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, onCheckedListener), annonceFull.getAnnonce());
                 });
     }
 
@@ -146,8 +151,9 @@ class CoreSync {
      * Envoi des photos sur FirebaseStorage
      */
     private void syncPhotosToSend() {
+        Log.d(TAG, "Starting syncPhotosToSend");
         // Read all photos with TO_SEND status to send them
-        PhotoRepository.getInstance(context)
+        photoRepository
                 .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -156,76 +162,48 @@ class CoreSync {
                     if (listPhoto != null && !listPhoto.isEmpty()) {
                         nbPhotoCompletedTask = 0;
 
-                        // On a des annonces à envoyer, on affiche une notification de téléchargement
-                        createNotification("Oliweb - Envoi de vos photos", "Téléchargement en cours");
+                        // On a des photos à envoyer, on affiche une notification de téléchargement
+                        createNotification("Oliweb - Envoi de vos photos");
                         updateProgressBar(listPhoto.size(), 0, notificationSyncPhotoId);
 
-                        OnCheckedListener onCheckedListener = count -> {
-                            if (count == null || count == 0) {
-                                mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-                                notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-                                notificationManager.cancel(notificationSyncPhotoId);
-                            }
-                        };
-
                         for (PhotoEntity photo : listPhoto) {
-                            File file = new File(photo.getUriLocal());
-                            String fileName = file.getName();
-                            StorageReference storageReference = fireStorage.child(fileName);
-                            storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                                    .addOnSuccessListener(taskSnapshot -> {
-                                        photo.setStatut(StatusRemote.SEND);
-                                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                                        photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
-                                        updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e(TAG, "Failed to upload image");
-                                        photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                                        photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
-                                        updateProgressBar(listPhoto.size(), nbPhotoCompletedTask++, notificationSyncPhotoId);
-                                    });
+                            sendPhotoToFirebaseStorage(photo, listPhoto.size());
                         }
                     }
                 });
     }
 
-    private void createNotification(String title, String content) {
-        notificationManager = NotificationManagerCompat.from(context);
-        mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
-        mBuilder.setContentTitle(title)
-                .setContentText(content)
-                .setSmallIcon(R.drawable.ic_sync_white_48dp)
-                .setPriority(NotificationCompat.PRIORITY_LOW);
+    private void sendPhotoToFirebaseStorage(PhotoEntity photo, int totalSize) {
+        Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
 
-        // Issue the initial notification with zero progress
-        int progressMax = 100;
-        int progressCurrent = 0;
-        mBuilder.setProgress(progressMax, progressCurrent, false);
+        OnCheckedListener onCheckedListener = count -> {
+            if (count == null || count == 0) {
+                mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
+                notificationManager.cancel(notificationSyncPhotoId);
+            }
+        };
+
+        File file = new File(photo.getUriLocal());
+        String fileName = file.getName();
+        StorageReference storageReference = fireStorage.child(fileName);
+        storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                .addOnSuccessListener(taskSnapshot -> {
+                    photo.setStatut(StatusRemote.SEND);
+                    if (taskSnapshot.getDownloadUrl() != null) {
+                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
+                    }
+                    photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
+                    updateProgressBar(totalSize, nbPhotoCompletedTask++, notificationSyncPhotoId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to upload image");
+                    photo.setStatut(StatusRemote.FAILED_TO_SEND);
+                    photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
+                    updateProgressBar(totalSize, nbPhotoCompletedTask++, notificationSyncPhotoId);
+                });
     }
 
-    private void updateProgressBar(int max, int current, int notificationId) {
-        mBuilder.setProgress(max, current, false);
-        notificationManager.notify(notificationId, mBuilder.build());
-    }
-
-    private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
-        // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
-        AnnonceRepository.getInstance(context)
-                .countAllAnnoncesByStatus(statusRemote.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(onCheckedListener::run);
-    }
-
-    private void isAnotherPhotoWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
-        // Read all photos with statusRemote, when reach 0, then run onCheckedListener
-        PhotoRepository.getInstance(context)
-                .countAllPhotosByStatus(statusRemote.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(onCheckedListener::run);
-    }
 
     /**
      * Delete all photos
@@ -236,7 +214,7 @@ class CoreSync {
      * @param idAnnonce
      */
     private void deletePhotoByIdAnnonce(long idAnnonce) {
-        PhotoRepository.getInstance(context)
+        photoRepository
                 .findAllSingleByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -257,7 +235,7 @@ class CoreSync {
         if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
             for (PhotoEntity photo : listPhotoToDelete) {
                 // Suppression du fichier physique
-                if (context.getContentResolver().delete(Uri.parse(photo.getUriLocal()), null, null) != 0) {
+                if (contentResolver.delete(Uri.parse(photo.getUriLocal()), null, null) != 0) {
                     Log.d(TAG, "Successful deleting physical photo : " + photo.getUriLocal());
                 } else {
                     Log.e(TAG, "Fail to delete physical photo : " + photo.getUriLocal());
@@ -297,7 +275,7 @@ class CoreSync {
      */
     private void syncDeleted() {
         // Read all annonces with TO_DELETE status to delete them on remote and local
-        AnnonceRepository.getInstance(context)
+        annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -311,6 +289,43 @@ class CoreSync {
                             }
                         }
                 );
+    }
+
+
+    private void createNotification(String title) {
+        mBuilder.setContentTitle(title)
+                .setContentText("Téléchargement en cours")
+                .setSmallIcon(R.drawable.ic_sync_white_48dp)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
+
+        // Issue the initial notification with zero progress
+        int progressMax = 100;
+        int progressCurrent = 0;
+        mBuilder.setProgress(progressMax, progressCurrent, false);
+    }
+
+    private void updateProgressBar(int max, int current, int notificationId) {
+        mBuilder.setProgress(max, current, false);
+        mBuilder.setContentText("Téléchargement en cours - " + current + "/" + max);
+        notificationManager.notify(notificationId, mBuilder.build());
+    }
+
+    private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+        // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
+        annonceRepository
+                .countAllAnnoncesByStatus(statusRemote.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(onCheckedListener::run);
+    }
+
+    private void isAnotherPhotoWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+        // Read all photos with statusRemote, when reach 0, then run onCheckedListener
+        photoRepository
+                .countAllPhotosByStatus(statusRemote.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(onCheckedListener::run);
     }
 
     private interface OnCheckedListener {
