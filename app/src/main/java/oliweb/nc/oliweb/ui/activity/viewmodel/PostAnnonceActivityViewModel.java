@@ -85,6 +85,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.listPhoto.size() < 4;
     }
 
+    // TODO don't remove photo when they have been send. Just pass status to TO_DELETE
     public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
         boolean retour = false;
         if (this.listPhoto.contains(photoEntity)) {
