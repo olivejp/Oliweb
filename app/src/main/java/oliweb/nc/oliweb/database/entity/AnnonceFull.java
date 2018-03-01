@@ -53,4 +53,14 @@ public class AnnonceFull {
     public void setUtilisateur(List<UtilisateurEntity> utilisateur) {
         this.utilisateur = utilisateur;
     }
+
+    @Override
+    public String toString() {
+        return "AnnonceFull{" +
+                "annonce=" + annonce +
+                ", photos=" + photos +
+                ", categorie=" + categorie +
+                ", utilisateur=" + utilisateur +
+                '}';
+    }
 }

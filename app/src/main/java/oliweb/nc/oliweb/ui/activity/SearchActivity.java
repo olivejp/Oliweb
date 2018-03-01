@@ -10,20 +10,20 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
+
+    private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
@@ -31,10 +31,8 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
-
     private String query;
+    private LoadingDialogFragment loadingDialogFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,14 +53,15 @@ public class SearchActivity extends AppCompatActivity {
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
-            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-            Intent intent = new Intent();
-            Bundle bundle = new Bundle();
-            intent.setClass(this, PostAnnonceActivity.class);
-            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_VIS);
-            bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
-            intent.putExtras(bundle);
-            startActivity(intent);
+            // TODO appeler une nouvelle activité ici pour visualiser l'annonce
+//            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
+//            Intent intent = new Intent();
+//            Bundle bundle = new Bundle();
+//            intent.setClass(this, PostAnnonceActivity.class);
+//            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_VIS);
+//            bundle.putParcelable(PostAnnonceActivity.BUNDLE_KEY_ANNONCE, annonce);
+//            intent.putExtras(bundle);
+//            startActivity(intent);
         };
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -82,14 +81,17 @@ public class SearchActivity extends AppCompatActivity {
         // Fait apparaitre un spinner pendant l'attente
         // ToDo ne marche pas pour le moment
         searchActivityViewModel.getLoading().observe(this, atomicBoolean -> {
-                    if (atomicBoolean != null){
-                        if (atomicBoolean.get()){
-                            progressBar.setVisibility(View.VISIBLE);
+                    if (atomicBoolean != null) {
+                        if (atomicBoolean.get()) {
+                            loadingDialogFragment = new LoadingDialogFragment();
+                            loadingDialogFragment.show(this.getSupportFragmentManager(), LOADING_DIALOG);
                             linearLayout.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.GONE);
                         } else {
-                            progressBar.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
+                            if (loadingDialogFragment != null) {
+                                loadingDialogFragment.dismiss();
+                            }
                         }
                     }
                 }

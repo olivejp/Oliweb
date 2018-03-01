@@ -105,6 +105,7 @@ class CoreSync {
 
                         // Parcours de la liste des annonces
                         for (AnnonceFull annonceFull : annoncesFulls) {
+                            Log.d(TAG, "Synchro d'une annonce : " + annonceFull.toString());
                             sendAnnonceToFireabaseDatabase(annonceFull, annoncesFulls.size());
                         }
                     }

@@ -5,6 +5,8 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
@@ -19,7 +21,7 @@ import com.google.firebase.database.Exclude;
         indices = {
                 @Index("UuidUtilisateur"),
                 @Index("idCategorie")})
-public class AnnonceEntity {
+public class AnnonceEntity implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idAnnonce;
@@ -154,4 +156,61 @@ public class AnnonceEntity {
     public void setFavorite(Integer favorite) {
         this.favorite = favorite;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idAnnonce);
+        dest.writeString(this.UUID);
+        dest.writeString(this.titre);
+        dest.writeString(this.description);
+        dest.writeValue(this.datePublication);
+        dest.writeValue(this.prix);
+        dest.writeString(this.contactByTel);
+        dest.writeString(this.contactByEmail);
+        dest.writeString(this.contactByMsg);
+        dest.writeInt(this.statut == null ? -1 : this.statut.ordinal());
+        dest.writeString(this.UuidUtilisateur);
+        dest.writeLong(this.idCategorie);
+        dest.writeString(this.debattre);
+        dest.writeValue(this.favorite);
+    }
+
+    public AnnonceEntity() {
+    }
+
+    protected AnnonceEntity(Parcel in) {
+        this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
+        this.UUID = in.readString();
+        this.titre = in.readString();
+        this.description = in.readString();
+        this.datePublication = (Long) in.readValue(Long.class.getClassLoader());
+        this.prix = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.contactByTel = in.readString();
+        this.contactByEmail = in.readString();
+        this.contactByMsg = in.readString();
+        int tmpStatut = in.readInt();
+        this.statut = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
+        this.UuidUtilisateur = in.readString();
+        this.idCategorie = in.readLong();
+        this.debattre = in.readString();
+        this.favorite = (Integer) in.readValue(Integer.class.getClassLoader());
+    }
+
+    public static final Creator<AnnonceEntity> CREATOR = new Creator<AnnonceEntity>() {
+        @Override
+        public AnnonceEntity createFromParcel(Parcel source) {
+            return new AnnonceEntity(source);
+        }
+
+        @Override
+        public AnnonceEntity[] newArray(int size) {
+            return new AnnonceEntity[size];
+        }
+    };
 }

@@ -68,6 +68,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 listAnnonce.postValue(listAnnonceWithPhoto);
                 newRequestRef.removeEventListener(this);
                 newRequestRef.removeValue();
+                updateLoadingStatus(false);
             } else {
                 if (dataSnapshot.child("results").exists()) {
                     List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
@@ -79,20 +80,24 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     }
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
+                    updateLoadingStatus(false);
                 }
             }
-            if (loading != null) {
-                loading.postValue(new AtomicBoolean(false));
-            }
+
         }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-            if (loading != null) {
-                loading.postValue(new AtomicBoolean(false));
-            }
+            updateLoadingStatus(false);
         }
     };
+
+    private void updateLoadingStatus(boolean status) {
+        if (loading == null) {
+            loading = new MutableLiveData<>();
+        }
+        loading.postValue(new AtomicBoolean(status));
+    }
 
     /**
      * Launch a search with the Query
@@ -110,9 +115,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
             // Ensuite on va écouter les changements pour cette nouvelle requête
             newRequestRef.addValueEventListener(listener);
-            if (loading != null) {
-                loading.postValue(new AtomicBoolean(true));
-            }
+            updateLoadingStatus(true);
             return true;
         } else {
             return false;
