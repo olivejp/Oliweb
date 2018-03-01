@@ -139,14 +139,14 @@ public class AnnonceAdapter extends
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getIdAnnonce().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getIdAnnonce());
+                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUUID().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUUID());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                     AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
                     AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
-                    return newAnnonce.getIdAnnonce().equals(oldAnnonce.getIdAnnonce())
+                    return newAnnonce.getUUID().equals(oldAnnonce.getUUID())
                             && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
                             && newAnnonce.getPrix().equals(oldAnnonce.getPrix());
