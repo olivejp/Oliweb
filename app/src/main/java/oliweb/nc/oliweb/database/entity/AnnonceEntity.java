@@ -38,10 +38,6 @@ public class AnnonceEntity {
     private String debattre;
     private Integer favorite;
 
-    public AnnonceEntity() {
-        this.idAnnonce = -1L;
-    }
-
     @Exclude
     @NonNull
     public Long getIdAnnonce() {

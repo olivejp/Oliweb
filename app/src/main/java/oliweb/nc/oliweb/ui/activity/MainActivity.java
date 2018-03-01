@@ -200,10 +200,8 @@ public class MainActivity extends AppCompatActivity
 
         // On vient de créer une nouvelle annonce.
         // On envoie un snackbar pour avertir l'utilisateur que cela s'est bien déroulé.
-        if (requestCode == RC_POST_ANNONCE) {
-            if (resultCode == RESULT_OK) {
-                Snackbar.make(toolbar, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
-            }
+        if (requestCode == RC_POST_ANNONCE && resultCode == RESULT_OK) {
+            Snackbar.make(toolbar, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

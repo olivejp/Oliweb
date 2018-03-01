@@ -23,6 +23,7 @@ import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.Utility;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.job.SyncService;
+import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
@@ -70,7 +71,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
         AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-            callPostAnnonceUpdate(annonce);
+            callActivityToUpdateAnnonce(annonce);
         });
         recyclerView.setAdapter(annonceAdapter);
 
@@ -103,7 +104,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE_POST && resultCode == RESULT_OK) {
+        if (NetworkReceiver.checkConnection(this) && requestCode == REQUEST_CODE_POST && resultCode == RESULT_OK) {
             SyncService.launchSynchroForAll(getApplicationContext());
         }
     }
@@ -172,7 +173,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         startActivityForResult(intent, REQUEST_CODE_POST);
     }
 
-    private void callPostAnnonceUpdate(AnnonceEntity annonce) {
+    private void callActivityToUpdateAnnonce(AnnonceEntity annonce) {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         intent.setClass(this, PostAnnonceActivity.class);

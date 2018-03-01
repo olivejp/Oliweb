@@ -22,7 +22,6 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
-import oliweb.nc.oliweb.database.repository.task.TypeTask;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -65,7 +64,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
-    public void updatePhotos(){
+    public void updatePhotos() {
         this.liveListPhoto.postValue(this.listPhoto);
     }
 
@@ -85,11 +84,18 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.listPhoto.size() < 4;
     }
 
-    // TODO don't remove photo when they have been send. Just pass status to TO_DELETE
     public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
         boolean retour = false;
         if (this.listPhoto.contains(photoEntity)) {
-            retour = this.listPhoto.remove(photoEntity);
+
+            if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
+                photoEntity.setStatut(StatusRemote.TO_DELETE);
+                this.photoRepository.update(null, photoEntity);
+                retour = true;
+            } else {
+                retour = this.listPhoto.remove(photoEntity);
+            }
+
             this.liveListPhoto.postValue(this.listPhoto);
         }
         return retour;
@@ -105,21 +111,23 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setUuidUtilisateur(uidUser);
 
-        // Sauvegarde de l'annonce
         if (listPhoto == null || listPhoto.isEmpty()) {
-            // On a pas de photo, on sauvegarde uniquement l'annonce
             this.annonceRepository.save(annonce, onRespositoryPostExecute);
         } else {
-            // On a des photos on va les insérer/modifier également
             this.annonceRepository.save(annonce, dataReturn -> {
-                if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
-                    if (dataReturn.getIds().length > 0) {
-                        long idAnnonceInserted = dataReturn.getIds()[0];
-                        updataPhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
-                    }
-                } else {
-                    if (dataReturn.getTypeTask() == TypeTask.UPDATE && dataReturn.getNb() > 0) {
-                        updataPhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                if (dataReturn.getNb() > 0) {
+                    switch (dataReturn.getTypeTask()) {
+                        case INSERT:
+                            if (dataReturn.getIds().length > 0) {
+                                long idAnnonceInserted = dataReturn.getIds()[0];
+                                updataPhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
+                            }
+                            break;
+                        case UPDATE:
+                            updataPhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                            break;
+                        default:
+                            break;
                     }
                 }
             });

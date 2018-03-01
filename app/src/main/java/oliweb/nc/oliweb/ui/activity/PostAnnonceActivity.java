@@ -42,6 +42,7 @@ import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
@@ -224,11 +225,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (photoEntities != null && !photoEntities.isEmpty()) {
             viewModel.setListPhoto(photoEntities);
             for (PhotoEntity photo : photoEntities) {
-                boolean insertion = false;
-                int i = 0;
-                while (!insertion && i < arrayImageViews.size()) {
-                    insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
-                    i++;
+                if (!photo.getStatut().equals(StatusRemote.TO_DELETE)) {
+                    boolean insertion = false;
+                    int i = 0;
+                    while (!insertion && i < arrayImageViews.size()) {
+                        insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
+                        i++;
+                    }
                 }
             }
         }
@@ -264,24 +267,20 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
-        switch (idItem) {
-            case R.id.menu_post_valid:
-                if (isValidAnnonce()) {
+        if (idItem == R.id.menu_post_valid && isValidAnnonce()) {
+            // Retrieve datas from the ui
+            String titre = textViewTitre.getText().toString();
+            String description = textViewDescription.getText().toString();
+            int prix = Integer.parseInt(textViewPrix.getText().toString());
 
-                    // Retrieve datas from the ui
-                    String titre = textViewTitre.getText().toString();
-                    String description = textViewDescription.getText().toString();
-                    int prix = Integer.parseInt(textViewPrix.getText().toString());
-
-                    // Save the annonce
-                    viewModel.saveAnnonce(titre, description, prix, uidUser, dataReturn -> {
-                        if (dataReturn.getNb() > 0) {
-                            setResult(RESULT_OK);
-                            finish();
-                        }
-                    });
-                    return true;
+            // Save the annonce
+            viewModel.saveAnnonce(titre, description, prix, uidUser, dataReturn -> {
+                if (dataReturn.getNb() > 0) {
+                    setResult(RESULT_OK);
+                    finish();
                 }
+            });
+            return true;
         }
         return false;
     }

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -80,7 +81,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
     }
 
-    public Maybe<Integer> countAllPhotosByStatus(String status) {
+    public Flowable<Integer> countAllPhotosByStatus(String status) {
         return this.photoDao.countAllPhotosByStatus(status);
     }
 }
