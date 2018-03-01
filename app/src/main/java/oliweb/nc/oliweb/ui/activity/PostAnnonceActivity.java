@@ -341,14 +341,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
                         while (i++ < data.getClipData().getItemCount() - 1) {
                             if (viewModel.canHandleAnotherPhoto()) {
                                 item = data.getClipData().getItemAt(i);
-                                insertionFromGallery(item.getUri());
+                                insertFromGallery(item.getUri());
                             }
                         }
                     } else {
                         // Insertion simple
                         Uri uri = data.getData();
                         if (uri != null) {
-                            insertionFromGallery(uri);
+                            insertFromGallery(uri);
                         }
                     }
                 }
@@ -375,11 +375,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
      *
      * @param uri
      */
-    private void insertionFromGallery(Uri uri) {
+    private void insertFromGallery(Uri uri) {
         try {
-            Uri nouvelleUri = generateNewUri();
-            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, nouvelleUri)) {
-                viewModel.addPhotoToCurrentList(nouvelleUri.toString());
+            Uri newUri = generateNewUri();
+            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, newUri)) {
+                viewModel.addPhotoToCurrentList(newUri.toString());
             } else {
                 Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }

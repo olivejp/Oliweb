@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.Utility;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 
@@ -36,6 +37,7 @@ public class WorkImageFragment extends Fragment {
     private Bitmap pBitmap;
     private AppCompatActivity activity;
     private PostAnnonceActivityViewModel viewModel;
+    private boolean hasBeenUpdated = false;
 
     @Override
     public void onAttach(Context context) {
@@ -81,17 +83,21 @@ public class WorkImageFragment extends Fragment {
             pBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
             scaledBitmap.recycle();
             photo.setImageBitmap(pBitmap);
+            hasBeenUpdated = true;
         }
     }
 
     @OnClick(R.id.frag_work_image_button_valid_photo)
     public void onValid(View v) {
-        if (MediaUtility.saveBitmapToUri(pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
-            Toast.makeText(this.activity, "Image mise à jour", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this.activity, "Mise à jour échouée", Toast.LENGTH_LONG).show();
+        if (hasBeenUpdated) {
+            if (MediaUtility.saveBitmapToFileProviderUri(activity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
+                viewModel.getUpdatedPhoto().setStatut(StatusRemote.TO_SEND);
+                Toast.makeText(this.activity, "Image mise à jour", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this.activity, "Mise à jour échouée", Toast.LENGTH_LONG).show();
+            }
+            this.viewModel.updatePhotos();
         }
-        this.viewModel.updatePhotos();
         this.activity.getSupportFragmentManager().popBackStackImmediate();
     }
 

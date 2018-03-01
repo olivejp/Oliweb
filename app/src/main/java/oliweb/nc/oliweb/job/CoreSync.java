@@ -275,6 +275,8 @@ class CoreSync {
      * Read all annonces with TO_DELETE status
      */
     private void syncDeleted() {
+
+
         // Read all annonces with TO_DELETE status to delete them on remote and local
         annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
@@ -283,9 +285,19 @@ class CoreSync {
                 .subscribe(listAnnoncesToDelete -> {
                             if (listAnnoncesToDelete != null && !listAnnoncesToDelete.isEmpty()) {
                                 for (AnnonceEntity annonce : listAnnoncesToDelete) {
+
+                                    // We delete only when it left 0 photos for this annonce
+                                    photoRepository.countAllPhotosByIdAnnonce(annonce.getIdAnnonce())
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(Schedulers.io())
+                                            .subscribe(integer -> {
+                                                if (integer == null || integer.equals(0)) {
+                                                    annonceRepository.delete(null, annonce);
+                                                }
+                                            });
+
                                     deletePhotoByIdAnnonce(annonce.getIdAnnonce());
                                     deleteAnnonceFromFirebaseDatabase(annonce);
-                                    annonceRepository.delete(null, annonce);
                                 }
                             }
                         }

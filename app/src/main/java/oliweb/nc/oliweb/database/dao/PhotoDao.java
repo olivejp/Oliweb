@@ -40,4 +40,8 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE statut = :statut")
     Flowable<Integer> countAllPhotosByStatus(String statut);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM photo WHERE idAnnonce = :idAnnonce")
+    Flowable<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
 }

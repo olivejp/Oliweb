@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.media;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -284,5 +285,20 @@ public class MediaUtility {
             }
         }
         return true;
+    }
+
+    public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri dst) {
+        try {
+            OutputStream out = contentResolver.openOutputStream(dst);
+            bitmapToSave.compress(Bitmap.CompressFormat.PNG, 100, out);
+            if (out != null) {
+                out.flush();
+                out.close();
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

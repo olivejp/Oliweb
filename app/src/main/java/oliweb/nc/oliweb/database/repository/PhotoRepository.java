@@ -84,4 +84,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     public Flowable<Integer> countAllPhotosByStatus(String status) {
         return this.photoDao.countAllPhotosByStatus(status);
     }
+
+    public Flowable<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {
+        return this.photoDao.countAllPhotosByIdAnnonce(idAnnonce);
+    }
+
 }

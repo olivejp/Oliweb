@@ -65,11 +65,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             finish();
         }
 
-        // Recherche du mode display actuellement dans les préférences.
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
-
-        AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, v -> {
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(AnnonceAdapter.DisplayType.RAW, v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
             callActivityToUpdateAnnonce(annonce);
         });
@@ -78,16 +74,13 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(linearLayoutManager);
-        if (!displayBeautyMode) {
-            // En mode Raw
-            RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-            recyclerView.addItemDecoration(itemDecoration);
+        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(itemDecoration);
 
-            // Ajout d'un swipe listener pour pouvoir supprimer l'annonce
-            RecyclerItemTouchHelper recyclerItemTouchHelper = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
-            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(recyclerItemTouchHelper);
-            itemTouchHelper.attachToRecyclerView(recyclerView);
-        }
+        // Ajout d'un swipe listener pour pouvoir supprimer l'annonce
+        RecyclerItemTouchHelper recyclerItemTouchHelper = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(recyclerItemTouchHelper);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         viewModel.findActiveAnnonceByUidUtilisateur(uidUser)
                 .observe(this, annonceWithPhotos -> {

@@ -120,11 +120,11 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                         case INSERT:
                             if (dataReturn.getIds().length > 0) {
                                 long idAnnonceInserted = dataReturn.getIds()[0];
-                                updataPhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
+                                updatePhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
                             }
                             break;
                         case UPDATE:
-                            updataPhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                            updatePhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
                             break;
                         default:
                             break;
@@ -134,7 +134,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         }
     }
 
-    private void updataPhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    private void updatePhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         for (PhotoEntity photo : listPhoto) {
             photo.setIdAnnonce(idAnnonce);
         }
