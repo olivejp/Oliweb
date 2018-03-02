@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -51,6 +52,7 @@ import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = PostAnnonceActivity.class.getName();
@@ -120,8 +122,72 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         @Override
         public void onNothingSelected(AdapterView<?> parent) {
+            // Do nothing
         }
     };
+
+    private boolean catchAndCheckParameter(Bundle bundle) {
+        // Récupération du Uid de l'utilisateur connecté
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        if (uidUser == null || uidUser.isEmpty()) {
+            Log.e(TAG, "Missing UID parameter");
+            return false;
+        }
+
+        // Récupération des paramètres
+        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
+            Log.e(TAG, "Missing mandatory parameter");
+            return false;
+        } else {
+            mode = bundle.getString(BUNDLE_KEY_MODE);
+            if (mode != null && mode.equals(Constants.PARAM_MAJ) && !bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
+                Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void initViewModelDataDependingOnMode(Bundle bundle) {
+        // Catch preferences
+        externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
+
+        arrayImageViews.add(new Pair<>(photo1, view1));
+        arrayImageViews.add(new Pair<>(photo2, view2));
+        arrayImageViews.add(new Pair<>(photo3, view3));
+        arrayImageViews.add(new Pair<>(photo4, view4));
+
+        if (mode.equals(Constants.PARAM_CRE)) {
+            viewModel.createNewAnnonce();
+        } else if (mode.equals(Constants.PARAM_MAJ)) {
+            idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+            viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
+                if (annonceEntity != null) {
+                    viewModel.setAnnonce(annonceEntity);
+
+                    // Récupération des photos de cette annonce dans l'adapter
+                    viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
+                            .observe(PostAnnonceActivity.this, this::putPhotosInCorrectView);
+
+                    displayAnnonce(annonceEntity);
+                }
+            });
+        }
+
+        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+
+        // Récupération dynamique de la liste des photos
+        viewModel.getLiveListPhoto().observe(this, this::putPhotosInCorrectView);
+
+        // Alimentation du spinner avec la liste des catégories
+        viewModel.getLiveDataListCategorie()
+                .observe(this, categorieEntities -> {
+                    if (categorieEntities != null && !categorieEntities.isEmpty()) {
+                        SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
+                        spinnerCategorie.setAdapter(adapter);
+                    }
+                });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,84 +200,31 @@ public class PostAnnonceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
-        // Catch preferences
-        externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
-
-        arrayImageViews.add(new Pair<>(photo1, view1));
-        arrayImageViews.add(new Pair<>(photo2, view2));
-        arrayImageViews.add(new Pair<>(photo3, view3));
-        arrayImageViews.add(new Pair<>(photo4, view4));
-
-        // Alimentation du spinner avec la liste des catégories
-        viewModel.getLiveDataListCategorie()
-                .observe(this, categorieEntities -> {
-                    if (categorieEntities != null && !categorieEntities.isEmpty()) {
-                        SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
-                        spinnerCategorie.setAdapter(adapter);
-                    }
-                });
-
-        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
-
-        // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, this::putPhotosInCorrectView);
-
-        // Récupération du Uid de l'utilisateur connecté
-        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-        if (uidUser == null || uidUser.isEmpty()) {
-            Log.e(TAG, "Missing UID parameter");
-            setResult(RESULT_CANCELED);
-            finish();
-        }
-
-        // Récupération des paramètres
         Bundle bundle;
         if (savedInstanceState != null) {
             bundle = savedInstanceState;
         } else {
             bundle = getIntent().getExtras();
         }
-        if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
-            Log.e(TAG, "Missing mandatory parameter");
+
+        if (catchAndCheckParameter(bundle)) {
+            initViewModelDataDependingOnMode(bundle);
+
+            // S'il y avait un fragment, je le remet
+            if (savedInstanceState != null && savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
+                Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
+                        .commit();
+            }
+        } else {
             setResult(RESULT_CANCELED);
             finish();
-        } else {
-            mode = bundle.getString(BUNDLE_KEY_MODE);
-            if (mode.equals(Constants.PARAM_CRE)) {
-                viewModel.createNewAnnonce();
-            } else if (mode.equals(Constants.PARAM_MAJ)) {
-                // On a une annonce à mettre à jour
-                if (!bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
-                    Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
-                    setResult(RESULT_CANCELED);
-                    finish();
-                }
-                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
-                viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
-                    if (annonceEntity != null) {
-                        viewModel.setAnnonce(annonceEntity);
-
-                        // Récupération des photos de cette annonce dans l'adapter
-                        viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                                .observe(PostAnnonceActivity.this, this::putPhotosInCorrectView);
-
-                        displayAnnonce(annonceEntity);
-                    }
-                });
-            }
-        }
-
-        // S'il y avait un fragment, je le remet
-        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
-            Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
-                    .commit();
         }
     }
 
-    private void putPhotosInCorrectView(List<PhotoEntity> photoEntities) {
+    private void initImageViewToDefault() {
         for (Pair pair : arrayImageViews) {
             ImageView imageView = (ImageView) pair.first;
             FrameLayout frame = (FrameLayout) pair.second;
@@ -222,7 +235,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 frame.setTag(null);
             }
         }
+    }
 
+    private void putPhotosInCorrectView(List<PhotoEntity> photoEntities) {
+        initImageViewToDefault();
         if (photoEntities != null && !photoEntities.isEmpty()) {
             viewModel.setListPhoto(photoEntities);
             for (PhotoEntity photo : photoEntities) {
@@ -238,13 +254,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * If the imageView has no tag then insert photo and return True, return False otherwise.
-     *
-     * @param pair
-     * @param photoEntity
-     * @return
-     */
     private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
         ImageView imageView = pair.first;
         FrameLayout frameLayout = pair.second;
@@ -270,7 +279,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
-        if (idItem == R.id.menu_post_valid && isValidAnnonce()) {
+        if (idItem == R.id.menu_post_valid && checkIfAnnonceIsValid()) {
             // Retrieve datas from the ui
             String titre = textViewTitre.getText().toString();
             String description = textViewDescription.getText().toString();
@@ -288,7 +297,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return false;
     }
 
-    private boolean isValidAnnonce() {
+    private boolean checkIfAnnonceIsValid() {
         boolean isValid = true;
         if (textViewTitre.getText().toString().isEmpty()) {
             textViewTitre.setError("Le titre est obligatoire.");
@@ -381,10 +390,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private void insertFromGallery(Uri uri) {
         try {
             Uri newUri = generateNewUri();
-            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, newUri)) {
-                viewModel.addPhotoToCurrentList(newUri.toString());
-            } else {
-                Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+            if (newUri != null) {
+                if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, newUri)) {
+                    viewModel.addPhotoToCurrentList(newUri.toString());
+                } else {
+                    Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                }
             }
         } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
@@ -476,6 +487,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
 
+    @Nullable
     private Uri generateNewUri() {
         Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaType.IMAGE, uidUser);
         if (pair != null && pair.first != null) {
