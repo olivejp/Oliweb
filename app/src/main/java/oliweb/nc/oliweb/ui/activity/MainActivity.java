@@ -25,14 +25,25 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
@@ -70,6 +81,36 @@ public class MainActivity extends AppCompatActivity
     private CatchPhotoFromUrlTask photoTask;
 
     private MainActivityViewModel viewModel;
+
+    // TODO déplacer cette méthode dans CoreSync quadn elle sera opérationnelle
+    private void retrieveAnnonceOnFirebaseByUidUser(String uidUser) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("annonces");
+        Query query = ref.orderByChild("utilisateur/uuid").equalTo(uidUser);
+        query.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                    List<AnnonceSearchDto> list = (List<AnnonceSearchDto>) dataSnapshot.getValue();
+                    for (AnnonceSearchDto annonceSearchDto1 : list) {
+                        viewModel.existByUidUtilisateurAndUidAnnonce(annonceSearchDto1.getUtilisateur().getUuid(), annonceSearchDto1.getUuid())
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(integer -> {
+                                    if (integer == null || integer.equals(0)) {
+                                        // I Should try to save this annonce in Local DB
+                                        viewModel.saveAnnonceFromFirebaseToLocalDb(annonceSearchDto1);
+                                    }
+                                });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -253,6 +294,10 @@ public class MainActivity extends AppCompatActivity
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
+
+                // TODO supprimer ce test par la suite
+                retrieveAnnonceOnFirebaseByUidUser(mFirebaseUser.getUid());
+
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
                 profileName.setText(mFirebaseUser.getDisplayName());
                 if (mFirebaseUser.getEmail() != null) {

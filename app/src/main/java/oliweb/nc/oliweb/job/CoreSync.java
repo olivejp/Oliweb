@@ -341,6 +341,7 @@ class CoreSync {
                 .subscribe(onCheckedListener::run);
     }
 
+
     private interface OnCheckedListener {
         void run(Integer count);
     }
