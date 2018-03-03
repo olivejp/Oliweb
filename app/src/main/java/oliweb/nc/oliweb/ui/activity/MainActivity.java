@@ -276,6 +276,9 @@ public class MainActivity extends AppCompatActivity
                     HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
                         for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
+                            if (questionAsked.get()) {
+                                break;
+                            }
                             firebaseSync.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(Schedulers.io())

@@ -119,8 +119,10 @@ public class FirebaseSync {
             if (dataReturn.isSuccessful()) {
                 Log.d(TAG, "Annonce has been stored successfully");
                 long idAnnonce = dataReturn.getIds()[0];
-                for (String photoUrl : annonceSearchDto.getPhotos()) {
-                    savePhotoFromFirebaseStorageToLocal(context, idAnnonce, photoUrl, uidUtilisateur);
+                if (annonceSearchDto.getPhotos() != null && !annonceSearchDto.getPhotos().isEmpty()) {
+                    for (String photoUrl : annonceSearchDto.getPhotos()) {
+                        savePhotoFromFirebaseStorageToLocal(context, idAnnonce, photoUrl, uidUtilisateur);
+                    }
                 }
             } else {
                 Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUUID() + ", UidUtilisateur : " + uidUtilisateur);
