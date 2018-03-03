@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.DateConverter;
 import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
@@ -29,6 +28,7 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.service.FirebaseSync;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
@@ -71,7 +71,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setDateCreation(DateConverter.getNowEntity());
+        utilisateurEntity.setDateCreation(Utility.getNowEntity());
         utilisateurEntity.setEmail(user.getEmail());
         utilisateurEntity.setUuidUtilisateur(user.getUid());
         utilisateurEntity.setTelephone(user.getPhoneNumber());

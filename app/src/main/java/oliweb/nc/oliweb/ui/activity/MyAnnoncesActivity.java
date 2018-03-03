@@ -17,12 +17,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
+import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.RecyclerItemTouchHelper;
-import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.service.SyncService;
+import oliweb.nc.oliweb.helper.RecyclerItemTouchHelper;
+import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.NetworkReceiver;
+import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
@@ -120,14 +121,15 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             bundle.putInt(ARG_NOTICE_BUNDLE_POSITION, viewHolderRaw.getAdapterPosition());
 
             if (direction == ItemTouchHelper.LEFT) {
-                // Appel d'un fragment qui va demander à l'utilisateur s'il est sûr de vouloir supprimer le colis.
-                NoticeDialogFragment.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(),
-                        String.format("Supprimer l'annonce %s ?%n%nLe numéro de suivi ainsi que toutes ses étapes seront perdues.", annonce.getTitre()),
-                        NoticeDialogFragment.TYPE_BOUTON_YESNO,
-                        R.drawable.ic_delete_grey_900_24dp,
-                        DIALOG_TAG_DELETE,
-                        bundle,
-                        this);
+                DialogInfos dialogInfos = new DialogInfos();
+                dialogInfos.setMessage(String.format("Supprimer l'annonce %s ?%n%nLe numéro de suivi ainsi que toutes ses étapes seront perdues.", annonce.getTitre()))
+                        .setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO)
+                        .setIdDrawable(R.drawable.ic_delete_grey_900_24dp)
+                        .setTag(DIALOG_TAG_DELETE)
+                        .setBundlePar(bundle)
+                        .setListener(this);
+
+                NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
             }
         } catch (ClassCastException e) {
             Log.e(TAG, "Cette méthode n'est applicable que pour le mode Display Raw et devrait donc contenir un AnnonceAdapter.ViewHolderRaw");

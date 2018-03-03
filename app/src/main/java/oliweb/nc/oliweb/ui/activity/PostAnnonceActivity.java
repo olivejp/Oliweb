@@ -40,7 +40,7 @@ import butterknife.OnClick;
 import butterknife.OnLongClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.SharedPreferencesHelper;
+import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;

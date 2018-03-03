@@ -18,7 +18,7 @@ import java.util.List;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.Utility;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -124,7 +124,7 @@ class CoreSync {
         }
 
         // Conversion de notre annonce en DTO
-        AnnonceSearchDto annonceSearchDto = Utility.convertEntityToDto(annonceFull);
+        AnnonceSearchDto annonceSearchDto = AnnonceConverter.convertEntityToDto(annonceFull);
         Log.d(TAG, annonceSearchDto.toString());
 
         OnCheckedListener onCheckedListener = count -> {

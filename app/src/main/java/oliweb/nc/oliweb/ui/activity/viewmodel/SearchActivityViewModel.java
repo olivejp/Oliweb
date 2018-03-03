@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import oliweb.nc.oliweb.Utility;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
@@ -74,7 +74,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
                     if (list != null && !list.isEmpty()) {
                         for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
-                            listAnnonceWithPhoto.add(Utility.convertDtoToEntity(resultSearchSnapshot.get_source()));
+                            listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
                         }
                         listAnnonce.postValue(listAnnonceWithPhoto);
                     }

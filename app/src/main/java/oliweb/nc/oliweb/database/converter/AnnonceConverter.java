@@ -1,9 +1,4 @@
-package oliweb.nc.oliweb;
-
-import android.app.Activity;
-import android.content.Context;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
+package oliweb.nc.oliweb.database.converter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,22 +14,9 @@ import oliweb.nc.oliweb.network.elasticsearchDto.CategorieSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurSearchDto;
 
 
-public class Utility {
+public class AnnonceConverter {
 
-    private Utility() {
-    }
-
-    public static void hideKeyboard(Context ctx) {
-        InputMethodManager inputManager = (InputMethodManager) ctx
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        View v = ((Activity) ctx).getCurrentFocus();
-        if (v == null)
-            return;
-
-        if (inputManager != null) {
-            inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
-        }
+    private AnnonceConverter() {
     }
 
     /**
