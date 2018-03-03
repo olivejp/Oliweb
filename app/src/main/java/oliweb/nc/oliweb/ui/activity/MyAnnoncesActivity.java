@@ -21,7 +21,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.RecyclerItemTouchHelper;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.job.SyncService;
+import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;

@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 
 
@@ -55,6 +56,18 @@ public class NoticeDialogFragment extends DialogFragment {
         dialogErreur.setListener(listener);
         dialogErreur.setArguments(bundle);
         dialogErreur.show(fragmentManager, tag);
+    }
+
+    public static void sendDialog(FragmentManager fragmentManager, DialogInfos dialogInfos) {
+        NoticeDialogFragment dialogErreur = new NoticeDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(NoticeDialogFragment.P_MESSAGE, dialogInfos.getMessage());
+        bundle.putInt(NoticeDialogFragment.P_TYPE, dialogInfos.getButtonType());
+        bundle.putInt(NoticeDialogFragment.P_IMG, dialogInfos.getIdDrawable());
+        bundle.putBundle(NoticeDialogFragment.P_BUNDLE, dialogInfos.getBundlePar());
+        dialogErreur.setListener(dialogInfos.getListener());
+        dialogErreur.setArguments(bundle);
+        dialogErreur.show(fragmentManager, dialogInfos.getTag());
     }
 
     @Override
@@ -129,7 +142,6 @@ public class NoticeDialogFragment extends DialogFragment {
         }
         return builder.create();
     }
-
 
     public Bundle getBundle() {
         return mBundle;

@@ -109,7 +109,7 @@
         </activity>
 
         <service
-            android:name=".job.SyncService"
+            android:name=".service.SyncService"
             android:exported="false" />
     </application>
 

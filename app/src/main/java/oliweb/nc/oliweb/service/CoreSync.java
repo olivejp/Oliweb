@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.job;
+package oliweb.nc.oliweb.service;
 
 import android.content.ContentResolver;
 import android.content.Context;

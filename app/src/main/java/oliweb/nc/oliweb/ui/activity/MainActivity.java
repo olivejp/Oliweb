@@ -16,7 +16,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,39 +25,27 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
-import oliweb.nc.oliweb.job.FirebaseSync;
-import oliweb.nc.oliweb.job.SyncService;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
-import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener, NoticeDialogFragment.DialogListener {
 
     public static final int RC_SIGN_IN = 1001;
-
-    public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
 
     private static final String TAG = MainActivity.class.getName();
 
@@ -100,6 +87,12 @@ public class MainActivity extends AppCompatActivity
 
             viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
+            viewModel.getNotification().observe(this, dialogInfos -> {
+                if (dialogInfos != null) {
+                    NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+                }
+            });
+
             View viewHeader = navigationView.getHeaderView(0);
             profileImage = viewHeader.findViewById(R.id.profileImage);
             profileName = viewHeader.findViewById(R.id.profileName);
@@ -137,11 +130,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -175,14 +164,12 @@ public class MainActivity extends AppCompatActivity
     /**
      * Remise à blanc des champs spécifiques à la connexion
      */
+
     private void signOut() {
         mFirebaseAuth.signOut();
         SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
     }
 
-    /**
-     * Methode pour lancer une connexion
-     */
     private void signIn(int requestCode) {
         if (NetworkReceiver.checkConnection(this)) {
             signOut();
@@ -190,14 +177,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             Snackbar.make(navigationView, "Une connexion est requise pour se connecter", Snackbar.LENGTH_LONG).show();
         }
-    }
-
-    private void createUser() {
-        viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
-            if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
-                Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
-            }
-        });
     }
 
     @Override
@@ -266,49 +245,13 @@ public class MainActivity extends AppCompatActivity
         photoTask.execute(uris);
     }
 
-    private void retrieveAnnonceFromFirebase(String uidUtilisateur) {
-        FirebaseSync firebaseSync = FirebaseSync.getInstance(this);
-        firebaseSync.getAllAnnonceByUidUtilisateur(uidUtilisateur).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                AtomicBoolean questionAsked = new AtomicBoolean(false);
-                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                    HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
-                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                        for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
-                            if (questionAsked.get()) {
-                                break;
-                            }
-                            firebaseSync.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(Schedulers.io())
-                                    .subscribe(integer -> {
-                                        if ((integer == null || integer.equals(0)) && !questionAsked.get()) {
-                                            questionAsked.set(true);
-                                            String message = "Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?";
-                                            NoticeDialogFragment.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(), message, TYPE_BOUTON_YESNO, R.drawable.ic_announcement_white_48dp, DIALOG_FIREBASE_RETRIEVE, null, MainActivity.this);
-                                        }
-                                    });
-
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d(TAG, "onCancelled");
-            }
-        });
-    }
-
     private void defineAuthListener() {
         mAuthStateListener = firebaseAuth -> {
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                retrieveAnnonceFromFirebase(mFirebaseUser.getUid());
+                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid(), this);
 
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
                 profileName.setText(mFirebaseUser.getDisplayName());
@@ -317,7 +260,11 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 // Create user in local Db
-                createUser();
+                viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
+                    if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
+                        Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
+                    }
+                });
 
                 // Call the task to retrieve the photo
                 callPhotoTask();
@@ -340,8 +287,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            // Launch synchro to retrieve datas from Firebase
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
             SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
             dialog.dismiss();
         }

@@ -1,7 +1,9 @@
-package oliweb.nc.oliweb.job;
+package oliweb.nc.oliweb.service;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
@@ -21,6 +23,8 @@ import java.util.Map;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.Constants;
+import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -30,6 +34,8 @@ import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+
+import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
 
 /**
  * Created by orlanth23 on 03/03/2018.
@@ -43,6 +49,8 @@ public class FirebaseSync {
 
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
+    private NotificationCompat.Builder mBuilder;
+    private NotificationManagerCompat notificationManager;
     public static GenericTypeIndicator<HashMap<String, AnnonceSearchDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceSearchDto>>() {
     };
 
@@ -55,20 +63,23 @@ public class FirebaseSync {
         }
         instance.photoRepository = PhotoRepository.getInstance(context);
         instance.annonceRepository = AnnonceRepository.getInstance(context);
+        instance.notificationManager = NotificationManagerCompat.from(context);
+        instance.mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
         return instance;
     }
 
     void synchronize(Context context, String uidUtilisateur) {
-        catchAnnonceFromFirebase(context, uidUtilisateur);
-    }
-
-    private void catchAnnonceFromFirebase(Context context, String uidUtilisateur) {
         getAllAnnonceByUidUtilisateur(uidUtilisateur).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue() != null) {
                     HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+
+                        createNotification("Oliweb - Réception de vos annonces");
+                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                        notificationManager.cancel(notificationSyncAnnonceId);
+
                         for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
                             checkAnnonceExistInLocalOrSaveIt(context, entry.getValue());
                         }
@@ -81,6 +92,18 @@ public class FirebaseSync {
                 Log.d(TAG, "onCancelled");
             }
         });
+    }
+
+    private void createNotification(String title) {
+        mBuilder.setContentTitle(title)
+                .setContentText("Téléchargement en cours")
+                .setSmallIcon(R.drawable.ic_sync_white_48dp)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
+
+        // Issue the initial notification with zero progress
+        int progressMax = 100;
+        int progressCurrent = 0;
+        mBuilder.setProgress(progressMax, progressCurrent, false);
     }
 
     private void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceSearchDto annonceSearchDto) {
