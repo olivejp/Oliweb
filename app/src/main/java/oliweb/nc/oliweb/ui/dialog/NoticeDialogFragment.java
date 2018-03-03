@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,12 +25,9 @@ public class NoticeDialogFragment extends DialogFragment {
     public static final String P_TYPE = "type";
     public static final String P_IMG = "image";
     public static final String P_BUNDLE = "bundle";
-    public static final String P_IMG_ID_RES = "img_id_ressource";
+
     public static final int TYPE_BOUTON_YESNO = 10;
     public static final int TYPE_BOUTON_OK = 20;
-    public static final int TYPE_IMAGE_CAUTION = 100;
-    public static final int TYPE_IMAGE_ERROR = 110;
-    public static final int TYPE_IMAGE_INFORMATION = 120;
 
     // Use this instance of the interface to deliver action events
     private Bundle mBundle;
@@ -36,6 +36,25 @@ public class NoticeDialogFragment extends DialogFragment {
 
     public void setListener(DialogListener listener) {
         mListener = listener;
+    }
+
+    /**
+     * @param fragmentManager Get from the context
+     * @param message         The message to be send
+     * @param buttonType            Can be TYPE_BOUTON_OK or TYPE_BOUTON_YESNO
+     * @param idDrawable      Drawable that will be show in top of the window
+     * @param tag             A text to be a tag
+     */
+    public static void sendDialogByFragmentManagerWithRes(FragmentManager fragmentManager, String message, int buttonType, @DrawableRes int idDrawable, @Nullable String tag, @Nullable Bundle bundlePar, @Nullable NoticeDialogFragment.DialogListener listener) {
+        NoticeDialogFragment dialogErreur = new NoticeDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(NoticeDialogFragment.P_MESSAGE, message);
+        bundle.putInt(NoticeDialogFragment.P_TYPE, buttonType);
+        bundle.putInt(NoticeDialogFragment.P_IMG, idDrawable);
+        bundle.putBundle(NoticeDialogFragment.P_BUNDLE, bundlePar);
+        dialogErreur.setListener(listener);
+        dialogErreur.setArguments(bundle);
+        dialogErreur.show(fragmentManager, tag);
     }
 
     @Override
@@ -68,7 +87,6 @@ public class NoticeDialogFragment extends DialogFragment {
         builder.setView(view);
 
         int typeBouton = 0;
-        Integer typeImage = null;
         int idResource = 0;
         TextView textview;
 
@@ -78,7 +96,7 @@ public class NoticeDialogFragment extends DialogFragment {
                 typeBouton = getArguments().getInt(P_TYPE);
             }
             if (getArguments().containsKey(P_IMG)) {
-                typeImage = getArguments().getInt(P_IMG);
+                idResource = getArguments().getInt(P_IMG);
             }
             if (getArguments().containsKey(P_MESSAGE)) {
                 textview = view.findViewById(R.id.msgDialog);
@@ -86,9 +104,6 @@ public class NoticeDialogFragment extends DialogFragment {
             }
             if (getArguments().containsKey(P_BUNDLE)) {
                 mBundle = getArguments().getBundle(P_BUNDLE);
-            }
-            if (getArguments().containsKey(P_IMG_ID_RES)) {
-                idResource = getArguments().getInt(P_IMG_ID_RES);
             }
 
             textview = view.findViewById(R.id.msgDialog);
@@ -110,26 +125,7 @@ public class NoticeDialogFragment extends DialogFragment {
 
             // Gestion de l'image à afficher en haut de la fenêtre
             ImageView imgView = view.findViewById(R.id.imageDialog);
-            if (idResource != 0) {
-                imgView.setImageResource(idResource);
-            } else {
-                if (typeImage != null) {
-                    switch (typeImage) {
-                        case TYPE_IMAGE_CAUTION:
-                            imgView.setImageResource(R.drawable.ic_warning_white_48dp);
-                            break;
-                        case TYPE_IMAGE_ERROR:
-                            imgView.setImageResource(R.drawable.ic_error_white_48dp);
-                            break;
-                        case TYPE_IMAGE_INFORMATION:
-                            imgView.setImageResource(R.drawable.ic_announcement_white_48dp);
-                            break;
-                        default:
-                            imgView.setImageResource(R.drawable.ic_announcement_white_48dp);
-                            break;
-                    }
-                }
-            }
+            imgView.setImageResource(idResource);
         }
         return builder.create();
     }

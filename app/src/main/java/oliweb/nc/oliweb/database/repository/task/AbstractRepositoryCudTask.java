@@ -42,6 +42,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
             default:
                 break;
         }
+        dataReturn.setSuccessful(dataReturn.getNb() > 0);
         return dataReturn;
     }
 
@@ -61,6 +62,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
         int nb;
         TypeTask typeTask;
         Long[] ids;
+        boolean successful;
 
         public int getNb() {
             return nb;
@@ -84,6 +86,14 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
 
         public void setIds(Long[] ids) {
             this.ids = ids;
+        }
+
+        public boolean isSuccessful() {
+            return successful;
+        }
+
+        public void setSuccessful(boolean successful) {
+            this.successful = successful;
         }
     }
 }

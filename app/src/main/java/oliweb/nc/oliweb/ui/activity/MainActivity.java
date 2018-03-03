@@ -16,6 +16,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,33 +28,37 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
+import oliweb.nc.oliweb.job.FirebaseSync;
+import oliweb.nc.oliweb.job.SyncService;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
+import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
+import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener {
+        implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener, NoticeDialogFragment.DialogListener {
 
     public static final int RC_SIGN_IN = 1001;
+
+    public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
 
     private static final String TAG = MainActivity.class.getName();
 
@@ -82,36 +87,6 @@ public class MainActivity extends AppCompatActivity
 
     private MainActivityViewModel viewModel;
 
-    // TODO déplacer cette méthode dans CoreSync quadn elle sera opérationnelle
-    private void retrieveAnnonceOnFirebaseByUidUser(String uidUser) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("annonces");
-        Query query = ref.orderByChild("utilisateur/uuid").equalTo(uidUser);
-        query.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                    List<AnnonceSearchDto> list = (List<AnnonceSearchDto>) dataSnapshot.getValue();
-                    for (AnnonceSearchDto annonceSearchDto1 : list) {
-                        viewModel.existByUidUtilisateurAndUidAnnonce(annonceSearchDto1.getUtilisateur().getUuid(), annonceSearchDto1.getUuid())
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(integer -> {
-                                    if (integer == null || integer.equals(0)) {
-                                        // I Should try to save this annonce in Local DB
-                                        viewModel.saveAnnonceFromFirebaseToLocalDb(annonceSearchDto1);
-                                    }
-                                });
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,26 +95,28 @@ public class MainActivity extends AppCompatActivity
 
         // On attache la searchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        if (searchManager != null) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
-        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
+            viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
-        View viewHeader = navigationView.getHeaderView(0);
-        profileImage = viewHeader.findViewById(R.id.profileImage);
-        profileName = viewHeader.findViewById(R.id.profileName);
-        profileEmail = viewHeader.findViewById(R.id.profileEmail);
-        navigationViewMenu = navigationView.getMenu();
+            View viewHeader = navigationView.getHeaderView(0);
+            profileImage = viewHeader.findViewById(R.id.profileImage);
+            profileName = viewHeader.findViewById(R.id.profileName);
+            profileEmail = viewHeader.findViewById(R.id.profileEmail);
+            navigationViewMenu = navigationView.getMenu();
 
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        defineAuthListener();
+            mFirebaseAuth = FirebaseAuth.getInstance();
+            defineAuthListener();
 
-        setSupportActionBar(toolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+            setSupportActionBar(toolbar);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.addDrawerListener(toggle);
+            toggle.syncState();
 
-        navigationView.setNavigationItemSelectedListener(this);
+            navigationView.setNavigationItemSelectedListener(this);
+        }
     }
 
     @Override
@@ -289,14 +266,46 @@ public class MainActivity extends AppCompatActivity
         photoTask.execute(uris);
     }
 
+    private void retrieveAnnonceFromFirebase(String uidUtilisateur) {
+        FirebaseSync firebaseSync = FirebaseSync.getInstance(this);
+        firebaseSync.getAllAnnonceByUidUtilisateur(uidUtilisateur).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                AtomicBoolean questionAsked = new AtomicBoolean(false);
+                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                    HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+                        for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
+                            firebaseSync.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(Schedulers.io())
+                                    .subscribe(integer -> {
+                                        if ((integer == null || integer.equals(0)) && !questionAsked.get()) {
+                                            questionAsked.set(true);
+                                            String message = "Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?";
+                                            NoticeDialogFragment.sendDialogByFragmentManagerWithRes(getSupportFragmentManager(), message, TYPE_BOUTON_YESNO, R.drawable.ic_announcement_white_48dp, DIALOG_FIREBASE_RETRIEVE, null, MainActivity.this);
+                                        }
+                                    });
+
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        });
+    }
+
     private void defineAuthListener() {
         mAuthStateListener = firebaseAuth -> {
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                // TODO supprimer ce test par la suite
-                retrieveAnnonceOnFirebaseByUidUser(mFirebaseUser.getUid());
+                retrieveAnnonceFromFirebase(mFirebaseUser.getUid());
 
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
                 profileName.setText(mFirebaseUser.getDisplayName());
@@ -324,5 +333,19 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
+    }
+
+    @Override
+    public void onDialogPositiveClick(NoticeDialogFragment dialog) {
+        if (dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            // Launch synchro to retrieve datas from Firebase
+            SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
+            dialog.dismiss();
+        }
+    }
+
+    @Override
+    public void onDialogNegativeClick(NoticeDialogFragment dialog) {
+        dialog.dismiss();
     }
 }

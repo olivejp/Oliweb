@@ -15,11 +15,11 @@ public class SyncService extends IntentService {
 
     private static final String TAG = SyncService.class.getName();
 
-    public static final String ARG_ID_ANNONCE = "ARG_ID_ANNONCE";
+    public static final String ARG_UID_UTILISATEUR = "ARG_UID_UTILISATEUR";
     public static final String ARG_ACTION = "ARG_ACTION";
-    public static final String ARG_ACTION_SYNC_ANNONCE = "ARG_ACTION_SYNC_ANNONCE";
     public static final String ARG_ACTION_SYNC_ALL = "ARG_ACTION_SYNC_ALL";
     public static final String ARG_ACTION_SYNC_ALL_FROM_SCHEDULER = "ARG_ACTION_SYNC_ALL_FROM_SCHEDULER";
+    public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
 
     public SyncService() {
         super("SyncService");
@@ -37,6 +37,19 @@ public class SyncService extends IntentService {
     }
 
     /**
+     * Launch the sync service to retrieve datas from Firebase
+     *
+     * @param context
+     * @param uidUtilisateur
+     */
+    public static void launchSynchroFromFirebase(@NonNull Context context, String uidUtilisateur) {
+        Intent syncService = new Intent(context, SyncService.class);
+        syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_FROM_FIREBASE);
+        syncService.putExtra(SyncService.ARG_UID_UTILISATEUR, uidUtilisateur);
+        context.startService(syncService);
+    }
+
+    /**
      * Lancement du service de synchro pour tous les objets mais à partir du scheduler
      *
      * @param context
@@ -47,9 +60,12 @@ public class SyncService extends IntentService {
         context.startService(syncService);
     }
 
-
     private void handleActionSyncAll() {
         CoreSync.getInstance(this.getApplicationContext()).synchronize();
+    }
+
+    private void handleActionSyncFromFirebase(String uidUtilisateur) {
+        FirebaseSync.getInstance(this).synchronize(this, uidUtilisateur);
     }
 
     @Override
@@ -67,6 +83,11 @@ public class SyncService extends IntentService {
                         case ARG_ACTION_SYNC_ALL_FROM_SCHEDULER:
                             Log.d(TAG, "Lancement du batch par le Scheduler");
                             handleActionSyncAll();
+                            break;
+                        case ARG_ACTION_SYNC_FROM_FIREBASE:
+                            Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local");
+                            String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
+                            handleActionSyncFromFirebase(uidUtilisateur);
                             break;
                         default:
                             break;

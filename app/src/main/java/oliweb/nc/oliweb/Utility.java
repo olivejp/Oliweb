@@ -2,10 +2,6 @@ package oliweb.nc.oliweb;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -21,31 +17,11 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.CategorieSearchDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurSearchDto;
-import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
 
 public class Utility {
 
     private Utility() {
-    }
-
-    /**
-     * @param fragmentManager Get from the context
-     * @param message         The message to be send
-     * @param type            From NoticeDialogFragment
-     * @param idDrawable      From NoticeDialogFragment
-     * @param tag             A text to be a tag
-     */
-    public static void sendDialogByFragmentManagerWithRes(FragmentManager fragmentManager, String message, int type, @DrawableRes int idDrawable, @Nullable String tag, @Nullable Bundle bundlePar, NoticeDialogFragment.DialogListener listener) {
-        NoticeDialogFragment dialogErreur = new NoticeDialogFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(NoticeDialogFragment.P_MESSAGE, message);
-        bundle.putInt(NoticeDialogFragment.P_TYPE, type);
-        bundle.putInt(NoticeDialogFragment.P_IMG, idDrawable);
-        bundle.putBundle(NoticeDialogFragment.P_BUNDLE, bundlePar);
-        dialogErreur.setListener(listener);
-        dialogErreur.setArguments(bundle);
-        dialogErreur.show(fragmentManager, tag);
     }
 
     public static void hideKeyboard(Context ctx) {
@@ -77,12 +53,13 @@ public class Utility {
         annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
         annonceEntity.setPrix(annonceSearchDto.getPrix());
 
-        for (String photoUrl : annonceSearchDto.getPhotos()) {
-            PhotoEntity photoEntity = new PhotoEntity();
-            photoEntity.setFirebasePath(photoUrl);
-            annoncePhotos.getPhotos().add(photoEntity);
+        if (annonceSearchDto.getPhotos() != null && !annonceSearchDto.getPhotos().isEmpty()) {
+            for (String photoUrl : annonceSearchDto.getPhotos()) {
+                PhotoEntity photoEntity = new PhotoEntity();
+                photoEntity.setFirebasePath(photoUrl);
+                annoncePhotos.getPhotos().add(photoEntity);
+            }
         }
-
         annoncePhotos.setAnnonceEntity(annonceEntity);
 
         return annoncePhotos;
