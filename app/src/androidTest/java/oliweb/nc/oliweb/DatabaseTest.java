@@ -14,7 +14,6 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -26,6 +25,7 @@ import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -52,7 +52,7 @@ public class DatabaseTest {
 
     private UtilisateurEntity createUtilisateur() {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setDateCreation(DateConverter.getNowEntity());
+        utilisateurEntity.setDateCreation(Utility.getNowEntity());
         utilisateurEntity.setTelephone("123456");
         utilisateurEntity.setEmail(EMAIL);
         utilisateurEntity.setUuidUtilisateur(UUID_UTILISATEUR);
@@ -65,7 +65,7 @@ public class DatabaseTest {
         annonceEntity.setContactByEmail("1");
         annonceEntity.setContactByMsg("0");
         annonceEntity.setContactByTel("1");
-        annonceEntity.setDatePublication(DateConverter.getNowEntity());
+        annonceEntity.setDatePublication(Utility.getNowEntity());
         annonceEntity.setDescription("Description");
         annonceEntity.setPrix(15000);
         annonceEntity.setStatut(StatusRemote.TO_SEND);
@@ -80,7 +80,6 @@ public class DatabaseTest {
         photoEntity.setIdAnnonce(idAnnonce);
         photoEntity.setUriLocal("CheminLocal");
         photoEntity.setStatut(StatusRemote.SEND);
-        photoEntity.setUUID("UUID");
         photoEntity.setFirebasePath("firebasePath");
         return photoEntity;
     }
