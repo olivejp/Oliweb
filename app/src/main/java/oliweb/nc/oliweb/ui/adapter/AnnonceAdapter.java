@@ -199,7 +199,7 @@ public class AnnonceAdapter extends
         }
     }
 
-    public class ViewHolderBeauty extends RecyclerView.ViewHolder {
+    class ViewHolderBeauty extends RecyclerView.ViewHolder {
 
         @BindView(R.id.text_titre_annonce)
         TextView textTitreAnnonce;
