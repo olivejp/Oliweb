@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -53,23 +54,31 @@ public class SearchActivity extends AppCompatActivity {
 
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
-            // TODO appeler une nouvelle activité ici pour visualiser l'annonce
-//            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-//            Intent intent = new Intent();
-//            Bundle bundle = new Bundle();
-//            intent.setClass(this, PostAnnonceActivity.class);
-//            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_VIS);
-//            bundle.putParcelable(PostAnnonceActivity.BUNDLE_KEY_ANNONCE, annonce);
-//            intent.putExtras(bundle);
-//            startActivity(intent);
+            // TODO appeler un nouveau fragment ici pour visualiser l'annonce
+            //            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
+            //            Intent intent = new Intent();
+            //            Bundle bundle = new Bundle();
+            //            intent.setClass(this, PostAnnonceActivity.class);
+            //            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_VIS);
+            //            bundle.putParcelable(PostAnnonceActivity.BUNDLE_KEY_ANNONCE, annonce);
+            //            intent.putExtras(bundle);
+            //            startActivity(intent);
         };
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        // TODO tester le nouveau gridlayout
+        RecyclerView.LayoutManager layoutManager;
+        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        boolean gridMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getGridMode();
+
+        if (gridMode) {
+            layoutManager = new LinearLayoutManager(this);
+            ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.VERTICAL);
+        } else {
+            layoutManager = new GridLayoutManager(this, 2);
+        }
+        recyclerView.setLayoutManager(layoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
         recyclerView.setAdapter(annonceAdapter);
         if (!displayBeautyMode) {
@@ -79,7 +88,6 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         // Fait apparaitre un spinner pendant l'attente
-        // ToDo ne marche pas pour le moment
         searchActivityViewModel.getLoading().observe(this, atomicBoolean -> {
                     if (atomicBoolean != null) {
                         if (atomicBoolean.get()) {

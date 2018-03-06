@@ -12,7 +12,12 @@
         android:summary="Affichage avancé nécessitant plus de mémoire et plus de bande passante"
         android:title="Affichage en mode Beauty" />
 
-
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="PREF_DISPLAY_GRID"
+        android:dependency="PREF_DISPLAY_MODE"
+        android:summary="Affiche les résultats d'une recherche dans une grille"
+        android:title="Mode grille" />
 
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->

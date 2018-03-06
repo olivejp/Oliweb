@@ -43,7 +43,7 @@ import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALO
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener, NoticeDialogFragment.DialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -74,11 +74,15 @@ public class MainActivity extends AppCompatActivity
 
     private MainActivityViewModel viewModel;
 
+    private NoticeDialogFragment.DialogListener dialogListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        createDialoglistener();
 
         // On attache la searchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
@@ -109,6 +113,25 @@ public class MainActivity extends AppCompatActivity
             toggle.syncState();
 
             navigationView.setNavigationItemSelectedListener(this);
+        }
+    }
+
+    private void createDialoglistener() {
+        if (dialogListener == null) {
+            dialogListener = new NoticeDialogFragment.DialogListener() {
+                @Override
+                public void onDialogPositiveClick(NoticeDialogFragment dialog) {
+                    if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+                        SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
+                        dialog.dismiss();
+                    }
+                }
+
+                @Override
+                public void onDialogNegativeClick(NoticeDialogFragment dialog) {
+                    dialog.dismiss();
+                }
+            };
         }
     }
 
@@ -206,6 +229,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        createDialoglistener();
+
         if (mFirebaseAuth != null) {
             mFirebaseAuth.addAuthStateListener(mAuthStateListener);
         }
@@ -214,6 +239,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
+        if (dialogListener != null) {
+            dialogListener = null;
+        }
+
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
@@ -221,6 +250,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        if (dialogListener != null) {
+            dialogListener = null;
+        }
+
         if (photoTask != null) {
             photoTask.setListener(null);
             photoTask.setContext(null);
@@ -251,7 +284,7 @@ public class MainActivity extends AppCompatActivity
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid(), this);
+                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid(), dialogListener);
 
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
                 profileName.setText(mFirebaseUser.getDisplayName());
@@ -283,18 +316,5 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
-    }
-
-    @Override
-    public void onDialogPositiveClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
-            dialog.dismiss();
-        }
-    }
-
-    @Override
-    public void onDialogNegativeClick(NoticeDialogFragment dialog) {
-        dialog.dismiss();
     }
 }

@@ -13,6 +13,7 @@ public class SharedPreferencesHelper {
     private static final String PREF_DISPLAY_MODE = "PREF_DISPLAY_MODE";
     private static final String PREF_FIREBASE_USER_UID = "DISPLAY_FIREBASE_USER_UID";
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
+    private static final String PREF_DISPLAY_GRID = "PREF_DISPLAY_GRID";
     public static final int PREF_VALUE_DISPLAY_MODE_RAW = 500;
     public static final int PREF_VALUE_DISPLAY_MODE_BEAUTY = 600;
 
@@ -63,5 +64,13 @@ public class SharedPreferencesHelper {
 
     public boolean setUidFirebaseUser(String uidFirebaseUser) {
         return editor.putString(PREF_FIREBASE_USER_UID, uidFirebaseUser).commit();
+    }
+
+    public boolean getGridMode() {
+        return sharedPreferences.getBoolean(PREF_DISPLAY_GRID, true);
+    }
+
+    public boolean setGridMode(boolean gridMode) {
+        return editor.putBoolean(PREF_DISPLAY_GRID, gridMode).commit();
     }
 }
