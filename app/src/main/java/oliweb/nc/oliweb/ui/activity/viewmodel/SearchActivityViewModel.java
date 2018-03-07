@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -113,6 +114,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
             updateLoadingStatus(false);
         }
     };
+
+    public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
+        return annonceRepository.isAnnonceFavorite(uidAnnonce);
+    }
 
     private void updateLoadingStatus(boolean status) {
         if (loading == null) {

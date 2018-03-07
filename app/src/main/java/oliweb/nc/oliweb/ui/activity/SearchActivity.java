@@ -16,6 +16,8 @@ import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
@@ -63,7 +65,14 @@ public class SearchActivity extends AppCompatActivity {
             Log.d(TAG, "Click on add to favorite");
             if (v.getTag() != null) {
                 AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
-                searchActivityViewModel.addToFavorite(annonce);
+                searchActivityViewModel.isAnnonceFavorite(annonce.getAnnonceEntity().getUUID())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(integer -> {
+                            if (integer == null || integer == 0) {
+                                searchActivityViewModel.addToFavorite(annonce);
+                            }
+                        });
             }
         };
 
