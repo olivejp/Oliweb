@@ -25,9 +25,8 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.FirebaseSync;
-import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
@@ -57,15 +56,14 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveNotification;
     }
 
-    private void postNewNotification(String message, @DrawableRes int idDrawable, int buttonType, String tag, @Nullable Bundle bundle, NoticeDialogFragment.DialogListener dialogListener) {
+    private void postNewNotification(String message, @DrawableRes int idDrawable, int buttonType, String tag, @Nullable Bundle bundle) {
         DialogInfos dialogInfos = new DialogInfos();
         dialogInfos
                 .setMessage(message)
                 .setButtonType(buttonType)
                 .setIdDrawable(idDrawable)
                 .setTag(tag)
-                .setBundlePar(bundle)
-                .setListener(dialogListener);
+                .setBundlePar(bundle);
         liveNotification.postValue(dialogInfos);
     }
 
@@ -78,16 +76,16 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
     }
 
-    public void retrieveAnnoncesFromFirebase(final String uidUtilisateur, NoticeDialogFragment.DialogListener dialogListener) {
+    public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
         FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
-        firebaseSync.getAllAnnonceByUidUtilisateur(uidUtilisateur)
+        firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                            HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                            HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
                             if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                                listenForFirebaseAnnonces(uidUtilisateur, mapAnnonceSearchDto, dialogListener);
+                                listenForFirebaseAnnonces(uidUtilisateur, mapAnnonceSearchDto);
                             }
                         }
                     }
@@ -99,22 +97,22 @@ public class MainActivityViewModel extends AndroidViewModel {
                 });
     }
 
-    private void listenForFirebaseAnnonces(final String uidUtilisateur, HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto, NoticeDialogFragment.DialogListener dialogListener) {
+    private void listenForFirebaseAnnonces(final String uidUtilisateur, HashMap<String, AnnonceDto> mapAnnonceSearchDto) {
         FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
 
         AtomicBoolean questionAsked = new AtomicBoolean(false);
-        for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
+        for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
             if (questionAsked.get()) {
                 break;
             }
-            firebaseSync.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
+            firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .subscribe(integer -> {
                         if ((integer == null || integer.equals(0)) && !questionAsked.get()) {
                             questionAsked.set(true);
                             String message = "Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?";
-                            postNewNotification(message, R.drawable.ic_announcement_white_48dp, TYPE_BOUTON_YESNO, DIALOG_FIREBASE_RETRIEVE, null, dialogListener);
+                            postNewNotification(message, R.drawable.ic_announcement_white_48dp, TYPE_BOUTON_YESNO, DIALOG_FIREBASE_RETRIEVE, null);
                         }
                     });
 

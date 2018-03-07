@@ -4,16 +4,16 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
  * Created by orlanth23 on 20/02/2018.
  */
 
-public class UtilisateurSearchDto {
+public class UtilisateurDto {
     private String profile;
     private String uuid;
     private String telephone;
     private String email;
 
-    public UtilisateurSearchDto() {
+    public UtilisateurDto() {
     }
 
-    public UtilisateurSearchDto(String profile, String uuid, String telephone, String email) {
+    public UtilisateurDto(String profile, String uuid, String telephone, String email) {
         this.profile = profile;
         this.uuid = uuid;
         this.telephone = telephone;

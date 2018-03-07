@@ -5,6 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -18,9 +19,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
 import oliweb.nc.oliweb.network.elasticsearchDto.ResultElasticSearchDto;
 
@@ -33,15 +36,34 @@ import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
 
 public class SearchActivityViewModel extends AndroidViewModel {
 
-    private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>> genericClass;
+    private static final String TAG = SearchActivityViewModel.class.getName();
+
+    private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceDto>>> genericClass;
     private MutableLiveData<List<AnnoncePhotos>> listAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
+    private AnnonceRepository annonceRepository;
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
-        genericClass = new GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceSearchDto>>>() {
+        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        genericClass = new GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceDto>>>() {
         };
+    }
+
+    public void addToFavorite(AnnoncePhotos annoncePhotos) {
+        AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+        annonceEntity.setFavorite(1);
+        annonceRepository.save(annonceEntity, dataReturn -> {
+            if (dataReturn.isSuccessful()) {
+                Log.d(TAG, "Favorite successfully added");
+                if (listAnnonce.getValue() != null && !listAnnonce.getValue().isEmpty()) {
+                    int index = listAnnonce.getValue().indexOf(annoncePhotos);
+                    listAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(dataReturn.getIds()[0]);
+                }
+                listAnnonce.postValue(listAnnonce.getValue());
+            }
+        });
     }
 
     public LiveData<List<AnnoncePhotos>> getListAnnonce() {
@@ -71,9 +93,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 updateLoadingStatus(false);
             } else {
                 if (dataSnapshot.child("results").exists()) {
-                    List<ResultElasticSearchDto<AnnonceSearchDto>> list = dataSnapshot.child("results").getValue(genericClass);
+                    List<ResultElasticSearchDto<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
                     if (list != null && !list.isEmpty()) {
-                        for (ResultElasticSearchDto<AnnonceSearchDto> resultSearchSnapshot : list) {
+                        for (ResultElasticSearchDto<AnnonceDto> resultSearchSnapshot : list) {
                             listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
                         }
                         listAnnonce.postValue(listAnnonceWithPhoto);

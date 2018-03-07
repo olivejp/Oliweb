@@ -17,16 +17,14 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.relex.circleindicator.CircleIndicator;
-import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 
 /**
  * Created by orlanth23 on 07/02/2018.
  */
-
-
 public class AnnonceAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -39,10 +37,14 @@ public class AnnonceAdapter extends
 
     private List<AnnoncePhotos> listAnnonces;
     private View.OnClickListener onClickListener;
+    private View.OnClickListener onFavoriteClickListener;
+    private View.OnClickListener onShareClickListener;
     private DisplayType displayType;
 
-    public AnnonceAdapter(DisplayType displayType, View.OnClickListener onClickListener) {
+    public AnnonceAdapter(DisplayType displayType, View.OnClickListener onClickListener, View.OnClickListener onFavoriteClickListener, View.OnClickListener onShareClickListener) {
         this.onClickListener = onClickListener;
+        this.onFavoriteClickListener = onFavoriteClickListener;
+        this.onShareClickListener = onShareClickListener;
         this.listAnnonces = new ArrayList<>();
         this.displayType = displayType;
     }
@@ -111,8 +113,18 @@ public class AnnonceAdapter extends
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
         viewHolderBeauty.singleAnnonce = annonce;
 
+        // TODO modifier setTag pour y attacher une AnnoncePhoto
         viewHolderBeauty.cardView.setTag(viewHolderBeauty.singleAnnonce);
+        viewHolderBeauty.imageFavorite.setTag(annoncePhotos);
+        viewHolderBeauty.imageShare.setTag(annoncePhotos);
+
         viewHolderBeauty.cardView.setOnClickListener(this.onClickListener);
+        viewHolderBeauty.imageFavorite.setOnClickListener(this.onFavoriteClickListener);
+        viewHolderBeauty.imageShare.setOnClickListener(this.onShareClickListener);
+
+        if (viewHolderBeauty.singleAnnonce.isFavorite()) {
+            viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
+        }
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textDescriptionAnnonce.setText(annonce.getDescription());
@@ -149,6 +161,7 @@ public class AnnonceAdapter extends
                     return newAnnonce.getUUID().equals(oldAnnonce.getUUID())
                             && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
+                            && (newAnnonce.isFavorite() == oldAnnonce.isFavorite())
                             && newAnnonce.getPrix().equals(oldAnnonce.getPrix());
                 }
             });
@@ -218,6 +231,9 @@ public class AnnonceAdapter extends
 
         @BindView(R.id.image_favorite)
         ImageView imageFavorite;
+
+        @BindView(R.id.image_share)
+        ImageView imageShare;
 
         @BindView(R.id.view_pager)
         ViewPager viewPager;

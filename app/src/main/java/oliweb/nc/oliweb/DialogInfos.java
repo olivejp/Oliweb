@@ -2,8 +2,6 @@ package oliweb.nc.oliweb;
 
 import android.os.Bundle;
 
-import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
-
 /**
  * Created by orlanth23 on 04/03/2018.
  */
@@ -14,7 +12,6 @@ public class DialogInfos {
     private int idDrawable;
     private String tag;
     private Bundle bundlePar;
-    private NoticeDialogFragment.DialogListener listener;
 
     public String getMessage() {
         return message;
@@ -58,15 +55,6 @@ public class DialogInfos {
 
     public DialogInfos setBundlePar(Bundle bundlePar) {
         this.bundlePar = bundlePar;
-        return this;
-    }
-
-    public NoticeDialogFragment.DialogListener getListener() {
-        return listener;
-    }
-
-    public DialogInfos setListener(NoticeDialogFragment.DialogListener listener) {
-        this.listener = listener;
         return this;
     }
 }

@@ -65,10 +65,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
             finish();
         }
 
+        // TODO modifier les deux listeners à la fin. Dans le cas de nos propres annonces, on ne doit pas pouvoir mettre en favoris Mais on doit pouvoir partager une annonce.
         AnnonceAdapter annonceAdapter = new AnnonceAdapter(AnnonceAdapter.DisplayType.RAW, v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
             callActivityToUpdateAnnonce(annonce);
-        });
+        }, null, null);
         recyclerView.setAdapter(annonceAdapter);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -126,8 +127,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                         .setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO)
                         .setIdDrawable(R.drawable.ic_delete_grey_900_24dp)
                         .setTag(DIALOG_TAG_DELETE)
-                        .setBundlePar(bundle)
-                        .setListener(this);
+                        .setBundlePar(bundle);
 
                 NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
             }

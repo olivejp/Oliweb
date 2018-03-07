@@ -25,16 +25,17 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
 
 /**
@@ -51,7 +52,7 @@ public class FirebaseSync {
     private AnnonceRepository annonceRepository;
     private NotificationCompat.Builder mBuilder;
     private NotificationManagerCompat notificationManager;
-    public static GenericTypeIndicator<HashMap<String, AnnonceSearchDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceSearchDto>>() {
+    public static GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
     private FirebaseSync() {
@@ -69,18 +70,14 @@ public class FirebaseSync {
     }
 
     void synchronize(Context context, String uidUtilisateur) {
-        getAllAnnonceByUidUtilisateur(uidUtilisateur).addValueEventListener(new ValueEventListener() {
+        getAllAnnonceFromFirebaseByUidUser(uidUtilisateur).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                    HashMap<String, AnnonceSearchDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
+                    HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-
-                        createNotification("Oliweb - Réception de vos annonces");
-                        notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
-                        notificationManager.cancel(notificationSyncAnnonceId);
-
-                        for (Map.Entry<String, AnnonceSearchDto> entry : mapAnnonceSearchDto.entrySet()) {
+                        notificationManager.notify(notificationSyncAnnonceId, createNotification("Oliweb - Réception de vos annonces", "Téléchargement en cours").build());
+                        for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
                             checkAnnonceExistInLocalOrSaveIt(context, entry.getValue());
                         }
                     }
@@ -94,56 +91,44 @@ public class FirebaseSync {
         });
     }
 
-    private void createNotification(String title) {
-        mBuilder.setContentTitle(title)
-                .setContentText("Téléchargement en cours")
-                .setSmallIcon(R.drawable.ic_sync_white_48dp)
-                .setPriority(NotificationCompat.PRIORITY_LOW);
-
-        // Issue the initial notification with zero progress
-        int progressMax = 100;
-        int progressCurrent = 0;
-        mBuilder.setProgress(progressMax, progressCurrent, false);
-    }
-
-    private void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceSearchDto annonceSearchDto) {
-        existByUidUtilisateurAndUidAnnonce(annonceSearchDto.getUtilisateur().getUuid(), annonceSearchDto.getUuid())
+    private void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
+        existInLocalByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(integer -> {
                     if (integer == null || integer.equals(0)) {
-                        saveAnnonceFromFirebaseToLocalDb(context, annonceSearchDto);
+                        saveAnnonceFromFirebaseToLocalDb(context, annonceDto);
                     }
                 });
     }
 
-    public Query getAllAnnonceByUidUtilisateur(String uidUtilisateur) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("annonces");
+    public Query getAllAnnonceFromFirebaseByUidUser(String uidUtilisateur) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         return ref.orderByChild("utilisateur/uuid").equalTo(uidUtilisateur);
     }
 
-    public Single<Integer> existByUidUtilisateurAndUidAnnonce(String UidUtilisateur, String UidAnnonce) {
-        return annonceRepository.existByUidUtilisateurAndUidAnnonce(UidUtilisateur, UidAnnonce);
+    public Single<Integer> existInLocalByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
+        return annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
-    private void saveAnnonceFromFirebaseToLocalDb(Context context, final AnnonceSearchDto annonceSearchDto) {
+    private void saveAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceDto) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceEntity.setUUID(annonceSearchDto.getUuid());
+        annonceEntity.setUUID(annonceDto.getUuid());
         annonceEntity.setStatut(StatusRemote.SEND);
-        annonceEntity.setTitre(annonceSearchDto.getTitre());
-        annonceEntity.setDescription(annonceSearchDto.getDescription());
-        annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
-        annonceEntity.setPrix(annonceSearchDto.getPrix());
-        annonceEntity.setIdCategorie(annonceSearchDto.getCategorie().getId());
-        String uidUtilisateur = annonceSearchDto.getUtilisateur().getUuid();
+        annonceEntity.setTitre(annonceDto.getTitre());
+        annonceEntity.setDescription(annonceDto.getDescription());
+        annonceEntity.setDatePublication(annonceDto.getDatePublication());
+        annonceEntity.setPrix(annonceDto.getPrix());
+        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+        String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
         annonceEntity.setUuidUtilisateur(uidUtilisateur);
         annonceRepository.save(annonceEntity, dataReturn -> {
             // Now we can save Photos, if any
             if (dataReturn.isSuccessful()) {
                 Log.d(TAG, "Annonce has been stored successfully");
                 long idAnnonce = dataReturn.getIds()[0];
-                if (annonceSearchDto.getPhotos() != null && !annonceSearchDto.getPhotos().isEmpty()) {
-                    for (String photoUrl : annonceSearchDto.getPhotos()) {
+                if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
+                    for (String photoUrl : annonceDto.getPhotos()) {
                         savePhotoFromFirebaseStorageToLocal(context, idAnnonce, photoUrl, uidUtilisateur);
                     }
                 }
@@ -182,5 +167,12 @@ public class FirebaseSync {
                 Log.d(TAG, "Download failed for image : " + urlPhoto);
             });
         }
+    }
+
+    private NotificationCompat.Builder createNotification(String title, String contentText) {
+        return mBuilder.setContentTitle(title)
+                .setContentText(contentText)
+                .setSmallIcon(R.drawable.ic_sync_white_48dp)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
     }
 }

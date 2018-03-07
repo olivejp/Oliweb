@@ -27,6 +27,8 @@ public class StatusConverter {
             return StatusRemote.FAILED_TO_SEND;
         } else if (value.equals(StatusRemote.FAILED_TO_DELETE.getValue())) {
             return StatusRemote.FAILED_TO_DELETE;
+        } else if (value.equals(StatusRemote.NOT_TO_SEND.getValue())) {
+            return StatusRemote.NOT_TO_SEND;
         } else {
             throw new IllegalArgumentException("Could not recognize status");
         }

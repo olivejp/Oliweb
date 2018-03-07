@@ -6,17 +6,17 @@ import com.google.firebase.database.PropertyName;
  * Created by orlanth23 on 20/02/2018.
  */
 
-public class CategorieSearchDto {
+public class CategorieDto {
     @PropertyName("id_categorie")
     private long id;
 
     @PropertyName("libelle_categorie")
     private String libelle;
 
-    public CategorieSearchDto() {
+    public CategorieDto() {
     }
 
-    public CategorieSearchDto(long id, String libelle) {
+    public CategorieDto(long id, String libelle) {
         this.id = id;
         this.libelle = libelle;
     }

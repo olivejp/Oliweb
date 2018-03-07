@@ -8,10 +8,10 @@ import java.util.List;
  * Created by 2761oli on 20/02/2018.
  */
 
-public class AnnonceSearchDto {
-    private UtilisateurSearchDto utilisateur;
+public class AnnonceDto {
+    private UtilisateurDto utilisateur;
     private List<String> photos;
-    private CategorieSearchDto categorie;
+    private CategorieDto categorie;
     private String uuid;
     private String titre;
     private String description;
@@ -20,14 +20,14 @@ public class AnnonceSearchDto {
     @PropertyName("date_publication")
     private long datePublication;
 
-    public AnnonceSearchDto() {
+    public AnnonceDto() {
     }
 
-    public UtilisateurSearchDto getUtilisateur() {
+    public UtilisateurDto getUtilisateur() {
         return utilisateur;
     }
 
-    public void setUtilisateur(UtilisateurSearchDto utilisateur) {
+    public void setUtilisateur(UtilisateurDto utilisateur) {
         this.utilisateur = utilisateur;
     }
 
@@ -39,11 +39,11 @@ public class AnnonceSearchDto {
         this.uuid = uuid;
     }
 
-    public CategorieSearchDto getCategorie() {
+    public CategorieDto getCategorie() {
         return categorie;
     }
 
-    public void setCategorie(CategorieSearchDto categorie) {
+    public void setCategorie(CategorieDto categorie) {
         this.categorie = categorie;
     }
 
@@ -89,7 +89,7 @@ public class AnnonceSearchDto {
 
     @Override
     public String toString() {
-        return "AnnonceSearchDto{" +
+        return "AnnonceDto{" +
                 "utilisateur=" + utilisateur +
                 ", photos=" + photos +
                 ", categorie=" + categorie +

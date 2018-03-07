@@ -8,10 +8,11 @@ import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.CategorieSearchDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.CategorieDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurDto;
 
 
 public class AnnonceConverter {
@@ -20,23 +21,24 @@ public class AnnonceConverter {
     }
 
     /**
-     * @param annonceSearchDto
+     * @param annonceDto
      * @return
      */
-    public static AnnoncePhotos convertDtoToEntity(AnnonceSearchDto annonceSearchDto) {
+    public static AnnoncePhotos convertDtoToEntity(AnnonceDto annonceDto) {
         AnnoncePhotos annoncePhotos = new AnnoncePhotos();
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annoncePhotos.setPhotos(new ArrayList<>());
 
-        annonceEntity.setUUID(annonceSearchDto.getUuid());
-        annonceEntity.setTitre(annonceSearchDto.getTitre());
-        annonceEntity.setDescription(annonceSearchDto.getDescription());
-        // annonceEntity.setIdCategorie(annonceSearchDto.getCategorie().getId());
-        annonceEntity.setDatePublication(annonceSearchDto.getDatePublication());
-        annonceEntity.setPrix(annonceSearchDto.getPrix());
-
-        if (annonceSearchDto.getPhotos() != null && !annonceSearchDto.getPhotos().isEmpty()) {
-            for (String photoUrl : annonceSearchDto.getPhotos()) {
+        annonceEntity.setUUID(annonceDto.getUuid());
+        annonceEntity.setTitre(annonceDto.getTitre());
+        annonceEntity.setDescription(annonceDto.getDescription());
+        annonceEntity.setDatePublication(annonceDto.getDatePublication());
+        annonceEntity.setPrix(annonceDto.getPrix());
+        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+        annonceEntity.setUuidUtilisateur(annonceDto.getUtilisateur().getUuid());
+        annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
+        if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
+            for (String photoUrl : annonceDto.getPhotos()) {
                 PhotoEntity photoEntity = new PhotoEntity();
                 photoEntity.setFirebasePath(photoUrl);
                 annoncePhotos.getPhotos().add(photoEntity);
@@ -51,27 +53,27 @@ public class AnnonceConverter {
      * @param annonceFull
      * @return
      */
-    public static AnnonceSearchDto convertEntityToDto(AnnonceFull annonceFull) {
-        AnnonceSearchDto annonceSearchDto = new AnnonceSearchDto();
+    public static AnnonceDto convertEntityToDto(AnnonceFull annonceFull) {
+        AnnonceDto annonceDto = new AnnonceDto();
         UtilisateurEntity utilisateurEntity = annonceFull.getUtilisateur().get(0);
-        UtilisateurSearchDto utilisateurSearchDto = new UtilisateurSearchDto(utilisateurEntity.getProfile(), utilisateurEntity.getUuidUtilisateur(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());
-        annonceSearchDto.setUtilisateur(utilisateurSearchDto);
+        UtilisateurDto utilisateurDto = new UtilisateurDto(utilisateurEntity.getProfile(), utilisateurEntity.getUuidUtilisateur(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());
+        annonceDto.setUtilisateur(utilisateurDto);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
-        annonceSearchDto.setCategorie(new CategorieSearchDto(categorieEntity.getIdCategorie(), categorieEntity.getName()));
+        annonceDto.setCategorie(new CategorieDto(categorieEntity.getIdCategorie(), categorieEntity.getName()));
 
-        annonceSearchDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
-        annonceSearchDto.setDescription(annonceFull.getAnnonce().getDescription());
-        annonceSearchDto.setTitre(annonceFull.getAnnonce().getTitre());
-        annonceSearchDto.setPrix(annonceFull.getAnnonce().getPrix());
-        annonceSearchDto.setUuid(annonceFull.getAnnonce().getUUID());
+        annonceDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
+        annonceDto.setDescription(annonceFull.getAnnonce().getDescription());
+        annonceDto.setTitre(annonceFull.getAnnonce().getTitre());
+        annonceDto.setPrix(annonceFull.getAnnonce().getPrix());
+        annonceDto.setUuid(annonceFull.getAnnonce().getUUID());
 
         List<String> listPhotoDto = new ArrayList<>();
         for (PhotoEntity photo : annonceFull.getPhotos()) {
             listPhotoDto.add(photo.getFirebasePath());
         }
-        annonceSearchDto.setPhotos(listPhotoDto);
+        annonceDto.setPhotos(listPhotoDto);
 
-        return annonceSearchDto;
+        return annonceDto;
     }
 }

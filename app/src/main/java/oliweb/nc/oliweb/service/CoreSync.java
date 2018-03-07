@@ -26,7 +26,7 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
@@ -124,8 +124,8 @@ class CoreSync {
         }
 
         // Conversion de notre annonce en DTO
-        AnnonceSearchDto annonceSearchDto = AnnonceConverter.convertEntityToDto(annonceFull);
-        Log.d(TAG, annonceSearchDto.toString());
+        AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFull);
+        Log.d(TAG, annonceDto.toString());
 
         OnCheckedListener onCheckedListener = count -> {
             if (count == null || count == 0) {
@@ -137,7 +137,7 @@ class CoreSync {
             }
         };
 
-        dbRef.setValue(annonceSearchDto)
+        dbRef.setValue(annonceDto)
                 .addOnSuccessListener(o -> {
                     annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
                     annonceRepository.update(dataReturn -> isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, onCheckedListener), annonceFull.getAnnonce());

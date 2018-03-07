@@ -34,6 +34,10 @@ public class AnnonceWithPhotosRepository {
         return this.annonceWithPhotosDao.findActiveAnnonceByUidUtilisateur(uuidUtilisateur);
     }
 
+    public LiveData<List<AnnoncePhotos>> findFavoritesByUidUtilisateur(String uuidUtilisateur) {
+        return this.annonceWithPhotosDao.findFavoritesByUidUtilisateur(uuidUtilisateur);
+    }
+
     public Maybe<List<AnnoncePhotos>> getAllAnnonceByStatus(String status) {
         return this.annonceWithPhotosDao.getAllAnnonceByStatus(status);
     }

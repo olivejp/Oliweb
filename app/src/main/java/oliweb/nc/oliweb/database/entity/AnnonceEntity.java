@@ -157,6 +157,9 @@ public class AnnonceEntity implements Parcelable {
         this.favorite = favorite;
     }
 
+    public boolean isFavorite() {
+        return favorite != null && favorite.equals(1);
+    }
 
     @Override
     public int describeContents() {

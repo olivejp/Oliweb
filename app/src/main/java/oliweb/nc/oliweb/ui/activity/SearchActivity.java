@@ -9,6 +9,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
@@ -23,7 +25,7 @@ import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
-
+    private static final String TAG = SearchActivity.class.getName();
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     @BindView(R.id.recycler_search_annonce)
@@ -55,31 +57,35 @@ public class SearchActivity extends AppCompatActivity {
         // Ouvre l'activité PostAnnonceActivity en mode Visualisation
         View.OnClickListener onClickListener = v -> {
             // TODO appeler un nouveau fragment ici pour visualiser l'annonce
-            //            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-            //            Intent intent = new Intent();
-            //            Bundle bundle = new Bundle();
-            //            intent.setClass(this, PostAnnonceActivity.class);
-            //            bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_VIS);
-            //            bundle.putParcelable(PostAnnonceActivity.BUNDLE_KEY_ANNONCE, annonce);
-            //            intent.putExtras(bundle);
-            //            startActivity(intent);
         };
 
-        // TODO tester le nouveau gridlayout
+        View.OnClickListener onFavoriteClickListener = v -> {
+            Log.d(TAG, "Click on add to favorite");
+            if (v.getTag() != null) {
+                AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
+                searchActivityViewModel.addToFavorite(annonce);
+            }
+        };
+
+        View.OnClickListener onShareClickListener = v -> {
+
+        };
+
         RecyclerView.LayoutManager layoutManager;
         boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         boolean gridMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getGridMode();
 
         if (gridMode) {
+            layoutManager = new GridLayoutManager(this, 2);
+        } else {
             layoutManager = new LinearLayoutManager(this);
             ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.VERTICAL);
-        } else {
-            layoutManager = new GridLayoutManager(this, 2);
         }
         recyclerView.setLayoutManager(layoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW, onClickListener);
+        AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, onClickListener, onFavoriteClickListener, onShareClickListener);
         recyclerView.setAdapter(annonceAdapter);
         if (!displayBeautyMode) {
             // En mode Raw uniquement
@@ -110,6 +116,7 @@ public class SearchActivity extends AppCompatActivity {
             if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
                 linearLayout.setVisibility(View.GONE);
                 annonceAdapter.setListAnnonces(annonceWithPhotos);
+                annonceAdapter.notifyDataSetChanged();
             } else {
                 linearLayout.setVisibility(View.VISIBLE);
             }
