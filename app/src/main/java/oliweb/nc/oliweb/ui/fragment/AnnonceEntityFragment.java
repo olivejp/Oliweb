@@ -21,14 +21,11 @@ import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 
 public class AnnonceEntityFragment extends Fragment {
 
-    // TODO: Customize parameters
-    private int mColumnCount = 2;
-
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
     @BindView(R.id.recycler_list_annonces)
-    private RecyclerView recyclerView;
+    RecyclerView recyclerView;
 
     private String uidUser;
     private String action;

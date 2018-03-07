@@ -2,8 +2,6 @@ package oliweb.nc.oliweb.service;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
@@ -23,8 +21,6 @@ import java.util.Map;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.Constants;
-import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -36,7 +32,6 @@ import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
 
 /**
  * Created by orlanth23 on 03/03/2018.
@@ -50,8 +45,6 @@ public class FirebaseSync {
 
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
-    private NotificationCompat.Builder mBuilder;
-    private NotificationManagerCompat notificationManager;
     public static GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
@@ -64,8 +57,6 @@ public class FirebaseSync {
         }
         instance.photoRepository = PhotoRepository.getInstance(context);
         instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.notificationManager = NotificationManagerCompat.from(context);
-        instance.mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
         return instance;
     }
 
@@ -76,7 +67,6 @@ public class FirebaseSync {
                 if (dataSnapshot != null && dataSnapshot.getValue() != null) {
                     HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                        notificationManager.notify(notificationSyncAnnonceId, createNotification("Oliweb - Réception de vos annonces", "Téléchargement en cours").build());
                         for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
                             checkAnnonceExistInLocalOrSaveIt(context, entry.getValue());
                         }
@@ -119,6 +109,7 @@ public class FirebaseSync {
         annonceEntity.setDescription(annonceDto.getDescription());
         annonceEntity.setDatePublication(annonceDto.getDatePublication());
         annonceEntity.setPrix(annonceDto.getPrix());
+        annonceEntity.setFavorite(0);
         annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
         String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
         annonceEntity.setUuidUtilisateur(uidUtilisateur);
@@ -167,12 +158,5 @@ public class FirebaseSync {
                 Log.d(TAG, "Download failed for image : " + urlPhoto);
             });
         }
-    }
-
-    private NotificationCompat.Builder createNotification(String title, String contentText) {
-        return mBuilder.setContentTitle(title)
-                .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_sync_white_48dp)
-                .setPriority(NotificationCompat.PRIORITY_LOW);
     }
 }

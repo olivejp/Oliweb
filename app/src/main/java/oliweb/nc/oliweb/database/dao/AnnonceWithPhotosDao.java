@@ -7,7 +7,6 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
-import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 
 /**
@@ -20,15 +19,10 @@ public interface AnnonceWithPhotosDao {
     LiveData<AnnoncePhotos> findById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND favorite <> '1'")
+    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND favorite <> 1")
     LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND favorite = '1'")
     LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
-
-    @Transaction
-    @Query("SELECT * FROM annonce WHERE statut = :statut")
-    Maybe<List<AnnoncePhotos>> getAllAnnonceByStatus(String statut);
-
 }

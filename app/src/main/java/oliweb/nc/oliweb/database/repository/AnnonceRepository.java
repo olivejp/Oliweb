@@ -71,4 +71,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     public Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce){
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
+
+    public LiveData<Integer> getAllAnnonceByStatusAndByUidUser(String status, String uidUser){
+        return this.annonceDao.getAllAnnonceByStatusAndByUidUser(status, uidUser);
+    }
 }

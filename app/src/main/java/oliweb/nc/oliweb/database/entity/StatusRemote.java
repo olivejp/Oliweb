@@ -12,7 +12,8 @@ public enum StatusRemote {
     DELETED("DELETED"),
     FAILED_TO_SEND("FAILED_TO_SEND"),
     FAILED_TO_DELETE("FAILED_TO_DELETE"),
-    NOT_TO_SEND("NOT_TO_SEND");
+    NOT_TO_SEND("NOT_TO_SEND"),
+    TO_INSERT("TO_INSERT");
 
     private final String value;
 
