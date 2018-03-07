@@ -36,6 +36,7 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
@@ -151,6 +152,8 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         } else if (id == R.id.nav_profile) {
 
+        } else if (id == R.id.nav_favorites) {
+            callFavoriteFragment();
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
@@ -284,6 +287,11 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
+    }
+
+    private void callFavoriteFragment() {
+        AnnonceEntityFragment annonceEntityFragment = AnnonceEntityFragment.getInstance(FirebaseAuth.getInstance().getUid(), "FAVORITE");
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, annonceEntityFragment).addToBackStack(null).commit();
     }
 
     @Override

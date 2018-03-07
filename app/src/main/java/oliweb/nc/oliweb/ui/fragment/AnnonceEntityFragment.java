@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +15,9 @@ import android.view.ViewGroup;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.ui.fragment.dummy.DummyContent;
+import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
+import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 
 public class AnnonceEntityFragment extends Fragment {
 
@@ -30,12 +33,13 @@ public class AnnonceEntityFragment extends Fragment {
     private String uidUser;
     private String action;
     private AppCompatActivity appCompatActivity;
+    private MainActivityViewModel viewModel;
 
     public AnnonceEntityFragment() {
         // Empty constructor
     }
 
-    public AnnonceEntityFragment getInstance(String uidUtilisateur, String action) {
+    public static AnnonceEntityFragment getInstance(String uidUtilisateur, String action) {
         AnnonceEntityFragment annonceEntityFragment = new AnnonceEntityFragment();
         Bundle bundle = new Bundle();
         bundle.putString(ARG_UID_USER, uidUtilisateur);
@@ -58,7 +62,7 @@ public class AnnonceEntityFragment extends Fragment {
             action = getArguments().getString(ARG_ACTION);
         }
 
-        ViewModelProviders.of(this).get();
+        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
     }
 
     @Override
@@ -68,9 +72,22 @@ public class AnnonceEntityFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        // Set the adapter
-        recyclerView.setLayoutManager(new GridLayoutManager(appCompatActivity, mColumnCount));
-        recyclerView.setAdapter(new MyAnnonceEntityRecyclerViewAdapter(DummyContent.ITEMS));
+        boolean displayBeauty = SharedPreferencesHelper.getInstance(getContext()).getDisplayBeautyMode();
+        AnnonceAdapter.DisplayType displayType = displayBeauty ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
+        RecyclerView.LayoutManager layoutManager;
+        if (SharedPreferencesHelper.getInstance(getContext()).getGridMode()) {
+            layoutManager = new GridLayoutManager(appCompatActivity, 2);
+        } else {
+            layoutManager = new LinearLayoutManager(appCompatActivity);
+        }
+        recyclerView.setLayoutManager(layoutManager);
+
+        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
+
+        if (uidUser != null) {
+            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> recyclerView.setAdapter(annonceAdapter));
+        }
+
         return view;
     }
 }

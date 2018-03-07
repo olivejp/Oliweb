@@ -21,11 +21,11 @@ public interface AnnonceWithPhotosDao {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND favorite <> '1'")
-    LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur);
+    LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND favorite = '1'")
-    LiveData<List<AnnoncePhotos>> findFavoritesByUidUtilisateur(String uuidUtilisateur);
+    LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut = :statut")

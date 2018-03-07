@@ -16,13 +16,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -42,18 +45,25 @@ public class MainActivityViewModel extends AndroidViewModel {
     public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
 
     private UtilisateurRepository utilisateurRepository;
+    private AnnonceWithPhotosRepository annonceWithPhotosRepository;
 
     private MutableLiveData<DialogInfos> liveNotification;
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
+        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
+
         liveNotification = new MutableLiveData<>();
         liveNotification.setValue(null);
     }
 
     public LiveData<DialogInfos> getNotification() {
         return liveNotification;
+    }
+
+    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur){
+        return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
     private void postNewNotification(String message, @DrawableRes int idDrawable, int buttonType, String tag, @Nullable Bundle bundle) {

@@ -30,12 +30,12 @@ public class AnnonceWithPhotosRepository {
         return INSTANCE;
     }
 
-    public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
-        return this.annonceWithPhotosDao.findActiveAnnonceByUidUtilisateur(uuidUtilisateur);
+    public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur) {
+        return this.annonceWithPhotosDao.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
-    public LiveData<List<AnnoncePhotos>> findFavoritesByUidUtilisateur(String uuidUtilisateur) {
-        return this.annonceWithPhotosDao.findFavoritesByUidUtilisateur(uuidUtilisateur);
+    public LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur) {
+        return this.annonceWithPhotosDao.findFavoritesByUidUser(uuidUtilisateur);
     }
 
     public Maybe<List<AnnoncePhotos>> getAllAnnonceByStatus(String status) {

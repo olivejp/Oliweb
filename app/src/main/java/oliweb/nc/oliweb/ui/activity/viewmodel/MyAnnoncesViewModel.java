@@ -38,7 +38,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
-        return annonceWithPhotosRepository.findActiveAnnonceByUidUtilisateur(uuidUtilisateur);
+        return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
     /**
