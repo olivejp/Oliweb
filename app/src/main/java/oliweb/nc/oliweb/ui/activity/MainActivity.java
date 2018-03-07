@@ -291,7 +291,11 @@ public class MainActivity extends AppCompatActivity
 
     private void callFavoriteFragment() {
         AnnonceEntityFragment annonceEntityFragment = AnnonceEntityFragment.getInstance(FirebaseAuth.getInstance().getUid(), "FAVORITE");
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, annonceEntityFragment).addToBackStack(null).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_frame, annonceEntityFragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override

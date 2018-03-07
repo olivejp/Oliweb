@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -26,6 +27,9 @@ public class AnnonceEntityFragment extends Fragment {
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
+
+    @BindView(R.id.empty_favorite_linear)
+    LinearLayout linearLayout;
 
     private String uidUser;
     private String action;
@@ -59,7 +63,7 @@ public class AnnonceEntityFragment extends Fragment {
             action = getArguments().getString(ARG_ACTION);
         }
 
-        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
+        viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
     }
 
     @Override
@@ -80,9 +84,17 @@ public class AnnonceEntityFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
 
         AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
+        recyclerView.setAdapter(annonceAdapter);
 
         if (uidUser != null) {
-            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> recyclerView.setAdapter(annonceAdapter));
+            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
+                if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
+                    annonceAdapter.setListAnnonces(annoncePhotos);
+                } else {
+                    linearLayout.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.GONE);
+                }
+            });
         }
 
         return view;

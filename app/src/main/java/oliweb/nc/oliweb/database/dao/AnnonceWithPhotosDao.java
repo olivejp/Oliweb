@@ -23,6 +23,6 @@ public interface AnnonceWithPhotosDao {
     LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND favorite = '1'")
+    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND favorite = 1")
     LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
 }
