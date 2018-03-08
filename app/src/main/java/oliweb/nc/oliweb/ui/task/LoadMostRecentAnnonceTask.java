@@ -4,6 +4,8 @@ import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,12 +14,13 @@ import java.util.Map;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.service.FirebaseSync;
 
 /**
  * Created by 2761oli on 08/03/2018.
  */
 
-public class LoadMostRecentAnnonceTask extends AsyncTask<Pair<List<AnnoncePhotos>, HashMap<String, AnnonceDto>>, Void, List<AnnoncePhotos>> {
+public class LoadMostRecentAnnonceTask extends AsyncTask<Pair<List<AnnoncePhotos>, DataSnapshot>, Void, List<AnnoncePhotos>> {
 
     private static final String TAG = LoadMostRecentAnnonceTask.class.getName();
 
@@ -28,25 +31,31 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<Pair<List<AnnoncePhotos
     }
 
     @Override
-    protected List<AnnoncePhotos> doInBackground(Pair<List<AnnoncePhotos>, HashMap<String, AnnonceDto>>[] lists) {
-        Pair<List<AnnoncePhotos>,HashMap<String, AnnonceDto>>  previousLists = lists[0];
-        List<AnnoncePhotos> oldList = previousLists.first;
-        HashMap<String, AnnonceDto> newList = previousLists.second;
-
+    protected List<AnnoncePhotos> doInBackground(Pair<List<AnnoncePhotos>, DataSnapshot>[] lists) {
         List<AnnoncePhotos> listPhotos = new ArrayList<>();
-        listPhotos.addAll(oldList);
-        for (Map.Entry<String, AnnonceDto> entry : newList.entrySet()) {
-            boolean trouve = false;
-            for (AnnoncePhotos anno : oldList) {
-                if (anno.getAnnonceEntity().getUUID().equals(entry.getValue().getUuid())) {
-                    trouve = true;
-                    break;
+
+        Pair<List<AnnoncePhotos>, DataSnapshot> previousLists = lists[0];
+        List<AnnoncePhotos> oldList = previousLists.first;
+        DataSnapshot dataSnapshot = previousLists.second;
+
+        if (oldList != null && dataSnapshot != null) {
+            HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+            if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+                listPhotos.addAll(oldList);
+                for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                    boolean trouve = false;
+                    for (AnnoncePhotos anno : oldList) {
+                        if (anno.getAnnonceEntity().getUUID().equals(entry.getValue().getUuid())) {
+                            trouve = true;
+                            break;
+                        }
+                    }
+                    if (!trouve) {
+                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(entry.getValue());
+                        Log.d(TAG, "Annonce récupérée => " + entry.toString());
+                        listPhotos.add(annoncePhotos);
+                    }
                 }
-            }
-            if (!trouve) {
-                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(entry.getValue());
-                Log.d(TAG, "Annonce récupérée => " + entry.toString());
-                listPhotos.add(annoncePhotos);
             }
         }
         return listPhotos;

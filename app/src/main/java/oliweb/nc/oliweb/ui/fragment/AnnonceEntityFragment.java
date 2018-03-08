@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
@@ -23,7 +24,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
@@ -31,8 +31,6 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.service.FirebaseSync;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
@@ -49,11 +47,18 @@ public class AnnonceEntityFragment extends Fragment {
     public static final String ACTION_FAVORITE = "ACTION_FAVORITE";
     public static final String ACTION_MOST_RECENT = "ACTION_MOST_RECENT";
 
+    public static final int SORT_DATE = 1;
+    public static final int SORT_TITLE = 2;
+    public static final int SORT_PRICE = 3;
+
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
 
     @BindView(R.id.empty_favorite_linear)
     LinearLayout linearLayout;
+
+    @BindView(R.id.bottom_navigation_sort)
+    BottomNavigationView bottomNavigationView;
 
     private String uidUser;
     private String action;
@@ -61,8 +66,11 @@ public class AnnonceEntityFragment extends Fragment {
     private MainActivityViewModel viewModel;
     private AnnonceAdapter annonceAdapter;
     private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
-    private int pagingNumber = 20;
+    private int pagingNumber = 10;
     private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
+    private DatabaseReference annoncesReference;
+    private int tri = SORT_DATE;
+    private int sens;
 
     public AnnonceEntityFragment() {
         // Empty constructor
@@ -90,7 +98,7 @@ public class AnnonceEntityFragment extends Fragment {
             uidUser = getArguments().getString(ARG_UID_USER);
             action = getArguments().getString(ARG_ACTION);
         }
-
+        annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
     }
 
@@ -113,35 +121,121 @@ public class AnnonceEntityFragment extends Fragment {
 
         annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
         recyclerView.setAdapter(annonceAdapter);
-
-        if (action.equals(ACTION_FAVORITE) && uidUser != null) {
-            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
-                if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                    annonceAdapter.setListAnnonces(annoncePhotos);
-                } else {
-                    linearLayout.setVisibility(View.VISIBLE);
-                    recyclerView.setVisibility(View.GONE);
-                }
-            });
-        }
-
-
-        endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
-            @Override
-            public void onLoadMore() {
-                loadData();
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            boolean raz = false;
+            switch (item.getItemId()) {
+                case R.id.action_sort_date:
+                    if (tri == SORT_DATE) {
+                        if (sens == 1) {
+                            sens = 2;
+                        } else {
+                            sens = 1;
+                        }
+                    } else {
+                        raz = true;
+                        tri = SORT_DATE;
+                        sens = 1;
+                    }
+                    break;
+                case R.id.action_sort_title:
+                    if (tri == SORT_TITLE) {
+                        if (sens == 1) {
+                            sens = 2;
+                        } else {
+                            sens = 1;
+                        }
+                    } else {
+                        raz = true;
+                        tri = SORT_TITLE;
+                        sens = 1;
+                    }
+                    break;
+                case R.id.action_sort_price:
+                    if (tri == SORT_PRICE) {
+                        if (sens == 1) {
+                            sens = 2;
+                        } else {
+                            sens = 1;
+                        }
+                    } else {
+                        raz = true;
+                        tri = SORT_PRICE;
+                        sens = 1;
+                    }
+                    break;
             }
-        };
+            if (raz) {
+                List<AnnoncePhotos> list = new ArrayList<>();
+                annonceAdapter.setListAnnonces(list);
+                annonceAdapter.notifyDataSetChanged();
+                annoncePhotosList = list;
+                loadMoreDatas();
+            }
+            return true;
+        });
 
-        if (action.equals(ACTION_MOST_RECENT)) {
-            recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
-            // First load
-            loadData();
+        switch (action) {
+            case ACTION_FAVORITE:
+                if (uidUser != null) {
+                    viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
+                        if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
+                            annonceAdapter.setListAnnonces(annoncePhotos);
+                        } else {
+                            linearLayout.setVisibility(View.VISIBLE);
+                            recyclerView.setVisibility(View.GONE);
+                        }
+                    });
+                }
+                break;
+            case ACTION_MOST_RECENT:
+                endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
+                    @Override
+                    public void onLoadMore() {
+                        loadMoreDatas();
+                    }
+                };
+                recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
+                loadMoreDatas();
+                break;
         }
         return view;
     }
 
-    private void loadData() {
+    private void loadMoreDatas() {
+        switch (tri) {
+            case SORT_DATE:
+                loadSortDate().addListenerForSingleValueEvent(valueEventListener);
+            case SORT_TITLE:
+                loadSortTitle().addListenerForSingleValueEvent(valueEventListener);
+            case SORT_PRICE:
+                loadSortPrice().addListenerForSingleValueEvent(valueEventListener);
+        }
+    }
+
+    private Query loadSortPrice() {
+        // Recherche du prix le plus élevé
+        Integer lastPrice = 999999999;
+        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+            if (lastPrice > annoncePhotos.getAnnonceEntity().getPrix()) {
+                lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+            }
+        }
+        return annoncesReference.orderByChild("prix").endAt(lastPrice).limitToLast(pagingNumber);
+    }
+
+    private Query loadSortTitle() {
+        // Recherche du titre le plus haut
+        // TODO trouver la valeur max d'un string
+        String lastTitle = "ZZZZZZZZZZZZ";
+        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+            if (lastTitle.compareTo(annoncePhotos.getAnnonceEntity().getTitre()) == 1) {
+                lastTitle = annoncePhotos.getAnnonceEntity().getTitre();
+            }
+        }
+        return annoncesReference.orderByChild("titre").endAt(lastTitle).limitToLast(pagingNumber);
+    }
+
+    private Query loadSortDate() {
         // Recherche de la date de publication la plus éloignée
         Long lastDate = Utility.getNowInEntityFormat();
         for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
@@ -149,31 +243,27 @@ public class AnnonceEntityFragment extends Fragment {
                 lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
             }
         }
-
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-        Query query = ref.orderByChild("datePublication").endAt(lastDate).limitToLast(pagingNumber);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                    HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
-                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-
-                        // Lancement d'une tache pour aller vérifier les annonces déjà reçues
-                        LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
-                        loadMoreTask.setListener(listAnnoncePhotos -> {
-                            annonceAdapter.setListAnnonces(listAnnoncePhotos);
-                            annoncePhotosList = listAnnoncePhotos;
-                        });
-                        loadMoreTask.execute(new Pair<>(annoncePhotosList, mapAnnonceSearchDto));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
+        return annoncesReference.orderByChild("datePublication").endAt(lastDate).limitToLast(pagingNumber);
     }
+
+    private ValueEventListener valueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+
+                // Lancement d'une tache pour aller vérifier les annonces déjà reçues
+                LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
+                loadMoreTask.setListener(listAnnoncePhotos -> {
+                    annonceAdapter.setListAnnonces(listAnnoncePhotos);
+                    annoncePhotosList = listAnnoncePhotos;
+                });
+                loadMoreTask.execute(new Pair(annoncePhotosList, dataSnapshot));
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Do nothing
+        }
+    };
 }

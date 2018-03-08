@@ -9,7 +9,7 @@ import java.util.List;
  * Created by orlanth23 on 08/02/2018.
  */
 
-public class AnnoncePhotos {
+public class AnnoncePhotos  {
     @Embedded
     public AnnonceEntity annonceEntity;
 
@@ -31,4 +31,5 @@ public class AnnoncePhotos {
     public void setPhotos(List<PhotoEntity> photos) {
         this.photos = photos;
     }
+
 }
