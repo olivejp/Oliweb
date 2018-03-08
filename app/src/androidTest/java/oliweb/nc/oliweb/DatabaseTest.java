@@ -52,7 +52,7 @@ public class DatabaseTest {
 
     private UtilisateurEntity createUtilisateur() {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setDateCreation(Utility.getNowEntity());
+        utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
         utilisateurEntity.setTelephone("123456");
         utilisateurEntity.setEmail(EMAIL);
         utilisateurEntity.setUuidUtilisateur(UUID_UTILISATEUR);
@@ -65,7 +65,7 @@ public class DatabaseTest {
         annonceEntity.setContactByEmail("1");
         annonceEntity.setContactByMsg("0");
         annonceEntity.setContactByTel("1");
-        annonceEntity.setDatePublication(Utility.getNowEntity());
+        annonceEntity.setDatePublication(Utility.getNowInEntityFormat());
         annonceEntity.setDescription("Description");
         annonceEntity.setPrix(15000);
         annonceEntity.setStatut(StatusRemote.TO_SEND);

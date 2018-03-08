@@ -8,7 +8,6 @@ public abstract class EndlessRecyclerOnScrollListener extends
     private int previousTotal = 0;
     private boolean loading = true;
     private LinearLayoutManager mLinearLayoutManager;
-    private int currentPage;
 
     protected EndlessRecyclerOnScrollListener(
             LinearLayoutManager linearLayoutManager) {
@@ -29,9 +28,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
         }
 
         int visibleThreshold = 5;
-        if (!loading
-                && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
-            currentPage++;
+        if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
             onLoadMore();
             loading = true;
         }

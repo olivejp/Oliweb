@@ -106,7 +106,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
         this.annonce.setPrix(prix);
-        this.annonce.setDatePublication(Utility.getNowEntity());
+        this.annonce.setDatePublication(Utility.getNowInEntityFormat());
         this.annonce.setIdCategorie(categorie.getIdCategorie());
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setUuidUtilisateur(uidUser);
@@ -145,6 +145,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce = new AnnonceEntity();
         this.annonce.setUUID(UUID.randomUUID().toString());
         this.annonce.setStatut(StatusRemote.TO_SEND);
+        this.annonce.setFavorite(0);
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
         }

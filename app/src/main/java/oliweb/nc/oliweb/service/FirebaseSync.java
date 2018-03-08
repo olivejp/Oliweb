@@ -60,8 +60,8 @@ public class FirebaseSync {
         return instance;
     }
 
-    void synchronize(Context context, String uidUtilisateur) {
-        getAllAnnonceFromFirebaseByUidUser(uidUtilisateur).addValueEventListener(new ValueEventListener() {
+    void synchronize(Context context, String uidUser) {
+        getAllAnnonceFromFirebaseByUidUser(uidUser).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue() != null) {
@@ -92,13 +92,13 @@ public class FirebaseSync {
                 });
     }
 
-    public Query getAllAnnonceFromFirebaseByUidUser(String uidUtilisateur) {
+    public Query getAllAnnonceFromFirebaseByUidUser(String uidUser) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-        return ref.orderByChild("utilisateur/uuid").equalTo(uidUtilisateur);
+        return ref.orderByChild("utilisateur/uuid").equalTo(uidUser);
     }
 
-    public Single<Integer> existInLocalByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
-        return annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
+    public Single<Integer> existInLocalByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+        return annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUser, uidAnnonce);
     }
 
     private void saveAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceDto) {
@@ -116,7 +116,7 @@ public class FirebaseSync {
         annonceRepository.save(annonceEntity, dataReturn -> {
             // Now we can save Photos, if any
             if (dataReturn.isSuccessful()) {
-                Log.d(TAG, "Annonce has been stored successfully");
+                Log.d(TAG, "Annonce has been stored successfully : " + annonceDto.getTitre());
                 long idAnnonce = dataReturn.getIds()[0];
                 if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
                     for (String photoUrl : annonceDto.getPhotos()) {
@@ -129,10 +129,10 @@ public class FirebaseSync {
         });
     }
 
-    private void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto, String uidUtilisateur) {
+    private void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto, String uidUser) {
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
         boolean externalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
-        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, externalStorage, MediaType.IMAGE, uidUtilisateur);
+        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, externalStorage, MediaType.IMAGE, uidUser);
         if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
             httpsReference.getFile(pairUriFile.second).addOnSuccessListener(taskSnapshot -> {
                 // Local temp file has been created

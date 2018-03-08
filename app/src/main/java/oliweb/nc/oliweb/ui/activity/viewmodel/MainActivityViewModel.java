@@ -79,7 +79,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setDateCreation(Utility.getNowEntity());
+        utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
         utilisateurEntity.setEmail(user.getEmail());
         utilisateurEntity.setUuidUtilisateur(user.getUid());
         utilisateurEntity.setTelephone(user.getPhoneNumber());

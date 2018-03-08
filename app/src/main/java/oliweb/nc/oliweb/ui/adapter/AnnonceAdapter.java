@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 07/02/2018.
@@ -125,6 +126,9 @@ public class AnnonceAdapter extends
         if (viewHolderBeauty.singleAnnonce.isFavorite()) {
             viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
         }
+
+        // Récupération de la date de publication
+        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textDescriptionAnnonce.setText(annonce.getDescription());

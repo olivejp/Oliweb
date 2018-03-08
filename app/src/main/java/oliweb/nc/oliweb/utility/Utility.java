@@ -39,7 +39,7 @@ public class Utility {
      *
      * @return Long
      */
-    public static Long getNowEntity() {
+    public static Long getNowInEntityFormat() {
         Calendar cal = Calendar.getInstance();
         return Long.parseLong(DateConverter.simpleEntityDateFormat.format(cal.getTime()));
     }

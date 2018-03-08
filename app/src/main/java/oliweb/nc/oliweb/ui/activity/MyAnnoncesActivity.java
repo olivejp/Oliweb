@@ -13,6 +13,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.UUID;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -20,6 +24,8 @@ import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.helper.RecyclerItemTouchHelper;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.NetworkReceiver;
@@ -27,6 +33,7 @@ import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 
@@ -165,6 +172,28 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
         startActivityForResult(intent, REQUEST_CODE_POST);
+    }
+
+    // TODO supprimer cette méthode une fois les tests terminés
+    @OnClick(R.id.fab_post_mass)
+    public void insertMassAnnonce(View v) {
+        for (int i = 0; i < 25; i++) {
+            AnnonceEntity annonce = new AnnonceEntity();
+            annonce.setUUID(UUID.randomUUID().toString());
+            annonce.setTitre("Titre " + i);
+            annonce.setDescription("Description " + i);
+            annonce.setPrix(i * 3);
+            annonce.setDatePublication(Utility.getNowInEntityFormat());
+            annonce.setIdCategorie(1L);
+            annonce.setStatut(StatusRemote.TO_SEND);
+            annonce.setFavorite(0);
+            annonce.setUuidUtilisateur(FirebaseAuth.getInstance().getUid());
+            AnnonceRepository.getInstance(this).save(annonce, dataReturn -> {
+                if (dataReturn.isSuccessful()) {
+                    Log.d(TAG, "Insertion test réussi");
+                }
+            });
+        }
     }
 
     private void callActivityToUpdateAnnonce(AnnonceEntity annonce) {

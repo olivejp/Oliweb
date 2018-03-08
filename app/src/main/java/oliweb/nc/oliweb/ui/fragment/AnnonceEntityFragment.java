@@ -8,22 +8,46 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.service.FirebaseSync;
+import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 
 public class AnnonceEntityFragment extends Fragment {
-
+    private static final String TAG = AnnonceEntityFragment.class.getName();
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
+
+    public static final String ACTION_FAVORITE = "ACTION_FAVORITE";
+    public static final String ACTION_MOST_RECENT = "ACTION_MOST_RECENT";
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
@@ -35,6 +59,9 @@ public class AnnonceEntityFragment extends Fragment {
     private String action;
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
+    private AnnonceAdapter annonceAdapter;
+    private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
+    private int pagingNumber = 10;
 
     public AnnonceEntityFragment() {
         // Empty constructor
@@ -83,20 +110,72 @@ public class AnnonceEntityFragment extends Fragment {
         }
         recyclerView.setLayoutManager(layoutManager);
 
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
+        annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
         recyclerView.setAdapter(annonceAdapter);
 
-        if (uidUser != null) {
-            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
-                if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                    annonceAdapter.setListAnnonces(annoncePhotos);
-                } else {
-                    linearLayout.setVisibility(View.VISIBLE);
-                    recyclerView.setVisibility(View.GONE);
+        if (action.equals(ACTION_FAVORITE)) {
+            if (uidUser != null) {
+                viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
+                    if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
+                        annonceAdapter.setListAnnonces(annoncePhotos);
+                    } else {
+                        linearLayout.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    }
+                });
+            }
+        }
+
+        if (action.equals(ACTION_MOST_RECENT)) {
+            recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
+                @Override
+                public void onLoadMore() {
+                    loadData();
                 }
             });
+
+            // First load
+            loadData();
         }
 
         return view;
     }
+
+    private void loadData() {
+        // Recherche de la date de publication la plus éloignée
+        Long lastDate = 0L;
+        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+            if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
+                lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+            }
+        }
+
+        if (lastDate.equals(0L)) {
+            lastDate = Utility.getNowInEntityFormat();
+        }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
+        Query query = ref.orderByChild("datePublication").endAt(lastDate).limitToLast(pagingNumber);
+        query.addListenerForSingleValueEvent(valueEventListener);
+    }
+
+    private ValueEventListener valueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+                    for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                        Log.d(TAG, "Annonce récupérée => " + entry.toString());
+                        annoncePhotosList.add(AnnonceConverter.convertDtoToEntity(entry.getValue()));
+                    }
+                    annonceAdapter.setListAnnonces(annoncePhotosList);
+                }
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Do nothing
+        }
+    };
 }

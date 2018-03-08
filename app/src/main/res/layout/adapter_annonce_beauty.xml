@@ -9,7 +9,10 @@
         android:id="@+id/card_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="10dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
         app:cardCornerRadius="2dp">
 
         <LinearLayout
@@ -101,7 +104,7 @@
 
                 <TextView
                     android:id="@+id/text_date_publication_annonce"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="bottom|start"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body2"

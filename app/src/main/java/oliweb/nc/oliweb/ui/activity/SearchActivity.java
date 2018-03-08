@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.ui.activity;
 
 import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +10,8 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -24,6 +27,7 @@ import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.utility.Utility;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -36,8 +40,49 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
+    @BindView(R.id.search_view_activity_search)
+    SearchView searchView;
+
+    @BindView(R.id.toolbar_activity_search)
+    Toolbar toolbar;
+
     private String query;
     private LoadingDialogFragment loadingDialogFragment;
+    private SearchActivityViewModel searchActivityViewModel;
+    private AnnonceAdapter annonceAdapter;
+
+    // Ouvre l'activité PostAnnonceActivity en mode Visualisation
+    private View.OnClickListener onClickListener = v -> {
+        // TODO appeler un nouveau fragment ici pour visualiser l'annonce
+    };
+
+    private View.OnClickListener onFavoriteClickListener = v -> {
+        Log.d(TAG, "Click on add to favorite");
+        if (v.getTag() != null) {
+            AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
+            searchActivityViewModel.isAnnonceFavorite(annonce.getAnnonceEntity().getUUID())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(integer -> {
+                        if (integer == null || integer == 0) {
+                            searchActivityViewModel.addToFavorite(annonce);
+                        }
+                    });
+        }
+    };
+
+    private View.OnClickListener onShareClickListener = v -> {
+        if (v.getTag() != null) {
+            // TODO pas génial ce partage faudrait peut être revoir cette fonctionnalité
+            AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = annonce.getAnnonceEntity().getDescription();
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, annonce.getAnnonceEntity().getTitre());
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Partager via"));
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +91,13 @@ public class SearchActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        SearchActivityViewModel searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
+        // On attache la searchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        if (searchManager != null) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
+        searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
 
         // Get the intent, verify the action and get the query string
         Intent intentParam = getIntent();
@@ -54,31 +105,16 @@ public class SearchActivity extends AppCompatActivity {
             query = intentParam.getStringExtra(SearchManager.QUERY);
         }
 
-        setTitle("Recherche \"" + query + "\"");
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
-        // Ouvre l'activité PostAnnonceActivity en mode Visualisation
-        View.OnClickListener onClickListener = v -> {
-            // TODO appeler un nouveau fragment ici pour visualiser l'annonce
-        };
+        // On repose les termes de la requête dans le searchView
+        searchView.setQuery(query, false);
 
-        View.OnClickListener onFavoriteClickListener = v -> {
-            Log.d(TAG, "Click on add to favorite");
-            if (v.getTag() != null) {
-                AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
-                searchActivityViewModel.isAnnonceFavorite(annonce.getAnnonceEntity().getUUID())
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(integer -> {
-                            if (integer == null || integer == 0) {
-                                searchActivityViewModel.addToFavorite(annonce);
-                            }
-                        });
-            }
-        };
-
-        View.OnClickListener onShareClickListener = v -> {
-
-        };
+        Utility.hideKeyboard(this);
 
         RecyclerView.LayoutManager layoutManager;
         boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
@@ -94,7 +130,7 @@ public class SearchActivity extends AppCompatActivity {
 
         // Recherche du mode display actuellement dans les préférences.
         AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(displayType, onClickListener, onFavoriteClickListener, onShareClickListener);
+        annonceAdapter = new AnnonceAdapter(displayType, onClickListener, onFavoriteClickListener, onShareClickListener);
         recyclerView.setAdapter(annonceAdapter);
         if (!displayBeautyMode) {
             // En mode Raw uniquement
@@ -102,6 +138,14 @@ public class SearchActivity extends AppCompatActivity {
             recyclerView.addItemDecoration(itemDecoration);
         }
 
+        initViewModelObservers();
+
+        if (!searchActivityViewModel.makeASearch(query)) {
+            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void initViewModelObservers() {
         // Fait apparaitre un spinner pendant l'attente
         searchActivityViewModel.getLoading().observe(this, atomicBoolean -> {
                     if (atomicBoolean != null) {
@@ -130,9 +174,5 @@ public class SearchActivity extends AppCompatActivity {
                 linearLayout.setVisibility(View.VISIBLE);
             }
         });
-
-        if (!searchActivityViewModel.makeASearch(query)) {
-            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
-        }
     }
 }
