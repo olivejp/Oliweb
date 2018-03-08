@@ -38,6 +38,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
+import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
@@ -46,7 +47,7 @@ import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ACTION_MOST_REC
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, CatchPhotoFromUrlTask.TaskListener, NoticeDialogFragment.DialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, TaskListener<Drawable>, NoticeDialogFragment.DialogListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -239,9 +240,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public Object onSuccess(Drawable drawable) {
+    public void onSuccess(Drawable drawable) {
         profileImage.setImageDrawable(drawable);
-        return null;
     }
 
     /**

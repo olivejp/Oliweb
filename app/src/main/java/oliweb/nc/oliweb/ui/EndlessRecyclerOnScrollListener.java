@@ -14,6 +14,10 @@ public abstract class EndlessRecyclerOnScrollListener extends
         this.mLinearLayoutManager = linearLayoutManager;
     }
 
+    public void setLoading(boolean bool) {
+        loading = bool;
+    }
+
     @Override
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
         super.onScrolled(recyclerView, dx, dy);
@@ -27,7 +31,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
             previousTotal = totalItemCount;
         }
 
-        int visibleThreshold = 5;
+        int visibleThreshold = 6;
         if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
             onLoadMore();
             loading = true;

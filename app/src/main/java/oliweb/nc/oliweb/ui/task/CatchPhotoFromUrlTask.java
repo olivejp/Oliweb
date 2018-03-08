@@ -20,14 +20,14 @@ public class CatchPhotoFromUrlTask extends AsyncTask<Uri, Void, Drawable> {
 
     private static final String TAG = CatchPhotoFromUrlTask.class.getName();
 
-    private TaskListener listener;
+    private TaskListener<Drawable> listener;
 
     private Context context;
 
     public CatchPhotoFromUrlTask() {
     }
 
-    public void setListener(TaskListener listener) {
+    public void setListener(TaskListener<Drawable> listener) {
         this.listener = listener;
     }
 
@@ -57,12 +57,5 @@ public class CatchPhotoFromUrlTask extends AsyncTask<Uri, Void, Drawable> {
         if (context != null && listener != null) {
             listener.onSuccess(drawable);
         }
-    }
-
-    /**
-     * Inner interface call on OnPostExecute method
-     */
-    public interface TaskListener {
-        Object onSuccess(Drawable drawable);
     }
 }

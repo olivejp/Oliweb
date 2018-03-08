@@ -16,7 +16,7 @@ public class DateConverter {
 
     public enum DatePattern {
         PATTERN_DTO("dd/MM/yyyy HH:mm:ss"),
-        PATTERN_ENTITY("yyyyMMddHHmmss"),
+        PATTERN_ENTITY("yyyyMMddHHmmssSSS"),
         PATTERN_UI("dd MMM yyyy à HH:mm"),
         PATTERN_AFTER_HIP("yyyy-MM-dd'T'HH:mm:ss");
 

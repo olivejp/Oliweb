@@ -3,12 +3,13 @@ package oliweb.nc.oliweb.ui.fragment;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,12 +25,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -37,6 +36,7 @@ import oliweb.nc.oliweb.service.FirebaseSync;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
@@ -61,7 +61,8 @@ public class AnnonceEntityFragment extends Fragment {
     private MainActivityViewModel viewModel;
     private AnnonceAdapter annonceAdapter;
     private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
-    private int pagingNumber = 10;
+    private int pagingNumber = 20;
+    private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
 
     public AnnonceEntityFragment() {
         // Empty constructor
@@ -94,7 +95,7 @@ public class AnnonceEntityFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_annonceentity_list, container, false);
 
@@ -113,69 +114,66 @@ public class AnnonceEntityFragment extends Fragment {
         annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
         recyclerView.setAdapter(annonceAdapter);
 
-        if (action.equals(ACTION_FAVORITE)) {
-            if (uidUser != null) {
-                viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
-                    if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                        annonceAdapter.setListAnnonces(annoncePhotos);
-                    } else {
-                        linearLayout.setVisibility(View.VISIBLE);
-                        recyclerView.setVisibility(View.GONE);
-                    }
-                });
-            }
-        }
-
-        if (action.equals(ACTION_MOST_RECENT)) {
-            recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
-                @Override
-                public void onLoadMore() {
-                    loadData();
+        if (action.equals(ACTION_FAVORITE) && uidUser != null) {
+            viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
+                if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
+                    annonceAdapter.setListAnnonces(annoncePhotos);
+                } else {
+                    linearLayout.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.GONE);
                 }
             });
+        }
 
+
+        endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
+            @Override
+            public void onLoadMore() {
+                loadData();
+            }
+        };
+
+        if (action.equals(ACTION_MOST_RECENT)) {
+            recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
             // First load
             loadData();
         }
-
         return view;
     }
 
     private void loadData() {
         // Recherche de la date de publication la plus éloignée
-        Long lastDate = 0L;
+        Long lastDate = Utility.getNowInEntityFormat();
         for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-            if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
+            if (lastDate > annoncePhotos.getAnnonceEntity().getDatePublication()) {
                 lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
             }
         }
 
-        if (lastDate.equals(0L)) {
-            lastDate = Utility.getNowInEntityFormat();
-        }
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         Query query = ref.orderByChild("datePublication").endAt(lastDate).limitToLast(pagingNumber);
-        query.addListenerForSingleValueEvent(valueEventListener);
-    }
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                    HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
 
-    private ValueEventListener valueEventListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
-                if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                    for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
-                        Log.d(TAG, "Annonce récupérée => " + entry.toString());
-                        annoncePhotosList.add(AnnonceConverter.convertDtoToEntity(entry.getValue()));
+                        // Lancement d'une tache pour aller vérifier les annonces déjà reçues
+                        LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
+                        loadMoreTask.setListener(listAnnoncePhotos -> {
+                            annonceAdapter.setListAnnonces(listAnnoncePhotos);
+                            annoncePhotosList = listAnnoncePhotos;
+                        });
+                        loadMoreTask.execute(new Pair<>(annoncePhotosList, mapAnnonceSearchDto));
                     }
-                    annonceAdapter.setListAnnonces(annoncePhotosList);
                 }
             }
-        }
 
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Do nothing
+            }
+        });
+    }
 }
