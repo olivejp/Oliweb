@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -34,8 +33,9 @@ import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
-import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 
@@ -50,6 +50,9 @@ public class AnnonceEntityFragment extends Fragment {
     public static final int SORT_DATE = 1;
     public static final int SORT_TITLE = 2;
     public static final int SORT_PRICE = 3;
+
+    public static final int ASC = 1;
+    public static final int DESC = 2;
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
@@ -67,10 +70,9 @@ public class AnnonceEntityFragment extends Fragment {
     private AnnonceAdapter annonceAdapter;
     private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
     private int pagingNumber = 10;
-    private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
     private DatabaseReference annoncesReference;
     private int tri = SORT_DATE;
-    private int sens;
+    private int direction;
 
     public AnnonceEntityFragment() {
         // Empty constructor
@@ -102,6 +104,48 @@ public class AnnonceEntityFragment extends Fragment {
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
     }
 
+    private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener = item -> {
+        int newTri;
+        switch (item.getItemId()) {
+            case R.id.action_sort_date:
+                newTri = SORT_DATE;
+                break;
+            case R.id.action_sort_title:
+                newTri = SORT_TITLE;
+                break;
+            case R.id.action_sort_price:
+                newTri = SORT_PRICE;
+                break;
+            default:
+                newTri = SORT_DATE;
+                break;
+        }
+
+        if (tri == newTri) {
+            if (direction == ASC) {
+                direction = DESC;
+            } else {
+                direction = ASC;
+            }
+        } else {
+            tri = newTri;
+            direction = ASC;
+        }
+
+        if (action.equals(ACTION_MOST_RECENT)) {
+            List<AnnoncePhotos> list = new ArrayList<>();
+            annonceAdapter.setListAnnonces(list);
+            annonceAdapter.notifyDataSetChanged();
+            annoncePhotosList = list;
+            loadMoreDatas();
+        } else {
+            LoadMostRecentAnnonceTask.sortList(annoncePhotosList, tri, direction);
+            annonceAdapter.notifyDataSetChanged();
+        }
+
+        return true;
+    };
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -121,65 +165,15 @@ public class AnnonceEntityFragment extends Fragment {
 
         annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
         recyclerView.setAdapter(annonceAdapter);
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            boolean raz = false;
-            switch (item.getItemId()) {
-                case R.id.action_sort_date:
-                    if (tri == SORT_DATE) {
-                        if (sens == 1) {
-                            sens = 2;
-                        } else {
-                            sens = 1;
-                        }
-                    } else {
-                        raz = true;
-                        tri = SORT_DATE;
-                        sens = 1;
-                    }
-                    break;
-                case R.id.action_sort_title:
-                    if (tri == SORT_TITLE) {
-                        if (sens == 1) {
-                            sens = 2;
-                        } else {
-                            sens = 1;
-                        }
-                    } else {
-                        raz = true;
-                        tri = SORT_TITLE;
-                        sens = 1;
-                    }
-                    break;
-                case R.id.action_sort_price:
-                    if (tri == SORT_PRICE) {
-                        if (sens == 1) {
-                            sens = 2;
-                        } else {
-                            sens = 1;
-                        }
-                    } else {
-                        raz = true;
-                        tri = SORT_PRICE;
-                        sens = 1;
-                    }
-                    break;
-            }
-            if (raz) {
-                List<AnnoncePhotos> list = new ArrayList<>();
-                annonceAdapter.setListAnnonces(list);
-                annonceAdapter.notifyDataSetChanged();
-                annoncePhotosList = list;
-                loadMoreDatas();
-            }
-            return true;
-        });
+        bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
         switch (action) {
             case ACTION_FAVORITE:
                 if (uidUser != null) {
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                            annonceAdapter.setListAnnonces(annoncePhotos);
+                            annoncePhotosList = annoncePhotos;
+                            annonceAdapter.setListAnnonces(annoncePhotosList);
                         } else {
                             linearLayout.setVisibility(View.VISIBLE);
                             recyclerView.setVisibility(View.GONE);
@@ -188,13 +182,12 @@ public class AnnonceEntityFragment extends Fragment {
                 }
                 break;
             case ACTION_MOST_RECENT:
-                endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
+                recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
                     @Override
                     public void onLoadMore() {
                         loadMoreDatas();
                     }
-                };
-                recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
+                });
                 loadMoreDatas();
                 break;
         }
@@ -205,22 +198,38 @@ public class AnnonceEntityFragment extends Fragment {
         switch (tri) {
             case SORT_DATE:
                 loadSortDate().addListenerForSingleValueEvent(valueEventListener);
+                break;
             case SORT_TITLE:
                 loadSortTitle().addListenerForSingleValueEvent(valueEventListener);
+                break;
             case SORT_PRICE:
                 loadSortPrice().addListenerForSingleValueEvent(valueEventListener);
+                break;
+            default:
+                break;
         }
     }
 
     private Query loadSortPrice() {
-        // Recherche du prix le plus élevé
-        Integer lastPrice = 999999999;
-        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-            if (lastPrice > annoncePhotos.getAnnonceEntity().getPrix()) {
-                lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+        Query query = annoncesReference.orderByChild("prix");
+        if (direction == ASC) {
+            Integer lastPrice = 0;
+            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonceEntity().getPrix() > lastPrice) {
+                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+                }
             }
+            query.startAt(lastPrice).limitToFirst(pagingNumber);
+        } else if (direction == DESC) {
+            Integer lastPrice = Integer.MAX_VALUE;
+            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+                if (lastPrice < annoncePhotos.getAnnonceEntity().getPrix()) {
+                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+                }
+            }
+            query.endAt(lastPrice).limitToLast(pagingNumber);
         }
-        return annoncesReference.orderByChild("prix").endAt(lastPrice).limitToLast(pagingNumber);
+        return query;
     }
 
     private Query loadSortTitle() {
@@ -228,7 +237,7 @@ public class AnnonceEntityFragment extends Fragment {
         // TODO trouver la valeur max d'un string
         String lastTitle = "ZZZZZZZZZZZZ";
         for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-            if (lastTitle.compareTo(annoncePhotos.getAnnonceEntity().getTitre()) == 1) {
+            if (lastTitle.compareTo(annoncePhotos.getAnnonceEntity().getTitre()) < 0) {
                 lastTitle = annoncePhotos.getAnnonceEntity().getTitre();
             }
         }
@@ -236,28 +245,35 @@ public class AnnonceEntityFragment extends Fragment {
     }
 
     private Query loadSortDate() {
-        // Recherche de la date de publication la plus éloignée
-        Long lastDate = Utility.getNowInEntityFormat();
-        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-            if (lastDate > annoncePhotos.getAnnonceEntity().getDatePublication()) {
-                lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+        Query query = annoncesReference.orderByChild("datePublication");
+        if (direction == ASC) {
+            Long lastDate = 0L;
+            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonceEntity().getDatePublication() > lastDate) {
+                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+                }
             }
+            query.startAt(lastDate).limitToFirst(pagingNumber);
+        } else if (direction == DESC) {
+            Long lastDate = Long.MAX_VALUE;
+            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
+                if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
+                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+                }
+            }
+            query.endAt(lastDate).limitToLast(pagingNumber);
         }
-        return annoncesReference.orderByChild("datePublication").endAt(lastDate).limitToLast(pagingNumber);
+        return query;
     }
 
     private ValueEventListener valueEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-
                 // Lancement d'une tache pour aller vérifier les annonces déjà reçues
                 LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
-                loadMoreTask.setListener(listAnnoncePhotos -> {
-                    annonceAdapter.setListAnnonces(listAnnoncePhotos);
-                    annoncePhotosList = listAnnoncePhotos;
-                });
-                loadMoreTask.execute(new Pair(annoncePhotosList, dataSnapshot));
+                loadMoreTask.setListener(taskListener);
+                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, tri, direction));
             }
         }
 
@@ -265,5 +281,11 @@ public class AnnonceEntityFragment extends Fragment {
         public void onCancelled(DatabaseError databaseError) {
             // Do nothing
         }
+    };
+
+    private TaskListener<List<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
+        annonceAdapter.setListAnnonces(listAnnoncePhotos);
+        annoncePhotosList = listAnnoncePhotos;
+        annoncesReference.removeEventListener(valueEventListener);
     };
 }

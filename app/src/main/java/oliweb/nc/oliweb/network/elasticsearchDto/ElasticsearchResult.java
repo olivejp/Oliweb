@@ -4,14 +4,14 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
  * Created by orlanth23 on 23/02/2018.
  */
 
-public class ResultElasticSearchDto<T> {
+public class ElasticsearchResult<T> {
     private String _id;
     private String _index;
     private Float _score;
     private String _type;
     private T _source;
 
-    public ResultElasticSearchDto() {
+    public ElasticsearchResult() {
     }
 
     public String get_id() {

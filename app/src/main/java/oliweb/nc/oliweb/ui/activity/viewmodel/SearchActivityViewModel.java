@@ -26,7 +26,7 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
-import oliweb.nc.oliweb.network.elasticsearchDto.ResultElasticSearchDto;
+import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchResult;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
 import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
@@ -39,7 +39,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = SearchActivityViewModel.class.getName();
 
-    private GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceDto>>> genericClass;
+    private GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>> genericClass;
     private MutableLiveData<List<AnnoncePhotos>> listAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
@@ -48,7 +48,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        genericClass = new GenericTypeIndicator<List<ResultElasticSearchDto<AnnonceDto>>>() {
+        genericClass = new GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>>() {
         };
     }
 
@@ -94,9 +94,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 updateLoadingStatus(false);
             } else {
                 if (dataSnapshot.child("results").exists()) {
-                    List<ResultElasticSearchDto<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
+                    List<ElasticsearchResult<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
                     if (list != null && !list.isEmpty()) {
-                        for (ResultElasticSearchDto<AnnonceDto> resultSearchSnapshot : list) {
+                        for (ElasticsearchResult<AnnonceDto> resultSearchSnapshot : list) {
                             listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
                         }
                         listAnnonce.postValue(listAnnonceWithPhoto);
@@ -134,7 +134,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
      */
     public boolean makeASearch(String query) {
         if (NetworkReceiver.checkConnection(getApplication().getApplicationContext())) {
-            ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query);
+            ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query, null);
 
             // Création d'une nouvelle request dans la table request
             newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
