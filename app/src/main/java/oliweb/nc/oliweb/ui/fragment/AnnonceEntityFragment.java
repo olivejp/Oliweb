@@ -149,7 +149,7 @@ public class AnnonceEntityFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_annonceentity_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_annonce_entity_list, container, false);
 
         ButterKnife.bind(this, view);
 
@@ -157,7 +157,22 @@ public class AnnonceEntityFragment extends Fragment {
         AnnonceAdapter.DisplayType displayType = displayBeauty ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
         RecyclerView.LayoutManager layoutManager;
         if (SharedPreferencesHelper.getInstance(getContext()).getGridMode()) {
-            layoutManager = new GridLayoutManager(appCompatActivity, 2);
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, 2);
+            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    switch (annonceAdapter.getItemViewType(position)) {
+                        case 1:
+                            return 1;
+                        case 2:
+                            return 2;
+                        default:
+                            return 1;
+                    }
+
+                }
+            });
+            layoutManager = gridLayoutManager;
         } else {
             layoutManager = new LinearLayoutManager(appCompatActivity);
         }
