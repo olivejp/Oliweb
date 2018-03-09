@@ -124,7 +124,21 @@ public class SearchActivity extends AppCompatActivity {
 
         RecyclerView.LayoutManager layoutManager;
         if (gridMode) {
-            layoutManager = new GridLayoutManager(this, 2);
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    switch (annonceBeautyAdapter.getItemViewType(position)) {
+                        case 1:
+                            return 1;
+                        case 2:
+                            return 2;
+                        default:
+                            return 1;
+                    }
+                }
+            });
+            layoutManager = gridLayoutManager;
         } else {
             layoutManager = new LinearLayoutManager(this);
             ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.VERTICAL);
