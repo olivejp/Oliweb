@@ -26,19 +26,20 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
-import oliweb.nc.oliweb.helper.RecyclerItemTouchHelper;
+import oliweb.nc.oliweb.helper.RecyclerRawItemTouchHelper;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
-public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerItemTouchHelper.SwipeListener, NoticeDialogFragment.DialogListener {
+public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerRawItemTouchHelper.SwipeListener, NoticeDialogFragment.DialogListener {
 
     private static final String TAG = MyAnnoncesActivity.class.getName();
 
@@ -73,11 +74,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         }
 
         // TODO modifier les deux listeners à la fin. Dans le cas de nos propres annonces, on ne doit pas pouvoir mettre en favoris Mais on doit pouvoir partager une annonce.
-        AnnonceAdapter annonceAdapter = new AnnonceAdapter(AnnonceAdapter.DisplayType.RAW, v -> {
+        AnnonceBeautyAdapter annonceBeautyAdapter = new AnnonceBeautyAdapter(v -> {
             AnnonceEntity annonce = (AnnonceEntity) v.getTag();
             callActivityToUpdateAnnonce(annonce);
         }, null, null);
-        recyclerView.setAdapter(annonceAdapter);
+        recyclerView.setAdapter(annonceBeautyAdapter);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -86,8 +87,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
         recyclerView.addItemDecoration(itemDecoration);
 
         // Ajout d'un swipe listener pour pouvoir supprimer l'annonce
-        RecyclerItemTouchHelper recyclerItemTouchHelper = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(recyclerItemTouchHelper);
+        RecyclerRawItemTouchHelper recyclerRawItemTouchHelper = new RecyclerRawItemTouchHelper(0, ItemTouchHelper.LEFT, this);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(recyclerRawItemTouchHelper);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
         viewModel.findActiveAnnonceByUidUtilisateur(uidUser)
@@ -98,7 +99,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                     } else {
                         linearLayout.setVisibility(View.GONE);
                         recyclerView.setVisibility(View.VISIBLE);
-                        annonceAdapter.setListAnnonces(annonceWithPhotos);
+                        annonceBeautyAdapter.setListAnnonces(annonceWithPhotos);
                     }
                 });
     }
@@ -111,7 +112,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     }
 
     /**
-     * This method is only available for AnnonceAdapter in Raw mode.
+     * This method is only available for AnnonceBeautyAdapter in Raw mode.
      * In Beauty mode we can't swipe to delete element.
      *
      * @param view
@@ -120,7 +121,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
     @Override
     public void onSwipe(RecyclerView.ViewHolder view, int direction) {
         try {
-            AnnonceAdapter.ViewHolderRaw viewHolderRaw = (AnnonceAdapter.ViewHolderRaw) view;
+            AnnonceRawAdapter.ViewHolderRaw viewHolderRaw = (AnnonceRawAdapter.ViewHolderRaw) view;
             AnnonceEntity annonce = viewHolderRaw.getSingleAnnonce();
 
             // Création d'un bundle dans lequel on va passer nos items
@@ -139,7 +140,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerIte
                 NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
             }
         } catch (ClassCastException e) {
-            Log.e(TAG, "Cette méthode n'est applicable que pour le mode Display Raw et devrait donc contenir un AnnonceAdapter.ViewHolderRaw");
+            Log.e(TAG, "Cette méthode n'est applicable que pour le mode Display Raw et devrait donc contenir un AnnonceBeautyAdapter.ViewHolderRaw");
         }
     }
 

@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
@@ -18,7 +17,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.relex.circleindicator.CircleIndicator;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.utility.Utility;
@@ -26,55 +24,38 @@ import oliweb.nc.oliweb.utility.Utility;
 /**
  * Created by orlanth23 on 07/02/2018.
  */
-public class AnnonceAdapter extends
+public class AnnonceBeautyAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    public enum DisplayType {
-        RAW,
-        BEAUTY
-    }
-
-    public static final String TAG = AnnonceAdapter.class.getName();
+    public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
     private List<AnnoncePhotos> listAnnonces;
     private View.OnClickListener onClickListener;
     private View.OnClickListener onFavoriteClickListener;
     private View.OnClickListener onShareClickListener;
-    private DisplayType displayType;
 
-    public AnnonceAdapter(DisplayType displayType, View.OnClickListener onClickListener, View.OnClickListener onFavoriteClickListener, View.OnClickListener onShareClickListener) {
+    public AnnonceBeautyAdapter(View.OnClickListener onClickListener, View.OnClickListener onFavoriteClickListener, View.OnClickListener onShareClickListener) {
         this.onClickListener = onClickListener;
         this.onFavoriteClickListener = onFavoriteClickListener;
         this.onShareClickListener = onShareClickListener;
         this.listAnnonces = new ArrayList<>();
-        this.displayType = displayType;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolderResult = null;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-
         View itemLayoutView;
-        if (displayType.equals(DisplayType.RAW)) {
-            itemLayoutView = inflater.inflate(R.layout.adapter_annonce_raw, parent, false);
-            viewHolderResult = new ViewHolderRaw(itemLayoutView);
-        } else if (displayType.equals(DisplayType.BEAUTY)) {
-            itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
-            viewHolderResult = new ViewHolderBeauty(itemLayoutView);
-            ((ViewHolderBeauty) viewHolderResult).parent = parent;
-        }
+        itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
+        viewHolderResult = new ViewHolderBeauty(itemLayoutView);
+        ((ViewHolderBeauty) viewHolderResult).parent = parent;
         return viewHolderResult;
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
         AnnoncePhotos annoncePhotos = listAnnonces.get(position);
-        if (displayType == DisplayType.RAW) {
-            bindViewHolderRaw(viewHolder, annoncePhotos);
-        } else if (displayType == DisplayType.BEAUTY) {
-            bindViewHolderBeauty(viewHolder, annoncePhotos);
-        }
+        bindViewHolderBeauty(viewHolder, annoncePhotos);
     }
 
     @Override
@@ -89,32 +70,6 @@ public class AnnonceAdapter extends
             return 1;
         } else {
             return 2;
-        }
-    }
-
-    private void bindViewHolderRaw(RecyclerView.ViewHolder viewHolder, AnnoncePhotos annoncePhotos) {
-        ViewHolderRaw viewHolderRaw = (ViewHolderRaw) viewHolder;
-        viewHolderRaw.singleAnnonce = annoncePhotos.getAnnonceEntity();
-
-        viewHolderRaw.normalLayoutRaw.setTag(viewHolderRaw.singleAnnonce);
-        viewHolderRaw.normalLayoutRaw.setOnClickListener(this.onClickListener);
-
-        // Attribution des données au valeurs graphiques
-        viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUUID()));
-        viewHolderRaw.textTitreAnnonce.setText(viewHolderRaw.singleAnnonce.getTitre());
-        viewHolderRaw.textPrixAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getPrix()));
-        String description = viewHolderRaw.singleAnnonce.getDescription();
-        int nbCaractere = (150 > description.length()) ? description.length() : 150;
-        viewHolderRaw.textDescriptionAnnonce.setText(description.substring(0, nbCaractere).concat("..."));
-
-        // Récupération de la date de publication
-        viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.convertDateEntityToUi(viewHolderRaw.singleAnnonce.getDatePublication()));
-
-        // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
-        if (!annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderRaw.imgPhoto.setVisibility(View.VISIBLE);
-        } else {
-            viewHolderRaw.imgPhoto.setVisibility(View.GONE);
         }
     }
 
@@ -181,48 +136,6 @@ public class AnnonceAdapter extends
             });
             this.listAnnonces = newListAnnonces;
             result.dispatchUpdatesTo(this);
-        }
-    }
-
-    public class ViewHolderRaw extends RecyclerView.ViewHolder {
-
-        @BindView(R.id.text_id_annonce_raw)
-        TextView textIdAnnonce;
-
-        @BindView(R.id.text_titre_annonce_raw)
-        TextView textTitreAnnonce;
-
-        @BindView(R.id.text_description_annonce_raw)
-        TextView textDescriptionAnnonce;
-
-        @BindView(R.id.text_prix_annonce_raw)
-        TextView textPrixAnnonce;
-
-        @BindView(R.id.text_date_publication_annonce_raw)
-        TextView textDatePublicationAnnonce;
-
-        @BindView(R.id.img_photo_raw)
-        ImageView imgPhoto;
-
-        @BindView(R.id.normal_layout_raw)
-        ConstraintLayout normalLayoutRaw;
-
-        @BindView(R.id.deleted_layout_raw)
-        ConstraintLayout deletedLayoutRaw;
-
-        AnnonceEntity singleAnnonce;
-
-        ViewHolderRaw(View itemLayoutView) {
-            super(itemLayoutView);
-            ButterKnife.bind(this, itemLayoutView);
-        }
-
-        public ConstraintLayout getNormalConstraint() {
-            return this.normalLayoutRaw;
-        }
-
-        public AnnonceEntity getSingleAnnonce() {
-            return this.singleAnnonce;
         }
     }
 

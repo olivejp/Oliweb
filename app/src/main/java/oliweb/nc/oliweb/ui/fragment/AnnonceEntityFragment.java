@@ -33,7 +33,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
@@ -68,7 +68,7 @@ public class AnnonceEntityFragment extends Fragment {
     private String action;
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
-    private AnnonceAdapter annonceAdapter;
+    private AnnonceBeautyAdapter annonceBeautyAdapter;
     private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
     private int pagingNumber = 10;
     private DatabaseReference annoncesReference;
@@ -135,13 +135,13 @@ public class AnnonceEntityFragment extends Fragment {
 
         if (action.equals(ACTION_MOST_RECENT)) {
             List<AnnoncePhotos> list = new ArrayList<>();
-            annonceAdapter.setListAnnonces(list);
-            annonceAdapter.notifyDataSetChanged();
+            annonceBeautyAdapter.setListAnnonces(list);
+            annonceBeautyAdapter.notifyDataSetChanged();
             annoncePhotosList = list;
             loadMoreDatas();
         } else {
             LoadMostRecentAnnonceTask.sortList(annoncePhotosList, tri, direction);
-            annonceAdapter.notifyDataSetChanged();
+            annonceBeautyAdapter.notifyDataSetChanged();
         }
 
         return true;
@@ -154,15 +154,13 @@ public class AnnonceEntityFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        boolean displayBeauty = SharedPreferencesHelper.getInstance(getContext()).getDisplayBeautyMode();
-        AnnonceAdapter.DisplayType displayType = displayBeauty ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
         RecyclerView.LayoutManager layoutManager;
         if (SharedPreferencesHelper.getInstance(getContext()).getGridMode()) {
             GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, 2);
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
-                    switch (annonceAdapter.getItemViewType(position)) {
+                    switch (annonceBeautyAdapter.getItemViewType(position)) {
                         case 1:
                             return 1;
                         case 2:
@@ -181,8 +179,9 @@ public class AnnonceEntityFragment extends Fragment {
         recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
-        recyclerView.setAdapter(annonceAdapter);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(null, null, null);
+
+        recyclerView.setAdapter(annonceBeautyAdapter);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
         switch (action) {
@@ -191,7 +190,7 @@ public class AnnonceEntityFragment extends Fragment {
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
                             annoncePhotosList = annoncePhotos;
-                            annonceAdapter.setListAnnonces(annoncePhotosList);
+                            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
                         } else {
                             linearLayout.setVisibility(View.VISIBLE);
                             recyclerView.setVisibility(View.GONE);
@@ -302,7 +301,7 @@ public class AnnonceEntityFragment extends Fragment {
     };
 
     private TaskListener<List<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
-        annonceAdapter.setListAnnonces(listAnnoncePhotos);
+        annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(valueEventListener);
     };

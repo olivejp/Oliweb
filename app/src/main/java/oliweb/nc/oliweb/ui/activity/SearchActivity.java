@@ -25,7 +25,8 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.AnnonceAdapter;
+import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -47,9 +48,11 @@ public class SearchActivity extends AppCompatActivity {
     Toolbar toolbar;
 
     private String query;
+    private boolean displayBeautyMode;
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel searchActivityViewModel;
-    private AnnonceAdapter annonceAdapter;
+    private AnnonceBeautyAdapter annonceBeautyAdapter;
+    private AnnonceRawAdapter annonceRawAdapter;
 
     // Ouvre l'activité PostAnnonceActivity en mode Visualisation
     private View.OnClickListener onClickListener = v -> {
@@ -91,13 +94,9 @@ public class SearchActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        // On attache la searchView
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        if (searchManager != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        }
-
         searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
+
+        Utility.hideKeyboard(this);
 
         // Get the intent, verify the action and get the query string
         Intent intentParam = getIntent();
@@ -111,15 +110,19 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
+        // On attache la searchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        if (searchManager != null) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
         // On repose les termes de la requête dans le searchView
         searchView.setQuery(query, false);
 
-        Utility.hideKeyboard(this);
-
-        RecyclerView.LayoutManager layoutManager;
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         boolean gridMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getGridMode();
 
+        RecyclerView.LayoutManager layoutManager;
         if (gridMode) {
             layoutManager = new GridLayoutManager(this, 2);
         } else {
@@ -129,11 +132,12 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 
         // Recherche du mode display actuellement dans les préférences.
-        AnnonceAdapter.DisplayType displayType = displayBeautyMode ? AnnonceAdapter.DisplayType.BEAUTY : AnnonceAdapter.DisplayType.RAW;
-        annonceAdapter = new AnnonceAdapter(displayType, onClickListener, onFavoriteClickListener, onShareClickListener);
-        recyclerView.setAdapter(annonceAdapter);
-        if (!displayBeautyMode) {
-            // En mode Raw uniquement
+        if (displayBeautyMode) {
+            annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
+            recyclerView.setAdapter(annonceBeautyAdapter);
+        } else {
+            annonceRawAdapter = new AnnonceRawAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
+            recyclerView.setAdapter(annonceRawAdapter);
             RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
             recyclerView.addItemDecoration(itemDecoration);
         }
@@ -168,8 +172,13 @@ public class SearchActivity extends AppCompatActivity {
         searchActivityViewModel.getListAnnonce().observe(this, annonceWithPhotos -> {
             if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
                 linearLayout.setVisibility(View.GONE);
-                annonceAdapter.setListAnnonces(annonceWithPhotos);
-                annonceAdapter.notifyDataSetChanged();
+                if (displayBeautyMode) {
+                    annonceBeautyAdapter.setListAnnonces(annonceWithPhotos);
+                    annonceBeautyAdapter.notifyDataSetChanged();
+                } else {
+                    annonceRawAdapter.setListAnnonces(annonceWithPhotos);
+                    annonceRawAdapter.notifyDataSetChanged();
+                }
             } else {
                 linearLayout.setVisibility(View.VISIBLE);
             }
