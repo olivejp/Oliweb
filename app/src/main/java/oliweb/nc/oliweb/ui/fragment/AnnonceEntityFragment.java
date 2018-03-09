@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -177,6 +178,8 @@ public class AnnonceEntityFragment extends Fragment {
             layoutManager = new LinearLayoutManager(appCompatActivity);
         }
         recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         annonceAdapter = new AnnonceAdapter(displayType, null, null, null);
         recyclerView.setAdapter(annonceAdapter);

@@ -82,6 +82,16 @@ public class AnnonceAdapter extends
         return listAnnonces.size();
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        AnnoncePhotos annoncePhotos = listAnnonces.get(position);
+        if (annoncePhotos.getPhotos() == null || annoncePhotos.getPhotos().isEmpty() || (annoncePhotos.getPhotos().size() == 1)) {
+            return 1;
+        } else {
+            return 2;
+        }
+    }
+
     private void bindViewHolderRaw(RecyclerView.ViewHolder viewHolder, AnnoncePhotos annoncePhotos) {
         ViewHolderRaw viewHolderRaw = (ViewHolderRaw) viewHolder;
         viewHolderRaw.singleAnnonce = annoncePhotos.getAnnonceEntity();
