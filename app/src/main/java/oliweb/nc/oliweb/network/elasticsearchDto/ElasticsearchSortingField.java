@@ -4,13 +4,16 @@ package oliweb.nc.oliweb.network.elasticsearchDto;
  * Created by 2761oli on 22/02/2018.
  */
 
-public class ElasticsearchSort {
+public class ElasticsearchSortingField {
     private String direction;
-    private String sort;
+    private String field;
 
-    public ElasticsearchSort(String sort, String direction) {
+    public ElasticsearchSortingField() {
+    }
+
+    public ElasticsearchSortingField(String field, String direction) {
         this.direction = direction;
-        this.sort = sort;
+        this.field = field;
     }
 
     public String getDirection() {
@@ -21,11 +24,11 @@ public class ElasticsearchSort {
         this.direction = direction;
     }
 
-    public String getSort() {
-        return sort;
+    public String getField() {
+        return field;
     }
 
-    public void setSort(String sort) {
-        this.sort = sort;
+    public void setField(String field) {
+        this.field = field;
     }
 }
