@@ -83,38 +83,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return loading;
     }
 
-    private ValueEventListener listener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
-            if (dataSnapshot.child("no_results").exists()) {
-                listAnnonce.postValue(listAnnonceWithPhoto);
-                newRequestRef.removeEventListener(this);
-                newRequestRef.removeValue();
-                updateLoadingStatus(false);
-            } else {
-                if (dataSnapshot.child("results").exists()) {
-                    List<ElasticsearchResult<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
-                    if (list != null && !list.isEmpty()) {
-                        for (ElasticsearchResult<AnnonceDto> resultSearchSnapshot : list) {
-                            listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
-                        }
-                        listAnnonce.postValue(listAnnonceWithPhoto);
-                    }
-                    newRequestRef.removeEventListener(this);
-                    newRequestRef.removeValue();
-                    updateLoadingStatus(false);
-                }
-            }
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            updateLoadingStatus(false);
-        }
-    };
-
     public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
         return annonceRepository.isAnnonceFavorite(uidAnnonce);
     }
@@ -141,7 +109,38 @@ public class SearchActivityViewModel extends AndroidViewModel {
             newRequestRef.setValue(request);
 
             // Ensuite on va écouter les changements pour cette nouvelle requête
-            newRequestRef.addValueEventListener(listener);
+            newRequestRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
+                    if (dataSnapshot.child("no_results").exists()) {
+                        listAnnonce.postValue(listAnnonceWithPhoto);
+                        newRequestRef.removeEventListener(this);
+                        newRequestRef.removeValue();
+                        updateLoadingStatus(false);
+                    } else {
+                        if (dataSnapshot.child("results").exists()) {
+                            List<ElasticsearchResult<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
+                            if (list != null && !list.isEmpty()) {
+                                for (ElasticsearchResult<AnnonceDto> resultSearchSnapshot : list) {
+                                    listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
+                                }
+                                listAnnonce.postValue(listAnnonceWithPhoto);
+                            }
+                            newRequestRef.removeEventListener(this);
+                            newRequestRef.removeValue();
+                            updateLoadingStatus(false);
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    updateLoadingStatus(false);
+                }
+            });
+
             updateLoadingStatus(true);
             return true;
         } else {

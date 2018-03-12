@@ -24,6 +24,7 @@ import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.helper.RecyclerRawItemTouchHelper;
@@ -75,8 +76,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerRaw
 
         // TODO modifier les deux listeners à la fin. Dans le cas de nos propres annonces, on ne doit pas pouvoir mettre en favoris Mais on doit pouvoir partager une annonce.
         AnnonceBeautyAdapter annonceBeautyAdapter = new AnnonceBeautyAdapter(v -> {
-            AnnonceEntity annonce = (AnnonceEntity) v.getTag();
-            callActivityToUpdateAnnonce(annonce);
+            AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
+            callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
         }, null, null);
         recyclerView.setAdapter(annonceBeautyAdapter);
 
