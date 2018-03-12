@@ -9,8 +9,8 @@
     android:layout_marginEnd="8dp"
     android:layout_marginStart="8dp"
     android:layout_marginTop="8dp"
-    android:focusable="true"
     android:clickable="true"
+    android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardCornerRadius="2dp">
 
@@ -23,49 +23,36 @@
             android:id="@+id/firstLinear"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2">
+            android:layout_weight="3">
 
             <android.support.v4.view.ViewPager
                 android:id="@+id/view_pager"
                 android:layout_width="0dp"
-                android:layout_height="250dp"
+                android:layout_height="0dp"
                 android:background="@color/colorPrimary"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/image_favorite"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+            <TextView
+                android:id="@+id/text_date_publication_annonce"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:background="@drawable/drawable_ripple_red_effect"
-                android:clickable="true"
-                android:focusable="true"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textColor="@android:color/darker_gray"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_favorite_white_48dp" />
-
-            <ImageView
-                android:id="@+id/image_share"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_margin="10dp"
-                android:background="@drawable/drawable_ripple_blue_effect"
-                android:clickable="true"
-                android:focusable="true"
-                app:layout_constraintRight_toLeftOf="@+id/image_favorite"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_share_white_48dp" />
+                tools:text="2 jours" />
 
             <TextView
                 android:id="@+id/text_titre_annonce"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
+                android:layout_marginBottom="15dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
                 android:textColor="@android:color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -86,44 +73,47 @@
             android:id="@+id/secondLinear"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:padding="15dp">
+            android:padding="15dp"
+            android:layout_weight="1">
 
-            <TextView
-                android:id="@+id/text_description_annonce"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
-                app:layout_constraintBottom_toTopOf="@+id/text_date_publication_annonce"
-                app:layout_constraintLeft_toLeftOf="parent"
+            <ImageView
+                android:id="@+id/image_favorite"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/drawable_ripple_red_effect"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Test Description surper longue qui va durer un maximum de temps à ce que je l'écrive." />
+                app:srcCompat="@drawable/ic_favorite_border_grey_900_48dp" />
 
-            <TextView
-                android:id="@+id/text_date_publication_annonce"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="bottom|start"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textColor="@android:color/darker_gray"
+            <ImageView
+                android:id="@+id/image_share"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="10dp"
+                android:background="@drawable/drawable_ripple_blue_effect"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toLeftOf="@id/text_prix_annonce"
-                app:layout_constraintTop_toBottomOf="@+id/text_description_annonce"
-                tools:text="2 jours" />
+                app:layout_constraintRight_toLeftOf="@+id/image_favorite"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_share_grey_900_48dp" />
+
 
             <TextView
                 android:id="@+id/text_prix_annonce"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="bottom|end"
+                android:gravity="center_vertical"
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"
                 android:textColor="@color/colorAccent"
-                app:layout_constraintBaseline_toBaselineOf="@id/text_date_publication_annonce"
-                app:layout_constraintLeft_toRightOf="@id/text_date_publication_annonce"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/text_description_annonce"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:text="400 000xpf" />
         </android.support.constraint.ConstraintLayout>
     </LinearLayout>
