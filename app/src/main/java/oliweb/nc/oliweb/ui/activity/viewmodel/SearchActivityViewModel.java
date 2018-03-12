@@ -96,37 +96,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return loading;
     }
 
-    private ValueEventListener listener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot.child("no_results").exists()) {
-                liveListAnnonce.postValue(listAnnonce);
-                newRequestRef.removeEventListener(this);
-                newRequestRef.removeValue();
-            } else {
-                if (dataSnapshot.child("results").exists()) {
-                    DataSnapshot snapshotResults = dataSnapshot.child("results");
-                    for (DataSnapshot child : snapshotResults.getChildren()) {
-                        ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
-                        if (elasticsearchResult != null) {
-                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
-                            listAnnonce.add(annoncePhotos);
-                        }
-                    }
-                    liveListAnnonce.postValue(listAnnonce);
-                    newRequestRef.removeEventListener(this);
-                    newRequestRef.removeValue();
-                }
-            }
-            updateLoadingStatus(false);
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            updateLoadingStatus(false);
-        }
-    };
-
     public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
         return annonceRepository.isAnnonceFavorite(uidAnnonce);
     }
@@ -148,7 +117,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
      * @param query
      * @return true if the search has been launched, false otherwise
      */
-    public void makeASearch(String query, int pagingSize, int from, int tri, int direction) {
+    public boolean makeASearch(String query, int pagingSize, int from, int tri, int direction) {
+
         if (from == 0) {
             listAnnonce.clear();
         }
@@ -186,7 +156,37 @@ public class SearchActivityViewModel extends AndroidViewModel {
         newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
 
         // Ensuite on va écouter les changements pour cette nouvelle requête
-        newRequestRef.addValueEventListener(listener);
-        updateLoadingStatus(true);
+            newRequestRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.child("no_results").exists()) {
+                        liveListAnnonce.postValue(listAnnonce);
+                        newRequestRef.removeEventListener(this);
+                        newRequestRef.removeValue();
+                    } else {
+                        if (dataSnapshot.child("results").exists()) {
+                            DataSnapshot snapshotResults = dataSnapshot.child("results");
+                            for (DataSnapshot child : snapshotResults.getChildren()) {
+                                ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
+                                if (elasticsearchResult != null) {
+                                    AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
+                                    listAnnonce.add(annoncePhotos);
+                                }
+                            }
+                            liveListAnnonce.postValue(listAnnonce);
+                            newRequestRef.removeEventListener(this);
+                            newRequestRef.removeValue();
+                        }
+                    }
+                    updateLoadingStatus(false);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    updateLoadingStatus(false);
+                }
+            });
+            updateLoadingStatus(true);
+            return true;
     }
 }
