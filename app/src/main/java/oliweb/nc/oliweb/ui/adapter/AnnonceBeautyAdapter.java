@@ -43,7 +43,7 @@ public class AnnonceBeautyAdapter extends
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder viewHolderResult = null;
+        RecyclerView.ViewHolder viewHolderResult;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View itemLayoutView;
         itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
@@ -96,7 +96,6 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textDescriptionAnnonce.setText(annonce.getDescription());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(annonce.getPrix() + " XPF"));
         viewHolderBeauty.viewPager.setAdapter(new AnnonceViewPagerAdapter(viewHolderBeauty.parent.getContext(), annoncePhotos.getPhotos()));
         viewHolderBeauty.indicator.setViewPager(viewHolderBeauty.viewPager);
@@ -143,9 +142,6 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.text_titre_annonce)
         TextView textTitreAnnonce;
-
-        @BindView(R.id.text_description_annonce)
-        TextView textDescriptionAnnonce;
 
         @BindView(R.id.text_prix_annonce)
         TextView textPrixAnnonce;
