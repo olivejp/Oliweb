@@ -43,7 +43,7 @@ public class AnnonceBeautyAdapter extends
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder viewHolderResult = null;
+        RecyclerView.ViewHolder viewHolderResult;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View itemLayoutView;
         itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
@@ -79,8 +79,7 @@ public class AnnonceBeautyAdapter extends
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
         viewHolderBeauty.singleAnnonce = annonce;
 
-        // TODO modifier setTag pour y attacher une AnnoncePhoto
-        viewHolderBeauty.cardView.setTag(viewHolderBeauty.singleAnnonce);
+        viewHolderBeauty.cardView.setTag(annoncePhotos);
         viewHolderBeauty.imageFavorite.setTag(annoncePhotos);
         viewHolderBeauty.imageShare.setTag(annoncePhotos);
 
@@ -96,10 +95,12 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textDescriptionAnnonce.setText(annonce.getDescription());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(annonce.getPrix() + " XPF"));
-        viewHolderBeauty.viewPager.setAdapter(new AnnonceViewPagerAdapter(viewHolderBeauty.parent.getContext(), annoncePhotos.getPhotos()));
-        viewHolderBeauty.indicator.setViewPager(viewHolderBeauty.viewPager);
+
+        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+            viewHolderBeauty.viewPager.setAdapter(new AnnonceViewPagerAdapter(viewHolderBeauty.parent.getContext(), annoncePhotos.getPhotos()));
+            viewHolderBeauty.indicator.setViewPager(viewHolderBeauty.viewPager);
+        }
     }
 
     public void setListAnnonces(final List<AnnoncePhotos> newListAnnonces) {
@@ -143,9 +144,6 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.text_titre_annonce)
         TextView textTitreAnnonce;
-
-        @BindView(R.id.text_description_annonce)
-        TextView textDescriptionAnnonce;
 
         @BindView(R.id.text_prix_annonce)
         TextView textPrixAnnonce;
