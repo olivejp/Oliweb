@@ -13,6 +13,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,15 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
+import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchRequest;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchResult;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
-import static oliweb.nc.oliweb.Constants.PER_PAGE_REQUEST;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ASC;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_PRICE;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_TITLE;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -40,15 +43,24 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private static final String TAG = SearchActivityViewModel.class.getName();
 
     private GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>> genericClass;
-    private MutableLiveData<List<AnnoncePhotos>> listAnnonce;
+    private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
+
+    private List<AnnoncePhotos> listAnnonce;
+    private MutableLiveData<List<AnnoncePhotos>> liveListAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
     private AnnonceRepository annonceRepository;
+    private Gson gson = new Gson();
+    private DatabaseReference requestReference;
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
+        listAnnonce = new ArrayList<>();
         genericClass = new GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>>() {
+        };
+        genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {
         };
     }
 
@@ -58,21 +70,22 @@ public class SearchActivityViewModel extends AndroidViewModel {
         annonceRepository.save(annonceEntity, dataReturn -> {
             if (dataReturn.isSuccessful()) {
                 Log.d(TAG, "Favorite successfully added");
-                if (listAnnonce.getValue() != null && !listAnnonce.getValue().isEmpty()) {
-                    int index = listAnnonce.getValue().indexOf(annoncePhotos);
-                    listAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(dataReturn.getIds()[0]);
+                if (liveListAnnonce.getValue() != null && !liveListAnnonce.getValue().isEmpty()) {
+                    int index = liveListAnnonce.getValue().indexOf(annoncePhotos);
+                    liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(dataReturn.getIds()[0]);
                 }
-                listAnnonce.postValue(listAnnonce.getValue());
+                liveListAnnonce.postValue(liveListAnnonce.getValue());
             }
         });
     }
 
-    public LiveData<List<AnnoncePhotos>> getListAnnonce() {
-        if (listAnnonce == null) {
-            listAnnonce = new MutableLiveData<>();
-            listAnnonce.setValue(new ArrayList<>());
+    public LiveData<List<AnnoncePhotos>> getLiveListAnnonce() {
+        if (liveListAnnonce == null) {
+            liveListAnnonce = new MutableLiveData<>();
+            listAnnonce = new ArrayList<>();
+            liveListAnnonce.setValue(listAnnonce);
         }
-        return listAnnonce;
+        return liveListAnnonce;
     }
 
     public LiveData<AtomicBoolean> getLoading() {
@@ -94,45 +107,78 @@ public class SearchActivityViewModel extends AndroidViewModel {
         loading.postValue(new AtomicBoolean(status));
     }
 
+    public boolean isConnected() {
+        return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
+    }
+
     /**
      * Launch a search with the Query
      *
      * @param query
      * @return true if the search has been launched, false otherwise
      */
-    public boolean makeASearch(String query) {
-        if (NetworkReceiver.checkConnection(getApplication().getApplicationContext())) {
-            ElasticsearchRequest request = new ElasticsearchRequest(1, PER_PAGE_REQUEST, query, null);
+    public boolean makeASearch(String query, int pagingSize, int from, int tri, int direction) {
 
-            // Création d'une nouvelle request dans la table request
-            newRequestRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF).push();
-            newRequestRef.setValue(request);
+        if (from == 0) {
+            listAnnonce.clear();
+        }
 
-            // Ensuite on va écouter les changements pour cette nouvelle requête
+        ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
+        builder.setSize(pagingSize);
+        builder.setFrom(from);
+
+        List<String> listField = new ArrayList<>();
+        listField.add("titre");
+        listField.add("description");
+
+        builder.setMultiMatchQuery(listField, query);
+
+        String directionStr;
+        if (direction == ASC) {
+            directionStr = "asc";
+        } else {
+            directionStr = "desc";
+        }
+
+        String field;
+        if (tri == SORT_TITLE) {
+            field = "titre";
+        } else if (tri == SORT_PRICE) {
+            field = "prix";
+        } else {
+            field = "datePublication";
+        }
+
+        builder.addSortingFields(field, directionStr);
+
+        // Création d'une nouvelle request dans la table request
+        newRequestRef = requestReference.push();
+        newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
+
+        // Ensuite on va écouter les changements pour cette nouvelle requête
             newRequestRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    List<AnnoncePhotos> listAnnonceWithPhoto = new ArrayList<>();
                     if (dataSnapshot.child("no_results").exists()) {
-                        listAnnonce.postValue(listAnnonceWithPhoto);
+                        liveListAnnonce.postValue(listAnnonce);
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                        updateLoadingStatus(false);
                     } else {
                         if (dataSnapshot.child("results").exists()) {
-                            List<ElasticsearchResult<AnnonceDto>> list = dataSnapshot.child("results").getValue(genericClass);
-                            if (list != null && !list.isEmpty()) {
-                                for (ElasticsearchResult<AnnonceDto> resultSearchSnapshot : list) {
-                                    listAnnonceWithPhoto.add(AnnonceConverter.convertDtoToEntity(resultSearchSnapshot.get_source()));
+                            DataSnapshot snapshotResults = dataSnapshot.child("results");
+                            for (DataSnapshot child : snapshotResults.getChildren()) {
+                                ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
+                                if (elasticsearchResult != null) {
+                                    AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
+                                    listAnnonce.add(annoncePhotos);
                                 }
-                                listAnnonce.postValue(listAnnonceWithPhoto);
                             }
+                            liveListAnnonce.postValue(listAnnonce);
                             newRequestRef.removeEventListener(this);
                             newRequestRef.removeValue();
-                            updateLoadingStatus(false);
                         }
                     }
-
+                    updateLoadingStatus(false);
                 }
 
                 @Override
@@ -140,11 +186,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     updateLoadingStatus(false);
                 }
             });
-
             updateLoadingStatus(true);
             return true;
-        } else {
-            return false;
-        }
     }
 }

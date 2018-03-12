@@ -5,8 +5,8 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -24,11 +24,17 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
-import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ASC;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.DESC;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_DATE;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_PRICE;
+import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -47,12 +53,19 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.toolbar_activity_search)
     Toolbar toolbar;
 
+    @BindView(R.id.bottom_navigation_sort)
+    BottomNavigationView bottomNavigationView;
+
     private String query;
     private boolean displayBeautyMode;
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel searchActivityViewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
-    private AnnonceRawAdapter annonceRawAdapter;
+    private int tri;
+    private int direction;
+    private int currentPage = 0;
+    private int pagingSize = 20;
+    private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
 
     // Ouvre l'activité PostAnnonceActivity en mode Visualisation
     private View.OnClickListener onClickListener = v -> {
@@ -125,6 +138,7 @@ public class SearchActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager;
         if (gridMode) {
             GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+            layoutManager = gridLayoutManager;
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
@@ -138,30 +152,84 @@ public class SearchActivity extends AppCompatActivity {
                     }
                 }
             });
-            layoutManager = gridLayoutManager;
+            endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(gridLayoutManager) {
+                @Override
+                public void onLoadMore() {
+                    currentPage++;
+                    launchNewSearch(currentPage);
+                }
+            };
         } else {
             layoutManager = new LinearLayoutManager(this);
             ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.VERTICAL);
+            endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
+                @Override
+                public void onLoadMore() {
+                    currentPage++;
+                    launchNewSearch(currentPage);
+                }
+            };
         }
         recyclerView.setLayoutManager(layoutManager);
+
+        recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
         // Recherche du mode display actuellement dans les préférences.
         if (displayBeautyMode) {
             annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
             recyclerView.setAdapter(annonceBeautyAdapter);
-        } else {
-            annonceRawAdapter = new AnnonceRawAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
-            recyclerView.setAdapter(annonceRawAdapter);
-            RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-            recyclerView.addItemDecoration(itemDecoration);
         }
 
         initViewModelObservers();
 
-        if (!searchActivityViewModel.makeASearch(query)) {
+        currentPage = 0;
+        launchNewSearch(currentPage);
+    }
+
+    private void launchNewSearch(int currentPage) {
+        if (searchActivityViewModel.isConnected()) {
+            int from = currentPage * pagingSize;
+            searchActivityViewModel.makeASearch(query, pagingSize, from, tri, direction);
+        } else {
             Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
         }
     }
+
+    private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener = item -> {
+        int newTri;
+        switch (item.getItemId()) {
+            case R.id.action_sort_date:
+                newTri = SORT_DATE;
+                break;
+            case R.id.action_sort_title:
+                newTri = SORT_TITLE;
+                break;
+            case R.id.action_sort_price:
+                newTri = SORT_PRICE;
+                break;
+            default:
+                newTri = SORT_DATE;
+                break;
+        }
+
+        if (tri == newTri) {
+            if (direction == ASC) {
+                direction = DESC;
+            } else {
+                direction = ASC;
+            }
+        } else {
+            tri = newTri;
+            direction = ASC;
+        }
+
+        this.currentPage = 0;
+        launchNewSearch(currentPage);
+
+        return true;
+    };
 
     private void initViewModelObservers() {
         // Fait apparaitre un spinner pendant l'attente
@@ -171,9 +239,7 @@ public class SearchActivity extends AppCompatActivity {
                             loadingDialogFragment = new LoadingDialogFragment();
                             loadingDialogFragment.show(this.getSupportFragmentManager(), LOADING_DIALOG);
                             linearLayout.setVisibility(View.GONE);
-                            recyclerView.setVisibility(View.GONE);
                         } else {
-                            recyclerView.setVisibility(View.VISIBLE);
                             if (loadingDialogFragment != null) {
                                 loadingDialogFragment.dismiss();
                             }
@@ -183,16 +249,11 @@ public class SearchActivity extends AppCompatActivity {
         );
 
         // On écoute les changements sur la liste des annonces retournées par la recherche
-        searchActivityViewModel.getListAnnonce().observe(this, annonceWithPhotos -> {
+        searchActivityViewModel.getLiveListAnnonce().observe(this, annonceWithPhotos -> {
             if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
                 linearLayout.setVisibility(View.GONE);
-                if (displayBeautyMode) {
-                    annonceBeautyAdapter.setListAnnonces(annonceWithPhotos);
-                    annonceBeautyAdapter.notifyDataSetChanged();
-                } else {
-                    annonceRawAdapter.setListAnnonces(annonceWithPhotos);
-                    annonceRawAdapter.notifyDataSetChanged();
-                }
+                annonceBeautyAdapter.setListAnnonces(annonceWithPhotos);
+                annonceBeautyAdapter.notifyDataSetChanged();
             } else {
                 linearLayout.setVisibility(View.VISIBLE);
             }

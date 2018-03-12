@@ -10,13 +10,13 @@ public class ElasticsearchRequest {
     private int page;
     private int perPage;
     private String searchQuery;
-    private List<ElasticsearchSort> sorts;
+    private List<ElasticsearchSortingField> sortingFields;
 
-    public ElasticsearchRequest(int page, int perPage, String searchQuery, List<ElasticsearchSort> sorts) {
+    public ElasticsearchRequest(int page, int perPage, String searchQuery, List<ElasticsearchSortingField> sortingFields) {
         this.page = page;
         this.perPage = perPage;
         this.searchQuery = searchQuery;
-        this.sorts = sorts;
+        this.sortingFields = sortingFields;
     }
 
     public int getPage() {
@@ -43,11 +43,11 @@ public class ElasticsearchRequest {
         this.searchQuery = searchQuery;
     }
 
-    public List<ElasticsearchSort> getSorts() {
-        return sorts;
+    public List<ElasticsearchSortingField> getSorts() {
+        return sortingFields;
     }
 
-    public void setSorts(List<ElasticsearchSort> sorts) {
-        this.sorts = sorts;
+    public void setSorts(List<ElasticsearchSortingField> sorts) {
+        this.sortingFields = sorts;
     }
 }
