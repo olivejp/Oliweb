@@ -14,6 +14,7 @@ public class SharedPreferencesHelper {
     private static final String PREF_FIREBASE_USER_UID = "DISPLAY_FIREBASE_USER_UID";
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
     private static final String PREF_DISPLAY_GRID = "PREF_DISPLAY_GRID";
+    private static final String PREF_FIRST_TIME = "PREF_FIRST_TIME";
     public static final int PREF_VALUE_DISPLAY_MODE_RAW = 500;
     public static final int PREF_VALUE_DISPLAY_MODE_BEAUTY = 600;
 
@@ -40,6 +41,14 @@ public class SharedPreferencesHelper {
 
     public SharedPreferences.Editor getEditor() {
         return editor;
+    }
+
+    public boolean isFirstTime() {
+        return sharedPreferences.getBoolean(PREF_FIRST_TIME, true);
+    }
+
+    public void setFirstTime(boolean firstTime) {
+        editor.putBoolean(PREF_FIRST_TIME, firstTime).commit();
     }
 
     public boolean getDisplayBeautyMode() {
