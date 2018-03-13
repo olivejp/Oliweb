@@ -29,13 +29,9 @@ public class AnnonceRawAdapter extends
 
     private List<AnnoncePhotos> listAnnonces;
     private View.OnClickListener onClickListener;
-    private View.OnClickListener onFavoriteClickListener;
-    private View.OnClickListener onShareClickListener;
 
-    public AnnonceRawAdapter(View.OnClickListener onClickListener, View.OnClickListener onFavoriteClickListener, View.OnClickListener onShareClickListener) {
+    public AnnonceRawAdapter(View.OnClickListener onClickListener) {
         this.onClickListener = onClickListener;
-        this.onFavoriteClickListener = onFavoriteClickListener;
-        this.onShareClickListener = onShareClickListener;
         this.listAnnonces = new ArrayList<>();
     }
 
@@ -72,9 +68,6 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUUID()));
         viewHolderRaw.textTitreAnnonce.setText(viewHolderRaw.singleAnnonce.getTitre());
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getPrix()));
-        String description = viewHolderRaw.singleAnnonce.getDescription();
-        int nbCaractere = (150 > description.length()) ? description.length() : 150;
-        viewHolderRaw.textDescriptionAnnonce.setText(description.substring(0, nbCaractere).concat("..."));
 
         // Récupération de la date de publication
         viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.convertDateEntityToUi(viewHolderRaw.singleAnnonce.getDatePublication()));
@@ -131,9 +124,6 @@ public class AnnonceRawAdapter extends
 
         @BindView(R.id.text_titre_annonce_raw)
         TextView textTitreAnnonce;
-
-        @BindView(R.id.text_description_annonce_raw)
-        TextView textDescriptionAnnonce;
 
         @BindView(R.id.text_prix_annonce_raw)
         TextView textPrixAnnonce;

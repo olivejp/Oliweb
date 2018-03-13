@@ -42,7 +42,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = SearchActivityViewModel.class.getName();
 
-    private GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>> genericClass;
     private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
 
     private List<AnnoncePhotos> listAnnonce;
@@ -58,8 +57,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
-        genericClass = new GenericTypeIndicator<List<ElasticsearchResult<AnnonceDto>>>() {
-        };
         genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {
         };
     }
