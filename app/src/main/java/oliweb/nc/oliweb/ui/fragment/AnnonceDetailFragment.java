@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +29,9 @@ public class AnnonceDetailFragment extends Fragment {
 
     @BindView(R.id.view_pager)
     ViewPager viewPager;
+
+    @BindView(R.id.default_button)
+    FloatingActionButton fabDefaultButton;
 
     @BindView(R.id.indicator)
     CircleIndicator indicator;

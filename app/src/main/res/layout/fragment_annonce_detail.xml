@@ -6,6 +6,15 @@
     android:layout_height="match_parent"
     tools:ignore="MergeRootFrame">
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/default_button"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        app:layout_anchor="@id/collapsing_toolbar"
+        app:layout_anchorGravity="bottom|right"
+        app:srcCompat="@drawable/ic_phone_white_48dp" />
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
         android:layout_width="match_parent"
@@ -17,6 +26,7 @@
             android:id="@+id/collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+
             android:fitsSystemWindows="true"
             app:collapsedTitleGravity="center"
             app:contentScrim="?attr/colorPrimary"
@@ -57,7 +67,7 @@
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/movie_detail_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <ScrollView
@@ -67,9 +77,12 @@
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                
 
-
+                <TextView
+                    android:id="@+id/text_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI."/>
 
             </android.support.constraint.ConstraintLayout>
         </ScrollView>
