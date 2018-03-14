@@ -5,6 +5,8 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
@@ -16,7 +18,7 @@ import com.google.firebase.database.Exclude;
 @Entity(tableName = "photo",
         foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce"),
         indices = @Index(value = "idAnnonce"))
-public class PhotoEntity {
+public class PhotoEntity implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idPhoto;
@@ -70,4 +72,43 @@ public class PhotoEntity {
     public void setIdAnnonce(Long idAnnonce) {
         this.idAnnonce = idAnnonce;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idPhoto);
+        dest.writeString(this.uriLocal);
+        dest.writeString(this.firebasePath);
+        dest.writeInt(this.statut == null ? -1 : this.statut.ordinal());
+        dest.writeValue(this.idAnnonce);
+    }
+
+    public PhotoEntity() {
+    }
+
+    protected PhotoEntity(Parcel in) {
+        this.idPhoto = (Long) in.readValue(Long.class.getClassLoader());
+        this.uriLocal = in.readString();
+        this.firebasePath = in.readString();
+        int tmpStatut = in.readInt();
+        this.statut = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
+        this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
+    }
+
+    public static final Parcelable.Creator<PhotoEntity> CREATOR = new Parcelable.Creator<PhotoEntity>() {
+        @Override
+        public PhotoEntity createFromParcel(Parcel source) {
+            return new PhotoEntity(source);
+        }
+
+        @Override
+        public PhotoEntity[] newArray(int size) {
+            return new PhotoEntity[size];
+        }
+    };
 }
