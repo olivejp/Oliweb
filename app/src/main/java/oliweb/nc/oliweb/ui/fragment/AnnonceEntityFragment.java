@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -139,12 +140,13 @@ public class AnnonceEntityFragment extends Fragment {
             annonceBeautyAdapter.notifyDataSetChanged();
             annoncePhotosList = list;
             loadMoreDatas();
-        } else {
+            return true;
+        } else if (action.equals(ACTION_FAVORITE)) {
             LoadMostRecentAnnonceTask.sortList(annoncePhotosList, tri, direction);
             annonceBeautyAdapter.notifyDataSetChanged();
+            return true;
         }
-
-        return true;
+        return false;
     };
 
     @Override
@@ -184,9 +186,14 @@ public class AnnonceEntityFragment extends Fragment {
         recyclerView.setAdapter(annonceBeautyAdapter);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
+        ActionBar actionBar = appCompatActivity.getSupportActionBar();
+
         switch (action) {
             case ACTION_FAVORITE:
                 if (uidUser != null) {
+                    if (actionBar != null) {
+                        actionBar.setTitle("Annonces favorites");
+                    }
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
                             annoncePhotosList = annoncePhotos;
@@ -199,7 +206,10 @@ public class AnnonceEntityFragment extends Fragment {
                 }
                 break;
             case ACTION_MOST_RECENT:
-                recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener((LinearLayoutManager) layoutManager) {
+                if (actionBar != null) {
+                    actionBar.setTitle("Dernières annonces");
+                }
+                recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener(layoutManager) {
                     @Override
                     public void onLoadMore() {
                         loadMoreDatas();

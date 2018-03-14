@@ -22,6 +22,7 @@
                 android:id="@+id/search_view_activity_search"
                 android:layout_width="match_parent"
                 android:layout_height="35dp"
+                android:gravity="end"
                 android:imeOptions="actionSearch"
                 app:queryBackground="@color/colorAccentDark"
                 app:queryHint="Rechercher annonce..." />
