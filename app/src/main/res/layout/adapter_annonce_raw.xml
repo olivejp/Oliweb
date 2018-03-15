@@ -40,10 +40,10 @@
         android:id="@+id/normal_layout_raw"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@android:color/white"
         android:clickable="true"
         android:focusable="true"
         android:foreground="@drawable/ripple_recycler_view"
-        android:background="@android:color/white"
         android:padding="10dp">
 
         <TextView
@@ -52,51 +52,74 @@
             android:layout_height="0dp"
             android:visibility="invisible" />
 
-        <LinearLayout
-            android:id="@+id/linear_titre"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/text_date_publication_annonce_raw"
+            style="@style/TextAppearance.AppCompat.Caption"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintLeft_toLeftOf="parent"
+            android:gravity="center_vertical|start"
+            android:textStyle="italic"
+            app:layout_constraintLeft_toRightOf="@+id/text_titre_annonce_raw"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-
-        </LinearLayout>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="23/03/2016" />
 
         <TextView
             android:id="@+id/text_titre_annonce_raw"
             style="@style/TextAppearance.AppCompat.Body2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
+            android:layout_marginEnd="5dp"
+            android:gravity="center_vertical|start"
             app:layout_constraintBottom_toTopOf="@+id/text_prix_annonce_raw"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/img_photo_raw"
+            app:layout_constraintRight_toLeftOf="@+id/text_date_publication_annonce_raw"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="A vendre : Super affaire moto presque neuve. Super titre sur 2 lignes." />
 
+        <TextView
+            android:id="@+id/text_nb_photos"
+            style="@style/TextAppearance.AppCompat.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/img_photo_raw"
+            app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
+            tools:text="5" />
+
         <ImageView
             android:id="@+id/img_photo_raw"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            app:layout_constraintBottom_toBottomOf="@+id/text_titre_annonce_raw"
-            app:layout_constraintLeft_toRightOf="@+id/text_titre_annonce_raw"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/text_titre_annonce_raw"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/text_nb_conversations"
+            app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
             app:srcCompat="@drawable/ic_photo_camera_grey_900_48dp" />
 
+        <ImageView
+            android:id="@+id/img_conversation_raw"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
+            app:srcCompat="@drawable/ic_people_grey_900_48dp" />
+
         <TextView
-            android:id="@+id/text_date_publication_annonce_raw"
+            android:id="@+id/text_nb_conversations"
             style="@style/TextAppearance.AppCompat.Caption"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:gravity="start"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@id/text_prix_annonce_raw"
-            app:layout_constraintTop_toTopOf="@+id/text_prix_annonce_raw"
-            app:layout_constraintBottom_toBottomOf="@id/text_prix_annonce_raw"
-            tools:text="23/03/2016" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/img_conversation_raw"
+            app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
+            tools:text="4" />
+
 
         <TextView
             android:id="@+id/text_prix_annonce_raw"
@@ -106,10 +129,9 @@
             android:gravity="end"
             android:textColor="@color/colorAccent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toRightOf="@id/text_date_publication_annonce_raw"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
-            tools:text="400 000" />
+            tools:text="400 000 XPF" />
     </android.support.constraint.ConstraintLayout>
 
 </FrameLayout>
