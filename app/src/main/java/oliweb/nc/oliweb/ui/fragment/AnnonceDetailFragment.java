@@ -50,7 +50,7 @@ public class AnnonceDetailFragment extends Fragment {
         appCompatActivity = (AppCompatActivity) context;
     }
 
-    public AnnonceDetailFragment getInstance(AnnoncePhotos annoncePhotos) {
+    public static AnnonceDetailFragment getInstance(AnnoncePhotos annoncePhotos) {
         AnnonceDetailFragment annonceDetailFragment = new AnnonceDetailFragment();
 
         Bundle bundle = new Bundle();

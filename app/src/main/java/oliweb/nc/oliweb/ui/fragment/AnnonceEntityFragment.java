@@ -181,7 +181,13 @@ public class AnnonceEntityFragment extends Fragment {
         recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(null, null, null);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(v -> {
+            AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
+            if (getFragmentManager() != null) {
+                AnnonceDetailFragment annonceDetailFragment = AnnonceDetailFragment.getInstance(annoncePhotos);
+                getFragmentManager().beginTransaction().replace(R.id.main_frame, annonceDetailFragment).commit();
+            }
+        }, null, null);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
