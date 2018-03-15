@@ -30,9 +30,9 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchResult;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -112,9 +112,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
      * Launch a search with the Query
      *
      * @param query
-     * @return true if the search has been launched, false otherwise
      */
-    public boolean makeASearch(String query, int pagingSize, int from, int tri, int direction) {
+    public void makeASearch(String query, int pagingSize, int from, int tri, int direction) {
+        updateLoadingStatus(true);
 
         if (from == 0) {
             listAnnonce.clear();
@@ -153,37 +153,35 @@ public class SearchActivityViewModel extends AndroidViewModel {
         newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
 
         // Ensuite on va écouter les changements pour cette nouvelle requête
-            newRequestRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.child("no_results").exists()) {
+        newRequestRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("no_results").exists()) {
+                    liveListAnnonce.postValue(listAnnonce);
+                    newRequestRef.removeEventListener(this);
+                    newRequestRef.removeValue();
+                    updateLoadingStatus(false);
+                } else {
+                    if (dataSnapshot.child("results").exists()) {
+                        DataSnapshot snapshotResults = dataSnapshot.child("results");
+                        for (DataSnapshot child : snapshotResults.getChildren()) {
+                            ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
+                            if (elasticsearchResult != null) {
+                                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
+                                listAnnonce.add(annoncePhotos);
+                            }
+                        }
                         liveListAnnonce.postValue(listAnnonce);
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                    } else {
-                        if (dataSnapshot.child("results").exists()) {
-                            DataSnapshot snapshotResults = dataSnapshot.child("results");
-                            for (DataSnapshot child : snapshotResults.getChildren()) {
-                                ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
-                                if (elasticsearchResult != null) {
-                                    AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
-                                    listAnnonce.add(annoncePhotos);
-                                }
-                            }
-                            liveListAnnonce.postValue(listAnnonce);
-                            newRequestRef.removeEventListener(this);
-                            newRequestRef.removeValue();
-                        }
+                        updateLoadingStatus(false);
                     }
-                    updateLoadingStatus(false);
                 }
+            }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    updateLoadingStatus(false);
-                }
-            });
-            updateLoadingStatus(true);
-            return true;
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 }

@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,17 +25,20 @@ public class AnnonceDetailFragment extends Fragment {
 
     private static final String ARG_ANNONCE = "ARG_ANNONCE";
 
-    @BindView(R.id.collapsing_toolbar)
+    @BindView(R.id.collapsing_toolbar_detail)
     CollapsingToolbarLayout collapsingToolbarLayout;
 
-    @BindView(R.id.view_pager)
+    @BindView(R.id.view_pager_detail)
     ViewPager viewPager;
 
     @BindView(R.id.default_button)
     FloatingActionButton fabDefaultButton;
 
-    @BindView(R.id.indicator)
+    @BindView(R.id.indicator_detail)
     CircleIndicator indicator;
+
+    @BindView(R.id.text_description_detail)
+    TextView description;
 
     private AnnoncePhotos annoncePhotos;
 
@@ -71,8 +75,8 @@ public class AnnonceDetailFragment extends Fragment {
         }
 
         if (annoncePhotos != null) {
+            description.setText(annoncePhotos.getAnnonceEntity().getDescription());
             collapsingToolbarLayout.setTitle(annoncePhotos.getAnnonceEntity().getTitre());
-
             if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(appCompatActivity, annoncePhotos.getPhotos()));
                 indicator.setViewPager(viewPager);

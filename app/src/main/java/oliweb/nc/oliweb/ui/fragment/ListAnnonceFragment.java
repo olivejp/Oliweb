@@ -41,8 +41,8 @@ import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 
-public class AnnonceEntityFragment extends Fragment {
-    private static final String TAG = AnnonceEntityFragment.class.getName();
+public class ListAnnonceFragment extends Fragment {
+    private static final String TAG = ListAnnonceFragment.class.getName();
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
@@ -76,17 +76,17 @@ public class AnnonceEntityFragment extends Fragment {
     private int tri = SORT_DATE;
     private int direction;
 
-    public AnnonceEntityFragment() {
+    public ListAnnonceFragment() {
         // Empty constructor
     }
 
-    public static AnnonceEntityFragment getInstance(String uidUtilisateur, String action) {
-        AnnonceEntityFragment annonceEntityFragment = new AnnonceEntityFragment();
+    public static ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
+        ListAnnonceFragment listAnnonceFragment = new ListAnnonceFragment();
         Bundle bundle = new Bundle();
         bundle.putString(ARG_UID_USER, uidUtilisateur);
         bundle.putString(ARG_ACTION, action);
-        annonceEntityFragment.setArguments(bundle);
-        return annonceEntityFragment;
+        listAnnonceFragment.setArguments(bundle);
+        return listAnnonceFragment;
     }
 
     @Override
@@ -185,7 +185,7 @@ public class AnnonceEntityFragment extends Fragment {
             AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
             if (getFragmentManager() != null) {
                 AnnonceDetailFragment annonceDetailFragment = AnnonceDetailFragment.getInstance(annoncePhotos);
-                getFragmentManager().beginTransaction().replace(R.id.main_frame, annonceDetailFragment).commit();
+                appCompatActivity.getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, annonceDetailFragment).addToBackStack(null).commit();
             }
         }, null, null);
 

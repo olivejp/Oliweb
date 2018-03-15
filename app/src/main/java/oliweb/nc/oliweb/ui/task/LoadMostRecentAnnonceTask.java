@@ -14,10 +14,10 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_DATE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 /**
  * Created by 2761oli on 08/03/2018.

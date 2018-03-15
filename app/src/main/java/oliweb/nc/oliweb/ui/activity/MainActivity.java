@@ -36,14 +36,14 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
-import oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment;
+import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ACTION_FAVORITE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ACTION_MOST_RECENT;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
@@ -114,8 +114,8 @@ public class MainActivity extends AppCompatActivity
             navigationView.setNavigationItemSelectedListener(this);
 
             // Init most recent annonce fragment
-            AnnonceEntityFragment annonceEntityFragment = AnnonceEntityFragment.getInstance(null, ACTION_MOST_RECENT);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, annonceEntityFragment).commit();
+            ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment).commit();
         }
     }
 
@@ -295,10 +295,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void callFavoriteFragment() {
-        AnnonceEntityFragment annonceEntityFragment = AnnonceEntityFragment.getInstance(FirebaseAuth.getInstance().getUid(), ACTION_FAVORITE);
+        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(FirebaseAuth.getInstance().getUid(), ACTION_FAVORITE);
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.main_frame, annonceEntityFragment)
+                .replace(R.id.main_frame, listAnnonceFragment)
                 .addToBackStack(null)
                 .commit();
     }

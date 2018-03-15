@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,17 +25,19 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.ui.BottomNavigationViewBehavior;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.ui.fragment.AnnonceDetailFragment;
 import oliweb.nc.oliweb.utility.Utility;
 
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.DESC;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_DATE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceEntityFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.DESC;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
+import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -69,7 +72,11 @@ public class SearchActivity extends AppCompatActivity {
 
     // Ouvre l'activité PostAnnonceActivity en mode Visualisation
     private View.OnClickListener onClickListener = v -> {
-        // TODO appeler un nouveau fragment ici pour visualiser l'annonce
+        AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
+        if (getFragmentManager() != null) {
+            AnnonceDetailFragment annonceDetailFragment = AnnonceDetailFragment.getInstance(annoncePhotos);
+            getSupportFragmentManager().beginTransaction().replace(R.id.search_frame, annonceDetailFragment).addToBackStack(null).commit();
+        }
     };
 
     private View.OnClickListener onFavoriteClickListener = v -> {
@@ -129,6 +136,8 @@ public class SearchActivity extends AppCompatActivity {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         }
 
+        setTitle("Recherche " + query);
+
         // On repose les termes de la requête dans le searchView
         searchView.setQuery(query, false);
 
@@ -175,6 +184,8 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
+        CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) bottomNavigationView.getLayoutParams();
+        layoutParams.setBehavior(new BottomNavigationViewBehavior());
 
         // Recherche du mode display actuellement dans les préférences.
         if (displayBeautyMode) {

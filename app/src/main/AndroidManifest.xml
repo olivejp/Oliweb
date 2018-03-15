@@ -32,7 +32,8 @@
         <activity
             android:name="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
-            android:parentActivityName=".ui.activity.MyAnnoncesActivity">
+            android:parentActivityName=".ui.activity.MyAnnoncesActivity"
+            android:windowSoftInputMode="stateHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MyAnnoncesActivity" />
@@ -109,7 +110,7 @@
             android:name=".ui.activity.IntroActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="Intro"
-            android:theme="@style/SplashTheme"/>
+            android:theme="@style/SplashTheme" />
         <activity
             android:name=".ui.activity.SplashActivity"
             android:theme="@style/SplashTheme">

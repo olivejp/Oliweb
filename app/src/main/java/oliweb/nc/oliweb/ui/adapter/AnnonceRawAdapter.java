@@ -61,7 +61,7 @@ public class AnnonceRawAdapter extends
         ViewHolderRaw viewHolderRaw = (ViewHolderRaw) viewHolder;
         viewHolderRaw.singleAnnonce = annoncePhotos.getAnnonceEntity();
 
-        viewHolderRaw.normalLayoutRaw.setTag(viewHolderRaw.singleAnnonce);
+        viewHolderRaw.normalLayoutRaw.setTag(annoncePhotos);
         viewHolderRaw.normalLayoutRaw.setOnClickListener(this.onClickListener);
 
         // Attribution des données au valeurs graphiques

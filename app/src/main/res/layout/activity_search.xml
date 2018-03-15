@@ -1,70 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="oliweb.nc.oliweb.ui.activity.SearchActivity">
+    android:fitsSystemWindows="true">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:layout_height="?attr/actionBarSize"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:background="@android:color/white"
+        android:fitsSystemWindows="false">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_activity_search"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay">
 
             <android.support.v7.widget.SearchView
                 android:id="@+id/search_view_activity_search"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                android:gravity="end"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:imeOptions="actionSearch"
                 app:queryBackground="@color/colorAccentDark"
                 app:queryHint="Rechercher annonce..." />
-        </android.support.v7.widget.Toolbar>
 
+        </android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_search_annonce"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/search_frame"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="?attr/actionBarSize"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation_sort"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent"
+        tools:context="oliweb.nc.oliweb.ui.activity.SearchActivity">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_search_annonce"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingTop="?attr/actionBarSize"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <LinearLayout
+            android:id="@+id/empty_search_linear"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="50dp"
+                android:gravity="center"
+                android:text="Votre recherche n'a retourné aucun résultat.\nEssayer la recherche avancée pour pouvoir rentrer plus de paramètres." />
+        </LinearLayout>
+
+    </android.support.constraint.ConstraintLayout>
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/bottom_navigation_sort"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="bottom"
         android:background="@color/colorPrimaryDark"
         app:itemIconTint="@color/bottom_item_icon"
         app:itemTextColor="@color/bottom_item"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_navigation" />
 
-    <LinearLayout
-        android:id="@+id/empty_search_linear"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="50dp"
-            android:gravity="center"
-            android:text="Votre recherche n'a retourné aucun résultat.\nEssayer la recherche avancée pour pouvoir rentrer plus de paramètres." />
-    </LinearLayout>
-
-</android.support.constraint.ConstraintLayout>
+</android.support.design.widget.CoordinatorLayout>
