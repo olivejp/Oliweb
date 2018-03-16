@@ -71,7 +71,7 @@ public class NetworkReceiver extends BroadcastReceiver {
 
         NetworkInfo networkInfo = conn != null ? conn.getActiveNetworkInfo() : null;
 
-        if (networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected()) {
+        if (networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected() && !networkInfo.isFailover()) {
             return true;
         } else if (networkInfo == null || !networkInfo.isAvailable() || !networkInfo.isConnected()) {
             return false;

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search_grey_900_48dp"
+        android:title="Recherche"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sort_date"
+        android:icon="@drawable/ic_date_range_grey_900_48dp"
+        android:orderInCategory="100"
+        android:title="Trier par date"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/sort_title"
+        android:icon="@drawable/ic_sort_by_alpha_grey_900_48dp"
+        android:orderInCategory="100"
+        android:title="Trier par titre"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/sort_price"
+        android:icon="@drawable/ic_attach_money_grey_900_48dp"
+        android:orderInCategory="100"
+        android:title="Trier par prix"
+        app:showAsAction="never" />
+</menu>

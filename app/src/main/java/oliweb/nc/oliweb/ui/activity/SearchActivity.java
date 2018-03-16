@@ -5,8 +5,6 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,6 +12,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -25,7 +25,6 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.ui.BottomNavigationViewBehavior;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -50,17 +49,12 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
-    @BindView(R.id.search_view_activity_search)
     SearchView searchView;
 
     @BindView(R.id.toolbar_activity_search)
     Toolbar toolbar;
 
-    @BindView(R.id.bottom_navigation_sort)
-    BottomNavigationView bottomNavigationView;
-
     private String query;
-    private boolean displayBeautyMode;
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel searchActivityViewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
@@ -130,18 +124,9 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        // On attache la searchView
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        if (searchManager != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        }
-
         setTitle("Recherche " + query);
 
-        // On repose les termes de la requête dans le searchView
-        searchView.setQuery(query, false);
-
-        displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
+        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
         boolean gridMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getGridMode();
 
         RecyclerView.LayoutManager layoutManager;
@@ -183,10 +168,6 @@ public class SearchActivity extends AppCompatActivity {
 
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
-        bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
-        CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) bottomNavigationView.getLayoutParams();
-        layoutParams.setBehavior(new BottomNavigationViewBehavior());
-
         // Recherche du mode display actuellement dans les préférences.
         if (displayBeautyMode) {
             annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
@@ -199,25 +180,35 @@ public class SearchActivity extends AppCompatActivity {
         launchNewSearch(currentPage);
     }
 
-    private void launchNewSearch(int currentPage) {
-        if (searchActivityViewModel.isConnected()) {
-            int from = currentPage * pagingSize;
-            searchActivityViewModel.makeASearch(query, pagingSize, from, tri, direction);
-        } else {
-            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.search, menu);
+
+        // On attache la searchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        if (searchManager != null) {
+            searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         }
+
+        // On repose les termes de la requête dans le searchView
+        searchView.setQuery(query, false);
+        return true;
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener = item -> {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
         int newTri;
-        switch (item.getItemId()) {
-            case R.id.action_sort_date:
+        switch (id) {
+            case R.id.sort_date:
                 newTri = SORT_DATE;
                 break;
-            case R.id.action_sort_title:
+            case R.id.sort_title:
                 newTri = SORT_TITLE;
                 break;
-            case R.id.action_sort_price:
+            case R.id.sort_price:
                 newTri = SORT_PRICE;
                 break;
             default:
@@ -239,8 +230,17 @@ public class SearchActivity extends AppCompatActivity {
         this.currentPage = 0;
         launchNewSearch(currentPage);
 
-        return true;
-    };
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+    }
+
+    private void launchNewSearch(int currentPage) {
+        if (searchActivityViewModel.isConnected()) {
+            int from = currentPage * pagingSize;
+            searchActivityViewModel.makeASearch(query, pagingSize, from, tri, direction);
+        } else {
+            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
+        }
+    }
 
     private void initViewModelObservers() {
         // Fait apparaitre un spinner pendant l'attente
