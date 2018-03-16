@@ -230,7 +230,7 @@ public class SearchActivity extends AppCompatActivity {
         this.currentPage = 0;
         launchNewSearch(currentPage);
 
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        return true;
     }
 
     private void launchNewSearch(int currentPage) {

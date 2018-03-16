@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
-    @BindView(R.id.search_view)
     SearchView searchView;
 
     private ImageView profileImage;
@@ -84,39 +83,35 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        // On attache la searchView
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        if (searchManager != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-            viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
-            viewModel.getNotification().observe(this, dialogInfos -> {
-                if (dialogInfos != null) {
-                    NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
-                }
-            });
+        viewModel.getNotification().observe(this, dialogInfos -> {
+            if (dialogInfos != null) {
+                NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+            }
+        });
 
-            View viewHeader = navigationView.getHeaderView(0);
-            profileImage = viewHeader.findViewById(R.id.profileImage);
-            profileName = viewHeader.findViewById(R.id.profileName);
-            profileEmail = viewHeader.findViewById(R.id.profileEmail);
-            navigationViewMenu = navigationView.getMenu();
+        View viewHeader = navigationView.getHeaderView(0);
+        profileImage = viewHeader.findViewById(R.id.profileImage);
+        profileName = viewHeader.findViewById(R.id.profileName);
+        profileEmail = viewHeader.findViewById(R.id.profileEmail);
+        navigationViewMenu = navigationView.getMenu();
 
-            mFirebaseAuth = FirebaseAuth.getInstance();
-            defineAuthListener();
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        defineAuthListener();
 
-            setSupportActionBar(toolbar);
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-            drawer.addDrawerListener(toggle);
-            toggle.syncState();
+        setSupportActionBar(toolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
-            navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setNavigationItemSelectedListener(this);
 
-            // Init most recent annonce fragment
-            ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment).commit();
-        }
+        // Init most recent annonce fragment
+        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment).commit();
+
     }
 
     @Override
@@ -131,13 +126,20 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+
+        // On attache la searchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        if (searchManager != null) {
+            searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
