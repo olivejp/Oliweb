@@ -20,6 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
@@ -59,8 +60,6 @@ public class SearchActivity extends AppCompatActivity {
     private int tri;
     private int direction;
     private int currentPage = 0;
-    private int pagingSize = 20;
-    private int spanCount;
     private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
 
     // Ouvre l'activité PostAnnonceActivity en mode Visualisation
@@ -202,8 +201,8 @@ public class SearchActivity extends AppCompatActivity {
 
     private void launchNewSearch(int currentPage) {
         if (searchActivityViewModel.isConnected()) {
-            int from = currentPage * pagingSize;
-            searchActivityViewModel.makeASearch(query, pagingSize, from, tri, direction);
+            int from = currentPage * Constants.PER_PAGE_REQUEST;
+            searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
         } else {
             Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
         }

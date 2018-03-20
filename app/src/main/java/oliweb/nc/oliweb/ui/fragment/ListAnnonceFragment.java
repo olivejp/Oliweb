@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
@@ -58,8 +59,6 @@ public class ListAnnonceFragment extends Fragment {
     public static final int ASC = 1;
     public static final int DESC = 2;
 
-    public int spanCount;
-
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
 
@@ -72,7 +71,6 @@ public class ListAnnonceFragment extends Fragment {
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
     private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
-    private int pagingNumber = 10;
     private DatabaseReference annoncesReference;
     private int sort = SORT_DATE;
     private int direction;
@@ -239,7 +237,7 @@ public class ListAnnonceFragment extends Fragment {
                     lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
                 }
             }
-            query.startAt(lastPrice).limitToFirst(pagingNumber);
+            query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (direction == DESC) {
             Integer lastPrice = Integer.MAX_VALUE;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
@@ -247,7 +245,7 @@ public class ListAnnonceFragment extends Fragment {
                     lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
                 }
             }
-            query.endAt(lastPrice).limitToLast(pagingNumber);
+            query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
         }
         return query;
     }
@@ -261,7 +259,7 @@ public class ListAnnonceFragment extends Fragment {
                 lastTitle = annoncePhotos.getAnnonceEntity().getTitre();
             }
         }
-        return annoncesReference.orderByChild("titre").endAt(lastTitle).limitToLast(pagingNumber);
+        return annoncesReference.orderByChild("titre").endAt(lastTitle).limitToLast(Constants.PER_PAGE_REQUEST);
     }
 
     private Query loadSortDate() {
@@ -273,7 +271,7 @@ public class ListAnnonceFragment extends Fragment {
                     lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
                 }
             }
-            query.startAt(lastDate).limitToFirst(pagingNumber);
+            query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (direction == DESC) {
             Long lastDate = Long.MAX_VALUE;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
@@ -281,7 +279,7 @@ public class ListAnnonceFragment extends Fragment {
                     lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
                 }
             }
-            query.endAt(lastDate).limitToLast(pagingNumber);
+            query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
         }
         return query;
     }
