@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent();
             intent.setClass(this, SettingsActivity.class);
             startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         } else if (id == R.id.nav_profile) {
 
         } else if (id == R.id.nav_favorites) {
@@ -166,6 +167,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
             startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
 
         drawer.closeDrawer(GravityCompat.START);

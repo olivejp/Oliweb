@@ -165,6 +165,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerRaw
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
         startActivityForResult(intent, REQUEST_CODE_POST);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
     private void callActivityToUpdateAnnonce(AnnonceEntity annonce) {
@@ -175,5 +176,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerRaw
         bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CODE_POST);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 }

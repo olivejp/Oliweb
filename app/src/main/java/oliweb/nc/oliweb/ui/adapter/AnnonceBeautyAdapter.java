@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import android.support.v4.view.ViewPager;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -12,13 +11,14 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import me.relex.circleindicator.CircleIndicator;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -95,11 +95,18 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(annonce.getPrix() + " XPF"));
+        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE,"%,d", annonce.getPrix()) + " XPF"));
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderBeauty.viewPager.setAdapter(new AnnonceViewPagerAdapter(viewHolderBeauty.parent.getContext(), annoncePhotos.getPhotos()));
-            viewHolderBeauty.indicator.setViewPager(viewHolderBeauty.viewPager);
+            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
+            GlideApp.with(viewHolderBeauty.imageView)
+                    .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
+                    .placeholder(R.drawable.ic_access_time_grey_900_48dp)
+                    .error(R.drawable.ic_error_white_48dp)
+                    .centerCrop()
+                    .into(viewHolderBeauty.imageView);
+        } else {
+            viewHolderBeauty.imageView.setVisibility(View.GONE);
         }
     }
 
@@ -160,11 +167,8 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.image_share)
         ImageView imageShare;
 
-        @BindView(R.id.view_pager)
-        ViewPager viewPager;
-
-        @BindView(R.id.indicator)
-        CircleIndicator indicator;
+        @BindView(R.id.image_view_beauty)
+        ImageView imageView;
 
         AnnonceEntity singleAnnonce;
 

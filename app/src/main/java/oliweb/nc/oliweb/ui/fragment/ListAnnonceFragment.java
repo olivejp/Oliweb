@@ -33,6 +33,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
+import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
@@ -55,6 +56,8 @@ public class ListAnnonceFragment extends Fragment {
 
     public static final int ASC = 1;
     public static final int DESC = 2;
+
+    public static final int SPAN_COUNT = 2;
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
@@ -158,7 +161,7 @@ public class ListAnnonceFragment extends Fragment {
 
         RecyclerView.LayoutManager layoutManager;
         if (SharedPreferencesHelper.getInstance(getContext()).getGridMode()) {
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, 2);
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, SPAN_COUNT);
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
@@ -173,6 +176,7 @@ public class ListAnnonceFragment extends Fragment {
 
                 }
             });
+            gridLayoutManager.setAutoMeasureEnabled(true);
             layoutManager = gridLayoutManager;
         } else {
             layoutManager = new LinearLayoutManager(appCompatActivity);
@@ -180,6 +184,8 @@ public class ListAnnonceFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+        int spacing = getResources().getDimensionPixelSize(R.dimen.spacing_medium);
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(SPAN_COUNT, spacing, true));
 
         annonceBeautyAdapter = new AnnonceBeautyAdapter(v -> {
             AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();

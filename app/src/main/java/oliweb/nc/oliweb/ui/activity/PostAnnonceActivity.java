@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -507,7 +508,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // Récupération du titre, de la description et du prix
         textViewTitre.setText(annonce.getTitre());
         textViewDescription.setText(annonce.getDescription());
-        textViewPrix.setText(String.valueOf(annonce.getPrix()));
+        textViewPrix.setText(String.valueOf(String.format(Locale.FRANCE,"%,d", annonce.getPrix()) + " XPF"));
 
         // Récupération et sélection dans le spinner de la bonne catégorie
         viewModel.getLiveDataListCategorie()
