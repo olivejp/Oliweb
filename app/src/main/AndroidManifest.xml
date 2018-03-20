@@ -119,12 +119,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ui.fragment.AnnonceDetailActivity" />
-
+        <activity
+            android:name=".ui.fragment.AnnonceDetailActivity"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
         <service
             android:name=".service.SyncService"
             android:exported="false" />
     </application>
-
 </manifest>
