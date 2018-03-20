@@ -120,6 +120,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.fragment.AnnonceDetailActivity" />
+
         <service
             android:name=".service.SyncService"
             android:exported="false" />

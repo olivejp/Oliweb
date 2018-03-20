@@ -3,6 +3,9 @@ package oliweb.nc.oliweb.utility;
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -11,7 +14,10 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
+import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
+import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
+import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 
 /**
  * Created by orlanth23 on 04/03/2018.
@@ -149,5 +155,33 @@ public class Utility {
         }
 
         return duration;
+    }
+
+    public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView, AnnonceBeautyAdapter annonceBeautyAdapter) {
+        GridLayoutManager gridLayoutManager;
+        int spanCount;
+        spanCount = Integer.valueOf(context.getString(R.string.span_count));
+        gridLayoutManager = new GridLayoutManager(context, spanCount);
+        if (spanCount > 2) {
+            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    switch (annonceBeautyAdapter.getItemViewType(position)) {
+                        case 1:
+                            return 1;
+                        case 2:
+                            return 2;
+                        default:
+                            return 1;
+                    }
+                }
+            });
+        }
+        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
+        recyclerView.setLayoutManager(gridLayoutManager);
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        return gridLayoutManager;
     }
 }

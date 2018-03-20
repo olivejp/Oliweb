@@ -37,7 +37,6 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
-import oliweb.nc.oliweb.ui.fragment.AnnonceDetailFragment;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
@@ -128,22 +127,6 @@ public class MainActivity extends AppCompatActivity
                 .replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE)
                 .addToBackStack(null)
                 .commit();
-
-
-        AnnonceDetailFragment annonceDetailFragment;
-        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_DETAIL_ANNONCE)) {
-            annonceDetailFragment = (AnnonceDetailFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_DETAIL_ANNONCE);
-        } else {
-            annonceDetailFragment = (AnnonceDetailFragment) getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_ANNONCE);
-        }
-        if (annonceDetailFragment != null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .hide(listAnnonceFragment)
-                    .replace(R.id.main_frame, annonceDetailFragment, TAG_DETAIL_ANNONCE)
-                    .addToBackStack(null)
-                    .commit();
-        }
     }
 
     @Override

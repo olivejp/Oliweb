@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -24,14 +22,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
-import oliweb.nc.oliweb.ui.fragment.AnnonceDetailFragment;
+import oliweb.nc.oliweb.ui.fragment.AnnonceDetailActivity;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static oliweb.nc.oliweb.ui.fragment.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.DESC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
@@ -62,15 +60,16 @@ public class SearchActivity extends AppCompatActivity {
     private int direction;
     private int currentPage = 0;
     private int pagingSize = 20;
+    private int spanCount;
     private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
 
     // Ouvre l'activité PostAnnonceActivity en mode Visualisation
     private View.OnClickListener onClickListener = v -> {
         AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
-        if (getFragmentManager() != null) {
-            AnnonceDetailFragment annonceDetailFragment = AnnonceDetailFragment.getInstance(annoncePhotos);
-            getSupportFragmentManager().beginTransaction().replace(R.id.search_frame, annonceDetailFragment).addToBackStack(null).commit();
-        }
+        Intent intent = new Intent();
+        intent.putExtra(ARG_ANNONCE, annoncePhotos);
+        intent.setClass(this, AnnonceDetailActivity.class);
+        startActivity(intent);
     };
 
     private View.OnClickListener onFavoriteClickListener = v -> {
@@ -126,53 +125,21 @@ public class SearchActivity extends AppCompatActivity {
 
         setTitle("Recherche " + query);
 
-        boolean displayBeautyMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getDisplayBeautyMode();
-        boolean gridMode = SharedPreferencesHelper.getInstance(getApplicationContext()).getGridMode();
+        // Recherche du mode display actuellement dans les préférences.
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
 
-        RecyclerView.LayoutManager layoutManager;
-        if (gridMode) {
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
-            layoutManager = gridLayoutManager;
-            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                @Override
-                public int getSpanSize(int position) {
-                    switch (annonceBeautyAdapter.getItemViewType(position)) {
-                        case 1:
-                            return 1;
-                        case 2:
-                            return 2;
-                        default:
-                            return 1;
-                    }
-                }
-            });
-            endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(gridLayoutManager) {
-                @Override
-                public void onLoadMore() {
-                    currentPage++;
-                    launchNewSearch(currentPage);
-                }
-            };
-        } else {
-            layoutManager = new LinearLayoutManager(this);
-            ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.VERTICAL);
-            endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
-                @Override
-                public void onLoadMore() {
-                    currentPage++;
-                    launchNewSearch(currentPage);
-                }
-            };
-        }
-        recyclerView.setLayoutManager(layoutManager);
-
+        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
+        endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore() {
+                currentPage++;
+                launchNewSearch(currentPage);
+            }
+        };
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
-        // Recherche du mode display actuellement dans les préférences.
-        if (displayBeautyMode) {
-            annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
-            recyclerView.setAdapter(annonceBeautyAdapter);
-        }
+        recyclerView.setAdapter(annonceBeautyAdapter);
+
 
         initViewModelObservers();
 
