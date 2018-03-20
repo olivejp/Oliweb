@@ -84,5 +84,4 @@ public class AnnonceDetailFragment extends Fragment {
         }
         return rootView;
     }
-
 }

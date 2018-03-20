@@ -23,13 +23,13 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
  * Created by 2761oli on 08/03/2018.
  */
 
-public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Void, List<AnnoncePhotos>> {
+public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Void, ArrayList<AnnoncePhotos>> {
 
     private static final String TAG = LoadMostRecentAnnonceTask.class.getName();
 
-    private TaskListener<List<AnnoncePhotos>> listener;
+    private TaskListener<ArrayList<AnnoncePhotos>> listener;
 
-    public void setListener(TaskListener<List<AnnoncePhotos>> listener) {
+    public void setListener(TaskListener<ArrayList<AnnoncePhotos>> listener) {
         this.listener = listener;
     }
 
@@ -100,8 +100,8 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
     }
 
     @Override
-    protected List<AnnoncePhotos> doInBackground(LoadMoreTaskBundle[] bundles) {
-        List<AnnoncePhotos> listPhotosResult = new ArrayList<>();
+    protected ArrayList<AnnoncePhotos> doInBackground(LoadMoreTaskBundle[] bundles) {
+        ArrayList<AnnoncePhotos> listPhotosResult = new ArrayList<>();
 
         LoadMoreTaskBundle bundle = bundles[0];
         List<AnnoncePhotos> oldList = bundle.getListPhotosResult();
@@ -134,7 +134,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
     }
 
     @Override
-    protected void onPostExecute(List<AnnoncePhotos> listResult) {
+    protected void onPostExecute(ArrayList<AnnoncePhotos> listResult) {
         listener.onSuccess(listResult);
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -36,6 +37,7 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.ui.fragment.AnnonceDetailFragment;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
@@ -52,6 +54,9 @@ public class MainActivity extends AppCompatActivity
     public static final int RC_SIGN_IN = 1001;
 
     private static final String TAG = MainActivity.class.getName();
+    public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
+    public static final String TAG_DETAIL_ANNONCE = "TAG_DETAIL_ANNONCE";
+
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -109,9 +114,36 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         // Init most recent annonce fragment
-        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment).commit();
+        ListAnnonceFragment listAnnonceFragment;
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
+            listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
+        } else {
+            listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
+        }
+        if (listAnnonceFragment == null) {
+            listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
+        }
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE)
+                .addToBackStack(null)
+                .commit();
 
+
+        AnnonceDetailFragment annonceDetailFragment;
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_DETAIL_ANNONCE)) {
+            annonceDetailFragment = (AnnonceDetailFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_DETAIL_ANNONCE);
+        } else {
+            annonceDetailFragment = (AnnonceDetailFragment) getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_ANNONCE);
+        }
+        if (annonceDetailFragment != null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .hide(listAnnonceFragment)
+                    .replace(R.id.main_frame, annonceDetailFragment, TAG_DETAIL_ANNONCE)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     @Override
@@ -119,7 +151,11 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -319,4 +355,15 @@ public class MainActivity extends AppCompatActivity
     public void onDialogNegativeClick(NoticeDialogFragment dialog) {
         dialog.dismiss();
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        ListAnnonceFragment listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
+        if (listAnnonceFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_ANNONCE, listAnnonceFragment);
+        }
+        super.onSaveInstanceState(outState, outPersistentState);
+    }
+
+
 }

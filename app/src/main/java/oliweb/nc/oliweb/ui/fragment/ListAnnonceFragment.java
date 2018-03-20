@@ -25,7 +25,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,6 +40,8 @@ import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.ui.activity.MainActivity.TAG_DETAIL_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.MainActivity.TAG_LIST_ANNONCE;
 
 public class ListAnnonceFragment extends Fragment {
     private static final String TAG = ListAnnonceFragment.class.getName();
@@ -50,6 +51,10 @@ public class ListAnnonceFragment extends Fragment {
     public static final String ACTION_FAVORITE = "ACTION_FAVORITE";
     public static final String ACTION_MOST_RECENT = "ACTION_MOST_RECENT";
 
+    public static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
+    public static final String SAVE_SORT = "SAVE_SORT";
+    public static final String SAVE_DIRECTION = "SAVE_DIRECTION";
+
     public static final int SORT_DATE = 1;
     public static final int SORT_TITLE = 2;
     public static final int SORT_PRICE = 3;
@@ -57,7 +62,7 @@ public class ListAnnonceFragment extends Fragment {
     public static final int ASC = 1;
     public static final int DESC = 2;
 
-    public static final int SPAN_COUNT = 2;
+    public int spanCount;
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
@@ -65,18 +70,15 @@ public class ListAnnonceFragment extends Fragment {
     @BindView(R.id.empty_favorite_linear)
     LinearLayout linearLayout;
 
-    @BindView(R.id.bottom_navigation_sort)
-    BottomNavigationView bottomNavigationView;
-
     private String uidUser;
     private String action;
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
-    private List<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
+    private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
     private int pagingNumber = 10;
     private DatabaseReference annoncesReference;
-    private int tri = SORT_DATE;
+    private int sort = SORT_DATE;
     private int direction;
 
     public ListAnnonceFragment() {
@@ -126,26 +128,26 @@ public class ListAnnonceFragment extends Fragment {
                 break;
         }
 
-        if (tri == newTri) {
+        if (sort == newTri) {
             if (direction == ASC) {
                 direction = DESC;
             } else {
                 direction = ASC;
             }
         } else {
-            tri = newTri;
+            sort = newTri;
             direction = ASC;
         }
 
         if (action.equals(ACTION_MOST_RECENT)) {
-            List<AnnoncePhotos> list = new ArrayList<>();
+            ArrayList<AnnoncePhotos> list = new ArrayList<>();
             annonceBeautyAdapter.setListAnnonces(list);
             annonceBeautyAdapter.notifyDataSetChanged();
             annoncePhotosList = list;
             loadMoreDatas();
             return true;
         } else if (action.equals(ACTION_FAVORITE)) {
-            LoadMostRecentAnnonceTask.sortList(annoncePhotosList, tri, direction);
+            LoadMostRecentAnnonceTask.sortList(annoncePhotosList, sort, direction);
             annonceBeautyAdapter.notifyDataSetChanged();
             return true;
         }
@@ -159,24 +161,26 @@ public class ListAnnonceFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
+        spanCount = Integer.valueOf(appCompatActivity.getString(R.string.span_count));
+
         RecyclerView.LayoutManager layoutManager;
         if (SharedPreferencesHelper.getInstance(getContext()).getGridMode()) {
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, SPAN_COUNT);
-            gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                @Override
-                public int getSpanSize(int position) {
-                    switch (annonceBeautyAdapter.getItemViewType(position)) {
-                        case 1:
-                            return 1;
-                        case 2:
-                            return 2;
-                        default:
-                            return 1;
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(appCompatActivity, spanCount);
+            if (spanCount > 2) {
+                gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                    @Override
+                    public int getSpanSize(int position) {
+                        switch (annonceBeautyAdapter.getItemViewType(position)) {
+                            case 1:
+                                return 1;
+                            case 2:
+                                return 2;
+                            default:
+                                return 1;
+                        }
                     }
-
-                }
-            });
-            gridLayoutManager.setAutoMeasureEnabled(true);
+                });
+            }
             layoutManager = gridLayoutManager;
         } else {
             layoutManager = new LinearLayoutManager(appCompatActivity);
@@ -185,30 +189,39 @@ public class ListAnnonceFragment extends Fragment {
         recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         int spacing = getResources().getDimensionPixelSize(R.dimen.spacing_medium);
-        recyclerView.addItemDecoration(new GridSpacingItemDecoration(SPAN_COUNT, spacing, true));
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
 
         annonceBeautyAdapter = new AnnonceBeautyAdapter(v -> {
             AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
             if (getFragmentManager() != null) {
                 AnnonceDetailFragment annonceDetailFragment = AnnonceDetailFragment.getInstance(annoncePhotos);
-                appCompatActivity.getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, annonceDetailFragment).addToBackStack(null).commit();
+                appCompatActivity.getSupportFragmentManager()
+                        .beginTransaction()
+                        .hide(appCompatActivity.getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE))
+                        .add(R.id.main_frame, annonceDetailFragment, TAG_DETAIL_ANNONCE)
+                        .addToBackStack(null)
+                        .commit();
             }
         }, null, null);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
-        bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
         ActionBar actionBar = appCompatActivity.getSupportActionBar();
+
+        if (savedInstanceState != null) {
+            annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
+            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+        }
 
         switch (action) {
             case ACTION_FAVORITE:
                 if (uidUser != null) {
                     if (actionBar != null) {
-                        actionBar.setTitle("Annonces favorites");
+                        actionBar.setTitle("Vos favoris");
                     }
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                            annoncePhotosList = annoncePhotos;
+                            annoncePhotosList = (ArrayList<AnnoncePhotos>) annoncePhotos;
                             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
                         } else {
                             linearLayout.setVisibility(View.VISIBLE);
@@ -227,14 +240,18 @@ public class ListAnnonceFragment extends Fragment {
                         loadMoreDatas();
                     }
                 });
-                loadMoreDatas();
+                if (savedInstanceState == null) {
+                    loadMoreDatas();
+                }
+
                 break;
         }
+
         return view;
     }
 
     private void loadMoreDatas() {
-        switch (tri) {
+        switch (sort) {
             case SORT_DATE:
                 loadSortDate().addListenerForSingleValueEvent(valueEventListener);
                 break;
@@ -312,7 +329,7 @@ public class ListAnnonceFragment extends Fragment {
                 // Lancement d'une tache pour aller vérifier les annonces déjà reçues
                 LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
                 loadMoreTask.setListener(taskListener);
-                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, tri, direction));
+                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sort, direction));
             }
         }
 
@@ -322,9 +339,17 @@ public class ListAnnonceFragment extends Fragment {
         }
     };
 
-    private TaskListener<List<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
+    private TaskListener<ArrayList<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
         annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(valueEventListener);
     };
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
+        outState.putInt(SAVE_SORT, sort);
+        outState.putInt(SAVE_DIRECTION, direction);
+    }
 }
