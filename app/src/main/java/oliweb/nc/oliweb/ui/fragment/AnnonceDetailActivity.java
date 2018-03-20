@@ -43,7 +43,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_annonce_detail);
+        setContentView(R.layout.activity_annonce_detail);
         ButterKnife.bind(this);
 
         Bundle arguments = getIntent().getExtras();

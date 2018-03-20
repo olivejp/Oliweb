@@ -91,4 +91,12 @@
             </android.support.constraint.ConstraintLayout>
         </ScrollView>
     </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.BottomNavigationView
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorBottomDark"
+        android:layout_gravity="bottom">
+
+    </android.support.design.widget.BottomNavigationView>
 </android.support.design.widget.CoordinatorLayout>

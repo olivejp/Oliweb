@@ -7,4 +7,5 @@
     <color name="colorAccentDark">#d6d6d6</color>
     <color name="colorLoadingBegin">#ffcc80</color>
     <color name="colorLoadingEnd">#ef6c00</color>
+    <color name="colorBottomDark">#263238</color>
 </resources>
