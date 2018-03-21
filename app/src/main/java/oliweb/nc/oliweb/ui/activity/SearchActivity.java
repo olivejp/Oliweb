@@ -5,6 +5,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -38,7 +40,7 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
-public class SearchActivity extends AppCompatActivity {
+public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAdapter.AnnonceAdapterListener {
     private static final String TAG = SearchActivity.class.getName();
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
@@ -61,43 +63,6 @@ public class SearchActivity extends AppCompatActivity {
     private int direction;
     private int currentPage = 0;
     private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
-
-    // Ouvre l'activité PostAnnonceActivity en mode Visualisation
-    private View.OnClickListener onClickListener = v -> {
-        AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
-        Intent intent = new Intent();
-        intent.putExtra(ARG_ANNONCE, annoncePhotos);
-        intent.setClass(this, AnnonceDetailActivity.class);
-        startActivity(intent);
-    };
-
-    private View.OnClickListener onFavoriteClickListener = v -> {
-        Log.d(TAG, "Click on add to favorite");
-        if (v.getTag() != null) {
-            AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
-            searchActivityViewModel.isAnnonceFavorite(annonce.getAnnonceEntity().getUUID())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(integer -> {
-                        if (integer == null || integer == 0) {
-                            searchActivityViewModel.addToFavorite(annonce);
-                        }
-                    });
-        }
-    };
-
-    private View.OnClickListener onShareClickListener = v -> {
-        if (v.getTag() != null) {
-            // TODO pas génial ce partage faudrait peut être revoir cette fonctionnalité
-            AnnoncePhotos annonce = (AnnoncePhotos) v.getTag();
-            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-            sharingIntent.setType("text/plain");
-            String shareBody = annonce.getAnnonceEntity().getDescription();
-            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, annonce.getAnnonceEntity().getTitre());
-            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-            startActivity(Intent.createChooser(sharingIntent, "Partager via"));
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +90,7 @@ public class SearchActivity extends AppCompatActivity {
         setTitle("Recherche " + query);
 
         // Recherche du mode display actuellement dans les préférences.
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onFavoriteClickListener, onShareClickListener);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(this);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
         endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -235,5 +200,40 @@ public class SearchActivity extends AppCompatActivity {
                 linearLayout.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    @Override
+    public void onClick(AnnoncePhotos annoncePhotos, ImageView imageView) {
+        Intent intent = new Intent(this, AnnonceDetailActivity.class);
+        intent.putExtra(ARG_ANNONCE, annoncePhotos);
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(this,
+                        imageView,
+                        getString(R.string.image_detail_transition));
+        startActivity(intent, options.toBundle());
+    }
+
+    @Override
+    public void onShare(AnnoncePhotos annoncePhotos, ImageView imageView) {
+        // TODO pas génial ce partage faudrait peut être revoir cette fonctionnalité
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType("text/plain");
+        String shareBody = annoncePhotos.getAnnonceEntity().getDescription();
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, annoncePhotos.getAnnonceEntity().getTitre());
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+        startActivity(Intent.createChooser(sharingIntent, "Partager via"));
+    }
+
+    @Override
+    public void onLike(AnnoncePhotos annoncePhotos, ImageView imageView) {
+        Log.d(TAG, "Click on add to favorite");
+        searchActivityViewModel.isAnnonceFavorite(annoncePhotos.getAnnonceEntity().getUUID())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(integer -> {
+                    if (integer == null || integer == 0) {
+                        searchActivityViewModel.addToFavorite(annoncePhotos);
+                    }
+                });
     }
 }

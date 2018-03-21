@@ -49,7 +49,7 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECEN
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TaskListener<Drawable>, NoticeDialogFragment.DialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, TaskListener<Drawable>, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -349,5 +349,9 @@ public class MainActivity extends AppCompatActivity
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
-
+    @Override
+    public void sortHasBeenUpdated(int sort) {
+        SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(sort);
+        viewModel.updateSort(sort);
+    }
 }

@@ -4,7 +4,9 @@ package oliweb.nc.oliweb.ui.fragment;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 
 import java.util.Locale;
@@ -35,6 +37,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.text_view_prix_detail)
     TextView prix;
 
+    @BindView(R.id.detail_toolbar)
+    Toolbar toolbar;
 
     private AnnoncePhotos annoncePhotos;
 
@@ -50,12 +54,19 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         Bundle arguments = getIntent().getExtras();
 
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
         if (arguments != null) {
             annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
         }
 
         if (annoncePhotos != null) {
-            prix.setText(String.valueOf(String.format(Locale.FRANCE,"%,d", annoncePhotos.getAnnonceEntity().getPrix()) + " XPF"));
+            prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annoncePhotos.getAnnonceEntity().getPrix()) + " XPF"));
             description.setText(annoncePhotos.getAnnonceEntity().getDescription());
             collapsingToolbarLayout.setTitle(annoncePhotos.getAnnonceEntity().getTitre());
             if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {

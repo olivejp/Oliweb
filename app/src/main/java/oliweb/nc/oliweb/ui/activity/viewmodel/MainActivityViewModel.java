@@ -49,6 +49,8 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private MutableLiveData<DialogInfos> liveNotification;
 
+    private MutableLiveData<Integer> sorting;
+
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
@@ -127,5 +129,19 @@ public class MainActivityViewModel extends AndroidViewModel {
                     });
 
         }
+    }
+
+    public void updateSort(int sort) {
+        if (sorting == null) {
+            sorting = new MutableLiveData<>();
+        }
+        sorting.postValue(sort);
+    }
+
+    public LiveData<Integer> sortingUpdated() {
+        if (sorting == null) {
+            sorting = new MutableLiveData<>();
+        }
+        return sorting;
     }
 }

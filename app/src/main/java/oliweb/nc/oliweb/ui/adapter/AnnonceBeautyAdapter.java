@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.os.Build;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -30,14 +31,10 @@ public class AnnonceBeautyAdapter extends
     public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
     private List<AnnoncePhotos> listAnnonces;
-    private View.OnClickListener onClickListener;
-    private View.OnClickListener onFavoriteClickListener;
-    private View.OnClickListener onShareClickListener;
+    private AnnonceAdapterListener listener;
 
-    public AnnonceBeautyAdapter(View.OnClickListener onClickListener, View.OnClickListener onFavoriteClickListener, View.OnClickListener onShareClickListener) {
-        this.onClickListener = onClickListener;
-        this.onFavoriteClickListener = onFavoriteClickListener;
-        this.onShareClickListener = onShareClickListener;
+    public AnnonceBeautyAdapter(AnnonceAdapterListener annonceAdapterListener) {
+        this.listener = annonceAdapterListener;
         this.listAnnonces = new ArrayList<>();
     }
 
@@ -79,13 +76,18 @@ public class AnnonceBeautyAdapter extends
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
         viewHolderBeauty.singleAnnonce = annonce;
 
+        // Transition
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            viewHolderBeauty.imageView.setTransitionName(annonce.getUUID());
+        }
+
         viewHolderBeauty.cardView.setTag(annoncePhotos);
         viewHolderBeauty.imageFavorite.setTag(annoncePhotos);
         viewHolderBeauty.imageShare.setTag(annoncePhotos);
 
-        viewHolderBeauty.cardView.setOnClickListener(this.onClickListener);
-        viewHolderBeauty.imageFavorite.setOnClickListener(this.onFavoriteClickListener);
-        viewHolderBeauty.imageShare.setOnClickListener(this.onShareClickListener);
+        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty.imageView));
+        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty.imageView));
+        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty.imageView));
 
         if (viewHolderBeauty.singleAnnonce.isFavorite()) {
             viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
@@ -95,7 +97,7 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE,"%,d", annonce.getPrix()) + " XPF"));
+        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
@@ -178,5 +180,13 @@ public class AnnonceBeautyAdapter extends
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
         }
+    }
+
+    public interface AnnonceAdapterListener {
+        void onClick(AnnoncePhotos annoncePhotos, ImageView imageView);
+
+        void onShare(AnnoncePhotos annoncePhotos, ImageView imageView);
+
+        void onLike(AnnoncePhotos annoncePhotos, ImageView imageView);
     }
 }
