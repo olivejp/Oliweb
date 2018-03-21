@@ -43,6 +43,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
+                    android:transitionName="@string/view_1_transition"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toLeftOf="@+id/view_2"
                     app:layout_constraintTop_toTopOf="parent">
@@ -61,6 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
+                    android:transitionName="@string/view_2_transition"
                     app:layout_constraintLeft_toRightOf="@+id/view_1"
                     app:layout_constraintRight_toLeftOf="@+id/view_3"
                     app:layout_constraintTop_toTopOf="parent">
@@ -79,6 +81,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
+                    android:transitionName="@string/view_3_transition"
                     app:layout_constraintLeft_toRightOf="@+id/view_2"
                     app:layout_constraintRight_toLeftOf="@+id/view_4"
                     app:layout_constraintTop_toTopOf="parent">
@@ -97,6 +100,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
+                    android:transitionName="@string/view_4_transition"
                     app:layout_constraintLeft_toRightOf="@+id/view_3"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent">

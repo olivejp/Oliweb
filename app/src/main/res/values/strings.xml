@@ -89,4 +89,9 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="image_detail_transition">IMAGE_DETAIL_TRANSITION</string>
+    <string name="image_working_transition">image_working_transition</string>
+    <string name="view_1_transition">view_1_transition</string>
+    <string name="view_2_transition">view_2_transition</string>
+    <string name="view_3_transition">view_3_transition</string>
+    <string name="view_4_transition">view_4_transition</string>
 </resources>

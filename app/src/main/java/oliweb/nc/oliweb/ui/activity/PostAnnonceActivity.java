@@ -307,6 +307,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             WorkImageFragment workImageFragment = new WorkImageFragment();
             getSupportFragmentManager()
                     .beginTransaction()
+                    .addSharedElement(v, getString(R.string.image_working_transition))
                     .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
                     .addToBackStack(null)
                     .commit();

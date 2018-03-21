@@ -38,11 +38,14 @@ public class WorkImageFragment extends Fragment {
     private AppCompatActivity activity;
     private PostAnnonceActivityViewModel viewModel;
     private boolean hasBeenUpdated = false;
+    private Matrix matrix;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         this.activity = (AppCompatActivity) context;
+        matrix = new Matrix();
+        matrix.postRotate(-90);
         if (this.activity.getSupportActionBar() != null) {
             this.activity.getSupportActionBar().hide();
         }
@@ -77,8 +80,6 @@ public class WorkImageFragment extends Fragment {
     @OnClick(R.id.frag_work_image_button_rotate_photo)
     public void onRotate(View v) {
         if (pBitmap != null) {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(-90);
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(pBitmap, pBitmap.getWidth(), pBitmap.getHeight(), true);
             pBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
             scaledBitmap.recycle();
