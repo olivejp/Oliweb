@@ -22,7 +22,7 @@
             android:id="@+id/frag_work_image_photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:scaleType="fitXY"
+            android:scaleType="fitCenter"
             tools:src="@drawable/ic_settings_grey_900_48dp" />
     </android.support.v7.widget.CardView>
 

@@ -232,32 +232,48 @@ class CoreSync {
         }
     }
 
+    private void deletePhotoFromDevice(PhotoEntity photoToDelete, OnSuccessListener listener) {
+        // Suppression du fichier physique
+        if (contentResolver.delete(Uri.parse(photoToDelete.getUriLocal()), null, null) != 0) {
+            Log.d(TAG, "Successful deleting physical photo : " + photoToDelete.getUriLocal());
+            listener.run(true);
+        } else {
+            Log.e(TAG, "Fail to delete physical photo : " + photoToDelete.getUriLocal());
+            listener.run(false);
+        }
+    }
+
     private void deletePhotosFromDevice(List<PhotoEntity> listPhotoToDelete) {
         if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
             for (PhotoEntity photo : listPhotoToDelete) {
-                // Suppression du fichier physique
-                if (contentResolver.delete(Uri.parse(photo.getUriLocal()), null, null) != 0) {
-                    Log.d(TAG, "Successful deleting physical photo : " + photo.getUriLocal());
-                } else {
-                    Log.e(TAG, "Fail to delete physical photo : " + photo.getUriLocal());
-                }
+                deletePhotoFromDevice(photo, null);
             }
+        }
+    }
+
+    private void deletePhotoFromFirebaseStorage(PhotoEntity photoEntity, OnSuccessListener listener) {
+        // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
+        if (photoEntity.getFirebasePath() != null) {
+            // Suppression firebase ... puis suppression dans la DB
+            File file = new File(photoEntity.getUriLocal());
+            String fileName = file.getName();
+            StorageReference storageReference = fireStorage.child(fileName);
+            storageReference.delete()
+                    .addOnSuccessListener(taskSnapshot -> {
+                        Log.d(TAG, "Successful deleting photo on Firebase Storage : " + fileName);
+                        listener.run(true);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to delete image on Firebase Storage : " + e.getMessage());
+                        listener.run(false);
+                    });
         }
     }
 
     private void deletePhotosFromFirebaseStorage(List<PhotoEntity> listPhotoEntity) {
         if (listPhotoEntity != null && !listPhotoEntity.isEmpty()) {
             for (PhotoEntity photo : listPhotoEntity) {
-                // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
-                if (photo.getFirebasePath() != null) {
-                    // Suppression firebase ... puis suppression dans la DB
-                    File file = new File(photo.getUriLocal());
-                    String fileName = file.getName();
-                    StorageReference storageReference = fireStorage.child(fileName);
-                    storageReference.delete()
-                            .addOnSuccessListener(taskSnapshot -> Log.d(TAG, "Successful deleting photo on Firebase Storage : " + fileName))
-                            .addOnFailureListener(e -> Log.e(TAG, "Failed to delete image on Firebase Storage : " + e.getMessage()));
-                }
+                deletePhotoFromFirebaseStorage(photo, null);
             }
         }
     }
@@ -275,8 +291,6 @@ class CoreSync {
      * Read all annonces with TO_DELETE status
      */
     private void syncDeleted() {
-
-
         // Read all annonces with TO_DELETE status to delete them on remote and local
         annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
@@ -298,6 +312,25 @@ class CoreSync {
 
                                     deletePhotoByIdAnnonce(annonce.getIdAnnonce());
                                     deleteAnnonceFromFirebaseDatabase(annonce);
+                                }
+                            }
+                        }
+                );
+
+
+        // Read all PhotoEntities with TO_DELETE status to delete them on remote and local
+        photoRepository
+                .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(listPhotoToDelete -> {
+                            if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
+                                for (PhotoEntity photo : listPhotoToDelete) {
+                                    deletePhotoFromFirebaseStorage(photo, successFirebaseDeleting ->
+                                            deletePhotoFromDevice(photo, successDeviceDeleting ->
+                                                    photoRepository.delete(null, photo)
+                                            )
+                                    );
                                 }
                             }
                         }
@@ -344,5 +377,9 @@ class CoreSync {
 
     private interface OnCheckedListener {
         void run(Integer count);
+    }
+
+    private interface OnSuccessListener {
+        void run(boolean success);
     }
 }

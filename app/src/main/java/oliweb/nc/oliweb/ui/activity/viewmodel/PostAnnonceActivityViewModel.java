@@ -35,10 +35,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private AnnonceEntity annonce;
     private CategorieEntity categorie;
-    private List<PhotoEntity> listPhoto = new ArrayList<>();
+    private ArrayList<PhotoEntity> listPhoto = new ArrayList<>();
     private PhotoEntity photoEntityUpdated;
     private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
-    private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
+    private MutableLiveData<ArrayList<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -56,7 +56,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                 );
     }
 
-    public LiveData<List<PhotoEntity>> getLiveListPhoto() {
+    public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
             this.liveListPhoto.setValue(listPhoto);
@@ -156,7 +156,15 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce = annonce;
     }
 
-    public void setListPhoto(List<PhotoEntity> list) {
+    public AnnonceEntity getAnnonce() {
+        return this.annonce;
+    }
+
+    public ArrayList<PhotoEntity> getListPhoto() {
+        return this.listPhoto;
+    }
+
+    public void setListPhoto(ArrayList<PhotoEntity> list) {
         this.listPhoto = list;
     }
 
