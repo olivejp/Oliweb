@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.activity;
 
-import android.app.Dialog;
 import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -22,16 +21,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -331,23 +325,6 @@ public class MainActivity extends AppCompatActivity
                 .replace(R.id.main_frame, listAnnonceFragment)
                 .addToBackStack(null)
                 .commit();
-    }
-
-    private void showRadioButtonDialog() {
-        final Dialog dialog = new Dialog(this);
-        dialog.setTitle("Tri");
-        dialog.setContentView(R.layout.radiobutton_dialog);
-        List<String> stringList = new ArrayList<>();  // here is list
-        for (int i = 0; i < 5; i++) {
-            stringList.add("RadioButton " + (i + 1));
-        }
-        RadioGroup rg = dialog.findViewById(R.id.radio_group);
-        for (int i = 0; i < stringList.size(); i++) {
-            RadioButton rb = new RadioButton(this); // dynamically creating RadioButton and adding to RadioGroup.
-            rb.setText(stringList.get(i));
-            rg.addView(rb);
-        }
-        dialog.show();
     }
 
     @Override
