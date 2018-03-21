@@ -15,6 +15,7 @@ public class SharedPreferencesHelper {
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
     private static final String PREF_DISPLAY_GRID = "PREF_DISPLAY_GRID";
     private static final String PREF_FIRST_TIME = "PREF_FIRST_TIME";
+    private static final String PREF_SORT = "PREF_SORT";
     public static final int PREF_VALUE_DISPLAY_MODE_RAW = 500;
     public static final int PREF_VALUE_DISPLAY_MODE_BEAUTY = 600;
 
@@ -81,5 +82,13 @@ public class SharedPreferencesHelper {
 
     public boolean setGridMode(boolean gridMode) {
         return editor.putBoolean(PREF_DISPLAY_GRID, gridMode).commit();
+    }
+
+    public int getPrefSort() {
+        return sharedPreferences.getInt(PREF_SORT, 0);
+    }
+
+    public boolean setPrefSort(int sort) {
+        return editor.putInt(PREF_SORT, sort).commit();
     }
 }

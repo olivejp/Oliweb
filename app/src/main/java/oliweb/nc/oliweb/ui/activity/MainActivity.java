@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.activity;
 
+import android.app.Dialog;
 import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -21,11 +22,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -37,6 +43,7 @@ import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
@@ -54,8 +61,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = MainActivity.class.getName();
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
-    public static final String TAG_DETAIL_ANNONCE = "TAG_DETAIL_ANNONCE";
-
+    public static final String SORT_DIALOG = "SORT_DIALOG";
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -134,11 +140,7 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                getSupportFragmentManager().popBackStack();
-            } else {
-                super.onBackPressed();
-            }
+            super.onBackPressed();
         }
     }
 
@@ -158,7 +160,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.sorting) {
+            SortDialog sortDialog = new SortDialog();
+            sortDialog.show(getSupportFragmentManager(), SORT_DIALOG);
+        }
+
+        return true;
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -179,7 +187,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         } else if (id == R.id.nav_profile) {
-
+            // TODO - Do something here
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
         } else if (id == R.id.nav_annonces) {
@@ -246,7 +254,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
@@ -324,6 +331,23 @@ public class MainActivity extends AppCompatActivity
                 .replace(R.id.main_frame, listAnnonceFragment)
                 .addToBackStack(null)
                 .commit();
+    }
+
+    private void showRadioButtonDialog() {
+        final Dialog dialog = new Dialog(this);
+        dialog.setTitle("Tri");
+        dialog.setContentView(R.layout.radiobutton_dialog);
+        List<String> stringList = new ArrayList<>();  // here is list
+        for (int i = 0; i < 5; i++) {
+            stringList.add("RadioButton " + (i + 1));
+        }
+        RadioGroup rg = dialog.findViewById(R.id.radio_group);
+        for (int i = 0; i < stringList.size(); i++) {
+            RadioButton rb = new RadioButton(this); // dynamically creating RadioButton and adding to RadioGroup.
+            rb.setText(stringList.get(i));
+            rg.addView(rb);
+        }
+        dialog.show();
     }
 
     @Override

@@ -35,6 +35,13 @@
         <item>-1</item>
     </string-array>
 
+    <string-array name="pref_sort">
+        <item>Prix le plus élevé en premier</item>
+        <item>Prix le plus bas en premier</item>
+        <item>Plus récent en premier</item>
+        <item>Plus ancien en premier</item>
+    </string-array>
+
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Data &amp; sync</string>
 

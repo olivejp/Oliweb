@@ -8,21 +8,9 @@
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="always" />
     <item
-        android:id="@+id/sort_date"
-        android:icon="@drawable/ic_date_range_grey_900_48dp"
+        android:id="@+id/sorting"
+        android:icon="@drawable/ic_sort_white_48dp"
         android:orderInCategory="100"
-        android:title="Trier par date"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/sort_title"
-        android:icon="@drawable/ic_sort_by_alpha_grey_900_48dp"
-        android:orderInCategory="100"
-        android:title="Trier par titre"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/sort_price"
-        android:icon="@drawable/ic_attach_money_grey_900_48dp"
-        android:orderInCategory="100"
-        android:title="Trier par prix"
-        app:showAsAction="never" />
+        android:title="Trier"
+        app:showAsAction="ifRoom" />
 </menu>
