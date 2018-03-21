@@ -32,6 +32,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
+import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
@@ -40,7 +41,7 @@ import oliweb.nc.oliweb.ui.task.TaskListener;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.ui.fragment.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 
 public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapter.AnnonceAdapterListener {
     private static final String TAG = ListAnnonceFragment.class.getName();

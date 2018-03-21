@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.ui.fragment;
+package oliweb.nc.oliweb.ui.activity;
 
 
 import android.os.Bundle;

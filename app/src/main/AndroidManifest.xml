@@ -120,7 +120,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.fragment.AnnonceDetailActivity"
+            android:name=".ui.activity.AnnonceDetailActivity"
             android:parentActivityName=".ui.activity.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
