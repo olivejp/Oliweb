@@ -130,9 +130,11 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         int newTri;
         switch (id) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
             case R.id.sort_date:
                 newTri = SORT_DATE;
                 break;

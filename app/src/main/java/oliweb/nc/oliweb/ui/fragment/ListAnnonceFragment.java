@@ -128,7 +128,7 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         }
 
-        viewModel.sortingUpdated().observe(this, this::changeSort);
+        viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
 
         switch (action) {
             case ACTION_FAVORITE:
@@ -160,12 +160,14 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
                 break;
         }
 
-        changeSort(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+        if (savedInstanceState == null) {
+            changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+        }
 
         return view;
     }
 
-    private void changeSort(Integer newSort) {
+    private void changeSortAndUpdateList(Integer newSort) {
         if (newSort != null) {
             switch (newSort) {
                 case 0:

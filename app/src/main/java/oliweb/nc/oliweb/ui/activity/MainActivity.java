@@ -125,7 +125,6 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE)
-                .addToBackStack(null)
                 .commit();
     }
 
