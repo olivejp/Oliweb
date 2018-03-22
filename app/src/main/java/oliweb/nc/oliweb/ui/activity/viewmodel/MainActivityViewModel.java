@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
@@ -28,10 +29,12 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
+import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.FirebaseSync;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
 /**
@@ -64,7 +67,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveNotification;
     }
 
-    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur){
+    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
         return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
@@ -86,6 +89,17 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurEntity.setUuidUtilisateur(user.getUid());
         utilisateurEntity.setTelephone(user.getPhoneNumber());
         utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
+    }
+
+    public void createFirebaseUser(FirebaseUser user) {
+        UtilisateurFirebase utilisateurFirebase = new UtilisateurFirebase();
+        utilisateurFirebase.setPhotoPath(user.getPhotoUrl().toString());
+        utilisateurFirebase.setProfileName(user.getDisplayName());
+        utilisateurFirebase.setEmail(user.getEmail());
+        utilisateurFirebase.setTelephone(user.getPhoneNumber());
+        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).setValue(utilisateurFirebase)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
+                .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
     }
 
     public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {

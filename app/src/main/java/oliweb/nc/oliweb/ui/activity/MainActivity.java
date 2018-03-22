@@ -298,6 +298,9 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
+                // Create/Update user in Firebase
+                viewModel.createFirebaseUser(mFirebaseUser);
+
                 // Call the task to retrieve the photo
                 callPhotoTask();
             } else {
