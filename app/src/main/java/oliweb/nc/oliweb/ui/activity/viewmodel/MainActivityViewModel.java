@@ -15,6 +15,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -49,6 +51,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private UtilisateurRepository utilisateurRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
+    private AnnonceRepository annonceRepository;
 
     private MutableLiveData<DialogInfos> liveNotification;
 
@@ -58,6 +61,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         super(application);
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
+        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
 
         liveNotification = new MutableLiveData<>();
         liveNotification.setValue(null);
@@ -97,6 +101,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurFirebase.setProfileName(user.getDisplayName());
         utilisateurFirebase.setEmail(user.getEmail());
         utilisateurFirebase.setTelephone(user.getPhoneNumber());
+        utilisateurFirebase.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
         FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).setValue(utilisateurFirebase)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
                 .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
@@ -157,5 +162,13 @@ public class MainActivityViewModel extends AndroidViewModel {
             sorting = new MutableLiveData<>();
         }
         return sorting;
+    }
+
+    public LiveData<Integer> countAllAnnoncesByUser(String uid) {
+        return this.annonceRepository.countAllAnnoncesByUser(uid);
+    }
+
+    public LiveData<Integer> countAllFavoritesByUser(String uid) {
+        return this.annonceRepository.countAllFavoritesByUser(uid);
     }
 }

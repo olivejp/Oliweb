@@ -41,6 +41,13 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
     Single<Integer> countAllAnnoncesByStatus(String status);
 
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE UuidUtilisateur = :uidUser")
+    LiveData<Integer> countAllAnnoncesByUser(String uidUser);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE UuidUtilisateur = :uidUser AND favorite = 1")
+    LiveData<Integer> countAllFavoritesByUser(String uidUser);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE UuidUtilisateur = :uidUtilisateur AND UUID = :uidAnnonce")

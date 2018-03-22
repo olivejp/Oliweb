@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.app.SearchManager;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -80,6 +82,18 @@ public class MainActivity extends AppCompatActivity
     private CatchPhotoFromUrlTask photoTask;
 
     private MainActivityViewModel viewModel;
+
+    private Observer<Integer> observeNumberAnnonceBadge = integer -> {
+        TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
+        numberAnnoncesBadge.setGravity(Gravity.CENTER_VERTICAL);
+        numberAnnoncesBadge.setText(String.valueOf(integer));
+    };
+
+    private Observer<Integer> observeNumberFavoriteBadge = integer -> {
+        TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();
+        numberFavoriteBadge.setGravity(Gravity.CENTER_VERTICAL);
+        numberFavoriteBadge.setText(String.valueOf(integer));
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -277,6 +291,24 @@ public class MainActivity extends AppCompatActivity
         photoTask.execute(uris);
     }
 
+    private void initBadges(boolean active) {
+        String uid = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        if (active) {
+            // On lance les observers pour récupérer les badges
+            viewModel.countAllAnnoncesByUser(uid).observeForever(observeNumberAnnonceBadge);
+            viewModel.countAllFavoritesByUser(uid).observeForever(observeNumberFavoriteBadge);
+        } else {
+            // On stoppe les observers
+            viewModel.countAllAnnoncesByUser(uid).removeObserver(observeNumberAnnonceBadge);
+            viewModel.countAllFavoritesByUser(uid).removeObserver(observeNumberFavoriteBadge);
+
+            TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
+            TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();
+            numberAnnoncesBadge.setText(null);
+            numberFavoriteBadge.setText(null);
+        }
+    }
+
     private void defineAuthListener() {
         mAuthStateListener = firebaseAuth -> {
             mFirebaseUser = firebaseAuth.getCurrentUser();
@@ -291,6 +323,9 @@ public class MainActivity extends AppCompatActivity
                     profileEmail.setText(mFirebaseUser.getEmail());
                 }
 
+                // initBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
+                initBadges(true);
+
                 // Create user in local Db
                 viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
                     if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
@@ -304,11 +339,13 @@ public class MainActivity extends AppCompatActivity
                 // Call the task to retrieve the photo
                 callPhotoTask();
             } else {
-                SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
+                // initBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
+                initBadges(false);
                 profileName.setText(null);
                 profileEmail.setText(null);
                 mFirebaseUser = null;
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
+                SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
             }
         };
     }
@@ -317,6 +354,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_annonces).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
+        navigationView.getMenu().findItem(R.id.nav_messages).setEnabled(mFirebaseUser != null);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
     }
 

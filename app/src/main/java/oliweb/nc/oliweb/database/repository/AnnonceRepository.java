@@ -68,6 +68,14 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.countAllAnnoncesByStatus(status);
     }
 
+    public LiveData<Integer> countAllAnnoncesByUser(String uidUser){
+        return this.annonceDao.countAllAnnoncesByUser(uidUser);
+    }
+
+    public LiveData<Integer> countAllFavoritesByUser(String uidUser){
+        return this.annonceDao.countAllFavoritesByUser(uidUser);
+    }
+
     public Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce){
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }

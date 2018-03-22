@@ -198,7 +198,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
             });
             return true;
         }
-        return false;
+        if (idItem == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private boolean checkIfAnnonceIsValid() {
@@ -230,6 +234,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             callGalleryIntent();
         }
     }
+
     @SuppressWarnings("squid:S3776")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

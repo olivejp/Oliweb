@@ -75,10 +75,8 @@ public class AnnonceRawAdapter extends
 
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderRaw.imgPhoto.setVisibility(View.VISIBLE);
             viewHolderRaw.textNbPhotos.setText(String.valueOf(annoncePhotos.getPhotos().size()));
         } else {
-            viewHolderRaw.imgPhoto.setVisibility(View.GONE);
             viewHolderRaw.textNbPhotos.setText("0");
         }
     }

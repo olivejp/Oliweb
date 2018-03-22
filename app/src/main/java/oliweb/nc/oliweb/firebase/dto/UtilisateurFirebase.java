@@ -9,15 +9,17 @@ public class UtilisateurFirebase {
     private String telephone;
     private String photoPath;
     private String email;
+    private String tokenDevice;
 
     public UtilisateurFirebase() {
     }
 
-    public UtilisateurFirebase(String profileName, String telephone, String photoPath, String email) {
+    public UtilisateurFirebase(String profileName, String telephone, String photoPath, String email, String tokenDevice) {
         this.profileName = profileName;
         this.telephone = telephone;
         this.photoPath = photoPath;
         this.email = email;
+        this.tokenDevice = tokenDevice;
     }
 
     public String getProfileName() {
@@ -50,5 +52,13 @@ public class UtilisateurFirebase {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getTokenDevice() {
+        return tokenDevice;
+    }
+
+    public void setTokenDevice(String tokenDevice) {
+        this.tokenDevice = tokenDevice;
     }
 }
