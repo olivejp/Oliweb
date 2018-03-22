@@ -68,7 +68,7 @@ public class AnnonceRawAdapter extends
         // Attribution des données au valeurs graphiques
         viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUUID()));
         viewHolderRaw.textTitreAnnonce.setText(viewHolderRaw.singleAnnonce.getTitre());
-        viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE,"%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
+        viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
 
         // Récupération de la date de publication
         viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.convertDateEntityToUi(viewHolderRaw.singleAnnonce.getDatePublication()));
@@ -76,8 +76,10 @@ public class AnnonceRawAdapter extends
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
             viewHolderRaw.imgPhoto.setVisibility(View.VISIBLE);
+            viewHolderRaw.textNbPhotos.setText(String.valueOf(annoncePhotos.getPhotos().size()));
         } else {
             viewHolderRaw.imgPhoto.setVisibility(View.GONE);
+            viewHolderRaw.textNbPhotos.setText("0");
         }
     }
 
@@ -140,6 +142,12 @@ public class AnnonceRawAdapter extends
 
         @BindView(R.id.deleted_layout_raw)
         ConstraintLayout deletedLayoutRaw;
+
+        @BindView(R.id.text_nb_photos)
+        TextView textNbPhotos;
+
+        @BindView(R.id.text_nb_conversations)
+        TextView textNbConversations;
 
         AnnonceEntity singleAnnonce;
 

@@ -57,26 +57,26 @@
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
 
-            <android.support.constraint.ConstraintLayout
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/text_description_detail"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:minLines="1"
+                android:scrollbars="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI." />
 
-                <TextView
-                    android:id="@+id/text_description_detail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:lines="15"
-                    android:maxLength="1000"
-                    android:minLines="1"
-                    android:scrollbars="vertical"
-                    tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI." />
-
-            </android.support.constraint.ConstraintLayout>
+        </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
 
     <android.support.constraint.ConstraintLayout

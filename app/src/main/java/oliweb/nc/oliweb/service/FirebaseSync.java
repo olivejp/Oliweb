@@ -45,7 +45,7 @@ public class FirebaseSync {
 
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
-    public static GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
+    public static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
     private FirebaseSync() {
