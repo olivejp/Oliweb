@@ -7,7 +7,7 @@
     tools:layout_height="80dp">
 
     <ImageView
-        android:id="@+id/author_photo"
+        android:id="@+id/chat_author_photo"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_margin="12dp"
@@ -17,19 +17,19 @@
         tools:src="@drawable/ic_person_grey_900_48dp" />
 
     <TextView
-        android:id="@+id/last_message"
+        android:id="@+id/chat_last_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="25dp"
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/author_photo"
+        app:layout_constraintLeft_toRightOf="@+id/chat_author_photo"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Ceci est le dernier message que j'ai recu pour cette annonce.Et c'est vraiment un très long message qu'il faut absolument que je coupe." />
 
     <TextView
-        android:id="@+id/last_message_timestamp"
+        android:id="@+id/chat_last_message_timestamp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"

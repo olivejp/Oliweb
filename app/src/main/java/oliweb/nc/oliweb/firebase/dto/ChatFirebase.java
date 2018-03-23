@@ -1,27 +1,47 @@
 package oliweb.nc.oliweb.firebase.dto;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by 2761oli on 23/03/2018.
  */
 
 public class ChatFirebase {
-    String uidAnnonce;
-    String lastMessage;
-    long creationTimestamp;
-    long updateTimestamp;
-    HashMap<String, Boolean> members;
+    private String uidBuyer;
+    private String uidSeller;
+    private String uidAnnonce;
+    private String lastMessage;
+    private long creationTimestamp;
+    private long updateTimestamp;
+    private Map<String, Boolean> members;
 
     public ChatFirebase() {
     }
 
-    public ChatFirebase(String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, HashMap<String, Boolean> members) {
+    public ChatFirebase(String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, Map<String, Boolean> members) {
+        this.uidBuyer = uidBuyer;
+        this.uidSeller = uidSeller;
         this.uidAnnonce = uidAnnonce;
         this.lastMessage = lastMessage;
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
         this.members = members;
+    }
+
+    public String getUidBuyer() {
+        return uidBuyer;
+    }
+
+    public void setUidBuyer(String uidBuyer) {
+        this.uidBuyer = uidBuyer;
+    }
+
+    public String getUidSeller() {
+        return uidSeller;
+    }
+
+    public void setUidSeller(String uidSeller) {
+        this.uidSeller = uidSeller;
     }
 
     public String getUidAnnonce() {
@@ -56,11 +76,11 @@ public class ChatFirebase {
         this.updateTimestamp = updateTimestamp;
     }
 
-    public HashMap<String, Boolean> getMembers() {
+    public Map<String, Boolean> getMembers() {
         return members;
     }
 
-    public void setMembers(HashMap<String, Boolean> members) {
+    public void setMembers(Map<String, Boolean> members) {
         this.members = members;
     }
 }
