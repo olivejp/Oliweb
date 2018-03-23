@@ -94,4 +94,7 @@
     <string name="view_2_transition">view_2_transition</string>
     <string name="view_3_transition">view_3_transition</string>
     <string name="view_4_transition">view_4_transition</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

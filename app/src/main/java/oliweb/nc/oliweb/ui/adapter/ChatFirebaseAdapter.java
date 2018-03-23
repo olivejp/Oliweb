@@ -8,14 +8,24 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -37,6 +47,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
     protected void onBindViewHolder(@NonNull ChatFirebaseViewHolder holder, int position, @NonNull ChatFirebase model) {
         holder.lastMessage.setText(model.getLastMessage());
         holder.lastMessageTimestamp.setText(Utility.howLongFromNow(model.getUpdateTimestamp()));
+        retreivePhoto(holder, model);
     }
 
     @Override
@@ -44,6 +55,35 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         View rootView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.adapter_chat_element, parent, false);
         return new ChatFirebaseViewHolder(rootView);
+    }
+
+    private void retreivePhoto(@NonNull ChatFirebaseViewHolder holder, @NonNull ChatFirebase model) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
+        if (model.isAmITheSeller()) {
+            ref = ref.child(model.getUidBuyer());
+        } else {
+            ref = ref.child(model.getUidSeller());
+        }
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
+                if (utilisateurFirebase != null) {
+                    GlideApp.with(holder.imagePhotoAuthor)
+                            .load(utilisateurFirebase.getPhotoPath())
+                            .apply(RequestOptions.circleCropTransform())
+                            .placeholder(R.drawable.ic_person_grey_900_48dp)
+                            .error(R.drawable.ic_error_grey_900_48dp)
+                            .into(holder.imagePhotoAuthor);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Do nothing
+            }
+        });
     }
 
     public static class ChatFirebaseViewHolder extends RecyclerView.ViewHolder {
