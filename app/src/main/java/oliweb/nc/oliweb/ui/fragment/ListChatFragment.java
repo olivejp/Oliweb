@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
@@ -38,6 +41,9 @@ public class ListChatFragment extends Fragment {
     private DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
     private FirebaseRecyclerOptions<ChatFirebase> options;
     private ChatFirebaseAdapter adapter;
+
+    @BindView(R.id.recycler_list_chats)
+    RecyclerView recyclerView;
 
     public static ListChatFragment getInstance(@Nullable String uidUtilisateur, @Nullable String uidAnnonce) {
         ListChatFragment listChatFragment = new ListChatFragment();
@@ -77,8 +83,9 @@ public class ListChatFragment extends Fragment {
             }
             if (getArguments().containsKey(ARG_UID_USER)) {
                 uidUtilisateur = getArguments().getString(ARG_UID_USER);
-                query = reference.orderByChild(uidUtilisateur).equalTo(true);
+                query = reference.orderByChild("members/" + uidUtilisateur).equalTo(true);
             }
+
             options = new FirebaseRecyclerOptions.Builder<ChatFirebase>()
                     .setQuery(query, ChatFirebase.class)
                     .build();
@@ -89,11 +96,14 @@ public class ListChatFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_message_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_list_chat, container, false);
 
         ButterKnife.bind(this, view);
 
-        ChatFirebaseAdapter adapter = new ChatFirebaseAdapter(options);
+        adapter = new ChatFirebaseAdapter(options);
+
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(appCompatActivity));
 
         return view;
     }

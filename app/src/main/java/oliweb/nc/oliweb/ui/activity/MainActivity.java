@@ -12,12 +12,14 @@ import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,11 +30,15 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
@@ -41,6 +47,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
+import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
@@ -95,6 +102,20 @@ public class MainActivity extends AppCompatActivity
         numberFavoriteBadge.setText(String.valueOf(integer));
     };
 
+    // TODO test d'insertion d'un chat
+    private void testInsertionChat() {
+        ChatFirebase chatFirebase = new ChatFirebase();
+        chatFirebase.setLastMessage("Ceci est le dernier des messages");
+        chatFirebase.getMembers().put("WmWRENgvKsP6T9Azu0f2MiNItQN2", true);
+        chatFirebase.getMembers().put("WmWRENgvKsP6T9Azu0f2MiNItQN&", true);
+        chatFirebase.setUidAnnonce("0067c841-0561-4e45-944c-f3a4e681d60b");
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).push();
+        ref.setValue(chatFirebase)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "FIRST CHAT CREATED"))
+                .addOnFailureListener(e -> Log.d(TAG, "FAILED TO CREATED FIRST CHAT"));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +149,7 @@ public class MainActivity extends AppCompatActivity
 
         // Init most recent annonce fragment
         ListAnnonceFragment listAnnonceFragment;
+        boolean newFrag = false;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
         } else {
@@ -135,11 +157,15 @@ public class MainActivity extends AppCompatActivity
         }
         if (listAnnonceFragment == null) {
             listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
+            newFrag = true;
         }
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE)
-                .commit();
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
+        if (newFrag) {
+            transaction.addToBackStack(null).commit();
+        } else {
+            transaction.commit();
+        }
     }
 
     @Override
@@ -147,7 +173,11 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+                getSupportFragmentManager().popBackStackImmediate();
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -197,6 +227,9 @@ public class MainActivity extends AppCompatActivity
             // TODO - Do something here
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
+        } else if (id == R.id.nav_chats) {
+            ListChatFragment listChatFragment = ListChatFragment.getInstance(mFirebaseUser.getUid(), null);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment).addToBackStack(null).commit();
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
@@ -354,7 +387,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_annonces).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
-        navigationView.getMenu().findItem(R.id.nav_messages).setEnabled(mFirebaseUser != null);
+        navigationView.getMenu().findItem(R.id.nav_chats).setEnabled(mFirebaseUser != null);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
     }
 

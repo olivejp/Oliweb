@@ -16,9 +16,9 @@
                 android:title="@string/mes_annonces"
                 app:actionViewClass="android.widget.TextView" />
             <item
-                android:id="@+id/nav_messages"
+                android:id="@+id/nav_chats"
                 android:icon="@drawable/ic_message_grey_900_48dp"
-                android:title="@string/mes_messages"
+                android:title="@string/mes_conversations"
                 app:actionViewClass="android.widget.TextView" />
             <item
                 android:id="@+id/nav_favorites"

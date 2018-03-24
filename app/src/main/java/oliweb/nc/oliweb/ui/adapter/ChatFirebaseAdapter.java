@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.ui.adapter;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,6 +34,8 @@ import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
  */
 
 public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, ChatFirebaseAdapter.ChatFirebaseViewHolder> {
+
+    private static final String TAG = ChatFirebaseAdapter.class.getName();
 
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
@@ -57,12 +61,18 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         return new ChatFirebaseViewHolder(rootView);
     }
 
+    @Override
+    public void onError(@NonNull DatabaseError error) {
+        Log.d(TAG, "Grosse erreur dans le ChatFirebaseAdapter");
+        super.onError(error);
+    }
+
     private void retreivePhoto(@NonNull ChatFirebaseViewHolder holder, @NonNull ChatFirebase model) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-        if (model.isAmITheSeller()) {
-            ref = ref.child(model.getUidBuyer());
-        } else {
+        if (model.getUidBuyer().equals(FirebaseAuth.getInstance().getUid())) {
             ref = ref.child(model.getUidSeller());
+        } else {
+            ref = ref.child(model.getUidBuyer());
         }
 
         ref.addListenerForSingleValueEvent(new ValueEventListener() {

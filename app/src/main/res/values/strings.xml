@@ -5,6 +5,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="facebook_app_id">1556396067990675</string>
+    <string name="facebook_application_id">1556396067990675</string>
     <string name="fb_login_protocol_scheme">fb1556396067990675</string>
 
     <string name="pref_default_number_car" translatable="false">100</string>
@@ -98,11 +99,11 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="mon_profil">Mon profil</string>
     <string name="mes_annonces">Mes annonces</string>
-    <string name="mes_messages">Mes messages</string>
     <string name="mes_favoris">Mes favoris</string>
     <string name="mes_informations">Mes informations</string>
     <string name="se_connecter">Se connecter</string>
     <string name="connexion">Connexion</string>
     <string name="param_tres">Paramètres</string>
     <string name="content_description_profile_image">content_description_profile_image</string>
+    <string name="mes_conversations">Mes conversations</string>
 </resources>
