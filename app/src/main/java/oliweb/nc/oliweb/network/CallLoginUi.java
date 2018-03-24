@@ -13,11 +13,14 @@ import java.util.List;
 
 public class CallLoginUi {
 
+    private CallLoginUi() {
+    }
+
     public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
-        listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
-        listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.FACEBOOK_PROVIDER).build());
-        listProviders.add(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build());
+        listProviders.add(new AuthUI.IdpConfig.GoogleBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.EmailBuilder().build());
 
         activityCaller.startActivityForResult(
                 AuthUI.getInstance()

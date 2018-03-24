@@ -4,46 +4,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <item android:title="Mes informations">
+    <item android:title="@string/mes_informations">
         <menu>
             <item
                 android:id="@+id/nav_profile"
                 android:icon="@drawable/ic_person_grey_900_48dp"
-                android:title="Mon profil" />
+                android:title="@string/mon_profil" />
             <item
                 android:id="@+id/nav_annonces"
                 android:icon="@drawable/ic_assistant_photo_grey_900_48dp"
-                android:title="Mes annonces"
+                android:title="@string/mes_annonces"
                 app:actionViewClass="android.widget.TextView" />
             <item
                 android:id="@+id/nav_messages"
                 android:icon="@drawable/ic_message_grey_900_48dp"
-                android:title="Mes messages"
+                android:title="@string/mes_messages"
                 app:actionViewClass="android.widget.TextView" />
             <item
                 android:id="@+id/nav_favorites"
                 android:icon="@drawable/ic_favorite_grey_900_48dp"
-                android:title="Mes favoris"
+                android:title="@string/mes_favoris"
                 app:actionViewClass="android.widget.TextView" />
         </menu>
     </item>
 
-    <item android:title="Paramètres">
+    <item android:title="@string/param_tres">
         <menu>
             <item
                 android:id="@+id/nav_settings"
                 android:icon="@drawable/ic_settings_grey_900_48dp"
-                android:title="Paramètres" />
+                android:title="@string/param_tres" />
 
         </menu>
     </item>
 
-    <item android:title="Connexion">
+    <item android:title="@string/connexion">
         <menu>
             <item
                 android:id="@+id/nav_connect"
                 android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
-                android:title="Se connecter" />
+                android:title="@string/se_connecter" />
         </menu>
     </item>
 

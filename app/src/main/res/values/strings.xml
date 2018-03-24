@@ -95,6 +95,14 @@
     <string name="view_3_transition">view_3_transition</string>
     <string name="view_4_transition">view_4_transition</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="mon_profil">Mon profil</string>
+    <string name="mes_annonces">Mes annonces</string>
+    <string name="mes_messages">Mes messages</string>
+    <string name="mes_favoris">Mes favoris</string>
+    <string name="mes_informations">Mes informations</string>
+    <string name="se_connecter">Se connecter</string>
+    <string name="connexion">Connexion</string>
+    <string name="param_tres">Paramètres</string>
+    <string name="content_description_profile_image">content_description_profile_image</string>
 </resources>
