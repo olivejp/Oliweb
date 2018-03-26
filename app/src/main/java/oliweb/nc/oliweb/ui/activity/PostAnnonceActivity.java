@@ -69,6 +69,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
     private static final String SAVE_ANNONCE = "SAVE_ANNONCE";
     private static final String SAVE_LIST_PHOTO = "SAVE_LIST_PHOTO";
+    private static final String SAVE_FILE_URI_TEMP = "SAVE_FILE_URI_TEMP";
 
     private PostAnnonceActivityViewModel viewModel;
     private Uri mFileUriTemp;
@@ -149,6 +150,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
                 viewModel.setAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
+            }
+
+            if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
+                mFileUriTemp = savedInstanceState.getParcelable(SAVE_FILE_URI_TEMP);
             }
 
             if (savedInstanceState.containsKey(SAVE_LIST_PHOTO)) {
@@ -238,43 +243,43 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @SuppressWarnings("squid:S3776")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode != RESULT_CANCELED){
-        switch (requestCode) {
-            case DIALOG_REQUEST_IMAGE:
-                if (resultCode == RESULT_OK) {
-                    try {
-                        if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
-                            viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
-                        } else {
-                            Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+        if (resultCode != RESULT_CANCELED) {
+            switch (requestCode) {
+                case DIALOG_REQUEST_IMAGE:
+                    if (resultCode == RESULT_OK) {
+                        try {
+                            if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
+                                viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
+                            } else {
+                                Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, e.getMessage(), e);
                         }
-                    } catch (IOException e) {
-                        Log.e(TAG, e.getMessage(), e);
                     }
-                }
-                break;
-            case DIALOG_GALLERY_IMAGE:
-                if (resultCode == RESULT_OK) {
-                    // Insertion multiple
-                    if (data.getClipData() != null) {
-                        int i = -1;
-                        ClipData.Item item;
-                        while (i++ < data.getClipData().getItemCount() - 1) {
-                            if (viewModel.canHandleAnotherPhoto()) {
-                                item = data.getClipData().getItemAt(i);
-                                insertFromGallery(item.getUri());
+                    break;
+                case DIALOG_GALLERY_IMAGE:
+                    if (resultCode == RESULT_OK) {
+                        // Insertion multiple
+                        if (data.getClipData() != null) {
+                            int i = -1;
+                            ClipData.Item item;
+                            while (i++ < data.getClipData().getItemCount() - 1) {
+                                if (viewModel.canHandleAnotherPhoto()) {
+                                    item = data.getClipData().getItemAt(i);
+                                    insertFromGallery(item.getUri());
+                                }
+                            }
+                        } else {
+                            // Insertion simple
+                            Uri uri = data.getData();
+                            if (uri != null) {
+                                insertFromGallery(uri);
                             }
                         }
-                    } else {
-                        // Insertion simple
-                        Uri uri = data.getData();
-                        if (uri != null) {
-                            insertFromGallery(uri);
-                        }
                     }
-                }
-                break;
-        }
+                    break;
+            }
         }
     }
 
@@ -282,6 +287,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
         outState.putString(BUNDLE_KEY_MODE, mode);
+        outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
         outState.putParcelable(SAVE_ANNONCE, viewModel.getAnnonce());
         outState.putParcelableArrayList(SAVE_LIST_PHOTO, viewModel.getListPhoto());
         Fragment frag = getSupportFragmentManager().findFragmentByTag(TAG_WORKING_IMAGE);
