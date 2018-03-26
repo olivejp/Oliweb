@@ -44,7 +44,6 @@ import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 
 public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapter.AnnonceAdapterListener {
-    private static final String TAG = ListAnnonceFragment.class.getName();
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
@@ -208,9 +207,6 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
             case SORT_DATE:
                 loadSortDate().addListenerForSingleValueEvent(valueEventListener);
                 break;
-            case SORT_TITLE:
-                loadSortTitle().addListenerForSingleValueEvent(valueEventListener);
-                break;
             case SORT_PRICE:
                 loadSortPrice().addListenerForSingleValueEvent(valueEventListener);
                 break;
@@ -239,18 +235,6 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
             query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
         }
         return query;
-    }
-
-    private Query loadSortTitle() {
-        // Recherche du titre le plus haut
-        // TODO trouver la valeur max d'un string
-        String lastTitle = "ZZZZZZZZZZZZ";
-        for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-            if (lastTitle.compareTo(annoncePhotos.getAnnonceEntity().getTitre()) < 0) {
-                lastTitle = annoncePhotos.getAnnonceEntity().getTitre();
-            }
-        }
-        return annoncesReference.orderByChild("titre").endAt(lastTitle).limitToLast(Constants.PER_PAGE_REQUEST);
     }
 
     private Query loadSortDate() {

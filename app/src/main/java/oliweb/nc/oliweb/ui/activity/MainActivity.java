@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -65,6 +64,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = MainActivity.class.getName();
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
+    private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -166,6 +166,13 @@ public class MainActivity extends AppCompatActivity
         } else {
             transaction.commit();
         }
+
+        // Init Chat Fragment
+        ListChatFragment listChatFragment;
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CHAT)) {
+            listChatFragment = (ListChatFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CHAT);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
+        }
     }
 
     @Override
@@ -173,7 +180,7 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                 getSupportFragmentManager().popBackStackImmediate();
             } else {
                 super.onBackPressed();
@@ -206,7 +213,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
@@ -229,7 +235,7 @@ public class MainActivity extends AppCompatActivity
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
             ListChatFragment listChatFragment = ListChatFragment.getInstance(mFirebaseUser.getUid(), null);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment).addToBackStack(null).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).addToBackStack(null).commit();
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
@@ -414,12 +420,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+    protected void onSaveInstanceState(Bundle outState) {
         ListAnnonceFragment listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
         if (listAnnonceFragment != null) {
             getSupportFragmentManager().putFragment(outState, TAG_LIST_ANNONCE, listAnnonceFragment);
         }
-        super.onSaveInstanceState(outState, outPersistentState);
+
+        ListChatFragment listChatFragment = (ListChatFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CHAT);
+        if (listChatFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
