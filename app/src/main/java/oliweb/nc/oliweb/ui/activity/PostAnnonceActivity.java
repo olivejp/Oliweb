@@ -238,6 +238,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @SuppressWarnings("squid:S3776")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode != RESULT_CANCELED){
         switch (requestCode) {
             case DIALOG_REQUEST_IMAGE:
                 if (resultCode == RESULT_OK) {
@@ -273,6 +274,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     }
                 }
                 break;
+        }
         }
     }
 
