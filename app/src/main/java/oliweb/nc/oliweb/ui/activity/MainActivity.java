@@ -47,6 +47,7 @@ import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
+import oliweb.nc.oliweb.ui.fragment.ListMessageFragment;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
+    private static final String TAG_LIST_MESSAGE = "TAG_LIST_MESSAGE";
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -234,7 +236,10 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
-            ListChatFragment listChatFragment = ListChatFragment.getInstance(mFirebaseUser.getUid(), null);
+            ListChatFragment listChatFragment = ListChatFragment.getInstance(mFirebaseUser.getUid(), null, view -> {
+                ListMessageFragment listMessageFragment = ListMessageFragment.getInstance(mFirebaseUser.getUid(), null);
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listMessageFragment, TAG_LIST_MESSAGE).addToBackStack(null).commit();
+            });
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).addToBackStack(null).commit();
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();

@@ -1,6 +1,8 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.drm.DrmStore;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,20 +39,24 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
     private static final String TAG = ChatFirebaseAdapter.class.getName();
 
+    private View.OnClickListener clickListener;
+
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
      * {@link FirebaseRecyclerOptions} for configuration options.
      *
      * @param options
      */
-    public ChatFirebaseAdapter(@NonNull FirebaseRecyclerOptions<ChatFirebase> options) {
+    public ChatFirebaseAdapter(@NonNull FirebaseRecyclerOptions<ChatFirebase> options, View.OnClickListener clickListener) {
         super(options);
+        this.clickListener = clickListener;
     }
 
     @Override
     protected void onBindViewHolder(@NonNull ChatFirebaseViewHolder holder, int position, @NonNull ChatFirebase model) {
         holder.lastMessage.setText(model.getLastMessage());
         holder.lastMessageTimestamp.setText(Utility.howLongFromNow(model.getUpdateTimestamp()));
+        holder.constraintLayout.setOnClickListener(clickListener);
         retreivePhoto(holder, model);
     }
 
@@ -105,6 +111,9 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
         @BindView(R.id.chat_author_photo)
         ImageView imagePhotoAuthor;
+
+        @BindView(R.id.constraint_chat)
+        ConstraintLayout constraintLayout;
 
         public ChatFirebaseViewHolder(View itemView) {
             super(itemView);

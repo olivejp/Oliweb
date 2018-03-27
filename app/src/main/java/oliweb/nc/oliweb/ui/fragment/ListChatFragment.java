@@ -41,11 +41,12 @@ public class ListChatFragment extends Fragment {
     private DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
     private FirebaseRecyclerOptions<ChatFirebase> options;
     private ChatFirebaseAdapter adapter;
+    private View.OnClickListener clickListener;
 
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
 
-    public static ListChatFragment getInstance(@Nullable String uidUtilisateur, @Nullable String uidAnnonce) {
+    public static ListChatFragment getInstance(@Nullable String uidUtilisateur, @Nullable String uidAnnonce, @NonNull View.OnClickListener clickListener) {
         ListChatFragment listChatFragment = new ListChatFragment();
         Bundle bundle = new Bundle();
         if (uidUtilisateur != null) {
@@ -55,6 +56,7 @@ public class ListChatFragment extends Fragment {
             bundle.putString(ARG_UID_ANNONCE, uidAnnonce);
         }
         listChatFragment.setArguments(bundle);
+        listChatFragment.setClickListener(clickListener);
         return listChatFragment;
     }
 
@@ -100,7 +102,7 @@ public class ListChatFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        adapter = new ChatFirebaseAdapter(options);
+        adapter = new ChatFirebaseAdapter(options, clickListener);
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(appCompatActivity));
@@ -114,5 +116,9 @@ public class ListChatFragment extends Fragment {
         if (adapter != null) {
             adapter.stopListening();
         }
+    }
+
+    public void setClickListener(View.OnClickListener clickListener) {
+        this.clickListener = clickListener;
     }
 }

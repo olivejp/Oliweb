@@ -27,9 +27,8 @@ public class ListMessageFragment extends Fragment {
     private AppCompatActivity appCompatActivity;
     private String uidAnnonce;
     private String uidUtilisateur;
-    private String action;
 
-    public static ListMessageFragment getInstance(@Nullable String uidUtilisateur, @Nullable String uidAnnonce, @NonNull String action) {
+    public static ListMessageFragment getInstance(@Nullable String uidUtilisateur, @Nullable String uidAnnonce) {
         ListMessageFragment listMessageFragment = new ListMessageFragment();
         Bundle bundle = new Bundle();
         if (uidUtilisateur != null) {
@@ -38,7 +37,6 @@ public class ListMessageFragment extends Fragment {
         if (uidAnnonce != null) {
             bundle.putString(ARG_UID_ANNONCE, uidAnnonce);
         }
-        bundle.putString(ARG_ACTION, action);
         listMessageFragment.setArguments(bundle);
         return listMessageFragment;
     }
@@ -59,7 +57,6 @@ public class ListMessageFragment extends Fragment {
             if (getArguments().containsKey(ARG_UID_USER)) {
                 uidUtilisateur = getArguments().getString(ARG_UID_USER);
             }
-            action = getArguments().getString(ARG_ACTION);
         }
     }
 
