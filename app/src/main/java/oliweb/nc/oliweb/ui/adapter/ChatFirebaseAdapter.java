@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import android.drm.DrmStore;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
@@ -54,6 +53,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
     @Override
     protected void onBindViewHolder(@NonNull ChatFirebaseViewHolder holder, int position, @NonNull ChatFirebase model) {
+        holder.constraintLayout.setTag(model.getUid());
         holder.lastMessage.setText(model.getLastMessage());
         holder.lastMessageTimestamp.setText(Utility.howLongFromNow(model.getUpdateTimestamp()));
         holder.constraintLayout.setOnClickListener(clickListener);

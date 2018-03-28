@@ -13,6 +13,7 @@ public class Constants {
     public static final String FIREBASE_DB_USER_REF = "users";
     public static final String FIREBASE_DB_REQUEST_REF = "requests";
     public static final String FIREBASE_DB_CHATS_REF = "chats";
+    public static final String FIREBASE_DB_MESSAGES_REF = "messages";
     public static final String FIREBASE_DB_PHOTO_REF = "photos";
     public static final String FIREBASE_STORAGE_PHOTO = "photos";
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";

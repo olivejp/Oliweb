@@ -237,7 +237,9 @@ public class MainActivity extends AppCompatActivity
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
             ListChatFragment listChatFragment = ListChatFragment.getInstance(mFirebaseUser.getUid(), null, view -> {
-                ListMessageFragment listMessageFragment = ListMessageFragment.getInstance(mFirebaseUser.getUid(), null);
+                String uidChat = (String) view.getTag();
+                Log.d(TAG, "Ouverture listMessageFragment pour l'uid chat = " + uidChat);
+                ListMessageFragment listMessageFragment = ListMessageFragment.getInstance(uidChat);
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listMessageFragment, TAG_LIST_MESSAGE).addToBackStack(null).commit();
             });
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).addToBackStack(null).commit();

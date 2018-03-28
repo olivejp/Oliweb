@@ -7,6 +7,8 @@ import java.util.Map;
  */
 
 public class ChatFirebase {
+
+    private String uid;
     private String uidBuyer;
     private String uidSeller;
     private String uidAnnonce;
@@ -18,7 +20,8 @@ public class ChatFirebase {
     public ChatFirebase() {
     }
 
-    public ChatFirebase(String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, Map<String, Boolean> members) {
+    public ChatFirebase(String uid, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, Map<String, Boolean> members) {
+        this.uid = uid;
         this.uidBuyer = uidBuyer;
         this.uidSeller = uidSeller;
         this.uidAnnonce = uidAnnonce;
@@ -26,6 +29,14 @@ public class ChatFirebase {
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
         this.members = members;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     public String getUidBuyer() {
@@ -83,5 +94,4 @@ public class ChatFirebase {
     public void setMembers(Map<String, Boolean> members) {
         this.members = members;
     }
-
 }
