@@ -74,7 +74,7 @@ public class ListMessageFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null && getArguments().containsKey(ARG_UID_CHAT)) {
             uidChat = getArguments().getString(ARG_UID_CHAT);
-            Query query = reference.child(uidChat);
+            Query query = reference.orderByChild("uidAuthor").equalTo(FirebaseAuth.getInstance().getUid());
             options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
                     .setQuery(query, MessageFirebase.class)
                     .build();

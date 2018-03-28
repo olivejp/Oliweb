@@ -51,7 +51,7 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
     @Override
     public MessageFirebaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View rootView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_message_list, parent, false);
+                .inflate(R.layout.adapter_message_element, parent, false);
         return new MessageFirebaseAdapter.MessageFirebaseViewHolder(rootView);
     }
 
