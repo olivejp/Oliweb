@@ -81,6 +81,8 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
             ref = ref.child(model.getUidBuyer());
         }
 
+        ref.keepSynced(true);
+
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

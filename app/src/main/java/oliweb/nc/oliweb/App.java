@@ -3,6 +3,7 @@ package oliweb.nc.oliweb;
 import android.app.Application;
 
 import com.evernote.android.job.JobManager;
+import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.job.SyncJob;
@@ -36,5 +37,12 @@ public class App extends Application {
 
         // Lancement d'une synchro dès le début du programme
         SyncJob.launchImmediateJob();
+
+        // Active la persistence des données pour Firebase database
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).keepSynced(true);
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_ANNONCE_REF).keepSynced(true);
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
     }
 }

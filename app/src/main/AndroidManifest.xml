@@ -22,13 +22,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
-             See README(https://goo.gl/l4GJaQ) for more. -->
+        <!--
+             Set custom default icon. This is used when no icon is set for incoming notification messages.
+             See README(https://goo.gl/l4GJaQ) for more.
+        -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_message_white_48dp" />
-        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
-             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <!--
+             Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more.
+        -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorAccent" />
@@ -42,7 +46,7 @@
                 android:value="oliweb.nc.oliweb.ui.activity.SearchActivity" />
         </activity>
         <activity
-            android:name="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity"
+            android:name=".ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
             android:parentActivityName=".ui.activity.MyAnnoncesActivity"
             android:windowSoftInputMode="stateHidden">
@@ -128,6 +132,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -143,17 +148,25 @@
         <service
             android:name=".service.SyncService"
             android:exported="false" />
-
         <service android:name=".service.MyFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service android:name=".service.MyFirebaseInstanceIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".ui.activity.MyChatsActivity"
+            android:label="@string/title_activity_chats"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
     </application>
+
 </manifest>
