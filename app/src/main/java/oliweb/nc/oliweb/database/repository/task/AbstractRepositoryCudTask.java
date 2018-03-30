@@ -21,6 +21,12 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
         this.postExecute = postExecute;
     }
 
+    public AbstractRepositoryCudTask(AbstractDao<T> dao, TypeTask typeTask) {
+        this.typeTask = typeTask;
+        this.dao = dao;
+        this.postExecute = null;
+    }
+
     @Override
     protected DataReturn doInBackground(T... entities) {
         DataReturn dataReturn = new DataReturn();

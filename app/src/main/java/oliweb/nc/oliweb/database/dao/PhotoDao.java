@@ -38,6 +38,10 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
 
     @Transaction
+    @Query("SELECT * FROM photo WHERE statut = :statut AND idAnnonce = :idAnnonce")
+    Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(String statut, Long idAnnonce);
+
+    @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE statut = :statut")
     Flowable<Integer> countAllPhotosByStatus(String statut);
 

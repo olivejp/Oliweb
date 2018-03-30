@@ -36,6 +36,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return INSTANCE;
     }
 
+    public void save(PhotoEntity photoEntity) {
+        save(photoEntity, null);
+    }
+
     public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         if (photoEntity.getIdPhoto() != null) {
             this.photoDao.findSingleById(photoEntity.getIdPhoto())
@@ -75,6 +79,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
 
     public Maybe<List<PhotoEntity>> getAllPhotosByStatus(String status) {
         return this.photoDao.getAllPhotosByStatus(status);
+    }
+
+    public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(String status, long idAnnonce) {
+        return this.photoDao.getAllPhotosByStatusAndIdAnnonce(status, idAnnonce);
     }
 
     public Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce) {

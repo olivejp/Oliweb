@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -66,6 +67,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     public Single<Integer> countAllAnnoncesByStatus(String status){
         return this.annonceDao.countAllAnnoncesByStatus(status);
+    }
+
+    public Flowable<Integer> countFlowableAllAnnoncesByStatus(String status){
+        return this.annonceDao.countFlowableAllAnnoncesByStatus(status);
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser){

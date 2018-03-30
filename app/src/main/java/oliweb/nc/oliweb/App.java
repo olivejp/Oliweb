@@ -42,7 +42,6 @@ public class App extends Application {
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).keepSynced(true);
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
-        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_ANNONCE_REF).keepSynced(true);
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
     }
 }

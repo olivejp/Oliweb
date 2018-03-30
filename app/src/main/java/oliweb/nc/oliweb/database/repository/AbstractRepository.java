@@ -29,13 +29,28 @@ public abstract class AbstractRepository<T> {
         this.dao = dao;
     }
 
+    public void insert(T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.INSERT);
+        repositoryTask.execute(entities);
+    }
+
     public void insert(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
         AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.INSERT, onRespositoryPostExecute);
         repositoryTask.execute(entities);
     }
 
+    public void update(T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.UPDATE);
+        repositoryTask.execute(entities);
+    }
+
     public void update(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
         AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.UPDATE, onRespositoryPostExecute);
+        repositoryTask.execute(entities);
+    }
+
+    public void delete(T... entities) {
+        AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.DELETE);
         repositoryTask.execute(entities);
     }
 

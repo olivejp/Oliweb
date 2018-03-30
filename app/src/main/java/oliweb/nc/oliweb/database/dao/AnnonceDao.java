@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -36,6 +37,9 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Query("SELECT * FROM annonce WHERE statut = :status")
     Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status);
 
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
+    Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")

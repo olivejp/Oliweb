@@ -90,7 +90,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
             if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
                 photoEntity.setStatut(StatusRemote.TO_DELETE);
-                this.photoRepository.update(null, photoEntity);
+                this.photoRepository.update(photoEntity);
                 retour = true;
             } else {
                 retour = this.listPhoto.remove(photoEntity);
