@@ -26,8 +26,6 @@ import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 
 public class IntroActivity extends AppCompatActivity {
 
-    private MyViewPagerAdapter myViewPagerAdapter;
-    private TextView[] dots;
     private int[] layouts;
 
     @BindView(R.id.view_pager)
@@ -74,7 +72,7 @@ public class IntroActivity extends AppCompatActivity {
         // making notification bar transparent
         changeStatusBarColor();
 
-        myViewPagerAdapter = new MyViewPagerAdapter();
+        MyViewPagerAdapter myViewPagerAdapter = new MyViewPagerAdapter();
         viewPager.setAdapter(myViewPagerAdapter);
         viewPager.addOnPageChangeListener(viewPagerPageChangeListener);
 
@@ -94,7 +92,7 @@ public class IntroActivity extends AppCompatActivity {
     }
 
     private void addBottomDots(int currentPage) {
-        dots = new TextView[layouts.length];
+        TextView[] dots = new TextView[layouts.length];
 
         dotsLayout.removeAllViews();
         for (int i = 0; i < dots.length; i++) {

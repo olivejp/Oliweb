@@ -1,8 +1,12 @@
 package oliweb.nc.oliweb.ui.fragment;
 
+import android.annotation.TargetApi;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -47,6 +51,7 @@ public class ListMessageFragment extends Fragment {
     private AppCompatActivity appCompatActivity;
     private String uidChat;
     private MessageFirebaseAdapter adapter;
+    private Vibrator vibrator;
 
     @BindView(R.id.recycler_list_message)
     RecyclerView recyclerView;
@@ -76,6 +81,8 @@ public class ListMessageFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         MyChatsActivityViewModel viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
+
+        vibrator = (Vibrator) appCompatActivity.getSystemService(Context.VIBRATOR_SERVICE);
 
         uidChat = viewModel.getSelectedUidChat();
         Query query = reference.child(uidChat).orderByChild("timestamp");
@@ -123,6 +130,11 @@ public class ListMessageFragment extends Fragment {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    private void sendVibrationO() {
+
+    }
+
     @OnClick(R.id.button_send_message)
     public void sendMessage(View v) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF).child(uidChat).push();
@@ -138,6 +150,14 @@ public class ListMessageFragment extends Fragment {
         reference.setValue(messageFirebase)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Un message a été envoyé");
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(500, 50));
+                    } else {
+                        vibrator.vibrate(500);
+                    }
+
+
                     textToSend.setText("");
                     imageSend.setEnabled(true);
                 })
