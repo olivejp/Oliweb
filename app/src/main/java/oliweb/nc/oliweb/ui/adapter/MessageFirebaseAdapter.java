@@ -51,7 +51,7 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
     @Override
     public MessageFirebaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View rootView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.adapter_message_element, parent, false);
+                .inflate(R.layout.adapter_message_element_client, parent, false);
         return new MessageFirebaseAdapter.MessageFirebaseViewHolder(rootView);
     }
 
@@ -90,7 +90,7 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
         @BindView(R.id.message_author_photo)
         ImageView imageAuthor;
 
-        @BindView(R.id.message_last_message)
+        @BindView(R.id.message_message)
         TextView message;
 
         @BindView(R.id.message_timestamp)

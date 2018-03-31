@@ -22,7 +22,7 @@ public class SyncJob extends Job {
 
     @Override
     @NonNull
-    protected Result onRunJob(Params params) {
+    protected Result onRunJob(@NonNull Params params) {
         // A job run on the background thread, so no need to call SyncTask here
         SyncService.launchSynchroFromScheduler(getContext());
         return Result.SUCCESS;
