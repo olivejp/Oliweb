@@ -110,7 +110,7 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_annonce_entity_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_list_annonce_entity, container, false);
 
         ButterKnife.bind(this, view);
 

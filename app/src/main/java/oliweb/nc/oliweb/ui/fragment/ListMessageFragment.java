@@ -13,7 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -55,7 +55,7 @@ public class ListMessageFragment extends Fragment {
     EditText textToSend;
 
     @BindView(R.id.button_send_message)
-    ImageButton buttonMessage;
+    ImageView imageSend;
 
     @Override
     public void onAttach(Context context) {
@@ -78,7 +78,7 @@ public class ListMessageFragment extends Fragment {
         MyChatsActivityViewModel viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
 
         uidChat = viewModel.getSelectedUidChat();
-        Query query = reference.child(uidChat).orderByKey();
+        Query query = reference.child(uidChat).orderByChild("timestamp");
         options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
                 .setQuery(query, MessageFirebase.class)
                 .build();
@@ -87,7 +87,7 @@ public class ListMessageFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_message_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_list_message, container, false);
 
         ButterKnife.bind(this, view);
 
@@ -133,17 +133,17 @@ public class ListMessageFragment extends Fragment {
         messageFirebase.setUidAuthor(FirebaseAuth.getInstance().getUid());
 
         // On désactive le bouton envoyer
-        buttonMessage.setEnabled(false);
+        imageSend.setEnabled(false);
 
         reference.setValue(messageFirebase)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Un message a été envoyé");
                     textToSend.setText("");
-                    buttonMessage.setEnabled(true);
+                    imageSend.setEnabled(true);
                 })
                 .addOnFailureListener(e -> {
                     Log.d(TAG, "Un message n'a pas réussi à être envoyé." + e.getLocalizedMessage());
-                    buttonMessage.setEnabled(true);
+                    imageSend.setEnabled(true);
                 });
     }
 }

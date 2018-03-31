@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -37,6 +38,9 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
 
     private static final String TAG = MessageFirebaseAdapter.class.getName();
 
+    private static final int TYPE_OWNER = 100;
+    private static final int TYPE_CLIENT = 200;
+
     public MessageFirebaseAdapter(@NonNull FirebaseRecyclerOptions<MessageFirebase> options) {
         super(options);
     }
@@ -50,12 +54,21 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
 
     @Override
     public MessageFirebaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View rootView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.adapter_message_element_client, parent, false);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View rootView;
+        if (viewType == TYPE_OWNER) {
+            rootView = inflater.inflate(R.layout.adapter_message_element_owner, parent, false);
+        } else {
+            rootView = inflater.inflate(R.layout.adapter_message_element_client, parent, false);
+        }
         return new MessageFirebaseAdapter.MessageFirebaseViewHolder(rootView);
     }
 
-
+    @Override
+    public int getItemViewType(int position) {
+        MessageFirebase messageFirebase = getItem(position);
+        return (messageFirebase.getUidAuthor().equals(FirebaseAuth.getInstance().getUid())) ? TYPE_OWNER : TYPE_CLIENT;
+    }
 
     @Override
     public void onError(@NonNull DatabaseError error) {

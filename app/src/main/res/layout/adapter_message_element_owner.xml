@@ -1,56 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/cardview_message"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     android:layout_marginEnd="10dp"
     android:layout_marginStart="60dp"
-    android:layout_marginTop="10dp"
-    app:cardBackgroundColor="@android:color/darker_gray"
-    app:cardCornerRadius="23dp">
+    android:layout_marginTop="10dp">
 
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardview_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@android:color/darker_gray"
+        app:cardCornerRadius="23dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/message_author_photo"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_margin="8dp"
-            app:layout_constraintLeft_toRightOf="@id/message_message"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_person_grey_900_48dp"
-            tools:src="@drawable/ic_person_grey_900_48dp" />
-
-        <TextView
-            android:id="@+id/message_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            android:textColor="@android:color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/message_author_photo"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Texte qui tient sur une ligne." />
-
-        <TextView
-            android:id="@+id/message_timestamp"
+        <android.support.constraint.ConstraintLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="@id/message_message"
-            app:layout_constraintTop_toBottomOf="@id/message_message"
-            tools:text="4:20 pm" />
-    </android.support.constraint.ConstraintLayout>
-</android.support.v7.widget.CardView>
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/message_author_photo"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_person_grey_900_48dp"
+                tools:src="@drawable/ic_person_grey_900_48dp" />
+
+            <TextView
+                android:id="@+id/message_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="5dp"
+                android:gravity="end"
+                android:paddingStart="60dp"
+                android:textColor="@android:color/white"
+                app:layout_constraintRight_toLeftOf="@+id/message_author_photo"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Bonjour je suis très decu de votre comportement vis à vis de notre nouveau collègue. Et je vous invite tous autant que vous êtes à lui présenter des excuses." />
+
+            <TextView
+                android:id="@+id/message_timestamp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginStart="5dp"
+                android:gravity="start"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/message_author_photo"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/message_message"
+                tools:text="4:20 pm" />
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v7.widget.CardView>
+</android.support.constraint.ConstraintLayout>
