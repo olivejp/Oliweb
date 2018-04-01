@@ -50,14 +50,14 @@
                 android:id="@+id/message_timestamp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginStart="5dp"
                 android:gravity="start"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintRight_toLeftOf="@+id/message_author_photo"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintRight_toRightOf="@id/message_message"
                 app:layout_constraintTop_toBottomOf="@id/message_message"
                 tools:text="4:20 pm" />
         </android.support.constraint.ConstraintLayout>

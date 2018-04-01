@@ -297,6 +297,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+    }
+
     @OnClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
     public void onClick(View v) {
         if (v.getTag() == null) {

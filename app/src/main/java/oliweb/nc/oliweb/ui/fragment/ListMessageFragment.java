@@ -25,6 +25,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
@@ -100,7 +101,9 @@ public class ListMessageFragment extends Fragment {
         adapter = new MessageFirebaseAdapter(options);
 
         recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(appCompatActivity));
+        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
+        linearLayout.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayout);
 
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(uidChat).orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -113,11 +116,9 @@ public class ListMessageFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                // Do nothing
             }
         });
-
-
         return view;
     }
 
@@ -143,15 +144,13 @@ public class ListMessageFragment extends Fragment {
 
         reference.setValue(messageFirebase)
                 .addOnSuccessListener(aVoid -> {
+                    reference.child("timestamp").setValue(ServerValue.TIMESTAMP);
                     Log.d(TAG, "Un message a été envoyé");
-
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, 50));
                     } else {
                         vibrator.vibrate(500);
                     }
-
-
                     textToSend.setText("");
                     imageSend.setEnabled(true);
                 })

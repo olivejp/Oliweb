@@ -18,6 +18,7 @@ public class DateConverter {
         PATTERN_DTO("dd/MM/yyyy HH:mm:ss"),
         PATTERN_ENTITY("yyyyMMddHHmmssSSS"),
         PATTERN_UI("dd MMM yyyy à HH:mm"),
+        PATTERN_UI_MESSAGE("dd MMM yy HH:mm"),
         PATTERN_AFTER_HIP("yyyy-MM-dd'T'HH:mm:ss");
 
         private final String value;
@@ -38,6 +39,7 @@ public class DateConverter {
 
     public static final SimpleDateFormat simpleDtoDateFormat = new SimpleDateFormat(DatePattern.PATTERN_DTO.getDatePattern(), Locale.FRANCE);
     public static final SimpleDateFormat simpleUiDateFormat = new SimpleDateFormat(DatePattern.PATTERN_UI.getDatePattern(), Locale.FRANCE);
+    public static final SimpleDateFormat simpleUiMessageDateFormat = new SimpleDateFormat(DatePattern.PATTERN_UI_MESSAGE.getDatePattern(), Locale.FRANCE);
     public static final SimpleDateFormat simpleEntityDateFormat = new SimpleDateFormat(DatePattern.PATTERN_ENTITY.getDatePattern(), Locale.FRANCE);
     public static final SimpleDateFormat simpleAfterShipDateFormat = new SimpleDateFormat(DatePattern.PATTERN_AFTER_HIP.getDatePattern(), Locale.FRANCE);
 
