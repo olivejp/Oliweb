@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.fragment;
 
-import android.annotation.TargetApi;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Build;
@@ -128,11 +127,6 @@ public class ListMessageFragment extends Fragment {
         if (adapter != null) {
             adapter.stopListening();
         }
-    }
-
-    @TargetApi(Build.VERSION_CODES.O)
-    private void sendVibrationO() {
-
     }
 
     @OnClick(R.id.button_send_message)

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import java.util.List;
 
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -48,8 +49,8 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      * @param idAnnonce
      * @param onRespositoryPostExecute
      */
-    public void deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        this.annonceRepository.findSingleById(idAnnonce)
+    public Disposable deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        return this.annonceRepository.findSingleById(idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(annonceEntity -> {

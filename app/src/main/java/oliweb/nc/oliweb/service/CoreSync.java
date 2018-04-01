@@ -16,6 +16,7 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.List;
 
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
@@ -104,8 +105,8 @@ class CoreSync {
     /**
      * Liste toutes les annonces à envoyer
      */
-    private void syncToSend() {
-        annonceFullRepository
+    private Disposable syncToSend() {
+        return annonceFullRepository
                 .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -159,9 +160,9 @@ class CoreSync {
      *
      * @param idAnnonce of the AnnonceFull we try to send to Fb
      */
-    private void sendPhotosToFbStorage(long idAnnonce) {
+    private Disposable sendPhotosToFbStorage(long idAnnonce) {
         Log.d(TAG, "Starting sendPhotosToFbStorage");
-        photoRepository
+        return photoRepository
                 .getAllPhotosByStatusAndIdAnnonce(StatusRemote.TO_SEND.getValue(), idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -213,8 +214,8 @@ class CoreSync {
      *
      * @param idAnnonce of the AnnonceFull we want to send.
      */
-    private void updateAnnonceFullFromDbToFirebase(long idAnnonce) {
-        annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
+    private Disposable updateAnnonceFullFromDbToFirebase(long idAnnonce) {
+        return annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(annonceFull -> {
@@ -290,8 +291,8 @@ class CoreSync {
      *
      * @param idAnnonce
      */
-    private void deletePhotoByIdAnnonce(long idAnnonce) {
-        photoRepository
+    private Disposable deletePhotoByIdAnnonce(long idAnnonce) {
+        return photoRepository
                 .findAllSingleByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -388,8 +389,13 @@ class CoreSync {
      * Read all annonces with TO_DELETE status
      */
     private void syncToDelete() {
+        syncDeleteAnnonce();
+        syncDeletePhoto();
+    }
+
+    private Disposable syncDeleteAnnonce() {
         // Read all annonces with TO_DELETE status to delete them on remote and local
-        annonceRepository
+        return annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -413,10 +419,11 @@ class CoreSync {
                             }
                         }
                 );
+    }
 
-
+    private Disposable syncDeletePhoto() {
         // Read all PhotoEntities with TO_DELETE status to delete them on remote storage and local and on Firebase Database
-        photoRepository
+        return photoRepository
                 .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -458,9 +465,9 @@ class CoreSync {
         notificationManager.notify(notificationId, mBuilder.build());
     }
 
-    private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+    private Disposable isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
         // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
-        annonceRepository
+        return annonceRepository
                 .countFlowableAllAnnoncesByStatus(statusRemote.getValue())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
