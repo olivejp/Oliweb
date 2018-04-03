@@ -168,6 +168,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MainActivity" />
         </activity>
+        <activity
+            android:name=".ui.activity.AnnonceMessageActivity"
+            android:parentActivityName=".ui.activity.AnnonceDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.AnnonceDetailActivity" />
+        </activity>
     </application>
 
 </manifest>

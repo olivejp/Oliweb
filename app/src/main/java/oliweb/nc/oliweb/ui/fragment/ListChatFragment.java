@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
@@ -33,12 +34,8 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
 
 public class ListChatFragment extends Fragment {
 
-    private static final String ARG_UID_ANNONCE = "ARG_UID_ANNONCE";
-
     private AppCompatActivity appCompatActivity;
-    private String uidAnnonce;
-    private DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
-    private FirebaseRecyclerOptions<ChatFirebase> options;
+    private DatabaseReference chatReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
     private ChatFirebaseAdapter adapter;
 
     private MyChatsActivityViewModel viewModel;
@@ -55,6 +52,14 @@ public class ListChatFragment extends Fragment {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        if (adapter != null) {
+            adapter.stopListening();
+        }
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         appCompatActivity = (AppCompatActivity) context;
@@ -63,23 +68,7 @@ public class ListChatFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-
-        Query query = null;
-        if (getArguments() != null && getArguments().containsKey(ARG_UID_ANNONCE)) {
-            uidAnnonce = getArguments().getString(ARG_UID_ANNONCE);
-            query = reference.orderByChild("uidAnnonce").equalTo(uidAnnonce);
-        }
-        if (viewModel.getFirebaseUidUser() != null) {
-            query = reference.orderByChild("members/" + viewModel.getFirebaseUidUser()).equalTo(true);
-        }
-
-        options = new FirebaseRecyclerOptions.Builder<ChatFirebase>()
-                .setQuery(query, ChatFirebase.class)
-                .build();
-
-
     }
 
     @Override
@@ -89,23 +78,32 @@ public class ListChatFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        adapter = new ChatFirebaseAdapter(options, v -> displayListMessage((String) v.getTag()));
-
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(appCompatActivity));
-
+        Query query;
+        switch (viewModel.getTypeRecherche()) {
+            case PAR_ANNONCE:
+                query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedUidAnnonce());
+                loadQuery(query);
+                break;
+            case PAR_UTILISATEUR:
+                query = chatReference.orderByChild("members/" + FirebaseAuth.getInstance().getUid()).equalTo(true);
+                loadQuery(query);
+                break;
+        }
         return view;
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (adapter != null) {
-            adapter.stopListening();
-        }
+    private void loadQuery(Query query) {
+        FirebaseRecyclerOptions<ChatFirebase> options = new FirebaseRecyclerOptions.Builder<ChatFirebase>()
+                .setQuery(query, ChatFirebase.class)
+                .build();
+
+        adapter = new ChatFirebaseAdapter(options, v -> callListMessage((String) v.getTag()));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(linearLayoutManager);
     }
 
-    private void displayListMessage(String uidChat) {
+    private void callListMessage(String uidChat) {
         viewModel.setSelectedUidChat(uidChat);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();

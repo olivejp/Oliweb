@@ -15,34 +15,17 @@ public class MyChatsActivity extends AppCompatActivity {
 
     public static final String TAG_MASTER_FRAGMENT = "TAG_MASTER_FRAGMENT";
     public static final String TAG_DETAIL_FRAGMENT = "TAG_DETAIL_FRAGMENT";
+    public static final String ARG_ANNONCE_UID = "ARG_ANNONCE_UID";
+
+    private MyChatsActivityViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        MyChatsActivityViewModel viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
-
         setContentView(R.layout.activity_my_chats);
-
+        viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
         viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
-
-        // Manage the fragments
-        Fragment listChatFragment = getSupportFragmentManager().findFragmentByTag(TAG_MASTER_FRAGMENT);
-        if (listChatFragment == null) {
-            listChatFragment = new ListChatFragment();
-        }
-        getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT).commit();
-
-        Fragment listMessageFragment1 = getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_FRAGMENT);
-        if (listMessageFragment1 != null) {
-            getSupportFragmentManager().beginTransaction().remove(listMessageFragment1).commit();
-            ListMessageFragment listMessageFragment = new ListMessageFragment();
-            if (viewModel.isTwoPane()) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.frame_messages, listMessageFragment, TAG_DETAIL_FRAGMENT).commit();
-            } else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT).addToBackStack(null).commit();
-            }
-        }
+        initFragments();
     }
 
     @Override
@@ -61,6 +44,25 @@ public class MyChatsActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
             overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        }
+    }
+
+    private void initFragments() {
+        Fragment listChatFragment = getSupportFragmentManager().findFragmentByTag(TAG_MASTER_FRAGMENT);
+        if (listChatFragment == null) {
+            listChatFragment = new ListChatFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT).commit();
+
+        Fragment listMessageFragment1 = getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_FRAGMENT);
+        if (listMessageFragment1 != null) {
+            getSupportFragmentManager().beginTransaction().remove(listMessageFragment1).commit();
+            ListMessageFragment listMessageFragment = new ListMessageFragment();
+            if (viewModel.isTwoPane()) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.frame_messages, listMessageFragment, TAG_DETAIL_FRAGMENT).commit();
+            } else {
+                getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT).addToBackStack(null).commit();
+            }
         }
     }
 }

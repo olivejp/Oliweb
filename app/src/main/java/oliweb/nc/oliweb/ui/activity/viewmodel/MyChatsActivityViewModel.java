@@ -4,15 +4,21 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.support.annotation.NonNull;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 public class MyChatsActivityViewModel extends AndroidViewModel {
+
+    public enum TypeRecherche {
+        PAR_ANNONCE,
+        PAR_UTILISATEUR
+    }
 
     private boolean twoPane;
     private String selectedUidChat;
+    private String selectedUidAnnonce;
+    private TypeRecherche typeRecherche;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
+        typeRecherche = TypeRecherche.PAR_UTILISATEUR;
     }
 
     public boolean isTwoPane() {
@@ -31,7 +37,28 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.selectedUidChat = selectedUidChat;
     }
 
-    public String getFirebaseUidUser() {
-        return FirebaseAuth.getInstance().getUid();
+    public String getSelectedUidAnnonce() {
+        return selectedUidAnnonce;
+    }
+
+    public void setSelectedUidAnnonce(String selectedUidAnnonce) {
+        this.selectedUidAnnonce = selectedUidAnnonce;
+    }
+
+    public TypeRecherche getTypeRecherche() {
+        return typeRecherche;
+    }
+
+    public void setTypeRecherche(TypeRecherche typeRecherche) {
+        this.typeRecherche = typeRecherche;
+    }
+
+    public void rechercheByUidUtilisateur() {
+        typeRecherche = TypeRecherche.PAR_UTILISATEUR;
+    }
+
+    public void rechercheByUidAnnonce(String uidAnnonce) {
+        typeRecherche = TypeRecherche.PAR_ANNONCE;
+        selectedUidAnnonce = uidAnnonce;
     }
 }
