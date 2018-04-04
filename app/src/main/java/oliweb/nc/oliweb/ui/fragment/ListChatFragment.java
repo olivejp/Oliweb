@@ -104,7 +104,7 @@ public class ListChatFragment extends Fragment {
     }
 
     private void callListMessage(String uidChat) {
-        viewModel.setSelectedUidChat(uidChat);
+        viewModel.rechercheByUidChat(uidChat);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {

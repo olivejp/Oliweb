@@ -33,7 +33,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.ui.activity.viewmodel.ListeningForChat;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageFirebaseAdapter;
 
@@ -43,15 +46,18 @@ import static oliweb.nc.oliweb.Constants.FIREBASE_DB_MESSAGES_REF;
  * Created by 2761oli on 23/03/2018.
  */
 
-public class ListMessageFragment extends Fragment {
+public class ListMessageFragment extends Fragment implements ListeningForChat {
     private static final String TAG = ListMessageFragment.class.getName();
 
     private DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
     private FirebaseRecyclerOptions<MessageFirebase> options;
     private AppCompatActivity appCompatActivity;
     private String uidChat;
+    private AnnonceEntity annonce;
     private MessageFirebaseAdapter adapter;
     private Vibrator vibrator;
+    private MyChatsActivityViewModel viewModel;
+    private Query query;
 
     @BindView(R.id.recycler_list_message)
     RecyclerView recyclerView;
@@ -77,18 +83,18 @@ public class ListMessageFragment extends Fragment {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        if (adapter != null) {
+            adapter.stopListening();
+        }
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        MyChatsActivityViewModel viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-
+        viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
         vibrator = (Vibrator) appCompatActivity.getSystemService(Context.VIBRATOR_SERVICE);
-
-        uidChat = viewModel.getSelectedUidChat();
-        Query query = reference.child(uidChat).orderByChild("timestamp");
-        options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
-                .setQuery(query, MessageFirebase.class)
-                .build();
     }
 
     @Override
@@ -98,40 +104,40 @@ public class ListMessageFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        adapter = new MessageFirebaseAdapter(options);
-
-        recyclerView.setAdapter(adapter);
         LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
         linearLayout.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayout);
 
-        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(uidChat).orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot datasnapshot1 : dataSnapshot.getChildren()) {
-                    MessageFirebase messageFirebase = datasnapshot1.getValue(MessageFirebase.class);
-                    Log.d(TAG, messageFirebase.toString());
-                }
-            }
+        switch (viewModel.getTypeRecherche()) {
+            case PAR_ANNONCE:
+                annonce = viewModel.getSelectedAnnonce();
+                break;
+            case PAR_UTILISATEUR:
+                break;
+            case PAR_CHAT:
+                uidChat = viewModel.getSelectedUidChat();
+                query = reference.child(uidChat).orderByChild("timestamp");
+                attachFirebaseRefToAdapter();
+                break;
+        }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
         return view;
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (adapter != null) {
-            adapter.stopListening();
-        }
+    private void attachFirebaseRefToAdapter() {
+        options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
+                .setQuery(query, MessageFirebase.class)
+                .build();
+        adapter = new MessageFirebaseAdapter(options);
+        recyclerView.setAdapter(adapter);
     }
 
     @OnClick(R.id.button_send_message)
-    public void sendMessage(View v) {
+    public void clickOnSend(View v) {
+        sendMessage();
+    }
+
+    private void sendMessage() {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF).child(uidChat).push();
 
         // Génération du message à envoyer
@@ -159,4 +165,51 @@ public class ListMessageFragment extends Fragment {
                     imageSend.setEnabled(true);
                 });
     }
+
+
+    private void lookForExistingChat(ListeningForChat listener) {
+        // Recherche dans Firebase si on a déjà une conversation pour cette annonce
+        FirebaseDatabase.getInstance()
+                .getReference(Constants.FIREBASE_DB_CHATS_REF)
+                .orderByChild("members/" + FirebaseAuth.getInstance().getUid())
+                .equalTo(true)
+                .addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                boolean found = false;
+                                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                    ChatFirebase chat = data.getValue(ChatFirebase.class);
+                                    if (chat.getUidAnnonce().equals(annonce.getUUID())) {
+                                        listener.findChat(chat);
+                                        uidChat = chat.getUid();
+                                        sendMessage();
+                                        found = true;
+                                        break;
+                                    }
+                                }
+
+                                // Create new chat
+                                if (!found) {
+                                    ChatFirebase chat = viewModel.createNewFirebaseChat(annonce);
+                                    FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).child(chat.getUid())
+                                            .setValue(chat)
+                                            .addOnSuccessListener(aVoid -> listener.findChat(chat));
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                // Do nothing
+                            }
+                        }
+                );
+    }
+
+    @Override
+    public void findChat(@NonNull ChatFirebase chat) {
+        uidChat = chat.getUid();
+        sendMessage();
+    }
+
 }
