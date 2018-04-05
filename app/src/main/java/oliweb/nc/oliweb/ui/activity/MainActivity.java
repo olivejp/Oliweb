@@ -18,7 +18,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,17 +26,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.NetworkReceiver;
@@ -65,7 +61,6 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
-    private static final String TAG_LIST_MESSAGE = "TAG_LIST_MESSAGE";
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -102,20 +97,6 @@ public class MainActivity extends AppCompatActivity
         numberFavoriteBadge.setGravity(Gravity.CENTER_VERTICAL);
         numberFavoriteBadge.setText(String.valueOf(integer));
     };
-
-    // TODO test d'insertion d'un chat
-    private void testInsertionChat() {
-        ChatFirebase chatFirebase = new ChatFirebase();
-        chatFirebase.setLastMessage("Ceci est le dernier des messages");
-        chatFirebase.getMembers().put("WmWRENgvKsP6T9Azu0f2MiNItQN2", true);
-        chatFirebase.getMembers().put("WmWRENgvKsP6T9Azu0f2MiNItQN&", true);
-        chatFirebase.setUidAnnonce("0067c841-0561-4e45-944c-f3a4e681d60b");
-
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).push();
-        ref.setValue(chatFirebase)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "FIRST CHAT CREATED"))
-                .addOnFailureListener(e -> Log.d(TAG, "FAILED TO CREATED FIRST CHAT"));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -255,10 +236,11 @@ public class MainActivity extends AppCompatActivity
     /**
      * Remise à blanc des champs spécifiques à la connexion
      */
-
     private void signOut() {
-        mFirebaseAuth.signOut();
-        SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(task -> SharedPreferencesHelper.getInstance(MainActivity.this).setUidFirebaseUser(null));
+
     }
 
     private void signIn(int requestCode) {
@@ -282,7 +264,6 @@ public class MainActivity extends AppCompatActivity
             }
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
-                // All the rest is done in defineAuthListener()
             }
         }
 
@@ -335,7 +316,7 @@ public class MainActivity extends AppCompatActivity
         photoTask.execute(uris);
     }
 
-    private void initBadges(boolean active) {
+    private void activeBadges(boolean active) {
         String uid = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (active) {
             // On lance les observers pour récupérer les badges
@@ -367,8 +348,8 @@ public class MainActivity extends AppCompatActivity
                     profileEmail.setText(mFirebaseUser.getEmail());
                 }
 
-                // initBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
-                initBadges(true);
+                // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
+                activeBadges(true);
 
                 // Create user in local Db
                 viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
@@ -383,8 +364,8 @@ public class MainActivity extends AppCompatActivity
                 // Call the task to retrieve the photo
                 callPhotoTask();
             } else {
-                // initBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
-                initBadges(false);
+                // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
+                activeBadges(false);
                 profileName.setText(null);
                 profileEmail.setText(null);
                 mFirebaseUser = null;
