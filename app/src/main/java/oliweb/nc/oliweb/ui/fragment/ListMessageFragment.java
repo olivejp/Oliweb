@@ -36,7 +36,6 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
-import oliweb.nc.oliweb.ui.activity.viewmodel.ListeningForChat;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageFirebaseAdapter;
 
@@ -46,10 +45,12 @@ import static oliweb.nc.oliweb.Constants.FIREBASE_DB_MESSAGES_REF;
  * Created by 2761oli on 23/03/2018.
  */
 
-public class ListMessageFragment extends Fragment implements ListeningForChat {
+public class ListMessageFragment extends Fragment {
     private static final String TAG = ListMessageFragment.class.getName();
 
-    private DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
+    private DatabaseReference messageRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
+    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
+    private String uidUser = FirebaseAuth.getInstance().getUid();
     private FirebaseRecyclerOptions<MessageFirebase> options;
     private AppCompatActivity appCompatActivity;
     private String uidChat;
@@ -111,12 +112,18 @@ public class ListMessageFragment extends Fragment implements ListeningForChat {
         switch (viewModel.getTypeRecherche()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
+                findChat(uidUser, annonce, chat -> {
+                    uidChat = viewModel.getSelectedUidChat();
+                    query = messageRef.child(uidChat).orderByChild("timestamp");
+                    attachFirebaseRefToAdapter();
+                });
                 break;
             case PAR_UTILISATEUR:
+                // TODO voir si vraiment nécessaire
                 break;
             case PAR_CHAT:
                 uidChat = viewModel.getSelectedUidChat();
-                query = reference.child(uidChat).orderByChild("timestamp");
+                query = messageRef.child(uidChat).orderByChild("timestamp");
                 attachFirebaseRefToAdapter();
                 break;
         }
@@ -134,23 +141,32 @@ public class ListMessageFragment extends Fragment implements ListeningForChat {
 
     @OnClick(R.id.button_send_message)
     public void clickOnSend(View v) {
-        sendMessage();
+        if (!textToSend.getText().toString().isEmpty()) {
+            createChat(uidUser, annonce, chat -> sendMessage(chat.getUid()));
+        }
     }
 
-    private void sendMessage() {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF).child(uidChat).push();
+    /**
+     * Envoie un nouveau message sur Firebase Database
+     *
+     * @param uidChat identifiant du chat sur lequel on veut poster le message.
+     */
+    private void sendMessage(String uidChat) {
+        DatabaseReference newMessageRef = messageRef.child(uidChat).push();
 
         // Génération du message à envoyer
         MessageFirebase messageFirebase = new MessageFirebase();
         messageFirebase.setMessage(textToSend.getText().toString());
-        messageFirebase.setUidAuthor(FirebaseAuth.getInstance().getUid());
+        messageFirebase.setUidAuthor(uidUser);
 
         // On désactive le bouton envoyer
         imageSend.setEnabled(false);
 
-        reference.setValue(messageFirebase)
+        newMessageRef.setValue(messageFirebase)
                 .addOnSuccessListener(aVoid -> {
-                    reference.child("timestamp").setValue(ServerValue.TIMESTAMP);
+                    // Mise à jour du timestamp
+                    newMessageRef.child("timestamp").setValue(ServerValue.TIMESTAMP);
+
                     Log.d(TAG, "Un message a été envoyé");
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, 50));
@@ -167,49 +183,60 @@ public class ListMessageFragment extends Fragment implements ListeningForChat {
     }
 
 
-    private void lookForExistingChat(ListeningForChat listener) {
-        // Recherche dans Firebase si on a déjà une conversation pour cette annonce
-        FirebaseDatabase.getInstance()
-                .getReference(Constants.FIREBASE_DB_CHATS_REF)
-                .orderByChild("members/" + FirebaseAuth.getInstance().getUid())
+    /**
+     * Recherche dans Firebase si on a déjà un chat pour cet utilisateur et pour cette annonce
+     * Sinon on le créer
+     *
+     * @param userUid  uid de notre utilisateur
+     * @param annonce  annonce pour laquelle on veut correspondre
+     * @param listener listener qui récupérera le chat trouvé ou créé
+     */
+    private void createChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
+        findChat(userUid, annonce, chat -> {
+            if (chat != null) {
+                ChatFirebase finalChat = viewModel.createNewFirebaseChat(annonce);
+                chatRef.child(finalChat.getUid())
+                        .setValue(finalChat)
+                        .addOnSuccessListener(aVoid -> listener.afterFoundChat(finalChat));
+            } else {
+                listener.afterFoundChat(chat);
+            }
+        });
+    }
+
+    /**
+     * Essaye de trouver un chat existant pour cet utilisateur et pour cette annonce
+     *
+     * @param userUid
+     * @param annonce
+     * @param listener
+     */
+    private void findChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
+        chatRef.orderByChild("members/" + userUid)
                 .equalTo(true)
                 .addListenerForSingleValueEvent(
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                boolean found = false;
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     ChatFirebase chat = data.getValue(ChatFirebase.class);
-                                    if (chat.getUidAnnonce().equals(annonce.getUUID())) {
-                                        listener.findChat(chat);
-                                        uidChat = chat.getUid();
-                                        sendMessage();
-                                        found = true;
+                                    if (chat != null && chat.getUidAnnonce().equals(annonce.getUUID())) {
+                                        listener.afterFoundChat(chat);
                                         break;
                                     }
                                 }
-
-                                // Create new chat
-                                if (!found) {
-                                    ChatFirebase chat = viewModel.createNewFirebaseChat(annonce);
-                                    FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).child(chat.getUid())
-                                            .setValue(chat)
-                                            .addOnSuccessListener(aVoid -> listener.findChat(chat));
-                                }
+                                listener.afterFoundChat(null);
                             }
 
                             @Override
                             public void onCancelled(DatabaseError databaseError) {
-                                // Do nothing
+                                listener.afterFoundChat(null);
                             }
                         }
                 );
     }
 
-    @Override
-    public void findChat(@NonNull ChatFirebase chat) {
-        uidChat = chat.getUid();
-        sendMessage();
+    public interface ListeningForChat {
+        void afterFoundChat(ChatFirebase chat);
     }
-
 }

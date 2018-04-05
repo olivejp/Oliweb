@@ -60,10 +60,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return typeRecherche;
     }
 
-    private void setTypeRecherche(TypeRecherche typeRecherche) {
-        this.typeRecherche = typeRecherche;
-    }
-
     public void rechercheByUidUtilisateur() {
         typeRecherche = TypeRecherche.PAR_UTILISATEUR;
     }

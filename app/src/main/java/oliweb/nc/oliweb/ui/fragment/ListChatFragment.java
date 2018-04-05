@@ -81,7 +81,7 @@ public class ListChatFragment extends Fragment {
         Query query;
         switch (viewModel.getTypeRecherche()) {
             case PAR_ANNONCE:
-                query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedUidAnnonce());
+                query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
                 loadQuery(query);
                 break;
             case PAR_UTILISATEUR:
