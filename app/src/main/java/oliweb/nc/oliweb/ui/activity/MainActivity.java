@@ -260,7 +260,6 @@ public class MainActivity extends AppCompatActivity
                 // Sign in was canceled by the user, finish the activity
                 Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
                 finish();
-
             }
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();

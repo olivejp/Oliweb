@@ -51,13 +51,14 @@ public class ListMessageFragment extends Fragment {
     private DatabaseReference messageRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
     private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
     private String uidUser = FirebaseAuth.getInstance().getUid();
-    private FirebaseRecyclerOptions<MessageFirebase> options;
+
     private AppCompatActivity appCompatActivity;
+    private MessageFirebaseAdapter adapter;
+    private MyChatsActivityViewModel viewModel;
+    private Vibrator vibrator;
+
     private String uidChat;
     private AnnonceEntity annonce;
-    private MessageFirebaseAdapter adapter;
-    private Vibrator vibrator;
-    private MyChatsActivityViewModel viewModel;
     private Query query;
 
     @BindView(R.id.recycler_list_message)
@@ -132,7 +133,7 @@ public class ListMessageFragment extends Fragment {
     }
 
     private void attachFirebaseRefToAdapter() {
-        options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
+        FirebaseRecyclerOptions<MessageFirebase> options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
                 .setQuery(query, MessageFirebase.class)
                 .build();
         adapter = new MessageFirebaseAdapter(options);
