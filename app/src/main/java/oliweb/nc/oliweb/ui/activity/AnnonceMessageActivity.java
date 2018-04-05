@@ -22,7 +22,7 @@ public class AnnonceMessageActivity extends AppCompatActivity {
 
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(ARG_ANNONCE)) {
             AnnonceEntity annonce = getIntent().getExtras().getParcelable(ARG_ANNONCE);
-            viewModel.rechercheByUidAnnonce(annonce);
+            viewModel.rechercheChatByUidAnnonce(annonce);
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_annonce_message, new ListMessageFragment()).commit();
         }
     }

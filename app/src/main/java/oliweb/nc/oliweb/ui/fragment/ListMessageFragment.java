@@ -59,7 +59,6 @@ public class ListMessageFragment extends Fragment {
 
     private String uidChat;
     private AnnonceEntity annonce;
-    private Query query;
 
     @BindView(R.id.recycler_list_message)
     RecyclerView recyclerView;
@@ -110,29 +109,26 @@ public class ListMessageFragment extends Fragment {
         linearLayout.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayout);
 
-        switch (viewModel.getTypeRecherche()) {
+        switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
                 findChat(uidUser, annonce, chat -> {
                     uidChat = viewModel.getSelectedUidChat();
-                    query = messageRef.child(uidChat).orderByChild("timestamp");
-                    attachFirebaseRefToAdapter();
+                    Query query = messageRef.child(uidChat).orderByChild("timestamp");
+                    attachFirebaseRefToAdapter(query);
                 });
-                break;
-            case PAR_UTILISATEUR:
-                // TODO voir si vraiment nécessaire
                 break;
             case PAR_CHAT:
                 uidChat = viewModel.getSelectedUidChat();
-                query = messageRef.child(uidChat).orderByChild("timestamp");
-                attachFirebaseRefToAdapter();
+                Query query = messageRef.child(uidChat).orderByChild("timestamp");
+                attachFirebaseRefToAdapter(query);
                 break;
         }
 
         return view;
     }
 
-    private void attachFirebaseRefToAdapter() {
+    private void attachFirebaseRefToAdapter(Query query) {
         FirebaseRecyclerOptions<MessageFirebase> options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
                 .setQuery(query, MessageFirebase.class)
                 .build();
@@ -143,7 +139,15 @@ public class ListMessageFragment extends Fragment {
     @OnClick(R.id.button_send_message)
     public void clickOnSend(View v) {
         if (!textToSend.getText().toString().isEmpty()) {
-            createChat(uidUser, annonce, chat -> sendMessage(chat.getUid()));
+            String messageToSend = textToSend.getText().toString();
+            switch (viewModel.getTypeRechercheMessage()) {
+                case PAR_CHAT:
+                    sendMessage(uidChat, messageToSend);
+                    break;
+                case PAR_ANNONCE:
+                    createChat(uidUser, annonce, chat -> sendMessage(chat.getUid(), messageToSend));
+                    break;
+            }
         }
     }
 
@@ -151,13 +155,14 @@ public class ListMessageFragment extends Fragment {
      * Envoie un nouveau message sur Firebase Database
      *
      * @param uidChat identifiant du chat sur lequel on veut poster le message.
+     * @param messageToSend le message à envoyer
      */
-    private void sendMessage(String uidChat) {
+    private void sendMessage(String uidChat, String messageToSend) {
         DatabaseReference newMessageRef = messageRef.child(uidChat).push();
 
         // Génération du message à envoyer
         MessageFirebase messageFirebase = new MessageFirebase();
-        messageFirebase.setMessage(textToSend.getText().toString());
+        messageFirebase.setMessage(messageToSend);
         messageFirebase.setUidAuthor(uidUser);
 
         // On désactive le bouton envoyer

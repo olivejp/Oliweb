@@ -69,6 +69,9 @@ public class ListChatFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
+        if (viewModel.getTypeRechercheChat() == null) {
+            viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getUid());
+        }
     }
 
     @Override
@@ -79,13 +82,13 @@ public class ListChatFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         Query query;
-        switch (viewModel.getTypeRecherche()) {
+        switch (viewModel.getTypeRechercheChat()) {
             case PAR_ANNONCE:
                 query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
                 loadQuery(query);
                 break;
             case PAR_UTILISATEUR:
-                query = chatReference.orderByChild("members/" + FirebaseAuth.getInstance().getUid()).equalTo(true);
+                query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
                 loadQuery(query);
                 break;
         }
@@ -104,7 +107,7 @@ public class ListChatFragment extends Fragment {
     }
 
     private void callListMessage(String uidChat) {
-        viewModel.rechercheByUidChat(uidChat);
+        viewModel.rechercheMessageByUidChat(uidChat);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {

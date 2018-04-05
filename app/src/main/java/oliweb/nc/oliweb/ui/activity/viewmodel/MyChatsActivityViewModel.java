@@ -16,20 +16,25 @@ import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 
-    public enum TypeRecherche {
+    public enum TypeRechercheChat {
         PAR_ANNONCE,
-        PAR_UTILISATEUR,
+        PAR_UTILISATEUR
+    }
+
+    public enum TypeRechercheMessage {
+        PAR_ANNONCE,
         PAR_CHAT
     }
 
     private boolean twoPane;
     private String selectedUidChat;
+    private String selectedUidUtilisateur;
     private AnnonceEntity selectedAnnonce;
-    private TypeRecherche typeRecherche;
+    private TypeRechercheChat typeRechercheChat;
+    private TypeRechercheMessage typeRechercheMessage;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
-        typeRecherche = TypeRecherche.PAR_UTILISATEUR;
     }
 
     public boolean isTwoPane() {
@@ -44,34 +49,40 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return selectedUidChat;
     }
 
-    private void setSelectedUidChat(String selectedUidChat) {
-        this.selectedUidChat = selectedUidChat;
-    }
-
     public AnnonceEntity getSelectedAnnonce() {
         return selectedAnnonce;
     }
 
-    private void setSelectedAnnonce(AnnonceEntity selectedUidAnnonce) {
-        this.selectedAnnonce = selectedUidAnnonce;
+    public String getSelectedUidUtilisateur() {
+        return selectedUidUtilisateur;
     }
 
-    public TypeRecherche getTypeRecherche() {
-        return typeRecherche;
+    public TypeRechercheChat getTypeRechercheChat() {
+        return typeRechercheChat;
     }
 
-    public void rechercheByUidUtilisateur() {
-        typeRecherche = TypeRecherche.PAR_UTILISATEUR;
+    public TypeRechercheMessage getTypeRechercheMessage() {
+        return typeRechercheMessage;
     }
 
-    public void rechercheByUidAnnonce(AnnonceEntity annonce) {
-        typeRecherche = TypeRecherche.PAR_ANNONCE;
+    public void rechercheChatByUidUtilisateur(String uidUtilisateur) {
+        typeRechercheChat = TypeRechercheChat.PAR_UTILISATEUR;
+        selectedUidUtilisateur = uidUtilisateur;
+    }
+
+    public void rechercheChatByUidAnnonce(AnnonceEntity annonce) {
+        typeRechercheChat = TypeRechercheChat.PAR_ANNONCE;
         selectedAnnonce = annonce;
     }
 
-    public void rechercheByUidChat(String uidChat) {
-        typeRecherche = TypeRecherche.PAR_CHAT;
+    public void rechercheMessageByUidChat(String uidChat) {
+        typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
         selectedUidChat = uidChat;
+    }
+
+    public void rechercheMessageByUidAnnonce(AnnonceEntity annonceEntity) {
+        typeRechercheMessage = TypeRechercheMessage.PAR_ANNONCE;
+        selectedAnnonce = annonceEntity;
     }
 
     public ChatFirebase createNewFirebaseChat(AnnonceEntity annonce) {
