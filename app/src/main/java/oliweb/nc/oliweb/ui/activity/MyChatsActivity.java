@@ -48,11 +48,16 @@ public class MyChatsActivity extends AppCompatActivity {
     }
 
     private void initFragments() {
+        // Récupération du fragment en cours dans frame_chats
+        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.frame_chats);
+
         Fragment listChatFragment = getSupportFragmentManager().findFragmentByTag(TAG_MASTER_FRAGMENT);
         if (listChatFragment == null) {
             listChatFragment = new ListChatFragment();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT).commit();
+        if (frag == null || !frag.equals(listChatFragment)) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT).commit();
+        }
 
         Fragment listMessageFragment1 = getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_FRAGMENT);
         if (listMessageFragment1 != null) {

@@ -41,6 +41,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
     private static final String TAG = ChatFirebaseAdapter.class.getName();
 
     private View.OnClickListener clickListener;
+    private View.OnClickListener popupClickListener;
 
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
@@ -48,9 +49,10 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
      *
      * @param options
      */
-    public ChatFirebaseAdapter(@NonNull FirebaseRecyclerOptions<ChatFirebase> options, View.OnClickListener clickListener) {
+    public ChatFirebaseAdapter(@NonNull FirebaseRecyclerOptions<ChatFirebase> options, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         super(options);
         this.clickListener = clickListener;
+        this.popupClickListener = popupClickListener;
     }
 
     @Override
@@ -59,6 +61,8 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         holder.lastMessage.setText(model.getLastMessage());
         holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
         holder.constraintLayout.setOnClickListener(clickListener);
+        holder.imagePopupMenu.setOnClickListener(popupClickListener);
+        holder.imagePopupMenu.setTag(model);
         retreivePhoto(holder, model);
     }
 
@@ -118,6 +122,9 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
         @BindView(R.id.constraint_chat)
         ConstraintLayout constraintLayout;
+
+        @BindView(R.id.chat_popup_menu)
+        ImageView imagePopupMenu;
 
         public ChatFirebaseViewHolder(View itemView) {
             super(itemView);

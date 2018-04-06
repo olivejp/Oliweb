@@ -2,14 +2,17 @@ package oliweb.nc.oliweb.ui.fragment;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -23,6 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatFirebaseAdapter;
 
@@ -40,6 +44,8 @@ public class ListChatFragment extends Fragment {
     private ChatFirebaseAdapter adapter;
 
     private MyChatsActivityViewModel viewModel;
+
+    private ChatFirebase chatClicked;
 
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
@@ -71,9 +77,6 @@ public class ListChatFragment extends Fragment {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
 
-        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(itemDecoration);
-
         if (viewModel.getTypeRechercheChat() == null) {
             viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getUid());
         }
@@ -85,6 +88,9 @@ public class ListChatFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_list_chat, container, false);
 
         ButterKnife.bind(this, view);
+
+        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(itemDecoration);
 
         Query query;
         switch (viewModel.getTypeRechercheChat()) {
@@ -105,7 +111,29 @@ public class ListChatFragment extends Fragment {
                 .setQuery(query, ChatFirebase.class)
                 .build();
 
-        adapter = new ChatFirebaseAdapter(options, v -> callListMessage((String) v.getTag()));
+        adapter = new ChatFirebaseAdapter(options,
+                v -> callListMessage((String) v.getTag()),
+                v -> {
+                    PopupMenu popup = new PopupMenu(appCompatActivity, v);
+                    popup.setOnMenuItemClickListener(item -> {
+                        switch (item.getItemId()) {
+                            case R.id.chat_open_annonce:
+                                // TODO ouvrir l'annonce ici
+                                Intent intent = new Intent();
+                                intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
+                                startActivity(intent);
+                                return true;
+                            case R.id.chat_delete:
+                                return true;
+                            default:
+                                return false;
+                        }
+                    });
+                    MenuInflater inflater = popup.getMenuInflater();
+                    inflater.inflate(R.menu.chat_popup_menu, popup.getMenu());
+                    chatClicked = (ChatFirebase) v.getTag();
+                    popup.show();
+                });
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(linearLayoutManager);
