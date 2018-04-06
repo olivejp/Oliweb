@@ -18,19 +18,27 @@ import android.view.ViewGroup;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatFirebaseAdapter;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_CHATS_REF;
+import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
 
 /**
@@ -45,10 +53,33 @@ public class ListChatFragment extends Fragment {
 
     private MyChatsActivityViewModel viewModel;
 
-    private ChatFirebase chatClicked;
-
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
+
+    /**
+     * OnClickListener qui ouvrira le détail d'une annonce pour le chat concerné
+     */
+    private View.OnClickListener onPopupClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            PopupMenu popup = new PopupMenu(appCompatActivity, v);
+            popup.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.chat_open_annonce:
+                        openAnnonceDetail((ChatFirebase) v.getTag());
+                        return true;
+                    case R.id.chat_delete:
+                        // TODO Delete the chat & messages here
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+            MenuInflater inflater = popup.getMenuInflater();
+            inflater.inflate(R.menu.chat_popup_menu, popup.getMenu());
+            popup.show();
+        }
+    };
 
     @Override
     public void onStart() {
@@ -93,15 +124,13 @@ public class ListChatFragment extends Fragment {
         recyclerView.addItemDecoration(itemDecoration);
 
         Query query;
-        switch (viewModel.getTypeRechercheChat()) {
-            case PAR_ANNONCE:
-                query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
-                loadQuery(query);
-                break;
-            case PAR_UTILISATEUR:
-                query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
-                loadQuery(query);
-                break;
+        if (viewModel.getTypeRechercheChat() == MyChatsActivityViewModel.TypeRechercheChat.PAR_ANNONCE) {
+            query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
+            loadQuery(query);
+
+        } else if (viewModel.getTypeRechercheChat() == MyChatsActivityViewModel.TypeRechercheChat.PAR_UTILISATEUR) {
+            query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
+            loadQuery(query);
         }
         return view;
     }
@@ -113,30 +142,33 @@ public class ListChatFragment extends Fragment {
 
         adapter = new ChatFirebaseAdapter(options,
                 v -> callListMessage((String) v.getTag()),
-                v -> {
-                    PopupMenu popup = new PopupMenu(appCompatActivity, v);
-                    popup.setOnMenuItemClickListener(item -> {
-                        switch (item.getItemId()) {
-                            case R.id.chat_open_annonce:
-                                // TODO ouvrir l'annonce ici
-                                Intent intent = new Intent();
-                                intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
-                                startActivity(intent);
-                                return true;
-                            case R.id.chat_delete:
-                                return true;
-                            default:
-                                return false;
-                        }
-                    });
-                    MenuInflater inflater = popup.getMenuInflater();
-                    inflater.inflate(R.menu.chat_popup_menu, popup.getMenu());
-                    chatClicked = (ChatFirebase) v.getTag();
-                    popup.show();
-                });
+                onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(linearLayoutManager);
+    }
+
+    private void openAnnonceDetail(ChatFirebase chatFirebase) {
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_ANNONCE_REF)
+                .child(chatFirebase.getUidAnnonce())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
+                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(annonceDto);
+                        Intent intent = new Intent();
+                        intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                        intent.putExtras(bundle);
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // Do nothing
+                    }
+                });
     }
 
     private void callListMessage(String uidChat) {
