@@ -25,7 +25,6 @@ import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
-import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -116,7 +115,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
         this.annonce.setPrix(prix);
-        this.annonce.setDatePublication(Utility.getNowInEntityFormat());
         this.annonce.setIdCategorie(categorie.getIdCategorie());
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setContactByEmail(email ? "O" : "N");

@@ -26,6 +26,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
@@ -237,7 +238,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
             isValid = false;
         }
         if (!checkBoxTel.isChecked() && !checkBoxEmail.isChecked() && !checkBoxMsg.isChecked()) {
-            checkBoxTel.setError("Au moins un moyen de contact est nécessaire.");
+            checkBoxMsg.setError("");
+            Toast.makeText(this, "Un moyen de contact obligatoire", Toast.LENGTH_LONG).show();
             isValid = false;
         }
         return isValid;
@@ -390,9 +392,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (utilisateurEntity != null) {
                 if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
                     checkBoxEmail.setVisibility(View.GONE);
+                    checkBoxEmail.setChecked(false);
                 }
-                if (utilisateurEntity.getTelephone() != null && !utilisateurEntity.getTelephone().isEmpty()) {
+                if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
                     checkBoxTel.setVisibility(View.GONE);
+                    checkBoxTel.setChecked(false);
                 }
             }
         });

@@ -198,6 +198,13 @@
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp" />
 
+
+            <CheckBox
+                android:id="@+id/checkbox_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Par message" />
+
             <CheckBox
                 android:id="@+id/checkbox_telephone"
                 android:layout_width="wrap_content"
@@ -210,11 +217,7 @@
                 android:layout_height="wrap_content"
                 android:text="Par email" />
 
-            <CheckBox
-                android:id="@+id/checkbox_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Par message" />
+
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

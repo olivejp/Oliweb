@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -71,7 +72,7 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
 
         // Récupération de la date de publication
-        viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.convertDateEntityToUi(viewHolderRaw.singleAnnonce.getDatePublication()));
+        viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
 
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
@@ -104,13 +105,15 @@ public class AnnonceRawAdapter extends
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                    AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
-                    AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
-                    return newAnnonce.getUUID().equals(oldAnnonce.getUUID())
-                            && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
-                            && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
-                            && (newAnnonce.isFavorite() == oldAnnonce.isFavorite())
-                            && newAnnonce.getPrix().equals(oldAnnonce.getPrix());
+                    AnnoncePhotos newAnnonce = newListAnnonces.get(newItemPosition);
+                    AnnoncePhotos oldAnnonce = listAnnonces.get(oldItemPosition);
+                    return newAnnonce.getAnnonceEntity().getUUID().equals(oldAnnonce.getAnnonceEntity().getUUID())
+                            && newAnnonce.getAnnonceEntity().getTitre().equals(oldAnnonce.getAnnonceEntity().getTitre())
+                            && newAnnonce.getAnnonceEntity().getDescription().equals(oldAnnonce.getAnnonceEntity().getDescription())
+                            && (newAnnonce.getAnnonceEntity().isFavorite() == oldAnnonce.getAnnonceEntity().isFavorite())
+                            && (newAnnonce.getAnnonceEntity().getDatePublication().equals(oldAnnonce.getAnnonceEntity().getDatePublication()))
+                            && newAnnonce.getPhotos().size() == oldAnnonce.getPhotos().size()
+                            && newAnnonce.getAnnonceEntity().getPrix().equals(oldAnnonce.getAnnonceEntity().getPrix());
                 }
             });
             this.listAnnonces = newListAnnonces;

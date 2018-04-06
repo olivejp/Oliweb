@@ -15,6 +15,11 @@ public class AnnonceDto {
     private String uuid;
     private String titre;
     private String description;
+
+    private boolean contactEmail;
+    private boolean contactTel;
+    private boolean contactMsg;
+
     private int prix;
 
     @PropertyName("date_publication")
@@ -87,6 +92,30 @@ public class AnnonceDto {
         this.datePublication = datePublication;
     }
 
+    public boolean isContactEmail() {
+        return contactEmail;
+    }
+
+    public void setContactEmail(boolean contactEmail) {
+        this.contactEmail = contactEmail;
+    }
+
+    public boolean isContactTel() {
+        return contactTel;
+    }
+
+    public void setContactTel(boolean contactTel) {
+        this.contactTel = contactTel;
+    }
+
+    public boolean isContactMsg() {
+        return contactMsg;
+    }
+
+    public void setContactMsg(boolean contactMsg) {
+        this.contactMsg = contactMsg;
+    }
+
     @Override
     public String toString() {
         return "AnnonceDto{" +
@@ -96,6 +125,9 @@ public class AnnonceDto {
                 ", uuid='" + uuid + '\'' +
                 ", titre='" + titre + '\'' +
                 ", description='" + description + '\'' +
+                ", contactEmail=" + contactEmail +
+                ", contactTel=" + contactTel +
+                ", contactMsg=" + contactMsg +
                 ", prix=" + prix +
                 ", datePublication=" + datePublication +
                 '}';

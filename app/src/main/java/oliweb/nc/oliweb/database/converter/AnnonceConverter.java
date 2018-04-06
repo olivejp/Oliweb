@@ -37,6 +37,11 @@ public class AnnonceConverter {
         annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
         annonceEntity.setUuidUtilisateur(annonceDto.getUtilisateur().getUuid());
         annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
+
+        annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
+        annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
+        annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+
         if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
             for (String photoUrl : annonceDto.getPhotos()) {
                 PhotoEntity photoEntity = new PhotoEntity();
@@ -67,6 +72,10 @@ public class AnnonceConverter {
         annonceDto.setTitre(annonceFull.getAnnonce().getTitre());
         annonceDto.setPrix(annonceFull.getAnnonce().getPrix());
         annonceDto.setUuid(annonceFull.getAnnonce().getUUID());
+
+        annonceDto.setContactEmail(annonceFull.getAnnonce().getContactByEmail() != null && annonceFull.getAnnonce().getContactByEmail().equals("O"));
+        annonceDto.setContactTel(annonceFull.getAnnonce().getContactByTel() != null && annonceFull.getAnnonce().getContactByTel().equals("O"));
+        annonceDto.setContactMsg(annonceFull.getAnnonce().getContactByMsg() != null && annonceFull.getAnnonce().getContactByMsg().equals("O"));
 
         List<String> listPhotoDto = new ArrayList<>();
         for (PhotoEntity photo : annonceFull.getPhotos()) {

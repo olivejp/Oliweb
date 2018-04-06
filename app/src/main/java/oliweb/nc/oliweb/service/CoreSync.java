@@ -8,9 +8,12 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -144,15 +147,30 @@ class CoreSync {
         dbRef.setValue(annonceDto)
                 .addOnSuccessListener(o -> {
                     // Mise à jour de la date de publication
-                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP);
+                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP)
+                            .addOnSuccessListener(aVoid ->
+                                    dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            // Récupération de la date de publication donnée par Firebase
+                                            AnnonceDto annonceDto1 = dataSnapshot.getValue(AnnonceDto.class);
+                                            annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
 
-                    // Mise à jour dans la DB locale
-                    annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                    annonceRepository.update(dataReturn -> {
-                        if (dataReturn.isSuccessful()) {
-                            sendPhotosToFbStorage(annonceFull.annonce.getIdAnnonce());
-                        }
-                    }, annonceFull.getAnnonce());
+                                            // Mise à jour dans la DB locale
+                                            annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
+                                            annonceRepository.update(dataReturn -> {
+                                                if (dataReturn.isSuccessful()) {
+                                                    sendPhotosToFbStorage(annonceFull.annonce.getIdAnnonce());
+                                                }
+                                            }, annonceFull.getAnnonce());
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+                                            // Do nothing
+                                        }
+                                    })
+                            );
                 })
                 .addOnFailureListener(e -> {
                     annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
