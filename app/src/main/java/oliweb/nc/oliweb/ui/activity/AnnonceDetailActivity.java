@@ -10,7 +10,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -85,11 +84,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
                 indicator.setViewPager(viewPager);
             }
-        }
-
-        // Désactive le bouton de contact s'il s'agit de notre annonce
-        if (annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
-            fabMainAction.setVisibility(View.GONE);
         }
     }
 

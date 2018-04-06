@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -114,6 +115,15 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.view_4)
     FrameLayout view4;
 
+    @BindView(R.id.checkbox_email)
+    CheckBox checkBoxEmail;
+
+    @BindView(R.id.checkbox_telephone)
+    CheckBox checkBoxTel;
+
+    @BindView(R.id.checkbox_message)
+    CheckBox checkBoxMsg;
+
     List<Pair<ImageView, FrameLayout>> arrayImageViews = new ArrayList<>();
 
     // Evenement sur le spinner
@@ -177,6 +187,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         } else if (savedInstanceState == null) {
             initViewModelDataDependingOnMode(bundle);
         }
+
+        initCheckboxes();
     }
 
     @Override
@@ -195,7 +207,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             int prix = Integer.parseInt(textViewPrix.getText().toString());
 
             // Save the annonce
-            viewModel.saveAnnonce(titre, description, prix, uidUser, dataReturn -> {
+            viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
                 if (dataReturn.getNb() > 0) {
                     setResult(RESULT_OK);
                     finish();
@@ -222,6 +234,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
         if (textViewPrix.getText().toString().isEmpty()) {
             textViewPrix.setError("Le prix est obligatoire.");
+            isValid = false;
+        }
+        if (!checkBoxTel.isChecked() && !checkBoxEmail.isChecked() && !checkBoxMsg.isChecked()) {
+            checkBoxTel.setError("Au moins un moyen de contact est nécessaire.");
             isValid = false;
         }
         return isValid;
@@ -338,6 +354,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return v.getTag() != null && viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag());
     }
 
+    /**
+     * Method called in the onCreate method to check if every mandatory arguments is present
+     *
+     * @param bundle to check
+     * @return true if everything is ok, false otherwise
+     */
     private boolean catchAndCheckParameter(Bundle bundle) {
         // Catch preferences
         externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
@@ -361,6 +383,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    private void initCheckboxes() {
+        viewModel.getConnectedUser().observe(this, utilisateurEntity -> {
+            if (utilisateurEntity != null) {
+                if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
+                    checkBoxEmail.setVisibility(View.GONE);
+                }
+                if (utilisateurEntity.getTelephone() != null && !utilisateurEntity.getTelephone().isEmpty()) {
+                    checkBoxTel.setVisibility(View.GONE);
+                }
+            }
+        });
     }
 
     private void initObservers() {
@@ -541,6 +576,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         textViewTitre.setText(annonce.getTitre());
         textViewDescription.setText(annonce.getDescription());
         textViewPrix.setText(String.valueOf(annonce.getPrix()));
+
+        checkBoxMsg.setChecked(annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O"));
+        checkBoxEmail.setChecked(annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O"));
+        checkBoxTel.setChecked(annonce.getContactByTel() != null && annonce.getContactByTel().equals("O"));
 
         // Récupération et sélection dans le spinner de la bonne catégorie
         viewModel.getLiveDataListCategorie()

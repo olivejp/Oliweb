@@ -7,6 +7,8 @@ import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +19,11 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -32,12 +36,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private CategorieRepository categorieRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
+    private UtilisateurRepository utilisateurRepository;
 
     private AnnonceEntity annonce;
     private CategorieEntity categorie;
     private ArrayList<PhotoEntity> listPhoto = new ArrayList<>();
     private PhotoEntity photoEntityUpdated;
-    private MutableLiveData<List<CategorieEntity>> liveDataListCategorie = new MutableLiveData<>();
+    private MutableLiveData<List<CategorieEntity>> liveDataListCategorie;
     private MutableLiveData<ArrayList<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
@@ -45,6 +50,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         categorieRepository = CategorieRepository.getInstance(application);
         photoRepository = PhotoRepository.getInstance(application);
         annonceRepository = AnnonceRepository.getInstance(application);
+        utilisateurRepository = UtilisateurRepository.getInstance(application);
 
         // Récupération de toutes la liste des catégories
         liveDataListCategorie = new MutableLiveData<>();
@@ -54,6 +60,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                 .subscribe(categorieEntities ->
                         liveDataListCategorie.setValue(categorieEntities)
                 );
+    }
+
+    public LiveData<UtilisateurEntity> getConnectedUser() {
+        return this.utilisateurRepository.findById(FirebaseAuth.getInstance().getUid());
     }
 
     public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {
@@ -101,7 +111,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return retour;
     }
 
-    public void saveAnnonce(String titre, String description, int prix, String uidUser, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telelphone, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
 
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
@@ -109,6 +119,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setDatePublication(Utility.getNowInEntityFormat());
         this.annonce.setIdCategorie(categorie.getIdCategorie());
         this.annonce.setStatut(StatusRemote.TO_SEND);
+        this.annonce.setContactByEmail(email ? "O" : "N");
+        this.annonce.setContactByTel(telelphone ? "O" : "N");
+        this.annonce.setContactByMsg(message ? "O" : "N");
         this.annonce.setUuidUtilisateur(uidUser);
 
         if (listPhoto == null || listPhoto.isEmpty()) {

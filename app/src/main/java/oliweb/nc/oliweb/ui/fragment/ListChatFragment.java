@@ -68,9 +68,6 @@ public class ListChatFragment extends Fragment {
                     case R.id.chat_open_annonce:
                         openAnnonceDetail((ChatFirebase) v.getTag());
                         return true;
-                    case R.id.chat_delete:
-                        // TODO Delete the chat & messages here
-                        return true;
                     default:
                         return false;
                 }

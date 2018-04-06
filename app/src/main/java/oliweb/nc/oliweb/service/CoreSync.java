@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -142,6 +143,10 @@ class CoreSync {
 
         dbRef.setValue(annonceDto)
                 .addOnSuccessListener(o -> {
+                    // Mise à jour de la date de publication
+                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP);
+
+                    // Mise à jour dans la DB locale
                     annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
                     annonceRepository.update(dataReturn -> {
                         if (dataReturn.isSuccessful()) {
@@ -235,53 +240,6 @@ class CoreSync {
                             });
                 });
     }
-
-//    private void syncPhotosToSend() {
-//        Log.d(TAG, "Starting syncPhotosToSend");
-//        // Read all photos with TO_SEND status to send them
-//        photoRepository
-//                .getAllPhotosByStatus(StatusRemote.TO_SEND.getValue())
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(Schedulers.io())
-//                .subscribe(listPhoto -> {
-//                    if (listPhoto != null && !listPhoto.isEmpty()) {
-//                        for (PhotoEntity photo : listPhoto) {
-//                            sendPhotoToFirebaseStorage(photo, listPhoto.size());
-//                        }
-//                    }
-//                });
-//    }
-
-//    private void sendPhotoToFirebaseStorage(PhotoEntity photo, int totalSize) {
-//        Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
-//
-//        OnCheckedListener onCheckedListener = count -> {
-//            if (count == null || count == 0) {
-//                mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-//                notificationManager.notify(notificationSyncPhotoId, mBuilder.build());
-//                notificationManager.cancel(notificationSyncPhotoId);
-//            }
-//        };
-//
-//        File file = new File(photo.getUriLocal());
-//        String fileName = file.getName();
-//        StorageReference storageReference = fireStorage.child(fileName);
-//        storageReference.putFile(Uri.parse(photo.getUriLocal()))
-//                .addOnSuccessListener(taskSnapshot -> {
-//                    photo.setStatut(StatusRemote.SEND);
-//                    if (taskSnapshot.getDownloadUrl() != null) {
-//                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-//                    }
-//                    photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
-//                    updateProgressBar(totalSize, nbPhotoCompletedTask++, notificationSyncPhotoId);
-//                })
-//                .addOnFailureListener(e -> {
-//                    Log.e(TAG, "Failed to upload image");
-//                    photo.setStatut(StatusRemote.FAILED_TO_SEND);
-//                    photoRepository.save(photo, dataReturn -> isAnotherPhotoWithStatus(StatusRemote.TO_SEND, onCheckedListener));
-//                    updateProgressBar(totalSize, nbPhotoCompletedTask++, notificationSyncPhotoId);
-//                });
-//    }
 
     /**
      * Delete all photos
