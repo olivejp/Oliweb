@@ -61,12 +61,12 @@ public class Utility {
     }
 
     /**
-     * @param dateEntity
+     * @param timestamp
      * @return
      */
-    public static String howLongFromNow(Long dateEntity) {
-        if (dateEntity != null) {
-            return howLongFromNow(DateConverter.convertDateEntityToDto(dateEntity));
+    public static String howLongFromNow(Long timestamp) {
+        if (timestamp != null) {
+            return howLongFromNow(DateConverter.simpleDtoDateFormat.format(new Date(timestamp)));
         }
         return null;
     }

@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class AnnonceDetailActivity extends AppCompatActivity {
 
@@ -65,6 +67,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     @BindView(R.id.fab_action_message)
     FloatingActionButton fabActionMessage;
+
+    @BindView(R.id.image_profil_seller)
+    ImageView image_profil_seller;
 
     private AnnoncePhotos annoncePhotos;
 
@@ -99,6 +104,27 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             fabActionEmail.setVisibility((annoncePhotos.getAnnonceEntity().getContactByEmail() != null && annoncePhotos.getAnnonceEntity().getContactByEmail().equals("O")) ? View.VISIBLE : View.GONE);
             fabActionTelephone.setVisibility((annoncePhotos.getAnnonceEntity().getContactByTel() != null && annoncePhotos.getAnnonceEntity().getContactByTel().equals("O")) ? View.VISIBLE : View.GONE);
             fabActionMessage.setVisibility((annoncePhotos.getAnnonceEntity().getContactByMsg() != null && annoncePhotos.getAnnonceEntity().getContactByMsg().equals("O")) ? View.VISIBLE : View.GONE);
+
+            FirebaseDatabase.getInstance()
+                    .getReference(Constants.FIREBASE_DB_USER_REF)
+                    .child(annoncePhotos.getAnnonceEntity().getUuidUtilisateur())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            UtilisateurFirebase user = dataSnapshot.getValue(UtilisateurFirebase.class);
+                            GlideApp.with(AnnonceDetailActivity.this)
+                                    .load(user.getPhotoPath())
+                                    .circleCrop()
+                                    .placeholder(R.drawable.ic_person_white_48dp)
+                                    .error(R.drawable.ic_person_white_48dp)
+                                    .into(image_profil_seller);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            // Do nothing
+                        }
+                    });
 
             if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));

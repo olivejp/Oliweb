@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -153,13 +154,17 @@ public class ListMessageFragment extends Fragment {
                 sendMessage(uidChat, messageToSend);
                 break;
             case PAR_ANNONCE:
-                findOrCreateChat(uidUser, annonce, chat -> {
-                    sendMessage(chat.getUid(), messageToSend);
-                    if (initializeAdapterLater) {
-                        Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
-                        attachFirebaseRefToAdapter(query);
-                    }
-                });
+                if (adapter != null || annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
+                    findOrCreateChat(uidUser, annonce, chat -> {
+                        sendMessage(chat.getUid(), messageToSend);
+                        if (initializeAdapterLater) {
+                            Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
+                            attachFirebaseRefToAdapter(query);
+                        }
+                    });
+                } else {
+                    Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
+                }
                 break;
         }
     }
