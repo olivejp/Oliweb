@@ -22,7 +22,7 @@ public class AnnonceMessageActivity extends AppCompatActivity {
 
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(ARG_ANNONCE)) {
             AnnonceEntity annonce = getIntent().getExtras().getParcelable(ARG_ANNONCE);
-            viewModel.rechercheChatByUidAnnonce(annonce);
+            viewModel.rechercheMessageByAnnonce(annonce);
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_annonce_message, new ListMessageFragment()).commit();
         }
     }
@@ -31,8 +31,8 @@ public class AnnonceMessageActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
+            return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 }

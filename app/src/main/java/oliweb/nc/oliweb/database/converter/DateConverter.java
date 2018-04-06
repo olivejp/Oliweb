@@ -23,7 +23,7 @@ public class DateConverter {
 
         private final String value;
 
-        private DatePattern(String value) {
+        DatePattern(String value) {
             this.value = value;
         }
 

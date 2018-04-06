@@ -7,12 +7,14 @@ import android.support.annotation.NonNull;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
 
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 
@@ -32,6 +34,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private AnnonceEntity selectedAnnonce;
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
+    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
@@ -80,12 +83,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedUidChat = uidChat;
     }
 
-    public void rechercheMessageByUidAnnonce(AnnonceEntity annonceEntity) {
+    public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {
         typeRechercheMessage = TypeRechercheMessage.PAR_ANNONCE;
         selectedAnnonce = annonceEntity;
     }
 
-    public ChatFirebase createNewFirebaseChat(AnnonceEntity annonce) {
+    public ChatFirebase createChat(AnnonceEntity annonce) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).push();
 
         HashMap<String, Boolean> hash = new HashMap<>();
@@ -100,5 +103,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         chatFirebase.setUidSeller(annonce.getUuidUtilisateur());
 
         return chatFirebase;
+    }
+
+    public void updateChat(String uidChat, MessageFirebase messageFirebase) {
+        // Mise à jour du dernier message dans le chat ainsi que la date de mise à jour.
+        chatRef.child(uidChat).child("lastMessage")
+                .setValue(messageFirebase.getMessage())
+                .addOnSuccessListener(aVoid1 -> chatRef.child(uidChat).child("updateTimestamp").setValue(ServerValue.TIMESTAMP));
     }
 }

@@ -4,11 +4,13 @@ package oliweb.nc.oliweb.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,6 +49,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.detail_toolbar)
     Toolbar toolbar;
 
+    @BindView(R.id.fab_main_action)
+    FloatingActionButton fabMainAction;
+
     private AnnoncePhotos annoncePhotos;
 
     public AnnonceDetailActivity() {
@@ -80,6 +85,11 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
                 indicator.setViewPager(viewPager);
             }
+        }
+
+        // Désactive le bouton de contact s'il s'agit de notre annonce
+        if (annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
+            fabMainAction.setVisibility(View.GONE);
         }
     }
 

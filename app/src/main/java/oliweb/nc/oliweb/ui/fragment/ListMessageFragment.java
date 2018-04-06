@@ -56,6 +56,7 @@ public class ListMessageFragment extends Fragment {
     private MessageFirebaseAdapter adapter;
     private MyChatsActivityViewModel viewModel;
     private Vibrator vibrator;
+    private boolean initializeAdapterLater = false;
 
     private String uidChat;
     private AnnonceEntity annonce;
@@ -113,9 +114,12 @@ public class ListMessageFragment extends Fragment {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
                 findChat(uidUser, annonce, chat -> {
-                    uidChat = viewModel.getSelectedUidChat();
-                    Query query = messageRef.child(uidChat).orderByChild("timestamp");
-                    attachFirebaseRefToAdapter(query);
+                    if (chat != null) {
+                        Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
+                        attachFirebaseRefToAdapter(query);
+                    } else {
+                        initializeAdapterLater = true;
+                    }
                 });
                 break;
             case PAR_CHAT:
@@ -134,27 +138,36 @@ public class ListMessageFragment extends Fragment {
                 .build();
         adapter = new MessageFirebaseAdapter(options);
         recyclerView.setAdapter(adapter);
+        adapter.startListening();
     }
 
     @OnClick(R.id.button_send_message)
-    public void clickOnSend(View v) {
-        if (!textToSend.getText().toString().isEmpty()) {
-            String messageToSend = textToSend.getText().toString();
-            switch (viewModel.getTypeRechercheMessage()) {
-                case PAR_CHAT:
-                    sendMessage(uidChat, messageToSend);
-                    break;
-                case PAR_ANNONCE:
-                    createChat(uidUser, annonce, chat -> sendMessage(chat.getUid(), messageToSend));
-                    break;
-            }
+    public void clickOnSendButton(View v) {
+        final String messageToSend = textToSend.getText().toString();
+        if (messageToSend.isEmpty()) {
+            return;
+        }
+
+        switch (viewModel.getTypeRechercheMessage()) {
+            case PAR_CHAT:
+                sendMessage(uidChat, messageToSend);
+                break;
+            case PAR_ANNONCE:
+                findOrCreateChat(uidUser, annonce, chat -> {
+                    sendMessage(chat.getUid(), messageToSend);
+                    if (initializeAdapterLater) {
+                        Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
+                        attachFirebaseRefToAdapter(query);
+                    }
+                });
+                break;
         }
     }
 
     /**
      * Envoie un nouveau message sur Firebase Database
      *
-     * @param uidChat identifiant du chat sur lequel on veut poster le message.
+     * @param uidChat       identifiant du chat sur lequel on veut poster le message.
      * @param messageToSend le message à envoyer
      */
     private void sendMessage(String uidChat, String messageToSend) {
@@ -173,6 +186,8 @@ public class ListMessageFragment extends Fragment {
                     // Mise à jour du timestamp
                     newMessageRef.child("timestamp").setValue(ServerValue.TIMESTAMP);
 
+                    viewModel.updateChat(uidChat, messageFirebase);
+
                     Log.d(TAG, "Un message a été envoyé");
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibrator.vibrate(VibrationEffect.createOneShot(500, 50));
@@ -188,7 +203,6 @@ public class ListMessageFragment extends Fragment {
                 });
     }
 
-
     /**
      * Recherche dans Firebase si on a déjà un chat pour cet utilisateur et pour cette annonce
      * Sinon on le créer
@@ -197,13 +211,16 @@ public class ListMessageFragment extends Fragment {
      * @param annonce  annonce pour laquelle on veut correspondre
      * @param listener listener qui récupérera le chat trouvé ou créé
      */
-    private void createChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
+    private void findOrCreateChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
         findChat(userUid, annonce, chat -> {
-            if (chat != null) {
-                ChatFirebase finalChat = viewModel.createNewFirebaseChat(annonce);
+            if (chat == null) {
+                ChatFirebase finalChat = viewModel.createChat(annonce);
                 chatRef.child(finalChat.getUid())
                         .setValue(finalChat)
-                        .addOnSuccessListener(aVoid -> listener.afterFoundChat(finalChat));
+                        .addOnSuccessListener(aVoid -> {
+                            chatRef.child(finalChat.getUid()).child("creationTimestamp").setValue(ServerValue.TIMESTAMP);
+                            listener.afterFoundChat(finalChat);
+                        });
             } else {
                 listener.afterFoundChat(chat);
             }
@@ -224,19 +241,23 @@ public class ListMessageFragment extends Fragment {
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
+                                boolean found = false;
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     ChatFirebase chat = data.getValue(ChatFirebase.class);
                                     if (chat != null && chat.getUidAnnonce().equals(annonce.getUUID())) {
                                         listener.afterFoundChat(chat);
+                                        found = true;
                                         break;
                                     }
                                 }
-                                listener.afterFoundChat(null);
+                                if (!found) {
+                                    listener.afterFoundChat(null);
+                                }
                             }
 
                             @Override
                             public void onCancelled(DatabaseError databaseError) {
-                                listener.afterFoundChat(null);
+                                // Do nothing
                             }
                         }
                 );
