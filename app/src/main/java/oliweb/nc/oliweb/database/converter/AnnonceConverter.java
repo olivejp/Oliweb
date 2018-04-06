@@ -67,7 +67,10 @@ public class AnnonceConverter {
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
         annonceDto.setCategorie(new CategorieDto(categorieEntity.getIdCategorie(), categorieEntity.getName()));
 
-        annonceDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
+        if (annonceFull.getAnnonce().getDatePublication() != null) {
+            annonceDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());
+        }
+
         annonceDto.setDescription(annonceFull.getAnnonce().getDescription());
         annonceDto.setTitre(annonceFull.getAnnonce().getTitre());
         annonceDto.setPrix(annonceFull.getAnnonce().getPrix());
