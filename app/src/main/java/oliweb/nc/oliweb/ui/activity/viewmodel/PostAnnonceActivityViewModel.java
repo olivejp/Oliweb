@@ -73,41 +73,39 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
-    public void updatePhotos() {
-        this.liveListPhoto.postValue(this.listPhoto);
+    public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
+        return this.photoRepository.findAllByIdAnnonce(idAnnonce);
     }
 
     public LiveData<List<CategorieEntity>> getLiveDataListCategorie() {
         return liveDataListCategorie;
     }
 
-    public void addPhotoToCurrentList(String path) {
-        PhotoEntity photoEntity = new PhotoEntity();
-        photoEntity.setUriLocal(path);
-        photoEntity.setStatut(StatusRemote.TO_SEND);
-        this.listPhoto.add(photoEntity);
-        this.liveListPhoto.postValue(this.listPhoto);
+    public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
+        return this.annonceRepository.findById(idAnnonce);
     }
 
-    public boolean canHandleAnotherPhoto() {
-        return this.listPhoto.size() < 4;
+    public LiveData<AnnonceEntity> findAnnonceByUid(String uidAnnonce) {
+        return this.annonceRepository.findByUid(uidAnnonce);
     }
 
-    public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
-        boolean retour = false;
-        if (this.listPhoto.contains(photoEntity)) {
-
-            if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
-                photoEntity.setStatut(StatusRemote.TO_DELETE);
-                this.photoRepository.update(photoEntity);
-                retour = true;
-            } else {
-                retour = this.listPhoto.remove(photoEntity);
-            }
-
-            this.liveListPhoto.postValue(this.listPhoto);
+    public void createNewAnnonce() {
+        this.annonce = new AnnonceEntity();
+        this.annonce.setUUID(UUID.randomUUID().toString());
+        this.annonce.setStatut(StatusRemote.TO_SEND);
+        this.annonce.setFavorite(0);
+        if (this.liveListPhoto == null) {
+            this.liveListPhoto = new MutableLiveData<>();
         }
-        return retour;
+        this.liveListPhoto.setValue(this.listPhoto);
+    }
+
+    public void setAnnonce(AnnonceEntity annonce) {
+        this.annonce = annonce;
+    }
+
+    public AnnonceEntity getAnnonce() {
+        return this.annonce;
     }
 
     public void saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telelphone, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
@@ -145,30 +143,45 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         }
     }
 
+
+    public void updatePhotos() {
+        this.liveListPhoto.postValue(this.listPhoto);
+    }
+
+    public void addPhotoToCurrentList(String path) {
+        PhotoEntity photoEntity = new PhotoEntity();
+        photoEntity.setUriLocal(path);
+        photoEntity.setStatut(StatusRemote.TO_SEND);
+        this.listPhoto.add(photoEntity);
+        this.liveListPhoto.postValue(this.listPhoto);
+    }
+
+    public boolean canHandleAnotherPhoto() {
+        return this.listPhoto.size() < 4;
+    }
+
+    public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
+        boolean retour = false;
+        if (this.listPhoto.contains(photoEntity)) {
+
+            if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
+                photoEntity.setStatut(StatusRemote.TO_DELETE);
+                this.photoRepository.update(photoEntity);
+                retour = true;
+            } else {
+                retour = this.listPhoto.remove(photoEntity);
+            }
+
+            this.liveListPhoto.postValue(this.listPhoto);
+        }
+        return retour;
+    }
+
     private void updatePhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         for (PhotoEntity photo : listPhoto) {
             photo.setIdAnnonce(idAnnonce);
         }
         this.photoRepository.save(listPhoto, onRespositoryPostExecute);
-    }
-
-    public void createNewAnnonce() {
-        this.annonce = new AnnonceEntity();
-        this.annonce.setUUID(UUID.randomUUID().toString());
-        this.annonce.setStatut(StatusRemote.TO_SEND);
-        this.annonce.setFavorite(0);
-        if (this.liveListPhoto == null) {
-            this.liveListPhoto = new MutableLiveData<>();
-        }
-        this.liveListPhoto.setValue(this.listPhoto);
-    }
-
-    public void setAnnonce(AnnonceEntity annonce) {
-        this.annonce = annonce;
-    }
-
-    public AnnonceEntity getAnnonce() {
-        return this.annonce;
     }
 
     public ArrayList<PhotoEntity> getListPhoto() {
@@ -179,7 +192,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.listPhoto = list;
     }
 
-
     public void setUpdatedPhoto(PhotoEntity photo) {
         this.photoEntityUpdated = photo;
     }
@@ -188,15 +200,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.photoEntityUpdated;
     }
 
-    public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
-        return this.annonceRepository.findById(idAnnonce);
-    }
 
     public void setCurrentCategorie(CategorieEntity categorie) {
         this.categorie = categorie;
     }
 
-    public LiveData<List<PhotoEntity>> getListPhotoByIdAnnonce(long idAnnonce) {
-        return this.photoRepository.findAllByIdAnnonce(idAnnonce);
-    }
 }

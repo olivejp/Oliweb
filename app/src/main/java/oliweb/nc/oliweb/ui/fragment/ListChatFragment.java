@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -152,13 +153,17 @@ public class ListChatFragment extends Fragment {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(annonceDto);
-                        Intent intent = new Intent();
-                        intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
-                        Bundle bundle = new Bundle();
-                        bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
-                        intent.putExtras(bundle);
-                        startActivity(intent);
+                        if (annonceDto != null) {
+                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(annonceDto);
+                            Intent intent = new Intent();
+                            intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
+                            Bundle bundle = new Bundle();
+                            bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                            intent.putExtras(bundle);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(appCompatActivity, "Oups... cette annonce a été supprimée", Toast.LENGTH_LONG).show();
+                        }
                     }
 
                     @Override

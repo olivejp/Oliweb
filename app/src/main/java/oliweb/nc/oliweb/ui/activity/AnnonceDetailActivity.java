@@ -36,6 +36,8 @@ import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
+import static oliweb.nc.oliweb.Constants.PARAM_MAJ;
+
 public class AnnonceDetailActivity extends AppCompatActivity {
 
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
@@ -67,6 +69,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     @BindView(R.id.fab_action_message)
     FloatingActionButton fabActionMessage;
+
+    @BindView(R.id.fab_action_update)
+    FloatingActionButton fabActionUpdate;
 
     @BindView(R.id.image_profil_seller)
     ImageView image_profil_seller;
@@ -101,9 +106,18 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             description.setText(annoncePhotos.getAnnonceEntity().getDescription());
             collapsingToolbarLayout.setTitle(annoncePhotos.getAnnonceEntity().getTitre());
 
-            fabActionEmail.setVisibility((annoncePhotos.getAnnonceEntity().getContactByEmail() != null && annoncePhotos.getAnnonceEntity().getContactByEmail().equals("O")) ? View.VISIBLE : View.GONE);
-            fabActionTelephone.setVisibility((annoncePhotos.getAnnonceEntity().getContactByTel() != null && annoncePhotos.getAnnonceEntity().getContactByTel().equals("O")) ? View.VISIBLE : View.GONE);
-            fabActionMessage.setVisibility((annoncePhotos.getAnnonceEntity().getContactByMsg() != null && annoncePhotos.getAnnonceEntity().getContactByMsg().equals("O")) ? View.VISIBLE : View.GONE);
+            boolean amITheOwner = annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
+            if (amITheOwner) {
+                fabActionUpdate.setVisibility(View.VISIBLE);
+                fabActionEmail.setVisibility(View.GONE);
+                fabActionTelephone.setVisibility(View.GONE);
+                fabActionMessage.setVisibility(View.GONE);
+            } else {
+                fabActionEmail.setVisibility((annoncePhotos.getAnnonceEntity().getContactByEmail() != null && annoncePhotos.getAnnonceEntity().getContactByEmail().equals("O")) ? View.VISIBLE : View.GONE);
+                fabActionTelephone.setVisibility((annoncePhotos.getAnnonceEntity().getContactByTel() != null && annoncePhotos.getAnnonceEntity().getContactByTel().equals("O")) ? View.VISIBLE : View.GONE);
+                fabActionMessage.setVisibility((annoncePhotos.getAnnonceEntity().getContactByMsg() != null && annoncePhotos.getAnnonceEntity().getContactByMsg().equals("O")) ? View.VISIBLE : View.GONE);
+                fabActionUpdate.setVisibility(View.GONE);
+            }
 
             FirebaseDatabase.getInstance()
                     .getReference(Constants.FIREBASE_DB_USER_REF)
@@ -112,12 +126,14 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             UtilisateurFirebase user = dataSnapshot.getValue(UtilisateurFirebase.class);
-                            GlideApp.with(AnnonceDetailActivity.this)
-                                    .load(user.getPhotoPath())
-                                    .circleCrop()
-                                    .placeholder(R.drawable.ic_person_white_48dp)
-                                    .error(R.drawable.ic_person_white_48dp)
-                                    .into(image_profil_seller);
+                            if (user != null && user.getPhotoPath() != null) {
+                                GlideApp.with(AnnonceDetailActivity.this)
+                                        .load(user.getPhotoPath())
+                                        .circleCrop()
+                                        .placeholder(R.drawable.ic_person_white_48dp)
+                                        .error(R.drawable.ic_person_white_48dp)
+                                        .into(image_profil_seller);
+                            }
                         }
 
                         @Override
@@ -199,6 +215,17 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         });
     }
 
+    @OnClick(R.id.fab_action_update)
+    public void callPostAnnonce(View v) {
+        Intent intent = new Intent();
+        intent.setClass(this, PostAnnonceActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUUID());
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_LOGIN && resultCode == RESULT_OK) {
@@ -209,7 +236,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private void callListMessageFragment() {
         Intent intent = new Intent();
-        intent.setClass(AnnonceDetailActivity.this, AnnonceMessageActivity.class);
+        intent.setClass(this, AnnonceMessageActivity.class);
         intent.putExtra(ARG_ANNONCE, annoncePhotos.getAnnonceEntity());
         startActivity(intent);
     }

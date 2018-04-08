@@ -15,7 +15,6 @@ public class MyChatsActivity extends AppCompatActivity {
 
     public static final String TAG_MASTER_FRAGMENT = "TAG_MASTER_FRAGMENT";
     public static final String TAG_DETAIL_FRAGMENT = "TAG_DETAIL_FRAGMENT";
-    public static final String ARG_ANNONCE_UID = "ARG_ANNONCE_UID";
 
     private MyChatsActivityViewModel viewModel;
 

@@ -57,6 +57,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.findById(idAnnonce);
     }
 
+    public LiveData<AnnonceEntity> findByUid(String uidAnnonce) {
+        return this.annonceDao.findByUid(uidAnnonce);
+    }
+
     public Single<AnnonceEntity> findSingleById(long idAnnonce) {
         return this.annonceDao.findSingleById(idAnnonce);
     }

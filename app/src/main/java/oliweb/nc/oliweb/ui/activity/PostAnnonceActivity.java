@@ -63,6 +63,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     public static final String TAG_WORKING_IMAGE = "TAG_WORKING_IMAGE";
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
+    public static final String BUNDLE_KEY_UID_ANNONCE = "BUNDLE_KEY_UID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
@@ -78,6 +79,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private long idAnnonce = 0;
     private boolean externalStorage;
     private String uidUser;
+    private String uidAnnonce;
     private String mode;
 
     @BindView(R.id.spinner_categorie)
@@ -304,6 +306,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
+        outState.putString(BUNDLE_KEY_UID_ANNONCE, uidAnnonce);
         outState.putString(BUNDLE_KEY_MODE, mode);
         outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
         outState.putParcelable(SAVE_ANNONCE, viewModel.getAnnonce());
@@ -379,8 +382,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
             return false;
         } else {
             mode = bundle.getString(BUNDLE_KEY_MODE);
-            if (mode != null && mode.equals(Constants.PARAM_MAJ) && !bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
-                Log.e(TAG, "Aucun Id d'annonce passé en paramètre");
+            if (mode != null && mode.equals(Constants.PARAM_MAJ) && !bundle.containsKey(BUNDLE_KEY_ID_ANNONCE) && !bundle.containsKey(BUNDLE_KEY_UID_ANNONCE)) {
+                Log.e(TAG, "Aucun Id ou UID d'annonce passé en paramètre");
                 return false;
             }
         }
@@ -422,22 +425,30 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (mode.equals(Constants.PARAM_CRE)) {
             viewModel.createNewAnnonce();
         } else if (mode.equals(Constants.PARAM_MAJ)) {
-            idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
-            viewModel.findAnnonceById(idAnnonce).observe(this, annonceEntity -> {
-                if (annonceEntity != null) {
-                    viewModel.setAnnonce(annonceEntity);
+            if (bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
+                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                viewModel.findAnnonceById(idAnnonce).observe(this, this::initAnnonce);
+            }
+            if (bundle.containsKey(BUNDLE_KEY_UID_ANNONCE)) {
+                uidAnnonce = bundle.getString(BUNDLE_KEY_UID_ANNONCE);
+                viewModel.findAnnonceByUid(uidAnnonce).observe(this, this::initAnnonce);
+            }
+        }
+    }
 
-                    // Récupération des photos de cette annonce dans l'adapter
-                    viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
-                            .observe(PostAnnonceActivity.this, photoEntities -> {
-                                if (photoEntities != null && !photoEntities.isEmpty()) {
-                                    putPhotosInCorrectView(new ArrayList<>(photoEntities));
-                                }
-                            });
+    private void initAnnonce(AnnonceEntity annonceEntity) {
+        if (annonceEntity != null) {
+            viewModel.setAnnonce(annonceEntity);
 
-                    displayAnnonce(annonceEntity);
-                }
-            });
+            // Récupération des photos de cette annonce dans l'adapter
+            viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
+                    .observe(PostAnnonceActivity.this, photoEntities -> {
+                        if (photoEntities != null && !photoEntities.isEmpty()) {
+                            putPhotosInCorrectView(new ArrayList<>(photoEntities));
+                        }
+                    });
+
+            displayAnnonce(annonceEntity);
         }
     }
 

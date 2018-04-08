@@ -64,4 +64,9 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE UUID = :uidAnnonce AND favorite = 1")
     Single<Integer> isAnnonceFavorite(String uidAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE UUID = :uidAnnonce AND favorite = 0")
+    LiveData<AnnonceEntity> findByUid(String uidAnnonce);
+
 }

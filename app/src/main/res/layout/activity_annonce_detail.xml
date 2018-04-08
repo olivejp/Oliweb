@@ -96,6 +96,17 @@
                         app:srcCompat="@drawable/ic_person_white_48dp" />
 
                     <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/fab_action_update"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="7dp"
+                        app:fabSize="mini"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintRight_toLeftOf="@+id/fab_action_telephone"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_mode_edit_white_48dp" />
+
+                    <android.support.design.widget.FloatingActionButton
                         android:id="@+id/fab_action_telephone"
                         android:layout_width="40dp"
                         android:layout_height="40dp"

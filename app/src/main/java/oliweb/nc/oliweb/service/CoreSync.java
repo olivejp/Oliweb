@@ -32,9 +32,12 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_CHATS_REF;
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_MESSAGES_REF;
 import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
 
 /**
@@ -154,15 +157,16 @@ class CoreSync {
                                         public void onDataChange(DataSnapshot dataSnapshot) {
                                             // Récupération de la date de publication donnée par Firebase
                                             AnnonceDto annonceDto1 = dataSnapshot.getValue(AnnonceDto.class);
-                                            annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
-
-                                            // Mise à jour dans la DB locale
-                                            annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                                            annonceRepository.update(dataReturn -> {
-                                                if (dataReturn.isSuccessful()) {
-                                                    sendPhotosToFbStorage(annonceFull.annonce.getIdAnnonce());
-                                                }
-                                            }, annonceFull.getAnnonce());
+                                            if (annonceDto1 != null) {
+                                                // Mise à jour dans la DB locale
+                                                annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
+                                                annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
+                                                annonceRepository.update(dataReturn -> {
+                                                    if (dataReturn.isSuccessful()) {
+                                                        sendPhotosToFbStorage(annonceFull.annonce.getIdAnnonce());
+                                                    }
+                                                }, annonceFull.getAnnonce());
+                                            }
                                         }
 
                                         @Override
@@ -358,7 +362,42 @@ class CoreSync {
                 .child(annonce.getUUID())
                 .removeValue()
                 .addOnFailureListener(e -> Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUUID()))
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUUID()));
+                .addOnSuccessListener(aVoid -> {
+                    deleteChatFromFirebaseByAnnonceUid(annonce.getUUID());
+                    Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUUID());
+                });
+    }
+
+    private void deleteChatFromFirebaseByAnnonceUid(String uidAnnonce) {
+        // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
+        fireDb.getReference(FIREBASE_DB_CHATS_REF)
+                .orderByChild("uidAnnonce")
+                .equalTo(uidAnnonce)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+                            ChatFirebase chat = data.getValue(ChatFirebase.class);
+                            if (chat != null) {
+                                fireDb.getReference(FIREBASE_DB_CHATS_REF)
+                                        .child(chat.getUid())
+                                        .removeValue()
+                                        .addOnSuccessListener(aVoid -> deleteMessageFromFirebase(chat.getUid()));
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // Do nothing
+                    }
+                });
+    }
+
+    private void deleteMessageFromFirebase(String uidChat) {
+        fireDb.getReference(FIREBASE_DB_MESSAGES_REF)
+                .child(uidChat)
+                .removeValue();
     }
 
     /**

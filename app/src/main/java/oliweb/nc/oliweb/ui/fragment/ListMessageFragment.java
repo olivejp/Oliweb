@@ -154,7 +154,9 @@ public class ListMessageFragment extends Fragment {
                 sendMessage(uidChat, messageToSend);
                 break;
             case PAR_ANNONCE:
-                if (adapter != null || annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
+                if (adapter == null && annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
+                    Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
+                } else {
                     findOrCreateChat(uidUser, annonce, chat -> {
                         sendMessage(chat.getUid(), messageToSend);
                         if (initializeAdapterLater) {
@@ -162,8 +164,6 @@ public class ListMessageFragment extends Fragment {
                             attachFirebaseRefToAdapter(query);
                         }
                     });
-                } else {
-                    Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 }
                 break;
         }
