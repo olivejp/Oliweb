@@ -36,4 +36,8 @@ public class AnnonceWithPhotosRepository {
     public LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur) {
         return this.annonceWithPhotosDao.findFavoritesByUidUser(uuidUtilisateur);
     }
+
+    public LiveData<AnnoncePhotos> findAnnonceByUidAnnonce(String uidAnnonce) {
+        return this.annonceWithPhotosDao.findAnnonceByUidAnnonce(uidAnnonce);
+    }
 }

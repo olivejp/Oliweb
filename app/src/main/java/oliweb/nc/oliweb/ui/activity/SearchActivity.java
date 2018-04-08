@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -14,7 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -204,18 +204,19 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
     }
 
     @Override
-    public void onClick(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onClick(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, annoncePhotos);
-        ActivityOptionsCompat options = ActivityOptionsCompat.
-                makeSceneTransitionAnimation(this,
-                        imageView,
-                        getString(R.string.image_detail_transition));
+
+        Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
+        Pair<View, String> pairPrix = new Pair<>(viewHolder.getTextPrixAnnonce(), getString(R.string.prix_detail_transition));
+
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage, pairPrix);
         startActivity(intent, options.toBundle());
     }
 
     @Override
-    public void onShare(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onShare(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
         // TODO pas génial ce partage faudrait peut être revoir cette fonctionnalité
         Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
         sharingIntent.setType("text/plain");
@@ -226,7 +227,7 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
     }
 
     @Override
-    public void onLike(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onLike(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
         Log.d(TAG, "Click on add to favorite");
         searchActivityViewModel.isAnnonceFavorite(annoncePhotos.getAnnonceEntity().getUUID())
                 .subscribeOn(Schedulers.io())

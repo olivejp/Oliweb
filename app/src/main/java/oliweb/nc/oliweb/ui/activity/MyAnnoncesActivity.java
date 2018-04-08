@@ -24,7 +24,6 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.helper.RecyclerRawItemTouchHelper;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
@@ -95,13 +94,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements RecyclerRaw
                         annonceRawAdapter.setListAnnonces(annonceWithPhotos);
                     }
                 });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (NetworkReceiver.checkConnection(this) && requestCode == REQUEST_CODE_POST && resultCode == RESULT_OK) {
-            SyncService.launchSynchroForAll(getApplicationContext());
-        }
     }
 
     /**

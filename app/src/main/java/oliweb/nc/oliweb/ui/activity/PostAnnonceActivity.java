@@ -16,16 +16,17 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -49,6 +50,8 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.media.MediaType;
 import oliweb.nc.oliweb.media.MediaUtility;
+import oliweb.nc.oliweb.network.NetworkReceiver;
+import oliweb.nc.oliweb.service.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
@@ -119,13 +122,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
     FrameLayout view4;
 
     @BindView(R.id.checkbox_email)
-    CheckBox checkBoxEmail;
+    SwitchCompat checkBoxEmail;
 
     @BindView(R.id.checkbox_telephone)
-    CheckBox checkBoxTel;
+    SwitchCompat checkBoxTel;
 
     @BindView(R.id.checkbox_message)
-    CheckBox checkBoxMsg;
+    SwitchCompat checkBoxMsg;
+
+    @BindView(R.id.text_checkbox_email)
+    TextView textCheckboxEmail;
+
+    @BindView(R.id.text_checkbox_telephone)
+    TextView textCheckboxTelephone;
 
     List<Pair<ImageView, FrameLayout>> arrayImageViews = new ArrayList<>();
 
@@ -204,18 +213,25 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
         if (idItem == R.id.menu_post_valid && checkIfAnnonceIsValid()) {
+
             // Retrieve datas from the ui
             String titre = textViewTitre.getText().toString();
             String description = textViewDescription.getText().toString();
             int prix = Integer.parseInt(textViewPrix.getText().toString());
 
-            // Save the annonce
-            viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
-                if (dataReturn.getNb() > 0) {
+            // Save the annonce to the local DB
+            viewModel.saveAnnonceToDb(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
+                if (dataReturn.isSuccessful()) {
+                    if (NetworkReceiver.checkConnection(this)) {
+                        SyncService.launchSynchroForAll(getApplicationContext());
+                    }
                     setResult(RESULT_OK);
-                    finish();
+                } else {
+                    setResult(RESULT_CANCELED);
                 }
+                finish();
             });
+
             return true;
         }
         if (idItem == android.R.id.home) {
@@ -394,10 +410,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         viewModel.getConnectedUser().observe(this, utilisateurEntity -> {
             if (utilisateurEntity != null) {
                 if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
+                    textCheckboxEmail.setVisibility(View.GONE);
                     checkBoxEmail.setVisibility(View.GONE);
                     checkBoxEmail.setChecked(false);
                 }
                 if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
+                    textCheckboxTelephone.setVisibility(View.GONE);
                     checkBoxTel.setVisibility(View.GONE);
                     checkBoxTel.setChecked(false);
                 }
@@ -447,7 +465,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                             putPhotosInCorrectView(new ArrayList<>(photoEntities));
                         }
                     });
-
             displayAnnonce(annonceEntity);
         }
     }

@@ -74,27 +74,28 @@ public class AnnonceBeautyAdapter extends
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
-        viewHolderBeauty.singleAnnonce = annonce;
+        viewHolderBeauty.annoncePhotos = annoncePhotos;
 
         // Transition
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             viewHolderBeauty.imageView.setTransitionName(annonce.getUUID());
+            viewHolderBeauty.textTitreAnnonce.setTransitionName(annonce.getTitre());
         }
 
         viewHolderBeauty.cardView.setTag(annoncePhotos);
         viewHolderBeauty.imageFavorite.setTag(annoncePhotos);
         viewHolderBeauty.imageShare.setTag(annoncePhotos);
 
-        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty.imageView));
-        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty.imageView));
-        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty.imageView));
+        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty));
+        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty));
+        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty));
 
-        if (viewHolderBeauty.singleAnnonce.isFavorite()) {
+        if (viewHolderBeauty.annoncePhotos.getAnnonceEntity().isFavorite()) {
             viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
         }
 
         // Récupération de la date de publication
-        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.singleAnnonce.getDatePublication()));
+        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annoncePhotos.getAnnonceEntity().getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
@@ -103,11 +104,11 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
             GlideApp.with(viewHolderBeauty.imageView)
                     .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
-                    .placeholder(R.drawable.ic_access_time_grey_900_48dp)
                     .error(R.drawable.ic_error_white_48dp)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {
+            GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
             viewHolderBeauty.imageView.setVisibility(View.GONE);
         }
     }
@@ -149,7 +150,7 @@ public class AnnonceBeautyAdapter extends
         }
     }
 
-    class ViewHolderBeauty extends RecyclerView.ViewHolder {
+    public class ViewHolderBeauty extends RecyclerView.ViewHolder {
 
         @BindView(R.id.text_titre_annonce)
         TextView textTitreAnnonce;
@@ -172,7 +173,7 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.image_view_beauty)
         ImageView imageView;
 
-        AnnonceEntity singleAnnonce;
+        AnnoncePhotos annoncePhotos;
 
         ViewGroup parent;
 
@@ -180,13 +181,49 @@ public class AnnonceBeautyAdapter extends
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
         }
+
+        public TextView getTextTitreAnnonce() {
+            return textTitreAnnonce;
+        }
+
+        public TextView getTextPrixAnnonce() {
+            return textPrixAnnonce;
+        }
+
+        public TextView getTextDatePublicationAnnonce() {
+            return textDatePublicationAnnonce;
+        }
+
+        public CardView getCardView() {
+            return cardView;
+        }
+
+        public ImageView getImageFavorite() {
+            return imageFavorite;
+        }
+
+        public ImageView getImageShare() {
+            return imageShare;
+        }
+
+        public ImageView getImageView() {
+            return imageView;
+        }
+
+        public AnnoncePhotos getAnnoncePhotos() {
+            return annoncePhotos;
+        }
+
+        public ViewGroup getParent() {
+            return parent;
+        }
     }
 
     public interface AnnonceAdapterListener {
-        void onClick(AnnoncePhotos annoncePhotos, ImageView imageView);
+        void onClick(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
 
-        void onShare(AnnoncePhotos annoncePhotos, ImageView imageView);
+        void onShare(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
 
-        void onLike(AnnoncePhotos annoncePhotos, ImageView imageView);
+        void onLike(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
     }
 }

@@ -7,13 +7,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.google.firebase.database.DataSnapshot;
@@ -43,7 +44,7 @@ import oliweb.nc.oliweb.utility.Utility;
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 
-public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapter.AnnonceAdapterListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, AnnonceBeautyAdapter.AnnonceAdapterListener {
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
@@ -60,6 +61,9 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
 
     public static final int ASC = 1;
     public static final int DESC = 2;
+
+    @BindView(R.id.swipeRefreshLayout)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
@@ -117,7 +121,7 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
         annonceBeautyAdapter = new AnnonceBeautyAdapter(this);
 
         RecyclerView.LayoutManager layoutManager;
-        layoutManager = Utility.initGridLayout(getContext(), recyclerView, annonceBeautyAdapter);
+        layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
 
@@ -127,6 +131,8 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         }
+
+        swipeRefreshLayout.setOnRefreshListener(this);
 
         viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
 
@@ -199,6 +205,10 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
                 LoadMostRecentAnnonceTask.sortList(annoncePhotosList, this.sort, direction);
                 annonceBeautyAdapter.notifyDataSetChanged();
             }
+        }
+
+        if (swipeRefreshLayout.isRefreshing()) {
+            swipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -291,23 +301,30 @@ public class ListAnnonceFragment extends Fragment implements AnnonceBeautyAdapte
     }
 
     @Override
-    public void onClick(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onClick(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, annoncePhotos);
-        ActivityOptionsCompat options = ActivityOptionsCompat.
-                makeSceneTransitionAnimation(appCompatActivity,
-                        imageView,
-                        getString(R.string.image_detail_transition));
+
+        Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
+        Pair<View, String> pairPrix = new Pair<>(viewHolder.getTextPrixAnnonce(), getString(R.string.prix_detail_transition));
+
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage, pairPrix);
         startActivity(intent, options.toBundle());
     }
 
     @Override
-    public void onShare(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onShare(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
 
     }
 
     @Override
-    public void onLike(AnnoncePhotos annoncePhotos, ImageView imageView) {
+    public void onLike(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
 
+    }
+
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
     }
 }

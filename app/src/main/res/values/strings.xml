@@ -90,6 +90,8 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="image_detail_transition">IMAGE_DETAIL_TRANSITION</string>
+    <string name="prix_detail_transition">PRIX_DETAIL_TRANSITION</string>
+    <string name="titre_detail_transition">TITRE_DETAIL_TRANSITION</string>
     <string name="image_working_transition">image_working_transition</string>
     <string name="view_1_transition">view_1_transition</string>
     <string name="view_2_transition">view_2_transition</string>
@@ -107,4 +109,5 @@
     <string name="content_description_profile_image">content_description_profile_image</string>
     <string name="mes_conversations">Mes conversations</string>
     <string name="title_activity_chats">Mes conversations</string>
+
 </resources>

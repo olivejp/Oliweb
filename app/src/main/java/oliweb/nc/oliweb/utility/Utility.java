@@ -170,14 +170,14 @@ public class Utility {
                         case 1:
                             return 1;
                         case 2:
-                            return 2;
+                            return 1;
                         default:
                             return 1;
                     }
                 }
             });
         }
-        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
+        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_tight);
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);

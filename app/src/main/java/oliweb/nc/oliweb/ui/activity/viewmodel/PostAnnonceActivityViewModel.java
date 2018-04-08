@@ -108,7 +108,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.annonce;
     }
 
-    public void saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telelphone, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void saveAnnonceToDb(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telelphone, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRepositoryPostExecute) {
 
         this.annonce.setTitre(titre);
         this.annonce.setDescription(description);
@@ -121,19 +121,19 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.annonce.setUuidUtilisateur(uidUser);
 
         if (listPhoto == null || listPhoto.isEmpty()) {
-            this.annonceRepository.save(annonce, onRespositoryPostExecute);
+            this.annonceRepository.save(annonce, onRepositoryPostExecute);
         } else {
             this.annonceRepository.save(annonce, dataReturn -> {
                 if (dataReturn.getNb() > 0) {
                     switch (dataReturn.getTypeTask()) {
                         case INSERT:
-                            if (dataReturn.getIds().length > 0) {
+                            if (dataReturn.isSuccessful()) {
                                 long idAnnonceInserted = dataReturn.getIds()[0];
-                                updatePhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRespositoryPostExecute);
+                                updatePhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRepositoryPostExecute);
                             }
                             break;
                         case UPDATE:
-                            updatePhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRespositoryPostExecute);
+                            updatePhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRepositoryPostExecute);
                             break;
                         default:
                             break;
@@ -142,7 +142,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
             });
         }
     }
-
 
     public void updatePhotos() {
         this.liveListPhoto.postValue(this.listPhoto);
