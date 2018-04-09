@@ -118,7 +118,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(this, appCompatActivity.getResources().getColor(R.color.colorPrimary));
 
         RecyclerView.LayoutManager layoutManager;
         layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
@@ -306,9 +306,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         intent.putExtra(ARG_ANNONCE, annoncePhotos);
 
         Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-        Pair<View, String> pairPrix = new Pair<>(viewHolder.getTextPrixAnnonce(), getString(R.string.prix_detail_transition));
 
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage, pairPrix);
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage);
         startActivity(intent, options.toBundle());
     }
 

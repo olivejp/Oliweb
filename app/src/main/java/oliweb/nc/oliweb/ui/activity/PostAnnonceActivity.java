@@ -441,8 +441,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void initViewModelDataDependingOnMode(Bundle bundle) {
         if (mode.equals(Constants.PARAM_CRE)) {
+            setTitle("Ajouter une annonce");
             viewModel.createNewAnnonce();
         } else if (mode.equals(Constants.PARAM_MAJ)) {
+            setTitle("Modifier une annonce");
             if (bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
                 idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
                 viewModel.findAnnonceById(idAnnonce).observe(this, this::initAnnonce);

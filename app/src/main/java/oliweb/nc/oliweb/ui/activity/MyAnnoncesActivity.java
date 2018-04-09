@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -17,7 +18,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import butterknife.OnClick;
 import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
@@ -97,6 +97,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         setContentView(R.layout.activity_my_annonces);
         recyclerView = findViewById(R.id.recycler_annonces);
 
+        FloatingActionButton fabPostAnnonce = findViewById(R.id.fab_post_annonce);
+        fabPostAnnonce.setOnClickListener(this::callPostAnnonceCreate);
+
         AnnonceRawAdapter annonceRawAdapter = new AnnonceRawAdapter(v -> {
             AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
             callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
@@ -167,8 +170,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         return super.onOptionsItemSelected(item);
     }
 
-    @OnClick(R.id.fab_post_annonce)
-    public void callPostAnnonceCreate(View v) {
+    private void callPostAnnonceCreate(View v) {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);

@@ -83,26 +83,24 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     FloatingActionButton fabActionUpdate;
 
     @BindView(R.id.image_profil_seller)
-    ImageView image_profil_seller;
+    ImageView imageProfilSeller;
 
     @BindView(R.id.text_date_publication)
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
 
-    private boolean amITheOwner;
-
     private ValueEventListener catchSellerPhoto = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             UtilisateurFirebase user = dataSnapshot.getValue(UtilisateurFirebase.class);
             if (user != null && user.getPhotoPath() != null) {
-                GlideApp.with(AnnonceDetailActivity.this)
+                GlideApp.with(imageProfilSeller)
                         .load(user.getPhotoPath())
                         .circleCrop()
                         .placeholder(R.drawable.ic_person_white_48dp)
                         .error(R.drawable.ic_person_white_48dp)
-                        .into(image_profil_seller);
+                        .into(imageProfilSeller);
             }
         }
 
@@ -210,7 +208,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private void initDisplay(AnnoncePhotos annoncePhotos) {
         if (annoncePhotos != null) {
-            amITheOwner = annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
+            boolean amITheOwner = annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
 
             prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annoncePhotos.getAnnonceEntity().getPrix()) + " XPF"));
             description.setText(annoncePhotos.getAnnonceEntity().getDescription());

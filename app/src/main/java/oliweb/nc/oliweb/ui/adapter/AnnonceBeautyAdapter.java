@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.adapter;
 
 import android.os.Build;
+import android.support.annotation.ColorInt;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -32,10 +33,12 @@ public class AnnonceBeautyAdapter extends
 
     private List<AnnoncePhotos> listAnnonces;
     private AnnonceAdapterListener listener;
+    private int backGroundColor;
 
-    public AnnonceBeautyAdapter(AnnonceAdapterListener annonceAdapterListener) {
+    public AnnonceBeautyAdapter(AnnonceAdapterListener annonceAdapterListener, @ColorInt int backGroundColor) {
         this.listener = annonceAdapterListener;
         this.listAnnonces = new ArrayList<>();
+        this.backGroundColor = backGroundColor;
     }
 
     @Override
@@ -101,15 +104,15 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
+            viewHolderBeauty.imageView.setBackground(null);
             GlideApp.with(viewHolderBeauty.imageView)
                     .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
                     .error(R.drawable.ic_error_white_48dp)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {
+            viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
             GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
-            viewHolderBeauty.imageView.setVisibility(View.GONE);
         }
     }
 
