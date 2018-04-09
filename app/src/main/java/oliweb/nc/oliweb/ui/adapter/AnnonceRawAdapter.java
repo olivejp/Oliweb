@@ -31,9 +31,11 @@ public class AnnonceRawAdapter extends
 
     private List<AnnoncePhotos> listAnnonces;
     private View.OnClickListener onClickListener;
+    private View.OnClickListener popupClickListener;
 
-    public AnnonceRawAdapter(View.OnClickListener onClickListener) {
+    public AnnonceRawAdapter(View.OnClickListener onClickListener, View.OnClickListener popupClickListener) {
         this.onClickListener = onClickListener;
+        this.popupClickListener = popupClickListener;
         this.listAnnonces = new ArrayList<>();
     }
 
@@ -75,6 +77,9 @@ public class AnnonceRawAdapter extends
         if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
             viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
         }
+
+        viewHolderRaw.imgPopup.setOnClickListener(popupClickListener);
+        viewHolderRaw.imgPopup.setTag(annoncePhotos);
 
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
@@ -144,11 +149,11 @@ public class AnnonceRawAdapter extends
         @BindView(R.id.img_photo_raw)
         ImageView imgPhoto;
 
+        @BindView(R.id.annonce_popup_menu)
+        ImageView imgPopup;
+
         @BindView(R.id.normal_layout_raw)
         ConstraintLayout normalLayoutRaw;
-
-        @BindView(R.id.deleted_layout_raw)
-        ConstraintLayout deletedLayoutRaw;
 
         @BindView(R.id.text_nb_photos)
         TextView textNbPhotos;
