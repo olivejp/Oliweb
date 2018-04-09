@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coordinator_my_annonces"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity">
@@ -11,24 +10,8 @@
         android:id="@+id/recycler_annonces"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="100dp"
-        android:clipToPadding="false" />
-
-    <LinearLayout
-        android:id="@+id/empty_linear"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="50dp"
-            android:gravity="center"
-            android:text="Vous n'avez encore posté aucune annonce.\nAppuyez sur le + pour saisir une annonce." />
-    </LinearLayout>
+        android:clipToPadding="false"
+        android:paddingBottom="100dp" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_post_annonce"
@@ -37,5 +20,4 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         app:srcCompat="@drawable/ic_add_white_48dp" />
-
-</android.support.design.widget.CoordinatorLayout>
+</merge>

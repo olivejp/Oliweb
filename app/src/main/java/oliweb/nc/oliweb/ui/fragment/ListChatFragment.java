@@ -60,23 +60,20 @@ public class ListChatFragment extends Fragment {
     /**
      * OnClickListener qui ouvrira le détail d'une annonce pour le chat concerné
      */
-    private View.OnClickListener onPopupClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            PopupMenu popup = new PopupMenu(appCompatActivity, v);
-            popup.setOnMenuItemClickListener(item -> {
-                switch (item.getItemId()) {
-                    case R.id.chat_open_annonce:
-                        openAnnonceDetail((ChatFirebase) v.getTag());
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-            MenuInflater inflater = popup.getMenuInflater();
-            inflater.inflate(R.menu.chat_popup_menu, popup.getMenu());
-            popup.show();
-        }
+    private View.OnClickListener onPopupClickListener = v -> {
+        PopupMenu popup = new PopupMenu(appCompatActivity, v);
+        popup.setOnMenuItemClickListener(item -> {
+            int i = item.getItemId();
+            if (i == R.id.chat_open_annonce) {
+                openAnnonceDetail((ChatFirebase) v.getTag());
+                return true;
+            } else {
+                return false;
+            }
+        });
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.chat_popup_menu, popup.getMenu());
+        popup.show();
     };
 
     @Override

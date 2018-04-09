@@ -1,7 +1,6 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/frame_detail_annonce"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -29,9 +28,10 @@
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:toolbarId="@+id/toolbar">
 
-                <android.support.constraint.ConstraintLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
                     <android.support.v4.view.ViewPager
                         android:id="@+id/view_pager_detail"
@@ -45,16 +45,14 @@
                         android:id="@+id/indicator_detail"
                         android:layout_width="match_parent"
                         android:layout_height="25dp"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-                </android.support.constraint.ConstraintLayout>
+                        android:layout_gravity="top" />
+                </LinearLayout>
 
                 <android.support.v7.widget.Toolbar
                     android:id="@+id/detail_toolbar"
                     android:layout_width="match_parent"
-                    android:layout_marginTop="25dp"
                     android:layout_height="?attr/actionBarSize"
+                    android:layout_marginTop="25dp"
                     android:gravity="start"
                     app:layout_collapseMode="pin"
                     app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
@@ -71,13 +69,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <android.support.constraint.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/linear_actions"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:background="@color/colorAccentDark"
                     android:elevation="1dp"
-                    android:gravity="end"
                     android:orientation="horizontal"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
@@ -87,67 +84,51 @@
                         android:id="@+id/image_profil_seller"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
+                        android:layout_gravity="center"
                         android:layout_marginBottom="5dp"
                         android:layout_marginStart="15dp"
                         android:layout_marginTop="5dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:foregroundGravity="left"
                         app:srcCompat="@drawable/ic_person_white_48dp" />
 
-                    <android.support.constraint.ConstraintLayout
-                        android:id="@+id/constraint_actions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/fab_action_update"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:layout_margin="7dp"
+                        app:fabSize="mini"
                         app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_mode_edit_white_48dp" />
 
-                        <android.support.design.widget.FloatingActionButton
-                            android:id="@+id/fab_action_update"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_margin="7dp"
-                            app:fabSize="mini"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintRight_toLeftOf="@+id/fab_action_telephone"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_mode_edit_white_48dp" />
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/fab_action_telephone"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:layout_margin="7dp"
+                        app:fabSize="mini"
+                        app:srcCompat="@drawable/ic_phone_white_48dp" />
 
-                        <android.support.design.widget.FloatingActionButton
-                            android:id="@+id/fab_action_telephone"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_margin="7dp"
-                            app:fabSize="mini"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintRight_toLeftOf="@+id/fab_action_email"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_phone_white_48dp" />
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/fab_action_email"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:layout_margin="7dp"
+                        app:fabSize="mini"
+                        app:srcCompat="@drawable/ic_email_white_48dp" />
 
-                        <android.support.design.widget.FloatingActionButton
-                            android:id="@+id/fab_action_email"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_margin="7dp"
-                            app:fabSize="mini"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintRight_toLeftOf="@+id/fab_action_message"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_email_white_48dp" />
-
-                        <android.support.design.widget.FloatingActionButton
-                            android:id="@+id/fab_action_message"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_margin="7dp"
-                            app:fabSize="mini"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintRight_toRightOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_message_white_48dp" />
-                    </android.support.constraint.ConstraintLayout>
-                </android.support.constraint.ConstraintLayout>
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/fab_action_message"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:layout_margin="7dp"
+                        app:fabSize="mini"
+                        app:srcCompat="@drawable/ic_message_white_48dp" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/text_date_publication"
@@ -174,24 +155,17 @@
             </android.support.constraint.ConstraintLayout>
         </android.support.v4.widget.NestedScrollView>
 
-        <android.support.constraint.ConstraintLayout
+        <TextView
+            android:id="@+id/text_view_prix_detail"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:layout_gravity="bottom"
-            android:background="@color/colorBottomDark">
-
-            <TextView
-                android:id="@+id/text_view_prix_detail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:textColor="@color/colorAccentDarker"
-                android:textSize="25sp"
-                android:transitionName="@string/prix_detail_transition"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="400 000 XPF" />
-        </android.support.constraint.ConstraintLayout>
+            android:background="@color/colorBottomDark"
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:textColor="@color/colorAccentDarker"
+            android:textSize="25sp"
+            android:transitionName="@string/prix_detail_transition"
+            tools:text="400 000 XPF" />
     </android.support.design.widget.CoordinatorLayout>
-</FrameLayout>
+</merge>

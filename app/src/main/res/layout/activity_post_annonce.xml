@@ -193,6 +193,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_marginStart="10dp"
                 android:text="Contactez moi"
                 android:textColor="@color/colorAccent"
@@ -235,6 +237,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
                     android:text="Par message"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -244,6 +247,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
                     android:text="Par téléphone"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/checkbox_message" />
 
@@ -253,6 +257,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
                     android:text="Par email"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/checkbox_telephone" />
 

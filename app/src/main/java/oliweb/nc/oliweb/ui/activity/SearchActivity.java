@@ -89,7 +89,7 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
         setTitle("Recherche " + query);
 
         // Recherche du mode display actuellement dans les préférences.
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(this, getResources().getColor(R.color.colorPrimary));
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
         endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -209,9 +209,8 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
         intent.putExtra(ARG_ANNONCE, annoncePhotos);
 
         Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-        Pair<View, String> pairPrix = new Pair<>(viewHolder.getTextPrixAnnonce(), getString(R.string.prix_detail_transition));
 
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage, pairPrix);
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage);
         startActivity(intent, options.toBundle());
     }
 

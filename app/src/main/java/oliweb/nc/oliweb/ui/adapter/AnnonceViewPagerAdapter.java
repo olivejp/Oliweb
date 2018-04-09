@@ -53,8 +53,8 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
             if (photos.get(position).getFirebasePath() != null) {
                 GlideApp.with(this.context)
                         .load(photos.get(position).getFirebasePath())
-                        .placeholder(R.drawable.ic_access_time_grey_900_48dp)
                         .error(R.drawable.ic_error_grey_900_48dp)
+                        .centerCrop()
                         .into(myImage);
             }
         }

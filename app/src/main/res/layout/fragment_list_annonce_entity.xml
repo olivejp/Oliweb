@@ -13,7 +13,6 @@
             android:id="@+id/recycler_list_annonces"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/colorAccentDark"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </android.support.v4.widget.SwipeRefreshLayout>

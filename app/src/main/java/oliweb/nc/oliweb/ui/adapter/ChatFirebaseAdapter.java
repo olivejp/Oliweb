@@ -21,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.Date;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,8 +29,10 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
+import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
 
 /**
@@ -63,6 +66,23 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         holder.constraintLayout.setOnClickListener(clickListener);
         holder.imagePopupMenu.setOnClickListener(popupClickListener);
         holder.imagePopupMenu.setTag(model);
+
+        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF).child(model.getUidAnnonce()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
+                if (annonceDto != null) {
+                    holder.titreAnnonce.setText(annonceDto.getTitre());
+                    holder.prixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonceDto.getPrix()) + " XPF"));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Do nothing
+            }
+        });
+
         retreivePhoto(holder, model);
     }
 
@@ -117,6 +137,12 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         @BindView(R.id.chat_last_message_timestamp)
         TextView lastMessageTimestamp;
 
+        @BindView(R.id.chat_prix_annonce)
+        TextView prixAnnonce;
+
+        @BindView(R.id.chat_titre_annonce)
+        TextView titreAnnonce;
+
         @BindView(R.id.chat_author_photo)
         ImageView imagePhotoAuthor;
 
@@ -126,7 +152,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
         @BindView(R.id.chat_popup_menu)
         ImageView imagePopupMenu;
 
-        public ChatFirebaseViewHolder(View itemView) {
+        ChatFirebaseViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
         }
