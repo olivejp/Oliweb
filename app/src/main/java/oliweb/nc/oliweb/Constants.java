@@ -18,12 +18,10 @@ public class Constants {
     public static final String FIREBASE_STORAGE_PHOTO = "photos";
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";
     public static final String CHANNEL_ID = "OLIWEB_CHANNEL_ID";
-
+    public static final String DANCING_FONT = "fonts/dancing-script.regular.ttf";
 
     public static int notificationSyncPhotoId = 123456;
     public static int notificationSyncAnnonceId = 654321;
-
-    public static final String URL_AFTERSHIP_BASE_URL = "http://35.201.25.32/";
 
     /**
      * Minutes we will wait before launch the sync

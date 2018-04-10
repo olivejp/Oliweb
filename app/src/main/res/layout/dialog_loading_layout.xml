@@ -7,16 +7,16 @@
 
     <ProgressBar
         android:id="@+id/progress_bar_loading"
-        style="?android:attr/progressBarStyleLarge"
+        style="?android:attr/progressBarStyle"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="10dp"
-        android:indeterminateDrawable="@drawable/drawable_progress_loading"
-        android:progressDrawable="@drawable/drawable_progress_loading"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/text_loading"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!--style="?android:attr/progressBarStyleLarge"-->
 
     <TextView
         android:id="@+id/text_loading"
