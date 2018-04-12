@@ -41,6 +41,8 @@ import oliweb.nc.oliweb.ui.adapter.ChatFirebaseAdapter;
 import static oliweb.nc.oliweb.Constants.FIREBASE_DB_CHATS_REF;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_UTILISATEUR;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -119,11 +121,10 @@ public class ListChatFragment extends Fragment {
         recyclerView.addItemDecoration(itemDecoration);
 
         Query query;
-        if (viewModel.getTypeRechercheChat() == MyChatsActivityViewModel.TypeRechercheChat.PAR_ANNONCE) {
+        if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
             query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
             loadQuery(query);
-
-        } else if (viewModel.getTypeRechercheChat() == MyChatsActivityViewModel.TypeRechercheChat.PAR_UTILISATEUR) {
+        } else if (viewModel.getTypeRechercheChat() == PAR_UTILISATEUR) {
             query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
             loadQuery(query);
         }

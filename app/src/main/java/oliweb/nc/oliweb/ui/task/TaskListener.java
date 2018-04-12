@@ -5,5 +5,5 @@ package oliweb.nc.oliweb.ui.task;
  */
 
 public interface TaskListener<T> {
-    void onSuccess(T object);
+    void onTaskSuccess(T object);
 }

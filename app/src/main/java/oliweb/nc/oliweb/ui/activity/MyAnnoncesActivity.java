@@ -90,6 +90,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     private void initEmptyLayout() {
         setContentView(R.layout.empty_recyclerview);
         TextView textEmpty = findViewById(R.id.text_empty);
+        FloatingActionButton fab = findViewById(R.id.fab_empty_add);
+        fab.setOnClickListener(this::callPostAnnonceCreate);
         textEmpty.setText("Vous n'avez encore posté aucune annonce.\nAppuyez sur le + pour saisir une annonce.");
     }
 

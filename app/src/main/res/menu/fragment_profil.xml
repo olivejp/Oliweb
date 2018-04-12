@@ -6,4 +6,9 @@
         android:icon="@drawable/ic_mode_edit_white_24dp"
         android:title="Modifier"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_profil_save"
+        android:icon="@drawable/ic_check_white_48dp"
+        android:title="Sauver"
+        android:visible="false" />
 </menu>

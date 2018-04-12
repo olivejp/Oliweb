@@ -43,11 +43,13 @@ import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UID_USER;
+import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
@@ -217,6 +219,7 @@ public class MainActivity extends AppCompatActivity
             intent.setClass(this, ProfilActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString(UID_USER, FirebaseAuth.getInstance().getUid());
+            bundle.putBoolean(UPDATE, true);
             intent.putExtras(bundle);
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
@@ -307,23 +310,40 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSuccess(Drawable drawable) {
+    public void onTaskSuccess(Drawable drawable) {
         profileImage.setImageDrawable(drawable);
     }
 
     /**
      * Try to retrieve the photo via URL
      */
-    private void callPhotoTask() {
-        Uri[] uris = new Uri[]{mFirebaseUser.getPhotoUrl()};
+    private void callPhotoTask(Uri uri) {
+        Uri[] uris = new Uri[]{uri};
         photoTask = new CatchPhotoFromUrlTask();
         photoTask.setContext(getApplicationContext());
         photoTask.setListener(this);
         photoTask.execute(uris);
     }
 
-    private void activeBadges(boolean active) {
-        String uid = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+    private void initViewsFromUser(FirebaseUser user) {
+        profileName.setText(user.getDisplayName());
+        if (user.getEmail() != null) {
+            profileEmail.setText(user.getEmail());
+        }
+        // Call the task to retrieve the photo
+        if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
+            GlideApp.with(getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .placeholder(R.drawable.ic_person_white_48dp)
+                    .into(profileImage);
+            // callPhotoTask(user.getPhotoUrl());
+        }
+
+        // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
+        activeBadges(user.getUid(), true);
+    }
+
+    private void activeBadges(String uid, boolean active) {
         if (active) {
             // On lance les observers pour récupérer les badges
             viewModel.countAllAnnoncesByUser(uid).observeForever(observeNumberAnnonceBadge);
@@ -346,32 +366,18 @@ public class MainActivity extends AppCompatActivity
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
-
-                SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(mFirebaseUser.getUid());
-                profileName.setText(mFirebaseUser.getDisplayName());
-                if (mFirebaseUser.getEmail() != null) {
-                    profileEmail.setText(mFirebaseUser.getEmail());
-                }
-
-                // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
-                activeBadges(true);
-
-                // Create user in local Db
-                viewModel.createUtilisateur(mFirebaseUser, dataReturn -> {
-                    if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.getNb() > 0) {
+                // Save user in SharedPreferences && in the local DB && FirebaseDatabase
+                viewModel.saveUtilisateur(mFirebaseUser, dataReturn -> {
+                    if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.isSuccessful() && dataReturn.getNb() > 0) {
                         Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
                     }
                 });
 
-                // Create/Update user in Firebase
-                viewModel.createFirebaseUser(mFirebaseUser);
-
-                // Call the task to retrieve the photo
-                callPhotoTask();
+                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
+                initViewsFromUser(mFirebaseUser);
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
-                activeBadges(false);
+                activeBadges(SharedPreferencesHelper.getInstance(getApplicationContext()).getUidFirebaseUser(), false);
                 profileName.setText(null);
                 profileEmail.setText(null);
                 mFirebaseUser = null;

@@ -199,8 +199,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         } else if (savedInstanceState == null) {
             initViewModelDataDependingOnMode(bundle);
         }
-
-        initCheckboxes();
     }
 
     @Override
@@ -406,23 +404,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return true;
     }
 
-    private void initCheckboxes() {
-        viewModel.getConnectedUser().observe(this, utilisateurEntity -> {
-            if (utilisateurEntity != null) {
-                if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
-                    textCheckboxEmail.setVisibility(View.GONE);
-                    checkBoxEmail.setVisibility(View.GONE);
-                    checkBoxEmail.setChecked(false);
-                }
-                if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
-                    textCheckboxTelephone.setVisibility(View.GONE);
-                    checkBoxTel.setVisibility(View.GONE);
-                    checkBoxTel.setChecked(false);
-                }
-            }
-        });
-    }
-
     private void initObservers() {
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
 
@@ -437,6 +418,21 @@ public class PostAnnonceActivity extends AppCompatActivity {
                         spinnerCategorie.setAdapter(adapter);
                     }
                 });
+
+        viewModel.getConnectedUser().observe(this, utilisateurEntity -> {
+            if (utilisateurEntity != null) {
+                if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
+                    textCheckboxEmail.setVisibility(View.GONE);
+                    checkBoxEmail.setVisibility(View.GONE);
+                    checkBoxEmail.setChecked(false);
+                }
+                if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
+                    textCheckboxTelephone.setVisibility(View.GONE);
+                    checkBoxTel.setVisibility(View.GONE);
+                    checkBoxTel.setChecked(false);
+                }
+            }
+        });
     }
 
     private void initViewModelDataDependingOnMode(Bundle bundle) {
@@ -506,7 +502,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         FrameLayout frameLayout = pair.second;
         if (imageView != null && frameLayout != null && frameLayout.getTag() == null) {
             frameLayout.setTag(photoEntity);
-            GlideApp.with(this)
+            GlideApp.with(getApplicationContext())
                     .load(Uri.parse(photoEntity.getUriLocal()))
                     .apply(RequestOptions.circleCropTransform())
                     .diskCacheStrategy(DiskCacheStrategy.NONE)

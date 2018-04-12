@@ -135,6 +135,6 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
 
     @Override
     protected void onPostExecute(ArrayList<AnnoncePhotos> listResult) {
-        listener.onSuccess(listResult);
+        listener.onTaskSuccess(listResult);
     }
 }

@@ -6,8 +6,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.bumptech.glide.request.RequestOptions;
-
 import java.util.concurrent.ExecutionException;
 
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -42,7 +40,7 @@ public class CatchPhotoFromUrlTask extends AsyncTask<Uri, Void, Drawable> {
                 return GlideApp.with(context)
                         .asDrawable()
                         .load(uris[0])
-                        .apply(RequestOptions.circleCropTransform())
+                        .circleCrop()
                         .submit()
                         .get();
             }
@@ -55,7 +53,7 @@ public class CatchPhotoFromUrlTask extends AsyncTask<Uri, Void, Drawable> {
     @Override
     protected void onPostExecute(Drawable drawable) {
         if (context != null && listener != null) {
-            listener.onSuccess(drawable);
+            listener.onTaskSuccess(drawable);
         }
     }
 }

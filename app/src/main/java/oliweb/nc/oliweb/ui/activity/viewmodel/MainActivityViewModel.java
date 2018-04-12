@@ -32,6 +32,7 @@ import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.FirebaseSync;
 import oliweb.nc.oliweb.utility.Utility;
@@ -96,15 +97,32 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public void createFirebaseUser(FirebaseUser user) {
-        UtilisateurFirebase utilisateurFirebase = new UtilisateurFirebase();
-        utilisateurFirebase.setPhotoPath(user.getPhotoUrl().toString());
-        utilisateurFirebase.setProfileName(user.getDisplayName());
-        utilisateurFirebase.setEmail(user.getEmail());
-        utilisateurFirebase.setTelephone(user.getPhoneNumber());
-        utilisateurFirebase.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
-        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).setValue(utilisateurFirebase)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
-                .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
+        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null) {
+                    UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
+                    if (utilisateurFirebase == null) {
+                        // Si pas d'utilisateur enregistré dans Firebase, je vais le créer.
+                        UtilisateurFirebase utilFirebase = new UtilisateurFirebase();
+                        if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
+                            utilFirebase.setPhotoPath(user.getPhotoUrl().toString());
+                        }
+                        utilFirebase.setProfileName(user.getDisplayName());
+                        utilFirebase.setEmail(user.getEmail());
+                        utilFirebase.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
+                        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).setValue(utilFirebase)
+                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
+                                .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d("MainActivityViewModel", "onCancelled");
+            }
+        });
     }
 
     public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
@@ -155,6 +173,17 @@ public class MainActivityViewModel extends AndroidViewModel {
             sorting = new MutableLiveData<>();
         }
         sorting.postValue(sort);
+    }
+
+    public void saveUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        // Sauvegarde dans les préférences, dans le cas d'une déconnexion
+        SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(user.getUid());
+
+        // Sauvegarde dans la DB
+        createUtilisateur(user, onRespositoryPostExecute);
+
+        // Sauvegarde dans Firebase
+        createFirebaseUser(user);
     }
 
     public LiveData<Integer> sortingUpdated() {
