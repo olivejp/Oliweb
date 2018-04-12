@@ -27,6 +27,10 @@ public class FirebaseQueryLiveData extends LiveData<DataSnapshot> {
         this.query = ref;
     }
 
+    public Query getQuery() {
+        return this.query;
+    }
+
     @Override
     protected void onActive() {
         Log.d(LOG_TAG, "onActive");

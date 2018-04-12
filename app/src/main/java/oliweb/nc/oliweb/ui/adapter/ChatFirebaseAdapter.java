@@ -113,7 +113,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
-                if (utilisateurFirebase != null) {
+                if (utilisateurFirebase != null && utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
                     GlideApp.with(holder.imagePhotoAuthor)
                             .load(utilisateurFirebase.getPhotoPath())
                             .apply(RequestOptions.circleCropTransform())

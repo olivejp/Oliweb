@@ -146,7 +146,7 @@ public class ProfilActivity extends AppCompatActivity {
             mMenu.findItem(R.id.menu_profil_save).setShowAsAction(SHOW_AS_ACTION_NEVER);
             utilisateurFirebase.setTelephone(textTelephone.getText().toString());
             FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(utilisateurFirebase).addOnSuccessListener(aVoid ->
-                Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
+                    Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
             );
             onBackPressed();
             return true;
@@ -165,5 +165,6 @@ public class ProfilActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 }
