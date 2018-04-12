@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity
         }
         // Call the task to retrieve the photo
         if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
-            GlideApp.with(getApplicationContext())
+            GlideApp.with(profileImage)
                     .load(user.getPhotoUrl())
                     .placeholder(R.drawable.ic_person_white_48dp)
                     .into(profileImage);

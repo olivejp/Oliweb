@@ -93,7 +93,7 @@ public class ProfilActivity extends AppCompatActivity {
                             textName.setText(utilisateurFirebase.getProfileName());
                             textEmail.setText(utilisateurFirebase.getEmail());
                             textTelephone.setText(utilisateurFirebase.getTelephone());
-                            GlideApp.with(getApplicationContext()).load(utilisateurFirebase.getPhotoPath()).circleCrop().into(imageProfil);
+                            GlideApp.with(imageProfil).load(utilisateurFirebase.getPhotoPath()).circleCrop().into(imageProfil);
                         }
                     }
 
@@ -165,11 +165,5 @@ public class ProfilActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-    }
-
-    @Override
-    protected void onDestroy() {
-        GlideApp.tearDown();
-        super.onDestroy();
     }
 }

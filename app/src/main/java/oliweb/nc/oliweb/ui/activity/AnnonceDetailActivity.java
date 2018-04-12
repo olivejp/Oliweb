@@ -95,7 +95,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         public void onDataChange(DataSnapshot dataSnapshot) {
             UtilisateurFirebase user = dataSnapshot.getValue(UtilisateurFirebase.class);
             if (user != null && user.getPhotoPath() != null) {
-                GlideApp.with(getApplicationContext())
+                GlideApp.with(imageProfilSeller)
                         .load(user.getPhotoPath())
                         .circleCrop()
                         .placeholder(R.drawable.ic_person_white_48dp)

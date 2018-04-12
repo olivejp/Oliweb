@@ -502,7 +502,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         FrameLayout frameLayout = pair.second;
         if (imageView != null && frameLayout != null && frameLayout.getTag() == null) {
             frameLayout.setTag(photoEntity);
-            GlideApp.with(getApplicationContext())
+            GlideApp.with(imageView)
                     .load(Uri.parse(photoEntity.getUriLocal()))
                     .apply(RequestOptions.circleCropTransform())
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
