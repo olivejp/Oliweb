@@ -1,13 +1,5 @@
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/recycler_list_chats"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="oliweb.nc.oliweb.ui.fragment.ListChatFragment">
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_list_chats"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true"/>
-
-</merge>
+    android:fitsSystemWindows="true" />

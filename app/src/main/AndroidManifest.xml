@@ -175,6 +175,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.AnnonceDetailActivity" />
         </activity>
+        <activity
+            android:name=".ui.activity.ProfilActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

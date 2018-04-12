@@ -47,6 +47,7 @@ import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UID_USER;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
@@ -212,7 +213,13 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         } else if (id == R.id.nav_profile) {
-            // TODO - Do something here
+            Intent intent = new Intent();
+            intent.setClass(this, ProfilActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString(UID_USER, FirebaseAuth.getInstance().getUid());
+            intent.putExtras(bundle);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
