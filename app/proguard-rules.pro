@@ -26,6 +26,12 @@
   *;
 }
 
+-keep class com.caverock.** { *; }
+-dontwarn com.caverock.**
+
+-keep class com.firebase.** { *; }
+-dontwarn com.firebase.**
+
 # Platform calls Class.forName on types which do not exist on Android to determine platform.
 -dontnote retrofit2.Platform
 # Platform used when running on Java 8 VMs. Will not be used at runtime.

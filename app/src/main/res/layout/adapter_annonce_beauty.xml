@@ -15,6 +15,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <ProgressBar
+            android:id="@+id/loading_progress"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/text_titre_annonce"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="visible" />
+
         <ImageView
             android:id="@+id/image_view_beauty"
             android:layout_width="0dp"

@@ -1,7 +1,9 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.ColorInt;
+import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -9,7 +11,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,6 +115,19 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.imageView.setBackground(null);
             GlideApp.with(viewHolderBeauty.imageView)
                     .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            viewHolderBeauty.progressBar.setVisibility(View.GONE);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            viewHolderBeauty.progressBar.setVisibility(View.GONE);
+                            return false;
+                        }
+                    })
                     .error(R.drawable.ic_error_white_48dp)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
@@ -175,6 +196,10 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.image_view_beauty)
         ImageView imageView;
+
+        @BindView(R.id.loading_progress)
+        ProgressBar progressBar;
+
 
         AnnoncePhotos annoncePhotos;
 
