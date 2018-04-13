@@ -18,23 +18,42 @@ public class FirebaseQueryLiveData extends LiveData<DataSnapshot> {
 
     private final Query query;
     private final MyValueEventListener listener = new MyValueEventListener();
+    private boolean stayConnected = true;
 
     public FirebaseQueryLiveData(Query query) {
         this.query = query;
+    }
+
+    public FirebaseQueryLiveData(Query query, boolean stayConnected) {
+        this.query = query;
+        this.stayConnected = stayConnected;
     }
 
     public FirebaseQueryLiveData(DatabaseReference ref) {
         this.query = ref;
     }
 
+    public FirebaseQueryLiveData(DatabaseReference ref, boolean stayConnected) {
+        this.query = ref;
+        this.stayConnected = stayConnected;
+    }
+
     public Query getQuery() {
         return this.query;
+    }
+
+    public boolean getStayConnected() {
+        return this.stayConnected;
     }
 
     @Override
     protected void onActive() {
         Log.d(LOG_TAG, "onActive");
-        query.addValueEventListener(listener);
+        if (stayConnected) {
+            query.addValueEventListener(listener);
+        } else {
+            query.addListenerForSingleValueEvent(listener);
+        }
     }
 
     @Override

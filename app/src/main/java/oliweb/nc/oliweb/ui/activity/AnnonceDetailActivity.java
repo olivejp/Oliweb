@@ -21,11 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.Date;
 import java.util.Locale;
@@ -34,7 +29,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.relex.circleindicator.CircleIndicator;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.converter.DateConverter;
@@ -93,69 +87,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
-
-    private DatabaseReference FB_USER_REF = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF);
-
-    private ValueEventListener catchSellerPhoto = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            UtilisateurFirebase user = dataSnapshot.getValue(UtilisateurFirebase.class);
-            if (user != null && user.getPhotoPath() != null) {
-                GlideApp.with(imageProfilSeller)
-                        .load(user.getPhotoPath())
-                        .circleCrop()
-                        .placeholder(R.drawable.ic_person_white_48dp)
-                        .error(R.drawable.ic_person_white_48dp)
-                        .into(imageProfilSeller);
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
-
-    private ValueEventListener actionEmailListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            UtilisateurFirebase vendeur = dataSnapshot.getValue(UtilisateurFirebase.class);
-            if (vendeur != null && vendeur.getEmail() != null && !vendeur.getEmail().isEmpty()) {
-                Intent intent = new Intent(Intent.ACTION_SENDTO);
-                intent.setType("message/rfc822");
-                intent.setData(Uri.parse("mailto:"));
-                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{vendeur.getEmail()});
-                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre());
-                intent.putExtra(Intent.EXTRA_TEXT, "Bonjour, votre annonce m'intéresse...");
-                try {
-                    startActivity(Intent.createChooser(intent, "Envoi d'email..."));
-                } catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(AnnonceDetailActivity.this, "Pas de client mail installé", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
-
-    private ValueEventListener actionTelephoneListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            UtilisateurFirebase vendeur = dataSnapshot.getValue(UtilisateurFirebase.class);
-            if (vendeur != null && vendeur.getTelephone() != null && !vendeur.getTelephone().isEmpty()) {
-                Intent phoneIntent = new Intent(Intent.ACTION_CALL);
-                phoneIntent.setData(Uri.parse(vendeur.getTelephone()));
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
+    private UtilisateurFirebase seller;
 
     public AnnonceDetailActivity() {
         // Required empty public constructor
@@ -184,12 +116,30 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
 
         if (annoncePhotos != null) {
+            // Récupération de l'annonce
             viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUUID()).observe(this, dataSnapshot -> {
                 if (dataSnapshot != null) {
                     AnnonceDto dto = dataSnapshot.getValue(AnnonceDto.class);
                     if (dto != null) {
                         AnnoncePhotos annonce = AnnonceConverter.convertDtoToEntity(dto);
                         initDisplay(annonce);
+
+
+                    }
+                }
+            });
+
+            // Récupération du vendeur
+            viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUuidUtilisateur()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
+                if (dataSnapshot != null) {
+                    seller = dataSnapshot.getValue(UtilisateurFirebase.class);
+                    if (seller != null && seller.getPhotoPath() != null) {
+                        GlideApp.with(imageProfilSeller)
+                                .load(seller.getPhotoPath())
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_person_white_48dp)
+                                .error(R.drawable.ic_person_white_48dp)
+                                .into(imageProfilSeller);
                     }
                 }
             });
@@ -224,12 +174,14 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             return;
         }
 
-        boolean amITheOwner = annoncePhotos.getAnnonceEntity().getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
+        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
-        prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annoncePhotos.getAnnonceEntity().getPrix()) + " XPF"));
-        description.setText(annoncePhotos.getAnnonceEntity().getDescription());
-        collapsingToolbarLayout.setTitle(annoncePhotos.getAnnonceEntity().getTitre());
-        textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annoncePhotos.getAnnonceEntity().getDatePublication())));
+        boolean amITheOwner = annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
+
+        prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
+        description.setText(annonce.getDescription());
+        collapsingToolbarLayout.setTitle(annonce.getTitre());
+        textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
 
         if (amITheOwner) {
             fabActionUpdate.setVisibility(View.VISIBLE);
@@ -237,15 +189,11 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             fabActionTelephone.setVisibility(View.GONE);
             fabActionMessage.setVisibility(View.GONE);
         } else {
-            AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
             fabActionUpdate.setVisibility(View.GONE);
             fabActionEmail.setVisibility((annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O")) ? View.VISIBLE : View.GONE);
             fabActionTelephone.setVisibility((annonce.getContactByTel() != null && annonce.getContactByTel().equals("O")) ? View.VISIBLE : View.GONE);
             fabActionMessage.setVisibility((annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O")) ? View.VISIBLE : View.GONE);
         }
-
-        // Récupération de la photo du vendeur
-        FB_USER_REF.child(annoncePhotos.getAnnonceEntity().getUuidUtilisateur()).addListenerForSingleValueEvent(catchSellerPhoto);
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
@@ -264,12 +212,27 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab_action_telephone)
     public void actionTelephone() {
-        FB_USER_REF.child(annoncePhotos.getAnnonceEntity().getUuidUtilisateur()).addListenerForSingleValueEvent(actionTelephoneListener);
+        if (seller != null && seller.getTelephone() != null && !seller.getTelephone().isEmpty()) {
+            Intent phoneIntent = new Intent(Intent.ACTION_CALL);
+            phoneIntent.setData(Uri.parse(seller.getTelephone()));
+        }
     }
 
     @OnClick(R.id.fab_action_email)
     public void actionEmail() {
-        FB_USER_REF.child(annoncePhotos.getAnnonceEntity().getUuidUtilisateur()).addListenerForSingleValueEvent(actionEmailListener);
+        if (seller != null && seller.getEmail() != null && !seller.getEmail().isEmpty()) {
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setType("message/rfc822");
+            intent.setData(Uri.parse("mailto:"));
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{seller.getEmail()});
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre());
+            intent.putExtra(Intent.EXTRA_TEXT, "Bonjour, votre annonce m'intéresse...");
+            try {
+                startActivity(Intent.createChooser(intent, "Envoi d'email..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(AnnonceDetailActivity.this, "Pas de client mail installé", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @OnClick(R.id.fab_action_update)
