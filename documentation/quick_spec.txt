@@ -1,0 +1,50 @@
+ ____________________________________________
+|                                            |
+|             Service de Messagerie          |
+|____________________________________________|
+
+Pré requis pour utiliser le service de messagerie
+- Avoir attaché un compte à l'application
+- Être connecté à ce compte même si l'appareil est hors connexion
+
+Comportement en mode Connecté
+-----------------------------
+
+- Si l'utilisateur est connecté :
+---> Il peut écrire des messages pour des annonces valides
+---> Il peut consulter les anciens messages qu'il a échangé avec l'auteur
+
+
+Comportement en mode Hors Connexion
+-----------------------------------
+
+
+
+Je veux pouvoir avoir un historique des conversations concernant une annonce en particulier et par auteur.
+Pour chaque conversation je voudrai avoir la photo de l'auteur à côté de la conversation.
+
+- La photo ne sera pas stockée dans le content provider (mais elle pourrait être mise en cache par Glide).
+- Toutes les conversations ainsi que tous les messages qu'elles contiendraient doivent être visibles hors connexion par l'auteur de l'annonce.
+
+
+Informations nécessaires pour les messages : 
+- Path de la photo de l'auteur
+- Le message
+- La date de création du message
+- Booléen pour savoir si le message a été lu ou pas encore
+
+
+ ____________________________________________
+|                                            |
+|               Service d'Alerte             |
+|____________________________________________|
+
+Pré requis pour utiliser le service de messagerie
+- Avoir attaché un compte à l'application
+- Être connecté à ce compte même si l'appareil est hors connexion
+
+
+Le service d'alerte permettra de créer des alertes pour prévenir une personne qu'une annonce correspond à ces critères de recherche.
+
+Exemple : Si je recherche un téléphone de marque Samsung pour un prix compris entre 0 et 50 000 xpf.
+Je créé donc une alerte pour la catégorie "Technologique" + avec le mot clé : "Samsung" et dont le prix est dans la fourchette 0 - 50 000.
