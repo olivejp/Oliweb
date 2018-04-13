@@ -22,7 +22,7 @@ import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 public class IntroActivity extends AppCompatActivity {
 

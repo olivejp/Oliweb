@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service;
+package oliweb.nc.oliweb.service.sync;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -22,7 +22,6 @@ import java.util.List;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -34,11 +33,12 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.utility.Constants;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_CHATS_REF;
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_MESSAGES_REF;
-import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
+import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
 
 /**
  * Created by orlanth23 on 18/12/2017.

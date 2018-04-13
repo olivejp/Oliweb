@@ -21,8 +21,8 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
+import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**

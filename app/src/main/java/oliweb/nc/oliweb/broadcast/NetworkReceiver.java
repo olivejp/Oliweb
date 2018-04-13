@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.network;
+package oliweb.nc.oliweb.broadcast;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

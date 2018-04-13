@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.job;
+package oliweb.nc.oliweb.service.job;
 
 import android.support.annotation.NonNull;
 
@@ -7,10 +7,10 @@ import com.evernote.android.job.JobRequest;
 
 import java.util.concurrent.TimeUnit;
 
-import oliweb.nc.oliweb.service.SyncService;
+import oliweb.nc.oliweb.service.sync.SyncService;
 
-import static oliweb.nc.oliweb.Constants.INTERVAL_SYNC_JOB_MINS;
-import static oliweb.nc.oliweb.Constants.PERIODIC_SYNC_JOB_MINS;
+import static oliweb.nc.oliweb.utility.Constants.INTERVAL_SYNC_JOB_MINS;
+import static oliweb.nc.oliweb.utility.Constants.PERIODIC_SYNC_JOB_MINS;
 
 
 /**

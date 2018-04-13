@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
@@ -32,13 +31,14 @@ import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.service.FirebaseSync;
+import oliweb.nc.oliweb.service.sync.FirebaseSync;
+import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -87,7 +87,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         liveNotification.postValue(dialogInfos);
     }
 
-    public void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    private void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
         utilisateurEntity.setEmail(user.getEmail());
@@ -96,7 +96,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
     }
 
-    public void createFirebaseUser(FirebaseUser user) {
+    private void createFirebaseUser(FirebaseUser user) {
         FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

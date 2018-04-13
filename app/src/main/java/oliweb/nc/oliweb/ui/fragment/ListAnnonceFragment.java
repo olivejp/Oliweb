@@ -28,10 +28,8 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -39,10 +37,12 @@ import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
+import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, AnnonceBeautyAdapter.AnnonceAdapterListener {
     private static final String ARG_UID_USER = "ARG_UID_USER";

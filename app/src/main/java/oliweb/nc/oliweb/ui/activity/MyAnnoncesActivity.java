@@ -18,16 +18,16 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import oliweb.nc.oliweb.Constants;
-import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.service.SyncService;
+import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.utility.Constants;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 

@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")

@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb;
+package oliweb.nc.oliweb.utility;
 
 public class Constants {
 

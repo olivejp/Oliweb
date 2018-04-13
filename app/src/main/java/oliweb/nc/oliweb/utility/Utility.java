@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.utility;
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,9 +11,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import com.firebase.ui.auth.AuthUI;
+
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
@@ -26,6 +31,21 @@ import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 public class Utility {
 
     private static final String TAG = Utility.class.getName();
+
+    public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
+        List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
+        listProviders.add(new AuthUI.IdpConfig.GoogleBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.EmailBuilder().build());
+
+        activityCaller.startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(listProviders)
+                        .build(),
+                requestCode);
+    }
 
     public static void hideKeyboard(Context ctx) {
         InputMethodManager inputManager = (InputMethodManager) ctx

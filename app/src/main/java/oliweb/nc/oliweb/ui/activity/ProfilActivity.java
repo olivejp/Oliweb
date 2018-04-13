@@ -22,10 +22,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
@@ -33,10 +33,10 @@ import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NE
 
 public class ProfilActivity extends AppCompatActivity {
     public static final String UID_USER = "uidUser";
-    public static final String UPDATE = "update";
+    public static final String UPDATE = "availableUpdate";
 
     private String uidUser;
-    private boolean update;
+    private boolean availableUpdate;
 
     @BindView(R.id.profil_photo)
     ImageView imageProfil;
@@ -83,7 +83,7 @@ public class ProfilActivity extends AppCompatActivity {
         Bundle args = getIntent().getExtras();
         if (args != null) {
             uidUser = args.getString(UID_USER);
-            update = args.getBoolean(UPDATE);
+            availableUpdate = args.getBoolean(UPDATE);
             if (uidUser != null) {
                 FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -124,7 +124,7 @@ public class ProfilActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (update) {
+        if (availableUpdate) {
             getMenuInflater().inflate(R.menu.fragment_profil, menu);
             this.mMenu = menu;
         }

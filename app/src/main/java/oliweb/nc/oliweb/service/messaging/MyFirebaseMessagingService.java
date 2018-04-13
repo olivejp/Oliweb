@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service;
+package oliweb.nc.oliweb.service.messaging;
 
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -6,10 +6,10 @@ import android.support.v4.app.NotificationManagerCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.utility.Constants;
 
-import static oliweb.nc.oliweb.Constants.notificationSyncAnnonceId;
+import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
 
 /**
  * Created by 2761oli on 22/03/2018.

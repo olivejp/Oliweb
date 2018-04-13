@@ -16,8 +16,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import oliweb.nc.oliweb.DialogInfos;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.ui.DialogInfos;
 
 
 public class NoticeDialogFragment extends DialogFragment {

@@ -41,21 +41,20 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.media.MediaType;
-import oliweb.nc.oliweb.media.MediaUtility;
-import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.service.SyncService;
+import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.Constants;
+import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
@@ -179,7 +178,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             }
 
             if (savedInstanceState.containsKey(SAVE_LIST_PHOTO)) {
-                putPhotosInCorrectView(savedInstanceState.getParcelableArrayList(SAVE_LIST_PHOTO));
+                initPhotosViews(savedInstanceState.getParcelableArrayList(SAVE_LIST_PHOTO));
             }
 
             // S'il y avait un fragment, je le remet
@@ -370,7 +369,24 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @OnLongClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
     public boolean onLongClick(View v) {
-        return v.getTag() != null && viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag());
+        if (v.getTag() != null) {
+            AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
+            } else {
+                builder = new AlertDialog.Builder(this);
+            }
+
+            builder.setTitle("Supprimer une photo")
+                    .setMessage("Etes vous sûr de vouloir supprimer la photo ?")
+                    .setPositiveButton("Oui", (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
+                    .setNegativeButton("Non", (dialog, which) -> {
+                    })
+                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                    .show();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -408,7 +424,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
 
         // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, this::putPhotosInCorrectView);
+        viewModel.getLiveListPhoto().observe(this, this::initPhotosViews);
 
         // Alimentation du spinner avec la liste des catégories
         viewModel.getLiveDataListCategorie()
@@ -460,7 +476,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
                     .observe(PostAnnonceActivity.this, photoEntities -> {
                         if (photoEntities != null && !photoEntities.isEmpty()) {
-                            putPhotosInCorrectView(new ArrayList<>(photoEntities));
+                            initPhotosViews(new ArrayList<>(photoEntities));
                         }
                     });
             displayAnnonce(annonceEntity);
@@ -480,7 +496,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    private void putPhotosInCorrectView(ArrayList<PhotoEntity> photoEntities) {
+    private void initPhotosViews(ArrayList<PhotoEntity> photoEntities) {
         initImageViewToDefault();
         if (photoEntities != null && !photoEntities.isEmpty()) {
             viewModel.setListPhoto(photoEntities);
@@ -587,7 +603,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Nullable
     private Uri generateNewUri() {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaType.IMAGE, uidUser);
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaUtility.MediaType.IMAGE, uidUser);
         if (pair != null && pair.first != null) {
             return pair.first;
         } else {

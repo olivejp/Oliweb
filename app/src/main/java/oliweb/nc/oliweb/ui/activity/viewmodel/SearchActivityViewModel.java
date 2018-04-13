@@ -20,19 +20,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
-import oliweb.nc.oliweb.network.NetworkReceiver;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchResult;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_REQUEST_REF;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
 
 /**
  * Created by 2761oli on 06/02/2018.

@@ -11,8 +11,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 public class AnnonceDetailViewModel extends AndroidViewModel {
 

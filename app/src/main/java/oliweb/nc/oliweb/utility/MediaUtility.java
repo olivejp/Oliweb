@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.media;
+package oliweb.nc.oliweb.utility;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.Locale;
 
 import oliweb.nc.oliweb.BuildConfig;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 
 /**
@@ -32,7 +31,16 @@ import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 
 public class MediaUtility {
 
+    public enum MediaType {
+        IMAGE,
+        VIDEO
+    }
+
     private static final String TAG = PostAnnonceActivity.class.getName();
+
+    private MediaUtility() {
+
+    }
 
     /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
@@ -52,7 +60,6 @@ public class MediaUtility {
         }
         return false;
     }
-
 
     /**
      * Force a refresh of media content provider for specific item
@@ -78,38 +85,6 @@ public class MediaUtility {
             if (scanner != null) {
                 scanner.disconnect();
             }
-        }
-    }
-
-    /**
-     * Redimenssionne une image pour qu'elle corresponde aux limitations.
-     * On ne fait que de la diminution d'image pas d'agrandissement.
-     *
-     * @param bitmap La bitmap a redimenssionné
-     * @param maxPx  Nombre de pixel maximum de l'image (autant en largeur ou hauteur)
-     * @return Bitmap redimenssionné
-     */
-    @Nullable
-    private static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
-        int newWidth;
-        int newHeight;
-
-        // L'image est trop grande il faut la réduire
-        if ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx)) {
-            int max;
-            if (bitmap.getWidth() > maxPx) {
-                max = bitmap.getWidth();
-            } else {
-                max = bitmap.getHeight();
-            }
-
-            double prorata = (double) maxPx / max;
-
-            newWidth = (int) (bitmap.getWidth() * prorata);
-            newHeight = (int) (bitmap.getHeight() * prorata);
-            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-        } else {
-            return bitmap;
         }
     }
 
@@ -154,6 +129,39 @@ public class MediaUtility {
         }
         return saved;
     }
+
+    /**
+     * Redimenssionne une image pour qu'elle corresponde aux limitations.
+     * On ne fait que de la diminution d'image pas d'agrandissement.
+     *
+     * @param bitmap La bitmap a redimenssionné
+     * @param maxPx  Nombre de pixel maximum de l'image (autant en largeur ou hauteur)
+     * @return Bitmap redimenssionné
+     */
+    @Nullable
+    private static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
+        int newWidth;
+        int newHeight;
+
+        // L'image est trop grande il faut la réduire
+        if ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx)) {
+            int max;
+            if (bitmap.getWidth() > maxPx) {
+                max = bitmap.getWidth();
+            } else {
+                max = bitmap.getHeight();
+            }
+
+            double prorata = (double) maxPx / max;
+
+            newWidth = (int) (bitmap.getWidth() * prorata);
+            newHeight = (int) (bitmap.getHeight() * prorata);
+            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+        } else {
+            return bitmap;
+        }
+    }
+
 
     /**
      * @param context
@@ -203,7 +211,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    public static File createInternalMediaFile(Context context, String fileName) {
+    private static File createInternalMediaFile(Context context, String fileName) {
         return new File(context.getFilesDir(), fileName);
     }
 
@@ -242,7 +250,7 @@ public class MediaUtility {
      * @param prefixName
      * @return
      */
-    public static String generateMediaName(MediaType type, String prefixName) {
+    private static String generateMediaName(MediaType type, String prefixName) {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         if (type.equals(MediaType.IMAGE)) {
             return File.separator + String.valueOf(prefixName) + "_IMG_" + timeStamp + ".jpg";

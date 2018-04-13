@@ -11,10 +11,10 @@ import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
 
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.utility.Constants;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 

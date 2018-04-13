@@ -6,9 +6,10 @@ import com.evernote.android.job.JobManager;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.leakcanary.LeakCanary;
 
-import oliweb.nc.oliweb.job.SyncJob;
-import oliweb.nc.oliweb.job.SyncJobCreator;
-import oliweb.nc.oliweb.network.NetworkReceiver;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.service.job.SyncJob;
+import oliweb.nc.oliweb.service.job.SyncJobCreator;
+import oliweb.nc.oliweb.utility.Constants;
 
 
 /**

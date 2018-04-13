@@ -35,13 +35,13 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
-import oliweb.nc.oliweb.network.CallLoginUi;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.Utility;
 
-import static oliweb.nc.oliweb.Constants.PARAM_MAJ;
+import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
 public class AnnonceDetailActivity extends AppCompatActivity {
 
@@ -204,7 +204,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @OnClick(R.id.fab_action_message)
     public void actionMessage() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            CallLoginUi.callLoginUi(this, REQUEST_CODE_LOGIN);
+            Utility.callLoginUi(this, REQUEST_CODE_LOGIN);
         } else {
             callListMessageFragment();
         }

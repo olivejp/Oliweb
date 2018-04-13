@@ -32,8 +32,8 @@ import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_USER_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.

@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service;
+package oliweb.nc.oliweb.service.sync;
 
 import android.content.Context;
 import android.net.Uri;
@@ -26,12 +26,11 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.media.MediaType;
-import oliweb.nc.oliweb.media.MediaUtility;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
 /**
  * Created by orlanth23 on 03/03/2018.
@@ -132,7 +131,7 @@ public class FirebaseSync {
     private void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto, String uidUser) {
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
         boolean externalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
-        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, externalStorage, MediaType.IMAGE, uidUser);
+        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, externalStorage, MediaUtility.MediaType.IMAGE, uidUser);
         if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
             httpsReference.getFile(pairUriFile.second).addOnSuccessListener(taskSnapshot -> {
                 // Local temp file has been created

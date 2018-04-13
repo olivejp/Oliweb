@@ -32,15 +32,15 @@ import com.google.firebase.database.ValueEventListener;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import oliweb.nc.oliweb.Constants;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageFirebaseAdapter;
+import oliweb.nc.oliweb.utility.Constants;
 
-import static oliweb.nc.oliweb.Constants.FIREBASE_DB_MESSAGES_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.

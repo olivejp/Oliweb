@@ -33,11 +33,9 @@ import com.google.firebase.auth.FirebaseUser;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.repository.task.TypeTask;
-import oliweb.nc.oliweb.helper.SharedPreferencesHelper;
-import oliweb.nc.oliweb.network.CallLoginUi;
-import oliweb.nc.oliweb.network.NetworkReceiver;
-import oliweb.nc.oliweb.service.SyncService;
+import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
@@ -46,6 +44,8 @@ import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
+import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UID_USER;
@@ -256,7 +256,7 @@ public class MainActivity extends AppCompatActivity
     private void signIn(int requestCode) {
         if (NetworkReceiver.checkConnection(this)) {
             signOut();
-            CallLoginUi.callLoginUi(this, requestCode);
+            Utility.callLoginUi(this, requestCode);
         } else {
             Snackbar.make(navigationView, "Une connexion est requise pour se connecter", Snackbar.LENGTH_LONG).show();
         }

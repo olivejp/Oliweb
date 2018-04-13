@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.helper;
+package oliweb.nc.oliweb.utility.helper;
 
 import android.graphics.Canvas;
 import android.support.v7.widget.RecyclerView;

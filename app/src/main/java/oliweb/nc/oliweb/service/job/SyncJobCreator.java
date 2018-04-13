@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.job;
+package oliweb.nc.oliweb.service.job;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
