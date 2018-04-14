@@ -10,14 +10,12 @@ import android.preference.PreferenceManager;
 
 public class SharedPreferencesHelper {
 
-    private static final String PREF_DISPLAY_MODE = "PREF_DISPLAY_MODE";
     private static final String PREF_FIREBASE_USER_UID = "DISPLAY_FIREBASE_USER_UID";
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
     private static final String PREF_DISPLAY_GRID = "PREF_DISPLAY_GRID";
     private static final String PREF_FIRST_TIME = "PREF_FIRST_TIME";
     private static final String PREF_SORT = "PREF_SORT";
-    public static final int PREF_VALUE_DISPLAY_MODE_RAW = 500;
-    public static final int PREF_VALUE_DISPLAY_MODE_BEAUTY = 600;
+    private static final String PREF_RETRIEVE_PREVIOUS_ANNONCES = "PREF_RETRIEVE_PREVIOUS_ANNONCES";
 
 
     private static SharedPreferencesHelper INSTANCE;
@@ -52,16 +50,8 @@ public class SharedPreferencesHelper {
         editor.putBoolean(PREF_FIRST_TIME, firstTime).commit();
     }
 
-    public boolean getDisplayBeautyMode() {
-        return sharedPreferences.getBoolean(PREF_DISPLAY_MODE, true);
-    }
-
     public boolean getUseExternalStorage() {
         return sharedPreferences.getBoolean(PREF_USE_EXTERNAL_STORAGE, false);
-    }
-
-    public boolean setDisplayBeautyMode(boolean value) {
-        return editor.putBoolean(PREF_DISPLAY_MODE, value).commit();
     }
 
     public boolean setUseExternalStorage(boolean useExternalStorage) {
@@ -76,12 +66,12 @@ public class SharedPreferencesHelper {
         return editor.putString(PREF_FIREBASE_USER_UID, uidFirebaseUser).commit();
     }
 
-    public boolean getGridMode() {
-        return sharedPreferences.getBoolean(PREF_DISPLAY_GRID, true);
+    public boolean getRetrievePreviousAnnonces() {
+        return sharedPreferences.getBoolean(PREF_RETRIEVE_PREVIOUS_ANNONCES, true);
     }
 
-    public boolean setGridMode(boolean gridMode) {
-        return editor.putBoolean(PREF_DISPLAY_GRID, gridMode).commit();
+    public boolean setRetrievePreviousAnnonces(boolean retrieve) {
+        return editor.putBoolean(PREF_RETRIEVE_PREVIOUS_ANNONCES, retrieve).commit();
     }
 
     public int getPrefSort() {

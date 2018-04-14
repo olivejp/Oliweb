@@ -23,12 +23,10 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
 
     private List<PhotoEntity> photos;
     private LayoutInflater inflater;
-    private Context context;
 
     public AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos) {
         this.photos = photos;
         this.inflater = LayoutInflater.from(context);
-        this.context = context;
     }
 
     @Override

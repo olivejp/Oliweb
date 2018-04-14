@@ -5,8 +5,6 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -42,8 +40,6 @@ import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-import oliweb.nc.oliweb.ui.task.CatchPhotoFromUrlTask;
-import oliweb.nc.oliweb.ui.task.TaskListener;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -56,7 +52,7 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECEN
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TaskListener<Drawable>, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -84,8 +80,6 @@ public class MainActivity extends AppCompatActivity
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-
-    private CatchPhotoFromUrlTask photoTask;
 
     private MainActivityViewModel viewModel;
 
@@ -218,7 +212,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent();
             intent.setClass(this, ProfilActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putString(UID_USER, FirebaseAuth.getInstance().getUid());
+            bundle.putString(UID_USER, FirebaseAuth.getInstance().getCurrentUser().getUid());
             bundle.putBoolean(UPDATE, true);
             intent.putExtras(bundle);
             startActivity(intent);
@@ -269,7 +263,6 @@ public class MainActivity extends AppCompatActivity
             if (resultCode == RESULT_CANCELED) {
                 // Sign in was canceled by the user, finish the activity
                 Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
-                finish();
             }
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
@@ -300,31 +293,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        if (photoTask != null) {
-            photoTask.setListener(null);
-            photoTask.setContext(null);
-        }
-        super.onDestroy();
-    }
-
-    @Override
-    public void onTaskSuccess(Drawable drawable) {
-        profileImage.setImageDrawable(drawable);
-    }
-
-    /**
-     * Try to retrieve the photo via URL
-     */
-    private void callPhotoTask(Uri uri) {
-        Uri[] uris = new Uri[]{uri};
-        photoTask = new CatchPhotoFromUrlTask();
-        photoTask.setContext(getApplicationContext());
-        photoTask.setListener(this);
-        photoTask.execute(uris);
-    }
-
     private void initViewsFromUser(FirebaseUser user) {
         profileName.setText(user.getDisplayName());
         if (user.getEmail() != null) {
@@ -334,9 +302,9 @@ public class MainActivity extends AppCompatActivity
         if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
             GlideApp.with(profileImage)
                     .load(user.getPhotoUrl())
+                    .circleCrop()
                     .placeholder(R.drawable.ic_person_white_48dp)
                     .into(profileImage);
-            // callPhotoTask(user.getPhotoUrl());
         }
 
         // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
@@ -373,8 +341,11 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
-                viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
                 initViewsFromUser(mFirebaseUser);
+
+                if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
+                    viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
+                }
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
                 activeBadges(SharedPreferencesHelper.getInstance(getApplicationContext()).getUidFirebaseUser(), false);
@@ -396,7 +367,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void callFavoriteFragment() {
-        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(FirebaseAuth.getInstance().getUid(), ACTION_FAVORITE);
+        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(FirebaseAuth.getInstance().getCurrentUser().getUid(), ACTION_FAVORITE);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_frame, listAnnonceFragment)
@@ -414,6 +385,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDialogNegativeClick(NoticeDialogFragment dialog) {
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
+        }
         dialog.dismiss();
     }
 

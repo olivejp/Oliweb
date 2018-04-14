@@ -106,7 +106,7 @@ public class ListChatFragment extends Fragment {
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
 
         if (viewModel.getTypeRechercheChat() == null) {
-            viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getUid());
+            viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getCurrentUser().getUid());
         }
     }
 

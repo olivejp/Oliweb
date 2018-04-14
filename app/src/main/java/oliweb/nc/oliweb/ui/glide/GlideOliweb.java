@@ -15,7 +15,7 @@ import java.io.InputStream;
  * Created by 2761oli on 27/12/2017.
  */
 @GlideModule
-public class GlideOliweb extends AppGlideModule {
+public final class GlideOliweb extends AppGlideModule {
     @Override
     public void registerComponents(Context context, Glide glide, Registry registry) {
         registry.register(SVG.class, PictureDrawable.class, new SvgDrawableTranscoder())

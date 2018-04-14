@@ -92,14 +92,14 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).push();
 
         HashMap<String, Boolean> hash = new HashMap<>();
-        hash.put(FirebaseAuth.getInstance().getUid(), true);
+        hash.put(FirebaseAuth.getInstance().getCurrentUser().getUid(), true);
         hash.put(annonce.getUuidUtilisateur(), true);
 
         ChatFirebase chatFirebase = new ChatFirebase();
         chatFirebase.setUid(ref.getKey());
         chatFirebase.setUidAnnonce(annonce.getUUID());
         chatFirebase.setMembers(hash);
-        chatFirebase.setUidBuyer(FirebaseAuth.getInstance().getUid());
+        chatFirebase.setUidBuyer(FirebaseAuth.getInstance().getCurrentUser().getUid());
         chatFirebase.setUidSeller(annonce.getUuidUtilisateur());
 
         return chatFirebase;

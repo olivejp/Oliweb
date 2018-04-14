@@ -62,7 +62,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<UtilisateurEntity> getConnectedUser() {
-        return this.utilisateurRepository.findById(FirebaseAuth.getInstance().getUid());
+        return this.utilisateurRepository.findById(FirebaseAuth.getInstance().getCurrentUser().getUid());
     }
 
     public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {

@@ -51,7 +51,7 @@ public class ListMessageFragment extends Fragment {
 
     private DatabaseReference messageRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
     private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
-    private String uidUser = FirebaseAuth.getInstance().getUid();
+    private String uidUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private AppCompatActivity appCompatActivity;
     private MessageFirebaseAdapter adapter;
@@ -154,7 +154,7 @@ public class ListMessageFragment extends Fragment {
                 sendMessage(uidChat, messageToSend);
                 break;
             case PAR_ANNONCE:
-                if (adapter == null && annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid())) {
+                if (adapter == null && annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
                     findOrCreateChat(uidUser, annonce, chat -> {

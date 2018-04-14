@@ -101,7 +101,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
     private void retreivePhoto(@NonNull ChatFirebaseViewHolder holder, @NonNull ChatFirebase model) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-        if (model.getUidBuyer().equals(FirebaseAuth.getInstance().getUid())) {
+        if (model.getUidBuyer().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
             ref = ref.child(model.getUidSeller());
         } else {
             ref = ref.child(model.getUidBuyer());

@@ -176,7 +176,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
-        boolean amITheOwner = annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getUid());
+        boolean amITheOwner = annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
         description.setText(annonce.getDescription());

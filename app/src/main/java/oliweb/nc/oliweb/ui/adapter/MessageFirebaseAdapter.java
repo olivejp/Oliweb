@@ -71,7 +71,7 @@ public class MessageFirebaseAdapter extends FirebaseRecyclerAdapter<MessageFireb
     @Override
     public int getItemViewType(int position) {
         MessageFirebase messageFirebase = getItem(position);
-        return (messageFirebase.getUidAuthor().equals(FirebaseAuth.getInstance().getUid())) ? TYPE_OWNER : TYPE_CLIENT;
+        return (messageFirebase.getUidAuthor().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) ? TYPE_OWNER : TYPE_CLIENT;
     }
 
     @Override

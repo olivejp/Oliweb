@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity;
 
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
@@ -15,15 +16,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
@@ -59,6 +58,9 @@ public class ProfilActivity extends AppCompatActivity {
     @BindView(R.id.profil_nb_chats)
     TextView textNbChats;
 
+    @BindView(R.id.profil_nb_messages)
+    TextView textNbMessages;
+
     @BindView(R.id.profil_toolbar)
     Toolbar toolbar;
 
@@ -80,28 +82,30 @@ public class ProfilActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profil);
         ButterKnife.bind(this);
 
+        ProfilViewModel viewModel = ViewModelProviders.of(this).get(ProfilViewModel.class);
+
         Bundle args = getIntent().getExtras();
         if (args != null) {
             uidUser = args.getString(UID_USER);
             availableUpdate = args.getBoolean(UPDATE);
             if (uidUser != null) {
-                FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                viewModel.getFirebaseUser(uidUser).observe(this, dataSnapshot -> {
+                    if (dataSnapshot != null) {
                         utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
                         if (utilisateurFirebase != null) {
                             textName.setText(utilisateurFirebase.getProfileName());
                             textEmail.setText(utilisateurFirebase.getEmail());
                             textTelephone.setText(utilisateurFirebase.getTelephone());
-                            GlideApp.with(imageProfil).load(utilisateurFirebase.getPhotoPath()).circleCrop().into(imageProfil);
+                            GlideApp.with(imageProfil).load(utilisateurFirebase.getPhotoPath()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // Do nothing
-                    }
                 });
+
+                viewModel.getFirebaseUserNbAnnoncesCount(uidUser).observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
+
+                viewModel.getFirebaseUserNbChatsCount(uidUser).observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
+
+                viewModel.getFirebaseUserNbMessagesCount(uidUser).observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
             }
         }
 
@@ -133,7 +137,6 @@ public class ProfilActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
@@ -148,7 +151,6 @@ public class ProfilActivity extends AppCompatActivity {
             FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(utilisateurFirebase).addOnSuccessListener(aVoid ->
                     Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
             );
-            onBackPressed();
             return true;
         }
 
