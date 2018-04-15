@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -168,6 +169,15 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         initObservers();
 
+        // Sur l'action finale du prix on va sauvegarder l'annonce.
+        textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveAnnonce();
+                return true;
+            }
+            return false;
+        });
+
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
                 viewModel.setAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
@@ -209,26 +219,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
-        if (idItem == R.id.menu_post_valid && checkIfAnnonceIsValid()) {
-
-            // Retrieve datas from the ui
-            String titre = textViewTitre.getText().toString();
-            String description = textViewDescription.getText().toString();
-            int prix = Integer.parseInt(textViewPrix.getText().toString());
-
-            // Save the annonce to the local DB
-            viewModel.saveAnnonceToDb(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
-                if (dataReturn.isSuccessful()) {
-                    if (NetworkReceiver.checkConnection(this)) {
-                        SyncService.launchSynchroForAll(getApplicationContext());
-                    }
-                    setResult(RESULT_OK);
-                } else {
-                    setResult(RESULT_CANCELED);
-                }
-                finish();
-            });
-
+        if (idItem == R.id.menu_post_valid) {
+            saveAnnonce();
             return true;
         }
         if (idItem == android.R.id.home) {
@@ -236,6 +228,30 @@ public class PostAnnonceActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveAnnonce() {
+        if (!checkIfAnnonceIsValid()) {
+            return;
+        }
+
+        // Retrieve datas from the ui
+        String titre = textViewTitre.getText().toString();
+        String description = textViewDescription.getText().toString();
+        int prix = Integer.parseInt(textViewPrix.getText().toString());
+
+        // Save the annonce to the local DB
+        viewModel.saveAnnonceToDb(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
+            if (dataReturn.isSuccessful()) {
+                if (NetworkReceiver.checkConnection(this)) {
+                    SyncService.launchSynchroForAll(getApplicationContext());
+                }
+                setResult(RESULT_OK);
+            } else {
+                setResult(RESULT_CANCELED);
+            }
+            finish();
+        });
     }
 
     private boolean checkIfAnnonceIsValid() {

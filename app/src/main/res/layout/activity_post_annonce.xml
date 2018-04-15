@@ -185,7 +185,7 @@
                     android:layout_margin="5dp"
                     android:ems="10"
                     android:hint="Prix"
-                    android:imeOptions="actionNext"
+                    android:imeOptions="actionDone"
                     android:inputType="number"
                     android:maxLength="9" />
             </android.support.design.widget.TextInputLayout>
