@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,8 +24,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,6 +41,7 @@ import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
+import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
 import oliweb.nc.oliweb.ui.adapter.ChatFirebaseAdapter;
 import oliweb.nc.oliweb.utility.Constants;
 
@@ -50,9 +57,16 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 
 public class ListChatFragment extends Fragment {
 
+    public final static String BACKSTACK_MESSAGE_FRAGMENT = "BACKSTACK_MESSAGE_FRAGMENT";
+
     private AppCompatActivity appCompatActivity;
     private DatabaseReference chatReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
     private ChatFirebaseAdapter adapter;
+    private ChatAdapter chatAdapter;
+    private List<ChatFirebase> listChats = new ArrayList<>();
+
+    private GenericTypeIndicator<HashMap<String, ChatFirebase>> genericClassDetail = new GenericTypeIndicator<HashMap<String, ChatFirebase>>() {
+    };
 
     private MyChatsActivityViewModel viewModel;
 
@@ -125,8 +139,23 @@ public class ListChatFragment extends Fragment {
             query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
             loadQuery(query);
         } else if (viewModel.getTypeRechercheChat() == PAR_UTILISATEUR) {
-            query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
-            loadQuery(query);
+            //            query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
+            //            loadQuery(query);
+
+            // Implémentation d'un nouvel adapter
+            chatAdapter = new ChatAdapter(v -> callListMessage((String) v.getTag()), onPopupClickListener);
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
+            recyclerView.setAdapter(chatAdapter);
+            recyclerView.setLayoutManager(linearLayoutManager);
+            viewModel.getFirebaseChatsByUidUser(viewModel.getSelectedUidUtilisateur()).observe(appCompatActivity, dataSnapshot -> {
+                if (dataSnapshot != null) {
+                    listChats.clear();
+                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                        listChats.add(data.getValue(ChatFirebase.class));
+                    }
+                    chatAdapter.setListChats(listChats);
+                }
+            });
         }
         return view;
     }
@@ -176,17 +205,16 @@ public class ListChatFragment extends Fragment {
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {
-                getFragmentManager()
+                appCompatActivity.getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.frame_messages, listMessageFragment, TAG_DETAIL_FRAGMENT)
                         .commit();
             } else {
-                getFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left, android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-                        .replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT)
-                        .addToBackStack(null)
-                        .commit();
+                FragmentTransaction ft = appCompatActivity.getSupportFragmentManager().beginTransaction();
+                ft.setCustomAnimations(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
+                ft.replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT);
+                ft.addToBackStack(null);
+                ft.commit();
             }
         }
     }

@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.adapter;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.CardView;
@@ -49,19 +50,18 @@ public class AnnonceBeautyAdapter extends
         this.backGroundColor = backGroundColor;
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder viewHolderResult;
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View itemLayoutView;
-        itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
-        viewHolderResult = new ViewHolderBeauty(itemLayoutView);
+        View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
+        RecyclerView.ViewHolder viewHolderResult = new ViewHolderBeauty(itemLayoutView);
         ((ViewHolderBeauty) viewHolderResult).parent = parent;
         return viewHolderResult;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AnnoncePhotos annoncePhotos = listAnnonces.get(position);
         bindViewHolderBeauty(viewHolder, annoncePhotos);
     }

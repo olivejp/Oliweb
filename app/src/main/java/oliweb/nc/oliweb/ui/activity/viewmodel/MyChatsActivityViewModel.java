@@ -2,16 +2,20 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.utility.Constants;
@@ -29,6 +33,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     private boolean twoPane;
+    private FirebaseQueryLiveData listChatsLiveData;
     private String selectedUidChat;
     private String selectedUidUtilisateur;
     private AnnonceEntity selectedAnnonce;
@@ -38,6 +43,14 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
+    }
+
+    public LiveData<DataSnapshot> getFirebaseChatsByUidUser(String uidUser) {
+        Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true);
+        if (listChatsLiveData == null) {
+            listChatsLiveData = new FirebaseQueryLiveData(query, false);
+        }
+        return listChatsLiveData;
     }
 
     public boolean isTwoPane() {

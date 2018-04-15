@@ -55,7 +55,10 @@ public class MyChatsActivity extends AppCompatActivity {
             listChatFragment = new ListChatFragment();
         }
         if (frag == null || !frag.equals(listChatFragment)) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT).commit();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_chats, listChatFragment, TAG_MASTER_FRAGMENT)
+                    .commit();
         }
 
         Fragment listMessageFragment1 = getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_FRAGMENT);
