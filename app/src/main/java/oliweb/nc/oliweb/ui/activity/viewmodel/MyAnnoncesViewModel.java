@@ -3,11 +3,19 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -18,6 +26,8 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.service.sync.FirebaseSync;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -30,6 +40,8 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
+    private boolean questionAsked;
+    private MutableLiveData<AtomicBoolean> isAnnoncesAvailableToSync;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
@@ -40,6 +52,45 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
+    }
+
+    public LiveData<AtomicBoolean> retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
+        isAnnoncesAvailableToSync = new MutableLiveData<>();
+        isAnnoncesAvailableToSync.setValue(new AtomicBoolean(false));
+        FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
+        firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                            HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                            if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+                                questionAsked = false;
+                                for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                                    if (questionAsked) {
+                                        break;
+                                    }
+                                    firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(Schedulers.io())
+                                            .subscribe(integer -> {
+                                                if ((integer == null || integer.equals(0)) && !questionAsked) {
+                                                    questionAsked = true;
+                                                    isAnnoncesAvailableToSync.postValue(new AtomicBoolean(true));
+                                                }
+                                            });
+
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.d(TAG, "onCancelled");
+                    }
+                });
+        return isAnnoncesAvailableToSync;
     }
 
     /**

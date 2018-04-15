@@ -1,8 +1,12 @@
 package oliweb.nc.oliweb.ui.activity;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +15,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,6 +45,10 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
 
     public static final String ARG_NOTICE_BUNDLE_ID_ANNONCE = "ARG_NOTICE_BUNDLE_ID_ANNONCE";
     public static final String DIALOG_TAG_DELETE = "DIALOG_TAG_DELETE";
+    public static final String DIALOG_TAG_SYNC = "DIALOG_TAG_SYNC";
+    public static final int REQUEST_STORAGE_PERMISSION_CODE = 5841;
+
+    private String uidUser;
 
     public static final int REQUEST_CODE_POST = 548;
 
@@ -69,7 +78,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         super.onCreate(savedInstanceState);
 
         // Récupération du UID de l'utilisateur connecté.
-        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (uidUser == null || uidUser.isEmpty()) {
             Log.e(TAG, "Missing mandatory parameter");
             finish();
@@ -136,6 +145,12 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.my_annonces_activity, menu);
+        return true;
+    }
+
+    @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_DELETE)
                 && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
@@ -149,11 +164,29 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 });
             }
         }
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_SYNC)) {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
+                } else {
+                    callToSync();
+                }
+            } else {
+                callToSync();
+            }
+
+
+
+        }
+    }
+
+    private void callToSync() {
+        SyncService.launchSynchroFromFirebase(this, uidUser);
     }
 
     @Override
     public void onDialogNegativeClick(NoticeDialogFragment dialog) {
-        // Do nothing
+        dialog.dismiss();
     }
 
     @Override
@@ -169,7 +202,29 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             onBackPressed();
             return true;
         }
+        if (idItem == R.id.menu_fb_sync) {
+            viewModel.retrieveAnnoncesFromFirebase(uidUser).observe(this, atomicBoolean -> {
+                if (atomicBoolean.get()) {
+                    DialogInfos dialogInfos = new DialogInfos();
+                    dialogInfos.setMessage("Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?");
+                    dialogInfos.setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO);
+                    dialogInfos.setTag(DIALOG_TAG_SYNC);
+                    dialogInfos.setIdDrawable(R.drawable.ic_announcement_white_48dp);
+                    NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+                }
+            });
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_STORAGE_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            callToSync();
+        }
     }
 
     private void callPostAnnonceCreate(View v) {
