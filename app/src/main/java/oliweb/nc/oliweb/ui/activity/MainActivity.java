@@ -243,7 +243,10 @@ public class MainActivity extends AppCompatActivity
     private void signOut() {
         AuthUI.getInstance()
                 .signOut(this)
-                .addOnCompleteListener(task -> SharedPreferencesHelper.getInstance(MainActivity.this).setUidFirebaseUser(null));
+                .addOnCompleteListener(task -> {
+                    SharedPreferencesHelper.getInstance(MainActivity.this).setUidFirebaseUser(null);
+                    Toast.makeText(this, "Vous êtes déconnecté", Toast.LENGTH_SHORT).show();
+                });
 
     }
 
