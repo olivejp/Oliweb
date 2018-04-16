@@ -49,7 +49,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
             myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
         } else {
             if (photos.get(position).getFirebasePath() != null) {
-                GlideApp.with(myImage)
+                GlideApp.with(myImage.getContext())
                         .load(photos.get(position).getFirebasePath())
                         .error(R.drawable.ic_error_grey_900_48dp)
                         .centerCrop()
