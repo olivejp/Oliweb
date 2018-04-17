@@ -42,6 +42,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private PhotoRepository photoRepository;
     private boolean questionAsked;
     private MutableLiveData<AtomicBoolean> isAnnoncesAvailableToSync;
+    private FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
@@ -57,7 +58,11 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     public LiveData<AtomicBoolean> retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
         isAnnoncesAvailableToSync = new MutableLiveData<>();
         isAnnoncesAvailableToSync.setValue(new AtomicBoolean(false));
-        FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
+        callFirebaseSync(uidUtilisateur);
+        return isAnnoncesAvailableToSync;
+    }
+
+    private void callFirebaseSync(String uidUtilisateur) {
         firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -70,16 +75,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                                     if (questionAsked) {
                                         break;
                                     }
-                                    firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
-                                            .subscribeOn(Schedulers.io())
-                                            .observeOn(Schedulers.io())
-                                            .subscribe(integer -> {
-                                                if ((integer == null || integer.equals(0)) && !questionAsked) {
-                                                    questionAsked = true;
-                                                    isAnnoncesAvailableToSync.postValue(new AtomicBoolean(true));
-                                                }
-                                            });
-
+                                    checkAnnonceExistInLocalDb(uidUtilisateur, entry);
                                 }
                             }
                         }
@@ -90,7 +86,18 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                         Log.d(TAG, "onCancelled");
                     }
                 });
-        return isAnnoncesAvailableToSync;
+    }
+
+    private Disposable checkAnnonceExistInLocalDb(String uidUtilisateur, Map.Entry<String, AnnonceDto> entry) {
+        return firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(integer -> {
+                    if ((integer == null || integer.equals(0)) && !questionAsked) {
+                        questionAsked = true;
+                        isAnnoncesAvailableToSync.postValue(new AtomicBoolean(true));
+                    }
+                });
     }
 
     /**
