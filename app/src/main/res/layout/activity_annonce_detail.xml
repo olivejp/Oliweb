@@ -1,6 +1,7 @@
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frame_annonce_detail"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -168,4 +169,4 @@
             android:transitionName="@string/prix_detail_transition"
             tools:text="400 000 XPF" />
     </android.support.design.widget.CoordinatorLayout>
-</merge>
+</FrameLayout>

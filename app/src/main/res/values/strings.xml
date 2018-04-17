@@ -109,5 +109,6 @@
     <string name="content_description_profile_image">content_description_profile_image</string>
     <string name="mes_conversations">Mes conversations</string>
     <string name="title_activity_chats">Mes conversations</string>
+    <string name="image_profil_transition">image_profil_transition</string>
 
 </resources>
