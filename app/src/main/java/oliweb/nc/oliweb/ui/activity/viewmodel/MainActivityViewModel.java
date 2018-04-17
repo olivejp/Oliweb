@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
@@ -34,7 +35,6 @@ import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.sync.FirebaseSync;
 import oliweb.nc.oliweb.ui.DialogInfos;
-import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
@@ -54,7 +54,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
 
-    private MutableLiveData<DialogInfos> liveNotification;
+    private MutableLiveData<DialogInfos> retreiveAnnonceNotification;
 
     private MutableLiveData<Integer> sorting;
 
@@ -63,17 +63,14 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-
-        liveNotification = new MutableLiveData<>();
-        liveNotification.setValue(null);
     }
 
-    public LiveData<DialogInfos> getNotification() {
-        return liveNotification;
-    }
-
-    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
-        return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
+    public LiveData<DialogInfos> getRetreiveAnnonceNotification() {
+        if (retreiveAnnonceNotification == null) {
+            retreiveAnnonceNotification = new MutableLiveData<>();
+            retreiveAnnonceNotification.setValue(null);
+        }
+        return retreiveAnnonceNotification;
     }
 
     private void postNewNotification(String message, @DrawableRes int idDrawable, int buttonType, String tag, @Nullable Bundle bundle) {
@@ -84,39 +81,29 @@ public class MainActivityViewModel extends AndroidViewModel {
                 .setIdDrawable(idDrawable)
                 .setTag(tag)
                 .setBundlePar(bundle);
-        liveNotification.postValue(dialogInfos);
+        retreiveAnnonceNotification.postValue(dialogInfos);
     }
 
-    private void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUuidUtilisateur(user.getUid());
-        utilisateurEntity.setProfile(user.getDisplayName());
-        utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
-        utilisateurEntity.setEmail(user.getEmail());
-        utilisateurEntity.setTelephone(user.getPhoneNumber());
-        utilisateurEntity.setPhotoUrl((user.getPhotoUrl() != null) ? user.getPhotoUrl().toString() : null);
+    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
+        return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
+    }
+
+    private void insertUserIntoLocalDb(FirebaseUser firebaseUser, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        UtilisateurEntity utilisateurEntity = UtilisateurConverter.convertFbToEntity(firebaseUser);
         utilisateurRepository.insert(onRespositoryPostExecute, utilisateurEntity);
     }
 
-    private void createFirebaseUser(FirebaseUser user) {
-        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+    private void insertUserIntoFirebase(FirebaseUser firebaseUser) {
+        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(firebaseUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null) {
-                    UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
-                    if (utilisateurFirebase == null) {
-                        // Si pas d'utilisateur enregistré dans Firebase, je vais le créer.
-                        UtilisateurFirebase utilFirebase = new UtilisateurFirebase();
-                        if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
-                            utilFirebase.setPhotoPath(user.getPhotoUrl().toString());
-                        }
-                        utilFirebase.setProfileName(user.getDisplayName());
-                        utilFirebase.setEmail(user.getEmail());
-                        utilFirebase.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
-                        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(user.getUid()).setValue(utilFirebase)
-                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
-                                .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
-                    }
+                if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
+                    // Si pas d'utilisateur enregistré dans Firebase, je vais le créer.
+                    String token = FirebaseInstanceId.getInstance().getToken();
+                    UtilisateurFirebase utilisateurFirebase = UtilisateurConverter.convertFbUserToUtilisateurFirebase(firebaseUser, token);
+                    FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(firebaseUser.getUid()).setValue(utilisateurFirebase)
+                            .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
+                            .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
                 }
             }
 
@@ -177,15 +164,15 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public void insertUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void insertUtilisateur(FirebaseUser firebaseUser, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         // Sauvegarde dans les préférences, dans le cas d'une déconnexion
-        SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(user.getUid());
+        SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(firebaseUser.getUid());
 
         // Sauvegarde dans la DB
-        createUtilisateur(user, onRespositoryPostExecute);
+        insertUserIntoLocalDb(firebaseUser, onRespositoryPostExecute);
 
         // Sauvegarde dans Firebase
-        createFirebaseUser(user);
+        insertUserIntoFirebase(firebaseUser);
     }
 
     public LiveData<Integer> sortingUpdated() {

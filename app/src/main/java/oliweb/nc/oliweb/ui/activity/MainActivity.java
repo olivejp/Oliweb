@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity
                 // Save user in SharedPreferences && in the local DB && FirebaseDatabase
                 viewModel.insertUtilisateur(mFirebaseUser, dataReturn -> {
                     if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.isSuccessful() && dataReturn.getNb() > 0) {
-                        Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " enregistré", Snackbar.LENGTH_LONG).show();
                     }
                 });
 
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
                     viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
-                    viewModel.getNotification().observe(this, dialogInfos -> {
+                    viewModel.getRetreiveAnnonceNotification().observe(this, dialogInfos -> {
                         if (dialogInfos != null) {
                             if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
                                 NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
