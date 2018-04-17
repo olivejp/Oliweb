@@ -26,14 +26,6 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     Single<AnnonceEntity> findSingleById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE idCategorie = :idCategorie")
-    Maybe<List<AnnonceEntity>> findByIdCategorie(Long idCategorie);
-
-    @Transaction
-    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :UuidUtilisateur")
-    Maybe<List<AnnonceEntity>> findByUuidUtilisateur(String UuidUtilisateur);
-
-    @Transaction
     @Query("SELECT * FROM annonce WHERE statut = :status")
     Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status);
 
