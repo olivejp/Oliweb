@@ -30,7 +30,6 @@
                 android:id="@+id/profil_photo"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:transitionName="@string/image_profil_transition"
                 app:layout_constraintBottom_toTopOf="@id/guide"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

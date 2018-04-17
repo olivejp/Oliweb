@@ -21,6 +21,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -68,8 +70,9 @@ public class ProfilActivity extends AppCompatActivity {
     ConstraintLayout mainConstraint;
 
     private Menu mMenu;
+    private ProfilViewModel viewModel;
 
-    private UtilisateurFirebase utilisateurFirebase;
+    private UtilisateurEntity utilisateurEntity;
 
     public ProfilActivity() {
         // Required empty public constructor
@@ -82,22 +85,20 @@ public class ProfilActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profil);
         ButterKnife.bind(this);
 
-        ProfilViewModel viewModel = ViewModelProviders.of(this).get(ProfilViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(ProfilViewModel.class);
 
         Bundle args = getIntent().getExtras();
         if (args != null) {
             uidUser = args.getString(UID_USER);
             availableUpdate = args.getBoolean(UPDATE);
             if (uidUser != null) {
-                viewModel.getFirebaseUser(uidUser).observe(this, dataSnapshot -> {
-                    if (dataSnapshot != null) {
-                        utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
-                        if (utilisateurFirebase != null) {
-                            textName.setText(utilisateurFirebase.getProfileName());
-                            textEmail.setText(utilisateurFirebase.getEmail());
-                            textTelephone.setText(utilisateurFirebase.getTelephone());
-                            GlideApp.with(imageProfil).load(utilisateurFirebase.getPhotoPath()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
-                        }
+                viewModel.getUtilisateurByUid(uidUser).observe(this, userEntity -> {
+                    if (userEntity != null) {
+                        utilisateurEntity = userEntity;
+                        textName.setText(utilisateurEntity.getProfile());
+                        textEmail.setText(utilisateurEntity.getEmail());
+                        textTelephone.setText(utilisateurEntity.getTelephone());
+                        GlideApp.with(imageProfil).load(utilisateurEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
                     }
                 });
 
@@ -147,10 +148,18 @@ public class ProfilActivity extends AppCompatActivity {
             mMenu.findItem(R.id.menu_profil_edit).setVisible(true);
             mMenu.findItem(R.id.menu_profil_save).setVisible(false);
             mMenu.findItem(R.id.menu_profil_save).setShowAsAction(SHOW_AS_ACTION_NEVER);
-            utilisateurFirebase.setTelephone(textTelephone.getText().toString());
-            FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(utilisateurFirebase).addOnSuccessListener(aVoid ->
-                    Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
-            );
+
+            utilisateurEntity.setTelephone(textTelephone.getText().toString());
+
+            viewModel.saveUtilisateur(utilisateurEntity, dataReturn -> {
+                if (dataReturn.isSuccessful()) {
+                    UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntity);
+                    FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
+                            Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
+                    );
+                }
+            });
+
             return true;
         }
 

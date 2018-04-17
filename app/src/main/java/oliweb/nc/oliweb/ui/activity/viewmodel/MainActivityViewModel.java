@@ -89,11 +89,13 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private void createUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
+        utilisateurEntity.setUuidUtilisateur(user.getUid());
+        utilisateurEntity.setProfile(user.getDisplayName());
         utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
         utilisateurEntity.setEmail(user.getEmail());
-        utilisateurEntity.setUuidUtilisateur(user.getUid());
         utilisateurEntity.setTelephone(user.getPhoneNumber());
-        utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
+        utilisateurEntity.setPhotoUrl((user.getPhotoUrl() != null) ? user.getPhotoUrl().toString() : null);
+        utilisateurRepository.insert(onRespositoryPostExecute, utilisateurEntity);
     }
 
     private void createFirebaseUser(FirebaseUser user) {
@@ -128,7 +130,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
         FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
         firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
-                .addValueEventListener(new ValueEventListener() {
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot != null && dataSnapshot.getValue() != null) {
@@ -175,7 +177,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public void saveUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public void insertUtilisateur(FirebaseUser user, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         // Sauvegarde dans les préférences, dans le cas d'une déconnexion
         SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(user.getUid());
 

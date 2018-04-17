@@ -103,12 +103,6 @@ public class MainActivity extends AppCompatActivity
 
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
-        viewModel.getNotification().observe(this, dialogInfos -> {
-            if (dialogInfos != null) {
-                NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
-            }
-        });
-
         View viewHeader = navigationView.getHeaderView(0);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
@@ -128,7 +122,6 @@ public class MainActivity extends AppCompatActivity
 
         // Init most recent annonce fragment
         ListAnnonceFragment listAnnonceFragment;
-        boolean newFrag = false;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
         } else {
@@ -136,15 +129,10 @@ public class MainActivity extends AppCompatActivity
         }
         if (listAnnonceFragment == null) {
             listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
-            newFrag = true;
         }
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
-        if (newFrag) {
-            transaction.addToBackStack(null).commit();
-        } else {
-            transaction.commit();
-        }
+        transaction.commit();
 
         // Init Chat Fragment
         ListChatFragment listChatFragment;
@@ -338,9 +326,17 @@ public class MainActivity extends AppCompatActivity
             if (mFirebaseUser != null) {
 
                 // Save user in SharedPreferences && in the local DB && FirebaseDatabase
-                viewModel.saveUtilisateur(mFirebaseUser, dataReturn -> {
+                viewModel.insertUtilisateur(mFirebaseUser, dataReturn -> {
                     if (dataReturn.getTypeTask() == TypeTask.INSERT && dataReturn.isSuccessful() && dataReturn.getNb() > 0) {
                         Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " bien créé", Snackbar.LENGTH_LONG).show();
+
+                        viewModel.getNotification().observe(this, dialogInfos -> {
+                            if (dialogInfos != null) {
+                                if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
+                                    NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+                                }
+                            }
+                        });
                     }
                 });
 

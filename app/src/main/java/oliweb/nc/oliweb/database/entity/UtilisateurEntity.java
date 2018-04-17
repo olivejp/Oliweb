@@ -20,6 +20,8 @@ public class UtilisateurEntity {
     private String profile;
     private Long dateCreation;
     private Long dateLastConnexion;
+    private String photoUrl;
+    private String tokenDevice;
 
     @Exclude
     @NonNull
@@ -71,5 +73,21 @@ public class UtilisateurEntity {
 
     public void setDateLastConnexion(Long dateLastConnexion) {
         this.dateLastConnexion = dateLastConnexion;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public String getTokenDevice() {
+        return tokenDevice;
+    }
+
+    public void setTokenDevice(String tokenDevice) {
+        this.tokenDevice = tokenDevice;
     }
 }

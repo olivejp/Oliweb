@@ -20,9 +20,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,11 +27,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
-
-import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
-import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NEVER;
 
 public class ProfilFragment extends Fragment {
 
@@ -74,7 +67,6 @@ public class ProfilFragment extends Fragment {
     @BindView(R.id.profil_main_constraint)
     ConstraintLayout mainConstraint;
 
-    private Menu mMenu;
     private AppCompatActivity appCompatActivity;
     private UtilisateurFirebase utilisateurFirebase;
     private ProfilViewModel viewModel;
@@ -156,7 +148,6 @@ public class ProfilFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         if (availableUpdate) {
             appCompatActivity.getMenuInflater().inflate(R.menu.fragment_profil, menu);
-            this.mMenu = menu;
         }
     }
 
@@ -164,26 +155,6 @@ public class ProfilFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             appCompatActivity.onBackPressed();
-            return true;
-        }
-
-        if (item.getItemId() == R.id.menu_profil_save) {
-            textTelephone.setEnabled(false);
-            mMenu.findItem(R.id.menu_profil_edit).setVisible(true);
-            mMenu.findItem(R.id.menu_profil_save).setVisible(false);
-            mMenu.findItem(R.id.menu_profil_save).setShowAsAction(SHOW_AS_ACTION_NEVER);
-            utilisateurFirebase.setTelephone(textTelephone.getText().toString());
-            FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(utilisateurFirebase).addOnSuccessListener(aVoid ->
-                    Toast.makeText(appCompatActivity, "Mise à jour effectuée", Toast.LENGTH_LONG).show()
-            );
-            return true;
-        }
-
-        if (item.getItemId() == R.id.menu_profil_edit) {
-            textTelephone.setEnabled(true);
-            mMenu.findItem(R.id.menu_profil_edit).setVisible(false);
-            mMenu.findItem(R.id.menu_profil_save).setVisible(true);
-            mMenu.findItem(R.id.menu_profil_save).setShowAsAction(SHOW_AS_ACTION_ALWAYS);
             return true;
         }
         return super.onOptionsItemSelected(item);

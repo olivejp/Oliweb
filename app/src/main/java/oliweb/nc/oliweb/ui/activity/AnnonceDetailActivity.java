@@ -8,10 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.transition.ChangeImageTransform;
-import android.support.transition.ChangeTransform;
-import android.support.transition.Fade;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -139,19 +135,11 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 if (dataSnapshot != null) {
                     seller = dataSnapshot.getValue(UtilisateurFirebase.class);
                     if (seller != null && seller.getPhotoPath() != null) {
-
                         imageProfilSeller.setOnClickListener(v -> {
                             ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUuidUtilisateur(), false);
-                            FragmentTransaction tr = getSupportFragmentManager().beginTransaction();
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                fragment.setSharedElementEnterTransition(new ChangeTransform());
-                                fragment.setEnterTransition(new Fade());
-                                fragment.setExitTransition(new Fade());
-                                fragment.setSharedElementReturnTransition(new ChangeImageTransform());
-
-                                tr.addSharedElement(v, getString(R.string.image_profil_transition));
-                            }
-                            tr.add(R.id.frame_annonce_detail, fragment)
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .add(R.id.frame_annonce_detail, fragment)
                                     .addToBackStack(null)
                                     .commit();
                         });

@@ -12,6 +12,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.utility.Constants;
 
@@ -23,9 +26,11 @@ public class ProfilViewModel extends AndroidViewModel {
     private MutableLiveData<Long> nbAnnoncesByUser;
     private MutableLiveData<Long> nbChatsByUser;
     private MutableLiveData<Long> nbMessagesByUser;
+    private UtilisateurRepository utilisateurRepository;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
+        utilisateurRepository = UtilisateurRepository.getInstance(application);
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
@@ -101,9 +106,16 @@ public class ProfilViewModel extends AndroidViewModel {
     public LiveData<DataSnapshot> getFirebaseUser(String uidUser) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(uidUser);
         if (fbSellerLiveData == null || fbSellerLiveData.getQuery() != ref) {
-            fbSellerLiveData = new FirebaseQueryLiveData(ref, false);
+            fbSellerLiveData = new FirebaseQueryLiveData(ref, true);
         }
         return fbSellerLiveData;
     }
 
+    public LiveData<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
+        return this.utilisateurRepository.findById(uidUser);
+    }
+
+    public void saveUtilisateur(UtilisateurEntity utilisateurEntity, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        this.utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
+    }
 }
