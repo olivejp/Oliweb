@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.repository.task;
 
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import oliweb.nc.oliweb.database.dao.AbstractDao;
 
@@ -37,9 +38,14 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
                 dataReturn.setNb(this.dao.delete(entities));
                 break;
             case INSERT:
-                Long[] ids = this.dao.insert(entities);
-                dataReturn.setNb(ids.length);
-                dataReturn.setIds(ids);
+                try {
+                    Long[] ids = this.dao.insert(entities);
+                    dataReturn.setNb(ids.length);
+                    dataReturn.setIds(ids);
+                } catch (RuntimeException e) {
+                    Log.e("AbstractRepositoryCudTa", e.getMessage());
+                }
+
                 break;
             case UPDATE:
                 dataReturn.setIds(null);
