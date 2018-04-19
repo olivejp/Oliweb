@@ -15,11 +15,13 @@ import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.dao.ChatDao;
+import oliweb.nc.oliweb.database.dao.MessageDao;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 
@@ -27,7 +29,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 13, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class})
+@Database(version = 14, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
     private static OliwebDatabase INSTANCE;
 
@@ -84,4 +86,6 @@ public abstract class OliwebDatabase extends RoomDatabase {
     public abstract AnnonceFullDao getAnnonceFullDao();
 
     public abstract ChatDao getChatDao();
+
+    public abstract MessageDao getMessageDao();
 }

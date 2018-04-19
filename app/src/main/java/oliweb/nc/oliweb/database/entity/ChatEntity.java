@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -21,11 +22,13 @@ public class ChatEntity implements Parcelable {
     private String lastMessage;
     private Long creationTimestamp;
     private Long updateTimestamp;
+    @TypeConverters(StatusConverter.class)
+    private StatusRemote statusRemote;
 
     public ChatEntity() {
     }
 
-    public ChatEntity(@NonNull String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp) {
+    public ChatEntity(@NonNull String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote) {
         this.uidChat = uidChat;
         this.uidBuyer = uidBuyer;
         this.uidSeller = uidSeller;
@@ -33,6 +36,7 @@ public class ChatEntity implements Parcelable {
         this.lastMessage = lastMessage;
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
+        this.statusRemote = statusRemote;
     }
 
     @NonNull
@@ -92,6 +96,15 @@ public class ChatEntity implements Parcelable {
         this.updateTimestamp = updateTimestamp;
     }
 
+    public StatusRemote getStatusRemote() {
+        return statusRemote;
+    }
+
+    public void setStatusRemote(StatusRemote statusRemote) {
+        this.statusRemote = statusRemote;
+    }
+
+
     @Override
     public int describeContents() {
         return 0;
@@ -106,6 +119,7 @@ public class ChatEntity implements Parcelable {
         dest.writeString(this.lastMessage);
         dest.writeValue(this.creationTimestamp);
         dest.writeValue(this.updateTimestamp);
+        dest.writeInt(this.statusRemote == null ? -1 : this.statusRemote.ordinal());
     }
 
     protected ChatEntity(Parcel in) {
@@ -116,6 +130,8 @@ public class ChatEntity implements Parcelable {
         this.lastMessage = in.readString();
         this.creationTimestamp = (Long) in.readValue(Long.class.getClassLoader());
         this.updateTimestamp = (Long) in.readValue(Long.class.getClassLoader());
+        int tmpStatut = in.readInt();
+        this.statusRemote = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
     }
 
     public static final Creator<ChatEntity> CREATOR = new Creator<ChatEntity>() {
