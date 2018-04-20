@@ -120,7 +120,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
                         }
                     }
                     if (!trouve) {
-                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(annonceDto);
+                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
                         Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
                         listPhotosResult.add(annoncePhotos);
                     }

@@ -109,6 +109,12 @@ public class ListChatFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        recyclerView.setAdapter(null);
+        super.onDestroyView();
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         appCompatActivity = (AppCompatActivity) context;
@@ -181,7 +187,7 @@ public class ListChatFragment extends Fragment {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
                         if (annonceDto != null) {
-                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(annonceDto);
+                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
                             Intent intent = new Intent();
                             intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
                             Bundle bundle = new Bundle();

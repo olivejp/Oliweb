@@ -94,6 +94,12 @@ public class ListMessageFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        recyclerView.setAdapter(null);
+        super.onDestroyView();
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);

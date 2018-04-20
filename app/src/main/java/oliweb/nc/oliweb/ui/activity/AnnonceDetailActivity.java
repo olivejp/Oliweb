@@ -89,6 +89,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private AnnoncePhotos annoncePhotos;
     private UtilisateurFirebase seller;
+    private FirebaseAuth auth;
 
     public AnnonceDetailActivity() {
         // Required empty public constructor
@@ -97,7 +98,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        auth = FirebaseAuth.getInstance();
         AnnonceDetailViewModel viewModel = ViewModelProviders.of(this).get(AnnonceDetailViewModel.class);
 
         setContentView(R.layout.activity_annonce_detail);
@@ -122,7 +123,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 if (dataSnapshot != null) {
                     AnnonceDto dto = dataSnapshot.getValue(AnnonceDto.class);
                     if (dto != null) {
-                        AnnoncePhotos annonce = AnnonceConverter.convertDtoToEntity(dto);
+                        AnnoncePhotos annonce = AnnonceConverter.convertDtoToAnnoncePhotos(dto);
                         initDisplay(annonce);
 
 
@@ -185,7 +186,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
-        boolean amITheOwner = annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUuidUtilisateur());
 
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
         description.setText(annonce.getDescription());

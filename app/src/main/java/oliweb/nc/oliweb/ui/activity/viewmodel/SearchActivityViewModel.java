@@ -167,7 +167,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         for (DataSnapshot child : snapshotResults.getChildren()) {
                             ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
                             if (elasticsearchResult != null) {
-                                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToEntity(elasticsearchResult.get_source());
+                                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(elasticsearchResult.get_source());
                                 listAnnonce.add(annoncePhotos);
                             }
                         }

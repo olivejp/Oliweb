@@ -24,7 +24,7 @@ public class AnnonceConverter {
      * @param annonceDto
      * @return
      */
-    public static AnnoncePhotos convertDtoToEntity(AnnonceDto annonceDto) {
+    public static AnnoncePhotos convertDtoToAnnoncePhotos(AnnonceDto annonceDto) {
         AnnoncePhotos annoncePhotos = new AnnoncePhotos();
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annoncePhotos.setPhotos(new ArrayList<>());
@@ -87,5 +87,19 @@ public class AnnonceConverter {
         annonceDto.setPhotos(listPhotoDto);
 
         return annonceDto;
+    }
+
+    public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
+        AnnonceEntity annonceEntity = new AnnonceEntity();
+        annonceEntity.setUUID(annonceDto.getUuid());
+        annonceEntity.setStatut(StatusRemote.SEND);
+        annonceEntity.setTitre(annonceDto.getTitre());
+        annonceEntity.setDescription(annonceDto.getDescription());
+        annonceEntity.setDatePublication(annonceDto.getDatePublication());
+        annonceEntity.setPrix(annonceDto.getPrix());
+        annonceEntity.setFavorite(0);
+        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+        annonceEntity.setUuidUtilisateur(annonceDto.getUtilisateur().getUuid());
+        return annonceEntity;
     }
 }
