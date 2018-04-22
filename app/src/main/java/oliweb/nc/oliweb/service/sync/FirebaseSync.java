@@ -59,7 +59,9 @@ public class FirebaseSync {
         return instance;
     }
 
+    // TODO Batch de récupération HS
     void synchronize(Context context, String uidUser) {
+        Log.d(TAG, "synchronize");
         getAllAnnonceFromFirebaseByUidUser(uidUser).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -82,8 +84,7 @@ public class FirebaseSync {
 
     private void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
         existInLocalByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(integer -> {
                     if (integer == null || integer.equals(0)) {
                         saveAnnonceFromFirebaseToLocalDb(context, annonceDto);
@@ -92,6 +93,7 @@ public class FirebaseSync {
     }
 
     public Query getAllAnnonceFromFirebaseByUidUser(String uidUser) {
+        Log.d(TAG, "getAllAnnonceFromFirebaseByUidUser called with uidUser = " + uidUser);
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         return ref.orderByChild("utilisateur/uuid").equalTo(uidUser);
     }

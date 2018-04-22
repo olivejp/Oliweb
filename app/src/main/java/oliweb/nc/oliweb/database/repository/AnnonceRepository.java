@@ -1,10 +1,12 @@
 package oliweb.nc.oliweb.database.repository;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.persistence.room.EmptyResultSetException;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -53,6 +55,46 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
                 });
     }
 
+    public Single<AtomicBoolean> existById(Long idAnnonce) {
+        return Single.create(e -> annonceDao.findSingleById(idAnnonce)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(annonceEntity -> e.onSuccess(new AtomicBoolean(annonceEntity != null)))
+                .doOnError(exception -> {
+                    if (exception instanceof EmptyResultSetException) {
+                        e.onSuccess(new AtomicBoolean(false));
+                    } else {
+                        e.onError(exception);
+                    }
+                })
+                .subscribe());
+    }
+
+    public Single<AtomicBoolean> save(AnnonceEntity annonceEntity) {
+        return Single.create(emitter -> existById(annonceEntity.getIdAnnonce())
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(exception -> {
+                    if (exception instanceof EmptyResultSetException) {
+                        emitter.onSuccess(new AtomicBoolean(false));
+                    } else {
+                        emitter.onError(exception);
+                    }
+                })
+                .doOnSuccess(atomicBoolean -> {
+                    if (atomicBoolean.get()) {
+                        updateSingle(annonceEntity)
+                                .doOnSuccess(emitter::onSuccess)
+                                .doOnError(emitter::onError)
+                                .subscribe();
+                    } else {
+                        insertSingle(annonceEntity)
+                                .doOnSuccess(emitter::onSuccess)
+                                .doOnError(emitter::onError)
+                                .subscribe();
+                    }
+                })
+                .subscribe());
+    }
+
     public LiveData<AnnonceEntity> findById(long idAnnonce) {
         return this.annonceDao.findById(idAnnonce);
     }
@@ -67,10 +109,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status){
         return this.annonceDao.getAllAnnonceByStatus(status);
-    }
-
-    public Single<Integer> countAllAnnoncesByStatus(String status){
-        return this.annonceDao.countAllAnnoncesByStatus(status);
     }
 
     public Flowable<Integer> countFlowableAllAnnoncesByStatus(String status){
@@ -89,11 +127,32 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
-    public LiveData<Integer> getAllAnnonceByStatusAndByUidUser(String status, String uidUser){
-        return this.annonceDao.getAllAnnonceByStatusAndByUidUser(status, uidUser);
-    }
-
     public Single<Integer> isAnnonceFavorite(String uidAnnonce){
         return this.annonceDao.isAnnonceFavorite(uidAnnonce);
+    }
+
+    public Single<List<AnnonceEntity>> getAll() {
+        return annonceDao.getAll();
+    }
+
+    /**
+     * @return Single to be observe. This Single emit an integer which represent the number of annonce correctly deleted
+     */
+    public Single<Integer> deleteAll() {
+        return Single.create(e -> annonceDao.getAll()
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(annonceEntities -> {
+                    if (annonceEntities != null && !annonceEntities.isEmpty()) {
+                        e.onSuccess(annonceDao.delete(annonceEntities));
+                    } else {
+                        e.onSuccess(0);
+                    }
+                })
+                .doOnError(e::onError)
+                .subscribe());
+    }
+
+    public Single<Integer> count() {
+        return this.annonceDao.count();
     }
 }

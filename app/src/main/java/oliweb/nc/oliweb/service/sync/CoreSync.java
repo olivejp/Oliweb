@@ -20,7 +20,6 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.List;
 
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
@@ -93,7 +92,7 @@ class CoreSync {
         mNotificationCreated = false;
         isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, count -> {
             if (count > 0 && !mNotificationCreated) {
-                createNotification("Oliweb - Envoi de vos annonces");
+                createNotification();
                 mNotificationCreated = true;
             }
 
@@ -112,12 +111,11 @@ class CoreSync {
     /**
      * Liste toutes les annonces à envoyer
      */
-    private Disposable syncToSend() {
-        return annonceFullRepository
+    private void syncToSend() {
+        annonceFullRepository
                 .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(annoncesFulls -> {
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annoncesFulls -> {
                     if (annoncesFulls != null && !annoncesFulls.isEmpty()) {
                         nbAnnonceCompletedTask = 0;
                         for (AnnonceFull annonceFull : annoncesFulls) {
@@ -125,7 +123,8 @@ class CoreSync {
                             sendAnnonceToFirebaseDatabase(annonceFull);
                         }
                     }
-                });
+                })
+                .subscribe();
     }
 
     /**
@@ -187,19 +186,19 @@ class CoreSync {
      *
      * @param idAnnonce of the AnnonceFull we try to send to Fb
      */
-    private Disposable sendPhotosToFbStorage(long idAnnonce) {
+    private void sendPhotosToFbStorage(long idAnnonce) {
         Log.d(TAG, "Starting sendPhotosToFbStorage");
-        return photoRepository
+        photoRepository
                 .getAllPhotosByStatusAndIdAnnonce(StatusRemote.TO_SEND.getValue(), idAnnonce)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(listPhoto -> {
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(listPhoto -> {
                     if (listPhoto != null && !listPhoto.isEmpty()) {
                         for (PhotoEntity photo : listPhoto) {
                             sendPhotoToFirebaseStorage(photo);
                         }
                     }
-                });
+                })
+                .subscribe();
     }
 
     /**
@@ -207,7 +206,7 @@ class CoreSync {
      * If succeed, we will receive the Download Path of the image.
      * This path should be send to update the AnnonceFull on Firebase Database
      *
-     * @param photo
+     * @param photo PhotoEntity to send to Firebase Storage
      */
     private void sendPhotoToFirebaseStorage(PhotoEntity photo) {
         Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
@@ -231,7 +230,7 @@ class CoreSync {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to upload image");
                     photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                    photoRepository.save(photo, null);
+                    photoRepository.update(photo);
                 });
     }
 
@@ -241,11 +240,10 @@ class CoreSync {
      *
      * @param idAnnonce of the AnnonceFull we want to send.
      */
-    private Disposable updateAnnonceFullFromDbToFirebase(long idAnnonce) {
-        return annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(annonceFull -> {
+    private void updateAnnonceFullFromDbToFirebase(long idAnnonce) {
+        annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annonceFull -> {
                     DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).child(annonceFull.getAnnonce().getUUID());
 
                     // Conversion de notre annonce en DTO
@@ -260,7 +258,8 @@ class CoreSync {
                                 annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
                                 annonceRepository.update(annonceFull.getAnnonce());
                             });
-                });
+                })
+                .subscribe();
     }
 
     /**
@@ -269,14 +268,14 @@ class CoreSync {
      * -on device
      * -in local database
      *
-     * @param idAnnonce
+     * @param idAnnonce id de l'annonce à supprimer
      */
-    private Disposable deletePhotoByIdAnnonce(long idAnnonce) {
-        return photoRepository
+    private void deletePhotoByIdAnnonce(long idAnnonce) {
+        photoRepository
                 .findAllSingleByIdAnnonce(idAnnonce)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(this::deletePhotosFromMultiService);
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(this::deletePhotosFromMultiService)
+                .subscribe();
     }
 
     private void deletePhotosFromMultiService(List<PhotoEntity> listPhotoEntity) {
@@ -340,7 +339,7 @@ class CoreSync {
     /**
      * Suppression d'une liste de Media présents sur notre Storage Firebase
      *
-     * @param listPhotoEntity
+     * @param listPhotoEntity List des photos à supprimer de Firebase Storage
      */
     private void deletePhotosFromFirebaseStorage(List<PhotoEntity> listPhotoEntity) {
         if (listPhotoEntity != null && !listPhotoEntity.isEmpty()) {
@@ -354,7 +353,7 @@ class CoreSync {
      * Suppression d'une annonce sur Firebase Database
      * La suppression est basée sur l'UID de l'annonce.
      *
-     * @param annonce
+     * @param annonce à supprimer de Firebase Database
      */
     private void deleteAnnonceFromFirebaseDatabase(AnnonceEntity annonce) {
         // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
@@ -408,62 +407,61 @@ class CoreSync {
         syncDeletePhoto();
     }
 
-    private Disposable syncDeleteAnnonce() {
+    private void syncDeleteAnnonce() {
         // Read all annonces with TO_DELETE status to delete them on remote and local
-        return annonceRepository
+        annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(listAnnoncesToDelete -> {
-                            if (listAnnoncesToDelete != null && !listAnnoncesToDelete.isEmpty()) {
-                                for (AnnonceEntity annonce : listAnnoncesToDelete) {
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(listAnnoncesToDelete -> {
+                    if (listAnnoncesToDelete != null && !listAnnoncesToDelete.isEmpty()) {
+                        for (AnnonceEntity annonce : listAnnoncesToDelete) {
 
-                                    // We delete only when it left 0 photos for this annonce
-                                    photoRepository.countAllPhotosByIdAnnonce(annonce.getIdAnnonce())
-                                            .subscribeOn(Schedulers.io())
-                                            .observeOn(Schedulers.io())
-                                            .subscribe(integer -> {
-                                                if (integer == null || integer.equals(0)) {
-                                                    annonceRepository.delete(annonce);
-                                                }
-                                            });
+                            // We delete only when it left 0 photos for this annonce
+                            photoRepository.countAllPhotosByIdAnnonce(annonce.getIdAnnonce())
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(Schedulers.io())
+                                    .doOnSuccess(integer -> {
+                                        if (integer == null || integer.equals(0)) {
+                                            annonceRepository.delete(annonce);
+                                        }
+                                    })
+                                    .subscribe();
 
-                                    deletePhotoByIdAnnonce(annonce.getIdAnnonce());
-                                    deleteAnnonceFromFirebaseDatabase(annonce);
-                                }
-                            }
+                            deletePhotoByIdAnnonce(annonce.getIdAnnonce());
+                            deleteAnnonceFromFirebaseDatabase(annonce);
                         }
-                );
+                    }
+                })
+                .subscribe();
     }
 
-    private Disposable syncDeletePhoto() {
+    private void syncDeletePhoto() {
         // Read all PhotoEntities with TO_DELETE status to delete them on remote storage and local and on Firebase Database
-        return photoRepository
+        photoRepository
                 .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(listPhotoToDelete -> {
-                            if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
-                                for (PhotoEntity photo : listPhotoToDelete) {
-                                    if (photo.getFirebasePath() != null) {
-                                        deletePhotoFromFirebaseStorage(photo, successFirebaseDeleting ->
-                                                deletePhotoFromDevice(photo, successDeviceDeleting ->
-                                                        photoRepository.delete(dataReturn -> {
-                                                            if (dataReturn.isSuccessful()) {
-                                                                updateAnnonceFullFromDbToFirebase(photo.getIdAnnonce());
-                                                            }
-                                                        }, photo)
-                                                )
-                                        );
-                                    }
-                                }
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(listPhotoToDelete -> {
+                    if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
+                        for (PhotoEntity photo : listPhotoToDelete) {
+                            if (photo.getFirebasePath() != null) {
+                                deletePhotoFromFirebaseStorage(photo, successFirebaseDeleting ->
+                                        deletePhotoFromDevice(photo, successDeviceDeleting ->
+                                                photoRepository.delete(dataReturn -> {
+                                                    if (dataReturn.isSuccessful()) {
+                                                        updateAnnonceFullFromDbToFirebase(photo.getIdAnnonce());
+                                                    }
+                                                }, photo)
+                                        )
+                                );
                             }
                         }
-                );
+                    }
+                })
+                .subscribe();
     }
 
-    private void createNotification(String title) {
-        mBuilder.setContentTitle(title)
+    private void createNotification() {
+        mBuilder.setContentTitle("Oliweb - Envoi de vos annonces")
                 .setContentText("Téléchargement en cours")
                 .setSmallIcon(R.drawable.ic_sync_white_48dp)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
@@ -480,13 +478,13 @@ class CoreSync {
         notificationManager.notify(notificationId, mBuilder.build());
     }
 
-    private Disposable isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+    private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
         // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
-        return annonceRepository
+        annonceRepository
                 .countFlowableAllAnnoncesByStatus(statusRemote.getValue())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(onCheckedListener::run);
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnNext(onCheckedListener::run)
+                .subscribe();
     }
 
     private interface OnCheckedListener {

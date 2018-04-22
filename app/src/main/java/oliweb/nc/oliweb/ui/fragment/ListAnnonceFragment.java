@@ -34,6 +34,7 @@ import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
@@ -44,7 +45,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, AnnonceBeautyAdapter.AnnonceAdapterListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
@@ -77,9 +78,26 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
     private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
-    private DatabaseReference annoncesReference;
+    private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sort = SORT_DATE;
     private int direction;
+
+    private View.OnClickListener onClickListener = v -> {
+        AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+        Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
+        intent.putExtra(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
+        Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage);
+        startActivity(intent, options.toBundle());
+    };
+
+    private View.OnClickListener onClickListenerShare = v -> {
+
+    };
+
+    private View.OnClickListener onClickListenerFavorite = v -> {
+
+    };
 
     public ListAnnonceFragment() {
         // Empty constructor
@@ -94,6 +112,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return listAnnonceFragment;
     }
 
+    EndlessRecyclerOnScrollListener scrollListener;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -107,7 +127,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             uidUser = getArguments().getString(ARG_UID_USER);
             action = getArguments().getString(ARG_ACTION);
         }
-        annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
     }
 
@@ -118,10 +137,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(this, appCompatActivity.getResources().getColor(R.color.colorPrimary));
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(appCompatActivity.getResources().getColor(R.color.colorPrimary),
+                onClickListener,
+                onClickListenerShare,
+                onClickListenerFavorite);
 
-        RecyclerView.LayoutManager layoutManager;
-        layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
 
@@ -157,12 +177,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 if (actionBar != null) {
                     actionBar.setTitle("Dernières annonces");
                 }
-                recyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener(layoutManager) {
+                RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
+                scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
                     @Override
                     public void onLoadMore() {
                         loadMoreDatas();
                     }
-                });
+                };
+                recyclerView.addOnScrollListener(scrollListener);
                 break;
         }
 
@@ -171,6 +193,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
 
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        GlideApp.get(appCompatActivity).clearMemory();
+        recyclerView.setAdapter(null);
+        recyclerView.removeOnScrollListener(scrollListener);
+        annoncesReference.removeEventListener(valueEventListener);
+        super.onDestroyView();
     }
 
     private void changeSortAndUpdateList(Integer newSort) {
@@ -274,8 +305,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         public void onDataChange(DataSnapshot dataSnapshot) {
             if (dataSnapshot != null && dataSnapshot.getValue() != null) {
                 // Lancement d'une tache pour aller vérifier les annonces déjà reçues
-                LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask();
-                loadMoreTask.setListener(taskListener);
+                LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
                 loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sort, direction));
             }
         }
@@ -298,27 +328,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
         outState.putInt(SAVE_SORT, sort);
         outState.putInt(SAVE_DIRECTION, direction);
-    }
-
-    @Override
-    public void onClick(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
-        Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
-        intent.putExtra(ARG_ANNONCE, annoncePhotos);
-
-        Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage);
-        startActivity(intent, options.toBundle());
-    }
-
-    @Override
-    public void onShare(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
-
-    }
-
-    @Override
-    public void onLike(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
-
     }
 
     @Override

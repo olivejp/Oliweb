@@ -23,7 +23,6 @@ import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -39,7 +38,7 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
-public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAdapter.AnnonceAdapterListener {
+public class SearchActivity extends AppCompatActivity {
     private static final String TAG = SearchActivity.class.getName();
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
@@ -89,7 +88,10 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
         setTitle("Recherche " + query);
 
         // Recherche du mode display actuellement dans les préférences.
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(this, getResources().getColor(R.color.colorPrimary));
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
+                onClickListener,
+                onClickListenerShare,
+                onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
         endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -203,38 +205,35 @@ public class SearchActivity extends AppCompatActivity implements AnnonceBeautyAd
         });
     }
 
-    @Override
-    public void onClick(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
+    private View.OnClickListener onClickListener = v -> {
+        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
-        intent.putExtra(ARG_ANNONCE, annoncePhotos);
-
+        intent.putExtra(ARG_ANNONCE, viewHolder.getAnnoncePhotos());
         Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-
         ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage);
         startActivity(intent, options.toBundle());
-    }
+    };
 
-    @Override
-    public void onShare(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
-        // TODO pas génial ce partage faudrait peut être revoir cette fonctionnalité
+    private View.OnClickListener onClickListenerShare = v -> {
+        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
         sharingIntent.setType("text/plain");
-        String shareBody = annoncePhotos.getAnnonceEntity().getDescription();
-        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, annoncePhotos.getAnnonceEntity().getTitre());
+        String shareBody = viewHolder.getAnnoncePhotos().getAnnonceEntity().getDescription();
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, viewHolder.getAnnoncePhotos().getAnnonceEntity().getTitre());
         sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
         startActivity(Intent.createChooser(sharingIntent, "Partager via"));
-    }
+    };
 
-    @Override
-    public void onLike(AnnoncePhotos annoncePhotos, AnnonceBeautyAdapter.ViewHolderBeauty viewHolder) {
+    private View.OnClickListener onClickListenerFavorite = v -> {
+        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Log.d(TAG, "Click on add to favorite");
-        searchActivityViewModel.isAnnonceFavorite(annoncePhotos.getAnnonceEntity().getUUID())
+        searchActivityViewModel.isAnnonceFavorite(viewHolder.getAnnoncePhotos().getAnnonceEntity().getUUID())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(integer -> {
                     if (integer == null || integer == 0) {
-                        searchActivityViewModel.addToFavorite(annoncePhotos);
+                        searchActivityViewModel.addToFavorite(viewHolder.getAnnoncePhotos());
                     }
                 });
-    }
+    };
 }

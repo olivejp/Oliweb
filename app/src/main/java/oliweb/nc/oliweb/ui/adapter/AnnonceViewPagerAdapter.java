@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
@@ -51,6 +53,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
             if (photos.get(position).getFirebasePath() != null) {
                 GlideApp.with(myImage.getContext())
                         .load(photos.get(position).getFirebasePath())
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .error(R.drawable.ic_error_grey_900_48dp)
                         .centerCrop()
                         .into(myImage);

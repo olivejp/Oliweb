@@ -11,7 +11,6 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -62,7 +61,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<UtilisateurEntity> getConnectedUser() {
-        return this.utilisateurRepository.findById(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        return this.utilisateurRepository.findByUid(FirebaseAuth.getInstance().getCurrentUser().getUid());
     }
 
     public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {
@@ -91,7 +90,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void createNewAnnonce() {
         this.annonce = new AnnonceEntity();
-        this.annonce.setUUID(UUID.randomUUID().toString());
+        this.annonce.setUUID(null);
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setFavorite(0);
         if (this.liveListPhoto == null) {

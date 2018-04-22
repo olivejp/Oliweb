@@ -11,13 +11,15 @@ import android.support.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
 
+import static android.arch.persistence.room.ForeignKey.CASCADE;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 
 @Entity(tableName = "annonce", foreignKeys = {
         @ForeignKey(entity = CategorieEntity.class, parentColumns = "idCategorie", childColumns = "idCategorie"),
-        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "UuidUtilisateur", childColumns = "UuidUtilisateur")},
+        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "UuidUtilisateur", childColumns = "UuidUtilisateur", onDelete = CASCADE)},
         indices = {
                 @Index("UuidUtilisateur"),
                 @Index("idCategorie")})

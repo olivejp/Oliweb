@@ -11,12 +11,14 @@ import android.support.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
 
+import static android.arch.persistence.room.ForeignKey.CASCADE;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 
 @Entity(tableName = "photo",
-        foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce"),
+        foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce", onDelete = CASCADE),
         indices = @Index(value = "idAnnonce"))
 public class PhotoEntity implements Parcelable {
     @NonNull

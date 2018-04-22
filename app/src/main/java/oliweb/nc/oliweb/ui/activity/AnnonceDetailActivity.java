@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Date;
@@ -125,8 +126,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                     if (dto != null) {
                         AnnoncePhotos annonce = AnnonceConverter.convertDtoToAnnoncePhotos(dto);
                         initDisplay(annonce);
-
-
                     }
                 }
             });
@@ -146,6 +145,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                         });
                         GlideApp.with(imageProfilSeller)
                                 .load(seller.getPhotoPath())
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .circleCrop()
                                 .placeholder(R.drawable.ic_person_white_48dp)
                                 .error(R.drawable.ic_person_white_48dp)

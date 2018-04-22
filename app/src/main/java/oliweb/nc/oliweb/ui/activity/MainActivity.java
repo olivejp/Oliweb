@@ -305,8 +305,10 @@ public class MainActivity extends AppCompatActivity
     private void activeBadges(String uid, boolean active) {
         if (active) {
             // On lance les observers pour récupérer les badges
-            viewModel.countAllAnnoncesByUser(uid).observeForever(observeNumberAnnonceBadge);
-            viewModel.countAllFavoritesByUser(uid).observeForever(observeNumberFavoriteBadge);
+            viewModel.countAllAnnoncesByUser(uid).removeObservers(this);
+            viewModel.countAllFavoritesByUser(uid).removeObservers(this);
+            viewModel.countAllAnnoncesByUser(uid).observe(this, observeNumberAnnonceBadge);
+            viewModel.countAllFavoritesByUser(uid).observe(this, observeNumberFavoriteBadge);
         } else {
             // On stoppe les observers
             viewModel.countAllAnnoncesByUser(uid).removeObserver(observeNumberAnnonceBadge);

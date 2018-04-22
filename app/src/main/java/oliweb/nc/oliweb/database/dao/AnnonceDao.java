@@ -34,10 +34,6 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
-    Single<Integer> countAllAnnoncesByStatus(String status);
-
-    @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE UuidUtilisateur = :uidUser")
     LiveData<Integer> countAllAnnoncesByUser(String uidUser);
 
@@ -50,8 +46,8 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status AND UuidUtilisateur = :uidUtilisateur")
-    LiveData<Integer> getAllAnnonceByStatusAndByUidUser(String status, String uidUtilisateur);
+    @Query("SELECT * FROM annonce")
+    Single<List<AnnonceEntity>> getAll();
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE UUID = :uidAnnonce AND favorite = 1")
@@ -61,4 +57,7 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Query("SELECT * FROM annonce WHERE UUID = :uidAnnonce AND favorite = 0")
     LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce")
+    Single<Integer> count();
 }

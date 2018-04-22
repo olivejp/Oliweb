@@ -1,14 +1,16 @@
 package oliweb.nc.oliweb.database.repository;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.persistence.room.EmptyResultSetException;
 import android.content.Context;
-import android.support.annotation.Nullable;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -31,24 +33,76 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
         return INSTANCE;
     }
 
-    public LiveData<UtilisateurEntity> findById(String UuidUtilisateur){
+    public LiveData<UtilisateurEntity> findByUid(String UuidUtilisateur) {
         return this.utilisateurDao.findByUuid(UuidUtilisateur);
     }
 
-    public void save(UtilisateurEntity utilisateurEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        this.utilisateurDao.findSingleByUuid(utilisateurEntity.getUuidUtilisateur())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe((utilisateurEntity1, throwable) -> {
-                    if (throwable != null) {
-                        // This user don't exists already, create it
-                        insert(onRespositoryPostExecute, utilisateurEntity);
+    public Single<UtilisateurEntity> findSingleByUid(String UuidUtilisateur) {
+        return this.utilisateurDao.findSingleByUuid(UuidUtilisateur);
+    }
+
+    public Single<AtomicBoolean> save(UtilisateurEntity utilisateurEntity) {
+        return Single.create(emitter -> existByUid(utilisateurEntity.getUuidUtilisateur())
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(exception -> {
+                    if (exception instanceof EmptyResultSetException) {
+                        emitter.onSuccess(new AtomicBoolean(false));
                     } else {
-                        if (utilisateurEntity1 != null) {
-                            // User exists, just update it
-                            update(onRespositoryPostExecute, utilisateurEntity);
-                        }
+                        emitter.onError(exception);
                     }
-                });
+                })
+                .doOnSuccess(atomicBoolean -> {
+                    if (atomicBoolean.get()) {
+                        updateSingle(utilisateurEntity)
+                                .doOnSuccess(emitter::onSuccess)
+                                .doOnError(emitter::onError)
+                                .subscribe();
+                    } else {
+                        insertSingle(utilisateurEntity)
+                                .doOnSuccess(emitter::onSuccess)
+                                .doOnError(emitter::onError)
+                                .subscribe();
+                    }
+                })
+                .subscribe());
+    }
+
+    public Single<AtomicBoolean> existByUid(String uidUser) {
+        return Single.create(e -> utilisateurDao.findSingleByUuid(uidUser)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(utilisateurEntity -> e.onSuccess(new AtomicBoolean(utilisateurEntity != null)))
+                .doOnError(exception -> {
+                    if (exception instanceof EmptyResultSetException) {
+                        e.onSuccess(new AtomicBoolean(false));
+                    } else {
+                        e.onError(exception);
+                    }
+                })
+                .subscribe());
+    }
+
+    public Single<List<UtilisateurEntity>> getAll() {
+        return utilisateurDao.getAll();
+    }
+
+    /**
+     * @return Single to be observe. This Single emit an integer which represent the number of user correctly deleted
+     */
+    public Single<Integer> deleteAll() {
+        return Single.create(e -> utilisateurDao.getAll()
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(utilisateurEntities -> {
+                    if (utilisateurEntities != null && !utilisateurEntities.isEmpty()) {
+                        e.onSuccess(utilisateurDao.delete(utilisateurEntities));
+                    } else {
+                        e.onSuccess(0);
+                    }
+                })
+                .doOnError(e::onError)
+                .subscribe());
+    }
+
+    public Single<Integer> count() {
+        return this.utilisateurDao.count();
     }
 }

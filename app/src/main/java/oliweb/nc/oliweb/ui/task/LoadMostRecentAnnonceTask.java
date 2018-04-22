@@ -27,6 +27,10 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
 
     private static final String TAG = LoadMostRecentAnnonceTask.class.getName();
 
+    public LoadMostRecentAnnonceTask(TaskListener<ArrayList<AnnoncePhotos>> listener) {
+        this.listener = listener;
+    }
+
     private TaskListener<ArrayList<AnnoncePhotos>> listener;
 
     public void setListener(TaskListener<ArrayList<AnnoncePhotos>> listener) {

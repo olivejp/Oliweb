@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.os.Parcel;
@@ -28,6 +29,7 @@ public class ChatEntity implements Parcelable {
     public ChatEntity() {
     }
 
+    @Ignore
     public ChatEntity(@NonNull String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote) {
         this.uidChat = uidChat;
         this.uidBuyer = uidBuyer;

@@ -10,7 +10,7 @@ import oliweb.nc.oliweb.database.dao.AbstractDao;
  * Created by orlanth23 on 28/01/2018.
  */
 
-public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRepositoryCudTask.DataReturn> {
+public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, DataReturn> {
 
     private TypeTask typeTask;
     private AbstractDao<T> dao;
@@ -34,8 +34,13 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
         dataReturn.setTypeTask(this.typeTask);
         switch (this.typeTask) {
             case DELETE:
-                dataReturn.setIds(null);
-                dataReturn.setNb(this.dao.delete(entities));
+                try {
+                    dataReturn.setIds(null);
+                    dataReturn.setNb(this.dao.delete(entities));
+                } catch (RuntimeException e) {
+                    Log.e("AbstractRepositoryCudTa", e.getMessage());
+                    dataReturn.setThrowable(e);
+                }
                 break;
             case INSERT:
                 try {
@@ -44,12 +49,17 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
                     dataReturn.setIds(ids);
                 } catch (RuntimeException e) {
                     Log.e("AbstractRepositoryCudTa", e.getMessage());
+                    dataReturn.setThrowable(e);
                 }
-
                 break;
             case UPDATE:
-                dataReturn.setIds(null);
-                dataReturn.setNb(this.dao.update(entities));
+                try {
+                    dataReturn.setIds(null);
+                    dataReturn.setNb(this.dao.update(entities));
+                } catch (RuntimeException e) {
+                    Log.e("AbstractRepositoryCudTa", e.getMessage());
+                    dataReturn.setThrowable(e);
+                }
                 break;
             default:
                 break;
@@ -70,42 +80,5 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, AbstractRep
         void onReposirotyPostExecute(DataReturn dataReturn);
     }
 
-    public static class DataReturn {
-        int nb;
-        TypeTask typeTask;
-        Long[] ids;
-        boolean successful;
 
-        public int getNb() {
-            return nb;
-        }
-
-        public void setNb(int nb) {
-            this.nb = nb;
-        }
-
-        public TypeTask getTypeTask() {
-            return typeTask;
-        }
-
-        public void setTypeTask(TypeTask typeTask) {
-            this.typeTask = typeTask;
-        }
-
-        public Long[] getIds() {
-            return ids;
-        }
-
-        public void setIds(Long[] ids) {
-            this.ids = ids;
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        public void setSuccessful(boolean successful) {
-            this.successful = successful;
-        }
-    }
 }

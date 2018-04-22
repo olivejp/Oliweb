@@ -114,7 +114,7 @@ public class DatabaseTest {
         final CountDownLatch signal = new CountDownLatch(1);
         AbstractRepositoryCudTask.OnRespositoryPostExecute postExecute = dataReturn -> {
             if (dataReturn.getIds().length > 0) {
-                String email = utilisateurRepository.findById(UUID_UTILISATEUR).getValue().getEmail();
+                String email = utilisateurRepository.findByUid(UUID_UTILISATEUR).getValue().getEmail();
                 Assert.assertEquals(EMAIL, email);
             } else {
                 Assert.assertTrue(false);

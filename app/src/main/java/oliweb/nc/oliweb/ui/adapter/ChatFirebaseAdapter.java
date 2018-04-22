@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -116,7 +116,8 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
                 if (utilisateurFirebase != null && utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
                     GlideApp.with(holder.imagePhotoAuthor)
                             .load(utilisateurFirebase.getPhotoPath())
-                            .apply(RequestOptions.circleCropTransform())
+                            .circleCrop()
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .placeholder(R.drawable.ic_person_grey_900_48dp)
                             .error(R.drawable.ic_error_grey_900_48dp)
                             .into(holder.imagePhotoAuthor);

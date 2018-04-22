@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
@@ -41,13 +42,20 @@ public class AnnonceBeautyAdapter extends
     public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
     private List<AnnoncePhotos> listAnnonces;
-    private AnnonceAdapterListener listener;
     private int backGroundColor;
+    private View.OnClickListener onClickListener;
+    private View.OnClickListener onClickListenerShare;
+    private View.OnClickListener onClickListenerFavorite;
 
-    public AnnonceBeautyAdapter(AnnonceAdapterListener annonceAdapterListener, @ColorInt int backGroundColor) {
-        this.listener = annonceAdapterListener;
+    public AnnonceBeautyAdapter(@ColorInt int backGroundColor,
+                                View.OnClickListener onClickListener,
+                                View.OnClickListener onClickListenerShare,
+                                View.OnClickListener onClickListenerFavorite) {
         this.listAnnonces = new ArrayList<>();
         this.backGroundColor = backGroundColor;
+        this.onClickListener = onClickListener;
+        this.onClickListenerShare = onClickListenerShare;
+        this.onClickListenerFavorite = onClickListenerFavorite;
     }
 
     @NonNull
@@ -93,13 +101,17 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.textTitreAnnonce.setTransitionName(annonce.getTitre());
         }
 
-        viewHolderBeauty.cardView.setTag(annoncePhotos);
-        viewHolderBeauty.imageFavorite.setTag(annoncePhotos);
-        viewHolderBeauty.imageShare.setTag(annoncePhotos);
+        viewHolderBeauty.cardView.setTag(viewHolderBeauty);
+        viewHolderBeauty.imageFavorite.setTag(viewHolderBeauty);
+        viewHolderBeauty.imageShare.setTag(viewHolderBeauty);
 
-        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty));
-        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty));
-        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty));
+//        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty));
+//        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty));
+//        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty));
+
+        viewHolderBeauty.cardView.setOnClickListener(onClickListener);
+        viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
+        viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
         if (viewHolderBeauty.annoncePhotos.getAnnonceEntity().isFavorite()) {
             viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
@@ -113,17 +125,22 @@ public class AnnonceBeautyAdapter extends
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setBackground(null);
+            viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
             GlideApp.with(viewHolderBeauty.imageView)
                     .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .thumbnail(0.5f)
                     .listener(new RequestListener<Drawable>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
                             viewHolderBeauty.progressBar.setVisibility(View.GONE);
                             return false;
                         }
 
                         @Override
                         public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
                             viewHolderBeauty.progressBar.setVisibility(View.GONE);
                             return false;
                         }
@@ -245,13 +262,5 @@ public class AnnonceBeautyAdapter extends
         public ViewGroup getParent() {
             return parent;
         }
-    }
-
-    public interface AnnonceAdapterListener {
-        void onClick(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
-
-        void onShare(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
-
-        void onLike(AnnoncePhotos annoncePhotos, ViewHolderBeauty viewHolderBeauty);
     }
 }

@@ -151,14 +151,15 @@ public class ProfilActivity extends AppCompatActivity {
 
             utilisateurEntity.setTelephone(textTelephone.getText().toString());
 
-            viewModel.saveUtilisateur(utilisateurEntity, dataReturn -> {
-                if (dataReturn.isSuccessful()) {
-                    UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntity);
-                    FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
-                            Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
-                    );
-                }
-            });
+            viewModel.saveUtilisateur(utilisateurEntity)
+                    .doOnSuccess(atomicBoolean -> {
+                        if (atomicBoolean.get()) {
+                            UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntity);
+                            FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
+                                    Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
+                            );
+                        }
+                    }).subscribe();
 
             return true;
         }

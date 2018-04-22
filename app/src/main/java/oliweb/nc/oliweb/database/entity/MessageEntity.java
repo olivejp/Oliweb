@@ -2,6 +2,8 @@ package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.os.Parcel;
@@ -14,7 +16,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
  * Created by orlanth23 on 19/04/2018.
  */
 
-@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "uidChat", childColumns = "uidChat", onDelete = CASCADE))
+@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "uidChat", childColumns = "uidChat", onDelete = CASCADE), indices = @Index("uidChat"))
 public class MessageEntity implements Parcelable {
     @NonNull
     @PrimaryKey
@@ -30,6 +32,7 @@ public class MessageEntity implements Parcelable {
     public MessageEntity() {
     }
 
+    @Ignore
     public MessageEntity(@NonNull String uidMessage, String message, String read, String uidAuthor, Long timestamp, String uidChat, StatusRemote statusRemote) {
         this.uidMessage = uidMessage;
         this.message = message;

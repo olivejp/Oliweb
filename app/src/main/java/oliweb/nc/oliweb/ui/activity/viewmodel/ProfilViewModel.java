@@ -12,9 +12,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.utility.Constants;
 
@@ -85,7 +89,9 @@ public class ProfilViewModel extends AndroidViewModel {
             nbAnnoncesByUser = new MutableLiveData<>();
             nbAnnoncesByUser.setValue(0L);
         }
-        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_ANNONCE_REF).orderByChild("utilisateur/uuid").equalTo(uidUser)
+        FirebaseDatabase.getInstance()
+                .getReference(Constants.FIREBASE_DB_ANNONCE_REF)
+                .orderByChild("utilisateur/uuid").equalTo(uidUser)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -112,10 +118,11 @@ public class ProfilViewModel extends AndroidViewModel {
     }
 
     public LiveData<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
-        return this.utilisateurRepository.findById(uidUser);
+        return this.utilisateurRepository.findByUid(uidUser);
     }
 
-    public void saveUtilisateur(UtilisateurEntity utilisateurEntity, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        this.utilisateurRepository.save(utilisateurEntity, onRespositoryPostExecute);
+    public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
+        return this.utilisateurRepository.save(utilisateurEntity)
+                .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io());
     }
 }
