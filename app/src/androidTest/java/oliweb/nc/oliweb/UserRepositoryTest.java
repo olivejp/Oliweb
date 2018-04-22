@@ -113,9 +113,14 @@ public class UserRepositoryTest {
     @Test
     public void deleteAllThenCount() {
         // Erase all the database
-        insertUser();
-        checkCount(1);
         deleteAll();
+
+        insertUser();
+
+        checkCount(1);
+
+        deleteAll();
+
         checkCount(0);
     }
 
