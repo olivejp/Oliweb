@@ -30,4 +30,8 @@ public interface UtilisateurDao extends AbstractDao<UtilisateurEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM utilisateur")
     Single<Integer> count();
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    Single<Integer> countByUid(String UuidUtilisateur);
 }

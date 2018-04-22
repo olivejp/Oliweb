@@ -46,7 +46,7 @@ public abstract class AbstractRepository<T> {
                 } else {
                     e.onSuccess(new AtomicBoolean(false));
                 }
-            } catch (RuntimeException exception) {
+            } catch (Exception exception) {
                 Log.e("AbstractRepositoryCudTa", exception.getMessage());
                 e.onError(exception);
             }
@@ -86,7 +86,7 @@ public abstract class AbstractRepository<T> {
                 } else {
                     e.onSuccess(new AtomicBoolean(false));
                 }
-            } catch (RuntimeException exception) {
+            } catch (Exception exception) {
                 Log.e("AbstractRepositoryCudTa", exception.getMessage());
                 e.onError(exception);
             }

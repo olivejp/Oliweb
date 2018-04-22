@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb.database.repository;
 
 import android.arch.lifecycle.LiveData;
-import android.arch.persistence.room.EmptyResultSetException;
 import android.content.Context;
 
 import java.util.List;
@@ -17,6 +16,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  */
 
 public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity> {
+    private static final String TAG = UtilisateurRepository.class.getName();
     private static UtilisateurRepository INSTANCE;
     private UtilisateurDao utilisateurDao;
 
@@ -44,13 +44,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
     public Single<AtomicBoolean> save(UtilisateurEntity utilisateurEntity) {
         return Single.create(emitter -> existByUid(utilisateurEntity.getUuidUtilisateur())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(exception -> {
-                    if (exception instanceof EmptyResultSetException) {
-                        emitter.onSuccess(new AtomicBoolean(false));
-                    } else {
-                        emitter.onError(exception);
-                    }
-                })
+                .doOnError(emitter::onError)
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         updateSingle(utilisateurEntity)
@@ -68,16 +62,10 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
     }
 
     public Single<AtomicBoolean> existByUid(String uidUser) {
-        return Single.create(e -> utilisateurDao.findSingleByUuid(uidUser)
+        return Single.create(e -> utilisateurDao.countByUid(uidUser)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnSuccess(utilisateurEntity -> e.onSuccess(new AtomicBoolean(utilisateurEntity != null)))
-                .doOnError(exception -> {
-                    if (exception instanceof EmptyResultSetException) {
-                        e.onSuccess(new AtomicBoolean(false));
-                    } else {
-                        e.onError(exception);
-                    }
-                })
+                .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
+                .doOnError(e::onError)
                 .subscribe());
     }
 

@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -22,20 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.sync.FirebaseSync;
 import oliweb.nc.oliweb.ui.DialogInfos;
-import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
@@ -53,6 +53,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private UtilisateurRepository utilisateurRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
+    private DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
 
     private MutableLiveData<DialogInfos> retreiveAnnonceNotification;
 
@@ -88,47 +89,40 @@ public class MainActivityViewModel extends AndroidViewModel {
         return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
+    // TODO refacto de cette méthode pour renvoyer un Single<AtomicBoolean> dans le cas où on trouve une annonce qui existe dans Fb et pas dans la db locale.
     public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
         FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
-        firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                            HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
-                            if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                                listenForFirebaseAnnonces(uidUtilisateur, mapAnnonceSearchDto);
+        firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                    HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+
+                        AtomicBoolean questionAsked = new AtomicBoolean(false);
+                        for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                            if (questionAsked.get()) {
+                                break;
                             }
+                            firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid()).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnSuccess(integer -> {
+                                        if ((integer == null || integer.equals(0)) && !questionAsked.get()) {
+                                            questionAsked.set(true);
+                                            String message = "Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?";
+                                            postNewNotification(message, R.drawable.ic_announcement_white_48dp, TYPE_BOUTON_YESNO, DIALOG_FIREBASE_RETRIEVE, null);
+                                        }
+                                    })
+                                    .subscribe();
                         }
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.d(TAG, "onCancelled");
-                    }
-                });
-    }
-
-    private void listenForFirebaseAnnonces(final String uidUtilisateur, HashMap<String, AnnonceDto> mapAnnonceSearchDto) {
-        FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
-
-        AtomicBoolean questionAsked = new AtomicBoolean(false);
-        for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
-            if (questionAsked.get()) {
-                break;
+                }
             }
-            firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(integer -> {
-                        if ((integer == null || integer.equals(0)) && !questionAsked.get()) {
-                            questionAsked.set(true);
-                            String message = "Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?";
-                            postNewNotification(message, R.drawable.ic_announcement_white_48dp, TYPE_BOUTON_YESNO, DIALOG_FIREBASE_RETRIEVE, null);
-                        }
-                    });
 
-        }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        });
     }
 
     public LiveData<Integer> sortingUpdated() {
@@ -145,48 +139,63 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public void insertUtilisateur(FirebaseUser firebaseUser, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        // Sauvegarde dans les préférences, dans le cas d'une déconnexion
-        SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(firebaseUser.getUid());
-
-        // Sauvegarde dans la DB
-        insertUserIntoLocalDb(firebaseUser, onRespositoryPostExecute);
-
-        // Sauvegarde dans Firebase
-        insertUserIntoFirebase(firebaseUser);
-    }
-
-    private void insertUserIntoLocalDb(FirebaseUser firebaseUser, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        Log.d(TAG, "insertUserIntoLocalDb : Try to insert firebaseUser : " + firebaseUser);
-        utilisateurRepository.findSingleByUid(firebaseUser.getUid())
-                .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                .doOnSuccess(utilisateurEntity -> {
-                    Log.d(TAG, "insertUserIntoLocalDb : Found user with uid : " + firebaseUser.getUid());
-                    utilisateurRepository.insert(onRespositoryPostExecute, UtilisateurConverter.convertFbToEntity(firebaseUser));
+    public Single<AtomicBoolean> tryToInsertUserIntoLocalDbAndFirebase(FirebaseUser firebaseUser) {
+        return Single.create(emitter -> existByUid(firebaseUser.getUid())
+                .doOnSuccess(userExist -> {
+                    if (!userExist.get()) {
+                        UtilisateurEntity entity = UtilisateurConverter.convertFbToEntity(firebaseUser);
+                        utilisateurRepository.save(entity)
+                                .doOnSuccess(saveSuccessful -> {
+                                    if (saveSuccessful.get()) {
+                                        insertUserIntoFirebase(firebaseUser)
+                                                .doOnSuccess(insertedIntoFirebase -> {
+                                                    if (insertedIntoFirebase.get()) {
+                                                        emitter.onSuccess(new AtomicBoolean(true));
+                                                    } else {
+                                                        emitter.onSuccess(new AtomicBoolean(false));
+                                                    }
+                                                })
+                                                .doOnError(emitter::onError).subscribe();
+                                    }
+                                })
+                                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
+                                .subscribe();
+                    }
                 })
-                .doOnError(throwable -> Log.d(TAG, "insertUserIntoLocalDb : Fail to find user with UID  : " + firebaseUser.getUid()))
-                .subscribe();
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
+                .subscribe());
     }
 
-    private void insertUserIntoFirebase(FirebaseUser firebaseUser) {
-        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(firebaseUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
-                    // Si pas d'utilisateur enregistré dans Firebase, je vais le créer.
-                    String token = FirebaseInstanceId.getInstance().getToken();
-                    UtilisateurFirebase utilisateurFirebase = UtilisateurConverter.convertFbUserToUtilisateurFirebase(firebaseUser, token);
-                    FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(firebaseUser.getUid()).setValue(utilisateurFirebase)
-                            .addOnSuccessListener(aVoid -> Log.d(TAG, "Utilisateur correctement créé dans Firebase"))
-                            .addOnFailureListener(e -> Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase"));
-                }
-            }
+    private Single<AtomicBoolean> existByUid(String uidUser) {
+        return utilisateurRepository.existByUid(uidUser);
+    }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d("MainActivityViewModel", "onCancelled");
-            }
-        });
+    private Single<AtomicBoolean> insertUserIntoFirebase(FirebaseUser firebaseUser) {
+        return Single.create(emitter -> USER_REF.child(firebaseUser.getUid())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
+                            String token = FirebaseInstanceId.getInstance().getToken();
+                            UtilisateurFirebase utilisateurFirebase = UtilisateurConverter.convertFbUserToUtilisateurFirebase(firebaseUser, token);
+                            USER_REF.child(firebaseUser.getUid()).setValue(utilisateurFirebase)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "Utilisateur correctement créé dans Firebase");
+                                        emitter.onSuccess(new AtomicBoolean(true));
+                                    })
+                                    .addOnFailureListener(exception -> {
+                                        Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase");
+                                        emitter.onError(exception);
+                                    });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.d("MainActivityViewModel", "onCancelled");
+                        emitter.onError(new RuntimeException(databaseError.getMessage()));
+                    }
+                }));
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uid) {

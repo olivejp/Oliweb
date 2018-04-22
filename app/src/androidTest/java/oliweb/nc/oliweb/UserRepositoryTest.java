@@ -80,6 +80,26 @@ public class UserRepositoryTest {
         subscriberInsert.assertValueAt(0, AtomicBoolean::get);
     }
 
+    private void existByUid(String uid, boolean expectedResult) {
+        // existById should return a single value with a AtomicBoolean == true
+        TestObserver<AtomicBoolean> subscriberExist = new TestObserver<>();
+        userRepository.existByUid(uid).subscribe(subscriberExist);
+        waitTerminalEvent(subscriberExist, 5);
+        subscriberExist.assertNoErrors();
+        subscriberExist.assertValueCount(1);
+        subscriberExist.assertValueAt(0, atomicBoolean -> atomicBoolean.get() == expectedResult);
+    }
+
+    /**
+     * Delete All users when the table is empty should not throw a exception
+     */
+    @Test
+    public void deleteThenQuery() {
+        deleteAll();
+        existByUid(UID_USER, false);
+    }
+
+
     /**
      * Delete All users when the table is empty should not throw a exception
      */
@@ -102,12 +122,7 @@ public class UserRepositoryTest {
         insertUser();
 
         // existById should return a single value with a AtomicBoolean == true
-        TestObserver<AtomicBoolean> subscriberExist = new TestObserver<>();
-        userRepository.existByUid(UID_USER).subscribe(subscriberExist);
-        waitTerminalEvent(subscriberExist, 5);
-        subscriberExist.assertNoErrors();
-        subscriberExist.assertValueCount(1);
-        subscriberExist.assertValueAt(0, AtomicBoolean::get);
+        existByUid(UID_USER, true);
     }
 
     @Test
