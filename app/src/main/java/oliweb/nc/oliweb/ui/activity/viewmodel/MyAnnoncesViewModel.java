@@ -8,13 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.disposables.Disposable;
@@ -40,9 +34,9 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
-    private boolean questionAsked;
     private MutableLiveData<AtomicBoolean> isAnnoncesAvailableToSync;
-    private FirebaseSync firebaseSync = FirebaseSync.getInstance(getApplication().getApplicationContext());
+    private MutableLiveData<AtomicBoolean> shouldAskQuestion;
+    private FirebaseSync utilisateurFbRespository = FirebaseSync.getInstance(getApplication().getApplicationContext());
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
@@ -62,42 +56,31 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         return isAnnoncesAvailableToSync;
     }
 
-    private void callFirebaseSync(String uidUtilisateur) {
-        firebaseSync.getAllAnnonceFromFirebaseByUidUser(uidUtilisateur)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null && dataSnapshot.getValue() != null) {
-                            HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
-                            if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
-                                questionAsked = false;
-                                for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
-                                    if (questionAsked) {
-                                        break;
-                                    }
-                                    checkAnnonceExistInLocalDb(uidUtilisateur, entry);
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.d(TAG, "onCancelled");
-                    }
-                });
+    private void callFirebaseSync(final String uidUtilisateur) {
+        utilisateurFbRespository.getAllAnnonceFromFbByUidUser(uidUtilisateur)
+                .doOnNext(annonceDto -> checkAnnonceExistInLocalDb(uidUtilisateur, annonceDto))
+                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
+                .subscribe();
     }
 
-    private Disposable checkAnnonceExistInLocalDb(String uidUtilisateur, Map.Entry<String, AnnonceDto> entry) {
-        return firebaseSync.existInLocalByUidUserAndUidAnnonce(uidUtilisateur, entry.getValue().getUuid())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(integer -> {
-                    if ((integer == null || integer.equals(0)) && !questionAsked) {
-                        questionAsked = true;
-                        isAnnoncesAvailableToSync.postValue(new AtomicBoolean(true));
+    private void checkAnnonceExistInLocalDb(String uidUtilisateur, AnnonceDto annonceDto) {
+        annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, annonceDto.getUuid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(integer -> {
+                    if (integer != null && integer > 0) {
+                        shouldAskQuestion.postValue(new AtomicBoolean(true));
                     }
-                });
+                })
+                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
+                .subscribe();
+    }
+
+    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData() {
+        if (shouldAskQuestion == null) {
+            shouldAskQuestion = new MutableLiveData<>();
+        }
+        shouldAskQuestion.setValue(new AtomicBoolean(false));
+        return shouldAskQuestion;
     }
 
     /**
@@ -107,10 +90,10 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      * @param idAnnonce
      * @param onRespositoryPostExecute
      */
+    // TODO Refacto de cette méthode bcp trop longue
     public Disposable deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         return this.annonceRepository.findSingleById(idAnnonce)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(annonceEntity -> {
 
                     // Update annonce status

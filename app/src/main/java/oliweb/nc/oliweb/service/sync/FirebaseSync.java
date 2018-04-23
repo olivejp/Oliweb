@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -12,25 +13,31 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by orlanth23 on 03/03/2018.
@@ -44,6 +51,7 @@ public class FirebaseSync {
 
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
+    private DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
     public static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
@@ -59,7 +67,6 @@ public class FirebaseSync {
         return instance;
     }
 
-    // TODO Batch de récupération HS
     void synchronize(Context context, String uidUser) {
         Log.d(TAG, "synchronize");
         getAllAnnonceFromFirebaseByUidUser(uidUser).addValueEventListener(new ValueEventListener() {
@@ -82,24 +89,48 @@ public class FirebaseSync {
         });
     }
 
+    public Single<AtomicBoolean> insertUserIntoFirebase(FirebaseUser firebaseUser) {
+        return Single.create(emitter -> USER_REF.child(firebaseUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
+                    String token = FirebaseInstanceId.getInstance().getToken();
+                    UtilisateurFirebase utilisateurFirebase = UtilisateurConverter.convertFbUserToUtilisateurFirebase(firebaseUser, token);
+                    USER_REF.child(firebaseUser.getUid()).setValue(utilisateurFirebase)
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "Utilisateur correctement créé dans Firebase");
+                                emitter.onSuccess(new AtomicBoolean(true));
+                            })
+                            .addOnFailureListener(exception -> {
+                                Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase");
+                                emitter.onError(exception);
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d("MainActivityViewModel", "onCancelled");
+                emitter.onError(new RuntimeException(databaseError.getMessage()));
+            }
+        }));
+    }
+
     private void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
-        existInLocalByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
+        annonceRepository.existByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe(integer -> {
+                .doOnSuccess(integer -> {
                     if (integer == null || integer.equals(0)) {
                         saveAnnonceFromFirebaseToLocalDb(context, annonceDto);
                     }
-                });
+                })
+                .subscribe();
     }
 
     public Query getAllAnnonceFromFirebaseByUidUser(String uidUser) {
         Log.d(TAG, "getAllAnnonceFromFirebaseByUidUser called with uidUser = " + uidUser);
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         return ref.orderByChild("utilisateur/uuid").equalTo(uidUser);
-    }
-
-    public Single<Integer> existInLocalByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
-        return annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUser, uidAnnonce);
     }
 
     private void saveAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceDto) {
@@ -159,5 +190,34 @@ public class FirebaseSync {
                 Log.d(TAG, "Download failed for image : " + urlPhoto);
             });
         }
+    }
+
+    public Observable<AnnonceDto> getAllAnnonceFromFbByUidUser(String uidUtilisateur) {
+        return Observable.create(emitter -> getAllAnnonceFromFirebaseByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot == null || dataSnapshot.getValue() == null) {
+                    emitter.onError(new RuntimeException("Datasnapshot is empty"));
+                    return;
+                }
+
+                HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(FirebaseSync.genericClass);
+                if (mapAnnonceSearchDto == null || mapAnnonceSearchDto.isEmpty()) {
+                    emitter.onError(new RuntimeException("MapAnnonceSearchDto is empty"));
+                    return;
+                }
+
+                for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                    emitter.onNext(entry.getValue());
+                }
+                emitter.onComplete();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled DatabaseError : " + databaseError.getMessage());
+                emitter.onError(new RuntimeException(databaseError.getMessage()));
+            }
+        }));
     }
 }

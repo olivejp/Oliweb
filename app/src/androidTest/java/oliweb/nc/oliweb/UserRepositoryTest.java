@@ -119,6 +119,16 @@ public class UserRepositoryTest {
     }
 
     @Test
+    public void insertTwice() {
+        // Erase all the database
+        deleteAll();
+
+        insertUser(null, null, null);
+
+        insertUser(null, null, null);
+    }
+
+    @Test
     public void insertThenCountThenQuery() {
         // Erase all the database
         deleteAll();

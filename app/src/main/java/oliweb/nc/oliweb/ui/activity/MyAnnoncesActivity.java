@@ -35,6 +35,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
+import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialogFragment.DialogListener {
@@ -94,6 +95,13 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                         initLayout(annonceWithPhotos);
                     }
                 });
+
+        viewModel.shouldIAskQuestionToRetreiveData().observe(this, atomicBoolean -> {
+            if (atomicBoolean != null && atomicBoolean.get()) {
+                viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
+                sendNotificationToRetreiveData(getSupportFragmentManager());
+            }
+        });
     }
 
     private void initEmptyLayout() {

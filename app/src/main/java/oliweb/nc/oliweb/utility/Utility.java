@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.utility;
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -21,8 +22,13 @@ import java.util.List;
 
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
+import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+
+import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
+import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
 /**
  * Created by orlanth23 on 04/03/2018.
@@ -212,6 +218,16 @@ public class Utility {
             result = context.getResources().getDimensionPixelSize(resourceId);
         }
         return result;
+    }
+
+    // TODO Permettre de paramétrer cette méthode
+    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager) {
+        DialogInfos dialogInfos = new DialogInfos();
+        dialogInfos.setMessage("Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?")
+                .setButtonType(TYPE_BOUTON_YESNO)
+                .setIdDrawable(R.drawable.ic_announcement_white_48dp)
+                .setTag(DIALOG_FIREBASE_RETRIEVE);
+        NoticeDialogFragment.sendDialog(fragmentManager, dialogInfos);
     }
 
 }

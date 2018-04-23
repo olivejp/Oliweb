@@ -51,6 +51,7 @@ import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
+import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
@@ -346,14 +347,13 @@ public class MainActivity extends AppCompatActivity
                 initViewsFromUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
-                    viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
-                    viewModel.getRetreiveAnnonceNotification().observe(this, dialogInfos -> {
-                        if (dialogInfos != null) {
-                            if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
-                                NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
-                            }
+                    viewModel.shouldIAskQuestionToRetreiveData().observe(this, atomicBoolean -> {
+                        if (atomicBoolean != null && atomicBoolean.get()) {
+                            viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
+                            sendNotificationToRetreiveData(getSupportFragmentManager());
                         }
                     });
+                    viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
                 }
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
@@ -363,6 +363,7 @@ public class MainActivity extends AppCompatActivity
                 mFirebaseUser = null;
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
+                viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
             }
         };
     }
