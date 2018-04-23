@@ -114,7 +114,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        if (arguments != null) {
+        if (arguments != null && arguments.containsKey(ARG_ANNONCE)) {
             annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
         }
 

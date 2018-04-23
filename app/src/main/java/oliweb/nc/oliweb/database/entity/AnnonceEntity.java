@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
@@ -41,6 +42,19 @@ public class AnnonceEntity implements Parcelable {
     private long idCategorie;
     private String debattre;
     private Integer favorite;
+
+    public AnnonceEntity() {
+    }
+
+    @Ignore
+    public AnnonceEntity(String UUID, String titre, String description, StatusRemote statut, String uuidUtilisateur, long idCategorie) {
+        this.UUID = UUID;
+        this.titre = titre;
+        this.description = description;
+        this.statut = statut;
+        UuidUtilisateur = uuidUtilisateur;
+        this.idCategorie = idCategorie;
+    }
 
     @Exclude
     @NonNull
@@ -186,8 +200,6 @@ public class AnnonceEntity implements Parcelable {
         dest.writeValue(this.favorite);
     }
 
-    public AnnonceEntity() {
-    }
 
     protected AnnonceEntity(Parcel in) {
         this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());

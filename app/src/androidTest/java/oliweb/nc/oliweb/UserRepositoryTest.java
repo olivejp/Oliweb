@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -10,14 +11,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.observers.TestObserver;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+
+import static oliweb.nc.oliweb.UtilityTest.UID_USER;
+import static oliweb.nc.oliweb.UtilityTest.checkCount;
+import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
+import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -27,7 +32,6 @@ import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
 @RunWith(AndroidJUnit4.class)
 public class UserRepositoryTest {
 
-    private static final String UID_USER = "123456";
     private static final String UPDATED_PROFILE = "Updated Profile";
     private static final String EMAIL_UPDATED = "updated_orlanth23@hotmail.com";
     private UtilisateurRepository userRepository;
@@ -38,31 +42,6 @@ public class UserRepositoryTest {
         userRepository = UtilisateurRepository.getInstance(appContext);
     }
 
-    private void waitTerminalEvent(TestObserver testObserver, int countDown) {
-        if (!testObserver.awaitTerminalEvent(countDown, TimeUnit.SECONDS)) {
-            Assert.assertTrue(false);
-        }
-    }
-
-    private UtilisateurEntity initUtilisateur() {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setProfile("orlanth23");
-        utilisateurEntity.setUuidUtilisateur(UID_USER);
-        utilisateurEntity.setEmail("orlanth23@hotmail.com");
-        return utilisateurEntity;
-    }
-
-    private void checkCount(Integer countExpected) {
-        TestObserver<Integer> subscriberCount = new TestObserver<>();
-        userRepository.count()
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .subscribe(subscriberCount);
-        waitTerminalEvent(subscriberCount, 5);
-        subscriberCount.assertNoErrors();
-        subscriberCount.assertValueAt(0, count -> count.equals(countExpected));
-    }
-
-
     private void deleteAll() {
         TestObserver<Integer> subscriber = new TestObserver<>();
         userRepository.deleteAll().subscribe(subscriber);
@@ -70,8 +49,8 @@ public class UserRepositoryTest {
         subscriber.assertNoErrors();
     }
 
-    private void insertUser() {
-        UtilisateurEntity utilisateurEntity = initUtilisateur();
+    private void insertUser(@Nullable String uidUser, @Nullable String profile, @Nullable String email) {
+        UtilisateurEntity utilisateurEntity = initUtilisateur(uidUser, profile, email);
         TestObserver<AtomicBoolean> subscriberInsert = new TestObserver<>();
         userRepository.insertSingle(utilisateurEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
@@ -119,7 +98,7 @@ public class UserRepositoryTest {
         // Erase all the database
         deleteAll();
 
-        insertUser();
+        insertUser(null, null, null);
 
         // existById should return a single value with a AtomicBoolean == true
         existByUid(UID_USER, true);
@@ -130,13 +109,13 @@ public class UserRepositoryTest {
         // Erase all the database
         deleteAll();
 
-        insertUser();
+        insertUser(null, null, null);
 
-        checkCount(1);
+        checkCount(1, userRepository.count());
 
         deleteAll();
 
-        checkCount(0);
+        checkCount(0, userRepository.count());
     }
 
     @Test
@@ -145,10 +124,10 @@ public class UserRepositoryTest {
         deleteAll();
 
         // Insert a new user
-        insertUser();
+        insertUser(null, null, null);
 
         // Count
-        checkCount(1);
+        checkCount(1, userRepository.count());
 
         // Query
         TestObserver<UtilisateurEntity> subscriberFindByUid = new TestObserver<>();
@@ -168,7 +147,7 @@ public class UserRepositoryTest {
         deleteAll();
 
         // Insert a new user
-        insertUser();
+        insertUser(null, null, null);
 
         // Updated the user
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
@@ -202,7 +181,7 @@ public class UserRepositoryTest {
         deleteAll();
 
         // Create a new user
-        UtilisateurEntity utilisateurEntity = initUtilisateur();
+        UtilisateurEntity utilisateurEntity = initUtilisateur(null, null, null);
 
         // Save (insert) the new user
         TestObserver<AtomicBoolean> subscriberSave = new TestObserver<>();
@@ -211,7 +190,7 @@ public class UserRepositoryTest {
         subscriberSave.assertNoErrors();
         subscriberSave.assertValueAt(0, AtomicBoolean::get);
 
-        checkCount(1);
+        checkCount(1, userRepository.count());
 
         // Updated the user
         UtilisateurEntity userUpdated = new UtilisateurEntity();
@@ -226,7 +205,7 @@ public class UserRepositoryTest {
         subscriberSave1.assertNoErrors();
         subscriberSave1.assertValueAt(0, AtomicBoolean::get);
 
-        checkCount(1);
+        checkCount(1, userRepository.count());
 
         // Query the updated values
         TestObserver<UtilisateurEntity> subscriberFindByUidSaved = new TestObserver<>();
@@ -239,5 +218,37 @@ public class UserRepositoryTest {
             boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(EMAIL_UPDATED);
             return sameUid && updatedProfile && updatedEmail;
         });
+    }
+
+    @Test
+    public void testGetAll() {
+        // Erase all the database
+        deleteAll();
+
+        checkCount(0, userRepository.count());
+
+        // Insert two new users
+        insertUser("UID_USER_1", "UTILISATEUR_1", "EMAIL1");
+        insertUser("UID_USER_2", "UTILISATEUR_2", "EMAIL2");
+
+        checkCount(2, userRepository.count());
+
+        TestObserver<List<UtilisateurEntity>> subscriberGetAll = new TestObserver<>();
+        userRepository.getAll().subscribe(subscriberGetAll);
+        waitTerminalEvent(subscriberGetAll, 5);
+        subscriberGetAll.assertNoErrors();
+        List<UtilisateurEntity> listRetour = subscriberGetAll.values().get(0);
+        Assert.assertEquals(2, listRetour.size());
+        boolean isFirstTrue = false;
+        boolean isSecondTrue = false;
+        for (UtilisateurEntity user : listRetour) {
+            if (user.getProfile().equals("UTILISATEUR_1") && user.getEmail().equals("EMAIL1") && user.getUuidUtilisateur().equals("UID_USER_1")) {
+                isFirstTrue = true;
+            }
+            if (user.getProfile().equals("UTILISATEUR_2") && user.getEmail().equals("EMAIL2") && user.getUuidUtilisateur().equals("UID_USER_2")) {
+                isSecondTrue = true;
+            }
+        }
+        Assert.assertTrue(isFirstTrue && isSecondTrue);
     }
 }

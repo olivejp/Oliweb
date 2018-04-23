@@ -60,4 +60,8 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce")
     Single<Integer> count();
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE idAnnonce = :idAnnonce")
+    Single<Integer> countById(Long idAnnonce);
 }
