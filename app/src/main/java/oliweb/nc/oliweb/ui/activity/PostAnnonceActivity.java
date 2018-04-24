@@ -537,8 +537,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             GlideApp.with(imageView)
                     .load(Uri.parse(photoEntity.getUriLocal()))
                     .apply(RequestOptions.circleCropTransform())
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
                     .into(imageView);
             return true;
         }

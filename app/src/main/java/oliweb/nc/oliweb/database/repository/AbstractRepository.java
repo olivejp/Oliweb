@@ -47,7 +47,7 @@ public abstract class AbstractRepository<T> {
                     e.onSuccess(new AtomicBoolean(false));
                 }
             } catch (Exception exception) {
-                Log.e("AbstractRepositoryCudTa", exception.getMessage());
+                Log.e("AbstractRepository", exception.getMessage());
                 e.onError(exception);
             }
         });

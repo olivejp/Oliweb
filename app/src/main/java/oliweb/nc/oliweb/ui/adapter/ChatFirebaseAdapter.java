@@ -117,7 +117,6 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
                     GlideApp.with(holder.imagePhotoAuthor)
                             .load(utilisateurFirebase.getPhotoPath())
                             .circleCrop()
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .placeholder(R.drawable.ic_person_grey_900_48dp)
                             .error(R.drawable.ic_error_grey_900_48dp)
                             .into(holder.imagePhotoAuthor);

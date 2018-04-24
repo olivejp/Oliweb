@@ -5,6 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
@@ -13,15 +14,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.service.sync.FirebaseSync;
+import oliweb.nc.oliweb.service.sync.FirebaseRepository;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -31,11 +30,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = MainActivityViewModel.class.getName();
 
-    public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
-
     private UtilisateurRepository utilisateurRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
-    private FirebaseSync utilisateurFbRespository;
+    private FirebaseRepository firebaseRespository;
     private AnnonceRepository annonceRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
@@ -45,37 +42,23 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        utilisateurFbRespository = FirebaseSync.getInstance(application.getApplicationContext());
+        firebaseRespository = FirebaseRepository.getInstance(application.getApplicationContext());
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
         return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
-    public void retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
-        utilisateurFbRespository.getAllAnnonceFromFbByUidUser(uidUtilisateur)
-                .doOnNext(annonceDto -> checkAnnonceExistInLocalDb(uidUtilisateur, annonceDto))
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .subscribe();
-    }
-
-    private void checkAnnonceExistInLocalDb(String uidUser, AnnonceDto annonceDto) {
-        annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(integer -> {
-                    if (integer != null && integer > 0) {
-                        shouldAskQuestion.postValue(new AtomicBoolean(true));
-                    }
-                })
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .subscribe();
-    }
-
-    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData() {
+    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new MutableLiveData<>();
         }
         shouldAskQuestion.setValue(new AtomicBoolean(false));
+
+        if (uidUtilisateur != null) {
+            firebaseRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+        }
+
         return shouldAskQuestion;
     }
 
@@ -93,14 +76,14 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public Single<AtomicBoolean> tryToInsertUserIntoLocalDbAndFirebase(FirebaseUser firebaseUser) {
+    public Single<AtomicBoolean> registerUser(FirebaseUser firebaseUser) {
         return Single.create(emitter -> {
             UtilisateurEntity entity = UtilisateurConverter.convertFbToEntity(firebaseUser);
-            utilisateurRepository.insertSingle(entity)
+            utilisateurRepository.save(entity)
                     .doOnSuccess(saveSuccessful -> {
                         if (saveSuccessful.get()) {
                             Log.d(TAG, "Utilisateur créé dans la base de données");
-                            utilisateurFbRespository.insertUserIntoFirebase(firebaseUser)
+                            firebaseRespository.insertUserIntoFirebase(firebaseUser)
                                     .doOnSuccess(insertedIntoFirebase -> {
                                         if (insertedIntoFirebase.get()) {
                                             emitter.onSuccess(new AtomicBoolean(true));

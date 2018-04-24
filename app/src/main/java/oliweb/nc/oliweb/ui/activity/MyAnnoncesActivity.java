@@ -35,6 +35,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
+import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -95,13 +96,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                         initLayout(annonceWithPhotos);
                     }
                 });
-
-        viewModel.shouldIAskQuestionToRetreiveData().observe(this, atomicBoolean -> {
-            if (atomicBoolean != null && atomicBoolean.get()) {
-                viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
-                sendNotificationToRetreiveData(getSupportFragmentManager());
-            }
-        });
     }
 
     private void initEmptyLayout() {
@@ -149,7 +143,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 .setIdDrawable(R.drawable.ic_delete_grey_900_24dp)
                 .setTag(DIALOG_TAG_DELETE)
                 .setBundlePar(bundle);
-        NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+        NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos, this);
     }
 
     @Override
@@ -172,7 +166,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 });
             }
         }
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_SYNC)) {
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
             if (Build.VERSION.SDK_INT >= 23) {
                 if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
@@ -182,9 +176,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             } else {
                 callToSync();
             }
-
-
-
         }
     }
 
@@ -211,14 +202,10 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             return true;
         }
         if (idItem == R.id.menu_fb_sync) {
-            viewModel.retrieveAnnoncesFromFirebase(uidUser).observe(this, atomicBoolean -> {
-                if (atomicBoolean.get()) {
-                    DialogInfos dialogInfos = new DialogInfos();
-                    dialogInfos.setMessage("Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?");
-                    dialogInfos.setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO);
-                    dialogInfos.setTag(DIALOG_TAG_SYNC);
-                    dialogInfos.setIdDrawable(R.drawable.ic_announcement_white_48dp);
-                    NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos);
+            viewModel.shouldIAskQuestionToRetreiveData(uidUser).observe(this, atomicBoolean -> {
+                if (atomicBoolean != null && atomicBoolean.get()) {
+                    viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
+                    sendNotificationToRetreiveData(getSupportFragmentManager(), this);
                 }
             });
             return true;

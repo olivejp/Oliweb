@@ -145,7 +145,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                         });
                         GlideApp.with(imageProfilSeller)
                                 .load(seller.getPhotoPath())
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .circleCrop()
                                 .placeholder(R.drawable.ic_person_white_48dp)
                                 .error(R.drawable.ic_person_white_48dp)

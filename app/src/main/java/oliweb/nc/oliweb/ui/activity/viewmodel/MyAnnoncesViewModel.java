@@ -20,8 +20,7 @@ import oliweb.nc.oliweb.database.repository.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.service.sync.FirebaseSync;
+import oliweb.nc.oliweb.service.sync.FirebaseRepository;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -34,52 +33,32 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
-    private MutableLiveData<AtomicBoolean> isAnnoncesAvailableToSync;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
-    private FirebaseSync utilisateurFbRespository = FirebaseSync.getInstance(getApplication().getApplicationContext());
+    private FirebaseRepository firebaseRespository;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
+        firebaseRespository = FirebaseRepository.getInstance(application.getApplicationContext());
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
-    public LiveData<AtomicBoolean> retrieveAnnoncesFromFirebase(final String uidUtilisateur) {
-        isAnnoncesAvailableToSync = new MutableLiveData<>();
-        isAnnoncesAvailableToSync.setValue(new AtomicBoolean(false));
-        callFirebaseSync(uidUtilisateur);
-        return isAnnoncesAvailableToSync;
-    }
-
-    private void callFirebaseSync(final String uidUtilisateur) {
-        utilisateurFbRespository.getAllAnnonceFromFbByUidUser(uidUtilisateur)
-                .doOnNext(annonceDto -> checkAnnonceExistInLocalDb(uidUtilisateur, annonceDto))
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .subscribe();
-    }
-
-    private void checkAnnonceExistInLocalDb(String uidUtilisateur, AnnonceDto annonceDto) {
-        annonceRepository.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, annonceDto.getUuid())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(integer -> {
-                    if (integer != null && integer > 0) {
-                        shouldAskQuestion.postValue(new AtomicBoolean(true));
-                    }
-                })
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .subscribe();
-    }
-
-    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData() {
+    // TODO : Peut faire mieux
+    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new MutableLiveData<>();
         }
         shouldAskQuestion.setValue(new AtomicBoolean(false));
+
+        if (uidUtilisateur != null) {
+            firebaseRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+        }
+
         return shouldAskQuestion;
     }
 
@@ -114,8 +93,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                                     }, photoEntity);
                                 }
                             });
-
-
                 });
     }
 }

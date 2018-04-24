@@ -48,9 +48,9 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
-import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
+import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-
+    private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
 
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity
                 // Sauvegarde dans les préférences, dans le cas d'une déconnexion
                 SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(mFirebaseUser.getUid());
 
-                viewModel.tryToInsertUserIntoLocalDbAndFirebase(mFirebaseUser)
+                viewModel.registerUser(mFirebaseUser)
                         .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                         .doOnSuccess(userExist -> {
                             if (!userExist.get()) {
@@ -347,13 +347,14 @@ public class MainActivity extends AppCompatActivity
                 initViewsFromUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
-                    viewModel.shouldIAskQuestionToRetreiveData().observe(this, atomicBoolean -> {
-                        if (atomicBoolean != null && atomicBoolean.get()) {
-                            viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
-                            sendNotificationToRetreiveData(getSupportFragmentManager());
+                    viewModel.shouldIAskQuestionToRetreiveData(mFirebaseUser.getUid()).observe(this, atomicBoolean -> {
+                        if (atomicBoolean != null && atomicBoolean.get() && !questionHasBeenAsked) {
+                            questionHasBeenAsked = true;
+                            viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
+                            sendNotificationToRetreiveData(getSupportFragmentManager(), this);
                         }
                     });
-                    viewModel.retrieveAnnoncesFromFirebase(mFirebaseUser.getUid());
+                    questionHasBeenAsked = false;
                 }
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
@@ -363,7 +364,7 @@ public class MainActivity extends AppCompatActivity
                 mFirebaseUser = null;
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
-                viewModel.shouldIAskQuestionToRetreiveData().removeObservers(this);
+                viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
             }
         };
     }

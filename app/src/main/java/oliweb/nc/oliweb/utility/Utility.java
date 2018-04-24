@@ -27,7 +27,6 @@ import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 
-import static oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
 /**
@@ -37,6 +36,7 @@ import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 public class Utility {
 
     private static final String TAG = Utility.class.getName();
+    public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
 
     public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
@@ -221,13 +221,13 @@ public class Utility {
     }
 
     // TODO Permettre de paramétrer cette méthode
-    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager) {
+    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager, NoticeDialogFragment.DialogListener listener) {
         DialogInfos dialogInfos = new DialogInfos();
         dialogInfos.setMessage("Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?")
                 .setButtonType(TYPE_BOUTON_YESNO)
                 .setIdDrawable(R.drawable.ic_announcement_white_48dp)
                 .setTag(DIALOG_FIREBASE_RETRIEVE);
-        NoticeDialogFragment.sendDialog(fragmentManager, dialogInfos);
+        NoticeDialogFragment.sendDialog(fragmentManager, dialogInfos, listener);
     }
 
 }

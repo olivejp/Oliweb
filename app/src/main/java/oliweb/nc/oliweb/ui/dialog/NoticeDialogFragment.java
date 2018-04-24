@@ -58,8 +58,9 @@ public class NoticeDialogFragment extends DialogFragment {
         dialogErreur.show(fragmentManager, tag);
     }
 
-    public static void sendDialog(FragmentManager fragmentManager, DialogInfos dialogInfos) {
+    public static void sendDialog(FragmentManager fragmentManager, DialogInfos dialogInfos, DialogListener listener) {
         NoticeDialogFragment dialogErreur = new NoticeDialogFragment();
+        dialogErreur.setListener(listener);
         Bundle bundle = new Bundle();
         bundle.putString(NoticeDialogFragment.P_MESSAGE, dialogInfos.getMessage());
         bundle.putInt(NoticeDialogFragment.P_TYPE, dialogInfos.getButtonType());
