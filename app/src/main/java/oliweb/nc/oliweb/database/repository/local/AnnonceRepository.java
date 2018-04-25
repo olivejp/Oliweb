@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.database.repository.local;
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,6 +22,9 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
  */
 
 public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
+
+    private static final String TAG = AnnonceRepository.class.getName();
+
     private static AnnonceRepository INSTANCE;
     private AnnonceDao annonceDao;
 
@@ -41,17 +45,13 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     public void save(AnnonceEntity annonceEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         this.annonceDao.findSingleById(annonceEntity.getIdAnnonce())
                 .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                .subscribe((annonceEntity1, throwable) -> {
-                    if (throwable != null) {
-                        // This annonce don't exists already, create it
-                        insert(onRespositoryPostExecute, annonceEntity);
-                    } else {
-                        if (annonceEntity1 != null) {
-                            // Annonce exists, just update it
-                            update(onRespositoryPostExecute, annonceEntity);
-                        }
+                .doOnSuccess(annonceEntity1 -> {
+                    if (annonceEntity1 != null) {
+                        update(onRespositoryPostExecute, annonceEntity1);
                     }
-                });
+                })
+                .doOnError(throwable -> insert(onRespositoryPostExecute, annonceEntity))
+                .subscribe();
     }
 
     public Single<AtomicBoolean> existById(Long idAnnonce) {
@@ -62,7 +62,49 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
                 .subscribe());
     }
 
-    public Single<AtomicBoolean> saveWithSingle(AnnonceEntity annonceEntity) {
+    private Single<AnnonceEntity> insertSingle(AnnonceEntity entity) {
+        return Single.create(e -> {
+            try {
+                Long[] ids = dao.insert(entity);
+                if (ids.length == 1) {
+                    findSingleById(ids[0])
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(e::onSuccess)
+                            .subscribe();
+                } else {
+                    e.onError(new RuntimeException("Failed to insert into AnnonceRepository"));
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+                e.onError(exception);
+            }
+        });
+    }
+
+    /**
+     * You have to subscribe to this Single on a background thread
+     * because it queries the Database which only accept background queries.
+     */
+    private Single<AnnonceEntity> updateSingle(AnnonceEntity entity) {
+        return Single.create(e -> {
+            try {
+                int updatedCount = dao.update(entity);
+                if (updatedCount == 1) {
+                    findSingleById(entity.getIdAnnonce())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(e::onSuccess)
+                            .subscribe();
+                } else {
+                    e.onError(new RuntimeException("Failed to update into AnnonceRepository"));
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+                e.onError(exception);
+            }
+        });
+    }
+
+    public Single<AnnonceEntity> saveWithSingle(AnnonceEntity annonceEntity) {
         return Single.create(emitter -> existById(annonceEntity.getIdAnnonce())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)

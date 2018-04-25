@@ -18,6 +18,7 @@ import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
+// TODO Faire des tests sur ce repository
 public class FirebaseUserRepository {
 
     private static final String TAG = FirebaseUserRepository.class.getName();

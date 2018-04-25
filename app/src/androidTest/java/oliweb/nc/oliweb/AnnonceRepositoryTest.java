@@ -4,6 +4,8 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +23,8 @@ import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
-import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 import static oliweb.nc.oliweb.UtilityTest.initAnnonce;
+import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -101,16 +103,13 @@ public class AnnonceRepositoryTest {
         subscriber.assertNoErrors();
     }
 
-    private void insertSingleTest() {
-        AnnonceEntity annonceEntity = initAnnonce("orlanth23", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
-
-        TestObserver<AtomicBoolean> subscriberInsert = new TestObserver<>();
-
-        annonceRepository.insertSingle(annonceEntity).subscribe(subscriberInsert);
+    private AnnonceEntity saveSingleTest(AnnonceEntity annonceEntity) {
+        TestObserver<AnnonceEntity> subscriberInsert = new TestObserver<>();
+        annonceRepository.saveWithSingle(annonceEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
-        subscriberInsert.assertValueAt(0, AtomicBoolean::get);
+        return subscriberInsert.values().get(0);
     }
 
     /**
@@ -130,10 +129,42 @@ public class AnnonceRepositoryTest {
     }
 
     @Test
-    public void insertAndCount() {
+    public void insertAndDeleteAndCount() {
         // Erase all the database
         deleteAllTest();
-        insertSingleTest();
+        checkCount(0, annonceRepository.count());
+
+        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
+        AnnonceEntity annonceEntityAfterInsert = saveSingleTest(annonceEntity);
+    }
+
+    @Test
+    public void insertAndCountAndUpdate() {
+        // Erase all the database
+        deleteAllTest();
+
+        checkCount(0, annonceRepository.count());
+
+        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
+
+        AnnonceEntity annonceEntityAfterInsert = saveSingleTest(annonceEntity);
+
+        Long idAnnonceAfterInsert = annonceEntityAfterInsert.getIdAnnonce();
+        Assert.assertNotNull(annonceEntityAfterInsert);
+        Assert.assertNotNull(annonceEntityAfterInsert.getIdAnnonce());
+
         checkCount(1, annonceRepository.count());
+
+        annonceEntityAfterInsert.setTitre("bouloup");
+        annonceEntityAfterInsert.setDescription("nouvelle description");
+        AnnonceEntity annonceEntityAfterUpdate = saveSingleTest(annonceEntityAfterInsert);
+
+        checkCount(1, annonceRepository.count());
+
+        Assert.assertEquals(idAnnonceAfterInsert, annonceEntityAfterUpdate.getIdAnnonce());
+        Assert.assertEquals("bouloup", annonceEntityAfterUpdate.getTitre());
+        Assert.assertEquals("nouvelle description", annonceEntityAfterUpdate.getDescription());
+        Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUUID());
+        Assert.assertEquals(UID_USER, annonceEntityAfterUpdate.getUuidUtilisateur());
     }
 }

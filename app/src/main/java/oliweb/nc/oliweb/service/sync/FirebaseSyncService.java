@@ -42,7 +42,7 @@ public class FirebaseSyncService {
 
     public void synchronize(Context context, String uidUser) {
         Log.d(TAG, "synchronize");
-        firebaseAnnonceRepository.queryByUidUser(uidUser).addValueEventListener(new ValueEventListener() {
+        firebaseAnnonceRepository.queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue() != null) {

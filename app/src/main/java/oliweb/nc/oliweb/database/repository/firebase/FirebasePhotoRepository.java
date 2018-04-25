@@ -20,6 +20,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_PHOTO_REF;
 
+// TODO Faire des tests sur ce repository
 public class FirebasePhotoRepository {
 
     private static final String TAG = FirebasePhotoRepository.class.getName();
