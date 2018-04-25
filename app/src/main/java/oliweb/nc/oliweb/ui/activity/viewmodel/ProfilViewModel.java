@@ -18,7 +18,7 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.utility.Constants;
 

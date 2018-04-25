@@ -27,9 +27,9 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.AnnonceFullRepository;
-import oliweb.nc.oliweb.database.repository.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Constants;
@@ -272,7 +272,7 @@ class CoreSync {
      */
     private void deletePhotoByIdAnnonce(long idAnnonce) {
         photoRepository
-                .findAllSingleByIdAnnonce(idAnnonce)
+                .findAllPhotosByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(this::deletePhotosFromMultiService)
                 .subscribe();

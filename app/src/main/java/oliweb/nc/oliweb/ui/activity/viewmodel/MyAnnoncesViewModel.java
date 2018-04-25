@@ -11,16 +11,16 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.database.repository.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
-import oliweb.nc.oliweb.service.sync.FirebaseRepository;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -34,14 +34,14 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
-    private FirebaseRepository firebaseRespository;
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
-        firebaseRespository = FirebaseRepository.getInstance(application.getApplicationContext());
+        firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
@@ -56,7 +56,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         shouldAskQuestion.setValue(new AtomicBoolean(false));
 
         if (uidUtilisateur != null) {
-            firebaseRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+            firebaseAnnonceRepository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
         }
 
         return shouldAskQuestion;
@@ -69,30 +69,33 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      * @param idAnnonce
      * @param onRespositoryPostExecute
      */
-    // TODO Refacto de cette méthode bcp trop longue
-    public Disposable deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        return this.annonceRepository.findSingleById(idAnnonce)
+    public void deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        this.annonceRepository.findSingleById(idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe(annonceEntity -> {
+                .doOnSuccess(annonceEntity -> updateAnnonceToDelete(annonceEntity, onRespositoryPostExecute))
+                .subscribe();
+    }
 
-                    // Update annonce status
-                    annonceEntity.setStatut(StatusRemote.TO_DELETE);
-                    this.annonceRepository.update(onRespositoryPostExecute, annonceEntity);
+    private void updateAnnonceToDelete(AnnonceEntity annonceEntity, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        // Update annonce status
+        annonceEntity.setStatut(StatusRemote.TO_DELETE);
+        annonceRepository.update(onRespositoryPostExecute, annonceEntity);
 
-                    // Update photo status
-                    this.photoRepository.findAllSingleByIdAnnonce(annonceEntity.getIdAnnonce())
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .subscribe(photoEntities -> {
-                                for (PhotoEntity photoEntity : photoEntities) {
-                                    photoEntity.setStatut(StatusRemote.TO_DELETE);
-                                    photoRepository.update(dataReturn -> {
-                                        if (dataReturn.getNb() != 0) {
-                                            Log.d(TAG, "PhotoEntity successfully updated TO_DELETE");
-                                        }
-                                    }, photoEntity);
-                                }
-                            });
-                });
+        // Update photo status
+        photoRepository.findAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(this::updateAllPhotosToDelete)
+                .subscribe();
+    }
+
+    private void updateAllPhotosToDelete(List<PhotoEntity> photoEntities) {
+        for (PhotoEntity photoEntity : photoEntities) {
+            photoEntity.setStatut(StatusRemote.TO_DELETE);
+            photoRepository.update(dataReturn -> {
+                if (dataReturn.getNb() != 0) {
+                    Log.d(TAG, "PhotoEntity successfully updated TO_DELETE");
+                }
+            }, photoEntity);
+        }
     }
 }

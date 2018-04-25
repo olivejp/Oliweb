@@ -16,9 +16,9 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.CategorieRepository;
-import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;

@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository;
+package oliweb.nc.oliweb.database.repository.local;
 
 import android.content.Context;
 

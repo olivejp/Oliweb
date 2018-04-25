@@ -17,10 +17,11 @@ import io.reactivex.Single;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
-import oliweb.nc.oliweb.service.sync.FirebaseRepository;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -32,7 +33,8 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private UtilisateurRepository utilisateurRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
-    private FirebaseRepository firebaseRespository;
+    private FirebaseAnnonceRepository firebaseAnnonceRespository;
+    private FirebaseUserRepository firebaseUserRespository;
     private AnnonceRepository annonceRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
@@ -42,7 +44,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        firebaseRespository = FirebaseRepository.getInstance(application.getApplicationContext());
+        firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
+        firebaseUserRespository = FirebaseUserRepository.getInstance();
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
@@ -56,7 +59,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         shouldAskQuestion.setValue(new AtomicBoolean(false));
 
         if (uidUtilisateur != null) {
-            firebaseRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+            firebaseAnnonceRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
         }
 
         return shouldAskQuestion;
@@ -83,7 +86,7 @@ public class MainActivityViewModel extends AndroidViewModel {
                     .doOnSuccess(saveSuccessful -> {
                         if (saveSuccessful.get()) {
                             Log.d(TAG, "Utilisateur créé dans la base de données");
-                            firebaseRespository.insertUserIntoFirebase(firebaseUser)
+                            firebaseUserRespository.insertUserIntoFirebase(firebaseUser)
                                     .doOnSuccess(insertedIntoFirebase -> {
                                         if (insertedIntoFirebase.get()) {
                                             emitter.onSuccess(new AtomicBoolean(true));

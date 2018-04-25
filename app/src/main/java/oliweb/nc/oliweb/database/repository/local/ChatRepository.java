@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository;
+package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;

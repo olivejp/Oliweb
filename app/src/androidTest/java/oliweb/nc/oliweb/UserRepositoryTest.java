@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 
 import static oliweb.nc.oliweb.UtilityTest.UID_USER;
 import static oliweb.nc.oliweb.UtilityTest.checkCount;

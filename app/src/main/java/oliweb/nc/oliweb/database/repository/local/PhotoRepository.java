@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository;
+package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
@@ -85,7 +85,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return this.photoDao.getAllPhotosByStatusAndIdAnnonce(status, idAnnonce);
     }
 
-    public Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce) {
+    public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
     }
 
