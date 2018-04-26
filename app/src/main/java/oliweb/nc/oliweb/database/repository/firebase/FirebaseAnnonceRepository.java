@@ -75,6 +75,7 @@ public class FirebaseAnnonceRepository {
 
 
     public void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
+        Log.d(TAG, "checkAnnonceExistInLocalOrSaveIt called with annonceDto = " + annonceDto.toString());
         annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(integer -> {
@@ -82,27 +83,27 @@ public class FirebaseAnnonceRepository {
                         getAnnonceFromFirebaseToLocalDb(context, annonceDto);
                     }
                 })
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .subscribe();
     }
 
-    private void getAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceDto) {
-        AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
-        String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
+    private void getAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceFromFirebase) {
+        Log.d(TAG, "getAnnonceFromFirebaseToLocalDb called with annonceDto = " + annonceFromFirebase.toString());
+        AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceFromFirebase);
+        String uidUtilisateur = annonceFromFirebase.getUtilisateur().getUuid();
         annonceEntity.setUuidUtilisateur(uidUtilisateur);
-        annonceRepository.save(annonceEntity, dataReturn -> {
-            // Now we can save Photos, if any
-            if (dataReturn.isSuccessful()) {
-                Log.d(TAG, "Annonce has been stored successfully : " + annonceDto.getTitre());
-                long idAnnonce = dataReturn.getIds()[0];
-                if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
-                    for (String photoUrl : annonceDto.getPhotos()) {
-                        firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, idAnnonce, photoUrl, uidUtilisateur);
+        annonceRepository.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annonceEntity1 -> {
+                    Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
+                    if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
+                        for (String photoUrl : annonceFromFirebase.getPhotos()) {
+                            firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl, uidUtilisateur);
+                        }
                     }
-                }
-            } else {
-                Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUUID() + ", UidUtilisateur : " + uidUtilisateur);
-            }
-        });
+                })
+                .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUUID() + ", UidUtilisateur : " + uidUtilisateur))
+                .subscribe();
     }
 
     private void checkAnnonceLocalRepository(String uidUser, AnnonceDto annonceDto, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {

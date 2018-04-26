@@ -389,6 +389,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
             SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
             dialog.dismiss();
         }

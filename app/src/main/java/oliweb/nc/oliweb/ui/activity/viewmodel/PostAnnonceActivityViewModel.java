@@ -5,14 +5,13 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -31,17 +30,16 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
-    private CategorieRepository categorieRepository;
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
     private UtilisateurRepository utilisateurRepository;
-
+    private CategorieRepository categorieRepository;
     private AnnonceEntity annonce;
     private CategorieEntity categorie;
     private ArrayList<PhotoEntity> listPhoto = new ArrayList<>();
     private PhotoEntity photoEntityUpdated;
-    private MutableLiveData<List<CategorieEntity>> liveDataListCategorie;
     private MutableLiveData<ArrayList<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
+    private int countPhoto = 0;
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -49,15 +47,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         photoRepository = PhotoRepository.getInstance(application);
         annonceRepository = AnnonceRepository.getInstance(application);
         utilisateurRepository = UtilisateurRepository.getInstance(application);
-
-        // Récupération de toutes la liste des catégories
-        liveDataListCategorie = new MutableLiveData<>();
-        this.categorieRepository.getListCategorie()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(categorieEntities ->
-                        liveDataListCategorie.setValue(categorieEntities)
-                );
     }
 
     public LiveData<UtilisateurEntity> getConnectedUser() {
@@ -76,8 +65,8 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.photoRepository.findAllByIdAnnonce(idAnnonce);
     }
 
-    public LiveData<List<CategorieEntity>> getLiveDataListCategorie() {
-        return liveDataListCategorie;
+    public Single<List<CategorieEntity>> getLiveDataListCategorie() {
+        return categorieRepository.getListCategorie();
     }
 
     public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
@@ -107,39 +96,32 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.annonce;
     }
 
-    public void saveAnnonceToDb(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telelphone, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRepositoryPostExecute) {
+    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone) {
+        return Single.create(emitter -> {
+            annonce.setTitre(titre);
+            annonce.setDescription(description);
+            annonce.setPrix(prix);
+            annonce.setIdCategorie(categorie.getIdCategorie());
+            annonce.setStatut(StatusRemote.TO_SEND);
+            annonce.setContactByEmail(email ? "O" : "N");
+            annonce.setContactByTel(telephone ? "O" : "N");
+            annonce.setContactByMsg(message ? "O" : "N");
+            annonce.setUuidUtilisateur(uidUser);
 
-        this.annonce.setTitre(titre);
-        this.annonce.setDescription(description);
-        this.annonce.setPrix(prix);
-        this.annonce.setIdCategorie(categorie.getIdCategorie());
-        this.annonce.setStatut(StatusRemote.TO_SEND);
-        this.annonce.setContactByEmail(email ? "O" : "N");
-        this.annonce.setContactByTel(telelphone ? "O" : "N");
-        this.annonce.setContactByMsg(message ? "O" : "N");
-        this.annonce.setUuidUtilisateur(uidUser);
+            annonceRepository.saveWithSingle(annonce)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(emitter::onSuccess)
+                    .doOnError(emitter::onError)
+                    .subscribe();
+        });
+    }
 
-        if (listPhoto == null || listPhoto.isEmpty()) {
-            this.annonceRepository.save(annonce, onRepositoryPostExecute);
-        } else {
-            this.annonceRepository.save(annonce, dataReturn -> {
-                if (dataReturn.getNb() > 0) {
-                    switch (dataReturn.getTypeTask()) {
-                        case INSERT:
-                            if (dataReturn.isSuccessful()) {
-                                long idAnnonceInserted = dataReturn.getIds()[0];
-                                updatePhotosWithIdAnnonce(this.listPhoto, idAnnonceInserted, onRepositoryPostExecute);
-                            }
-                            break;
-                        case UPDATE:
-                            updatePhotosWithIdAnnonce(this.listPhoto, annonce.getIdAnnonce(), onRepositoryPostExecute);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            });
+    public void savePhotos(AnnonceEntity annonce, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        for (PhotoEntity photo : listPhoto) {
+            photo.setIdAnnonce(annonce.getIdAnnonce());
         }
+        this.photoRepository.save(listPhoto, onRespositoryPostExecute);
+
     }
 
     public void updatePhotos() {
@@ -175,12 +157,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return retour;
     }
 
-    private void updatePhotosWithIdAnnonce(List<PhotoEntity> listPhoto, long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        for (PhotoEntity photo : listPhoto) {
-            photo.setIdAnnonce(idAnnonce);
-        }
-        this.photoRepository.save(listPhoto, onRespositoryPostExecute);
-    }
 
     public ArrayList<PhotoEntity> getListPhoto() {
         return this.listPhoto;

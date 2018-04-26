@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 
 import java.util.List;
 
-import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -20,6 +19,7 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
  */
 
 public class PhotoRepository extends AbstractRepository<PhotoEntity> {
+    private static final String TAG = PhotoRepository.class.getName();
     private static PhotoRepository INSTANCE;
     private PhotoDao photoDao;
 
@@ -73,6 +73,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         }
     }
 
+    public Single<PhotoEntity> findSingleById(long idPhoto) {
+        return this.photoDao.findSingleById(idPhoto);
+    }
+
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
         return this.photoDao.findByIdAnnonce(idAnnonce);
     }
@@ -87,10 +91,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
 
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
-    }
-
-    public Flowable<Integer> countAllPhotosByStatus(String status) {
-        return this.photoDao.countAllPhotosByStatus(status);
     }
 
     public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {

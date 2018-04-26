@@ -7,7 +7,6 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
@@ -105,7 +104,7 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
                 .subscribe());
     }
 
-    public Maybe<List<CategorieEntity>> getListCategorie() {
+    public Single<List<CategorieEntity>> getListCategorie() {
         return this.categorieDao.getListCategorie();
     }
 

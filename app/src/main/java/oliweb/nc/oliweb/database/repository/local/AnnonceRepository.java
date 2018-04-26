@@ -2,7 +2,6 @@ package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.List;
@@ -11,11 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -39,19 +36,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
             INSTANCE = new AnnonceRepository(context);
         }
         return INSTANCE;
-    }
-
-
-    public void save(AnnonceEntity annonceEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        this.annonceDao.findSingleById(annonceEntity.getIdAnnonce())
-                .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                .doOnSuccess(annonceEntity1 -> {
-                    if (annonceEntity1 != null) {
-                        update(onRespositoryPostExecute, annonceEntity1);
-                    }
-                })
-                .doOnError(throwable -> insert(onRespositoryPostExecute, annonceEntity))
-                .subscribe();
     }
 
     public Single<AtomicBoolean> existById(Long idAnnonce) {

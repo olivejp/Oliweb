@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -64,16 +65,18 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public void addToFavorite(AnnoncePhotos annoncePhotos) {
         AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
         annonceEntity.setFavorite(1);
-        annonceRepository.save(annonceEntity, dataReturn -> {
-            if (dataReturn.isSuccessful()) {
-                Log.d(TAG, "Favorite successfully added");
-                if (liveListAnnonce.getValue() != null && !liveListAnnonce.getValue().isEmpty()) {
-                    int index = liveListAnnonce.getValue().indexOf(annoncePhotos);
-                    liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(dataReturn.getIds()[0]);
-                }
-                liveListAnnonce.postValue(liveListAnnonce.getValue());
-            }
-        });
+        annonceRepository.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annonceEntity1 -> {
+                    Log.d(TAG, "Favorite successfully added");
+                    if (liveListAnnonce.getValue() != null && !liveListAnnonce.getValue().isEmpty()) {
+                        int index = liveListAnnonce.getValue().indexOf(annoncePhotos);
+                        liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(annonceEntity1.getIdAnnonce());
+                    }
+                    liveListAnnonce.postValue(liveListAnnonce.getValue());
+                })
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .subscribe();
     }
 
     public LiveData<List<AnnoncePhotos>> getLiveListAnnonce() {

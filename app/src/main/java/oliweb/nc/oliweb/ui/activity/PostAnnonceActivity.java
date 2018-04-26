@@ -30,7 +30,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 
 import java.io.File;
@@ -42,12 +41,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
@@ -241,17 +243,20 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int prix = Integer.parseInt(textViewPrix.getText().toString());
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonceToDb(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), dataReturn -> {
-            if (dataReturn.isSuccessful()) {
-                if (NetworkReceiver.checkConnection(this)) {
-                    SyncService.launchSynchroForAll(getApplicationContext());
-                }
-                setResult(RESULT_OK);
-            } else {
-                setResult(RESULT_CANCELED);
-            }
-            finish();
-        });
+        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked())
+                .doOnSuccess(annonce -> viewModel.savePhotos(annonce, dataReturn -> {
+                    if (dataReturn.isSuccessful()) {
+                        if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
+                            SyncService.launchSynchroForAll(getApplicationContext());
+                        }
+                        setResult(RESULT_OK);
+                        finish();
+                    } else {
+                        Log.e(TAG, dataReturn.getThrowable().getLocalizedMessage(), dataReturn.getThrowable());
+                    }
+                }))
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .subscribe();
     }
 
     private boolean checkIfAnnonceIsValid() {
@@ -436,35 +441,38 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return true;
     }
 
-    private void initObservers() {
+    private void defineSpinnerCategorie(List<CategorieEntity> categorieEntities) {
+        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, categorieEntities);
+        spinnerCategorie.setAdapter(adapter);
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+    }
 
+    private void changeUserContactMethod(UtilisateurEntity utilisateurEntity) {
+        if (utilisateurEntity == null) {
+            return;
+        }
+        if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
+            textCheckboxEmail.setVisibility(View.GONE);
+            checkBoxEmail.setVisibility(View.GONE);
+            checkBoxEmail.setChecked(false);
+        }
+        if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
+            textCheckboxTelephone.setVisibility(View.GONE);
+            checkBoxTel.setVisibility(View.GONE);
+            checkBoxTel.setChecked(false);
+        }
+    }
+
+    private void initObservers() {
         // Récupération dynamique de la liste des photos
         viewModel.getLiveListPhoto().observe(this, this::initPhotosViews);
 
         // Alimentation du spinner avec la liste des catégories
-        viewModel.getLiveDataListCategorie()
-                .observe(this, categorieEntities -> {
-                    if (categorieEntities != null && !categorieEntities.isEmpty()) {
-                        SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
-                        spinnerCategorie.setAdapter(adapter);
-                    }
-                });
+        viewModel.getLiveDataListCategorie().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(this::defineSpinnerCategorie)
+                .subscribe();
 
-        viewModel.getConnectedUser().observe(this, utilisateurEntity -> {
-            if (utilisateurEntity != null) {
-                if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
-                    textCheckboxEmail.setVisibility(View.GONE);
-                    checkBoxEmail.setVisibility(View.GONE);
-                    checkBoxEmail.setChecked(false);
-                }
-                if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
-                    textCheckboxTelephone.setVisibility(View.GONE);
-                    checkBoxTel.setVisibility(View.GONE);
-                    checkBoxTel.setChecked(false);
-                }
-            }
-        });
+        viewModel.getConnectedUser().observe(this, this::changeUserContactMethod);
     }
 
     private void initViewModelDataDependingOnMode(Bundle bundle) {
@@ -643,15 +651,17 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Récupération et sélection dans le spinner de la bonne catégorie
         viewModel.getLiveDataListCategorie()
-                .observe(this, categorieEntities -> {
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(categorieEntities -> {
                     if (categorieEntities != null && annonce.getIdCategorie() != null) {
                         for (CategorieEntity categorieEntity : categorieEntities) {
                             if (categorieEntity.getIdCategorie().equals(annonce.getIdCategorie())) {
-                                spinnerCategorie.setSelection(categorieEntities.indexOf(categorieEntity));
+                                spinnerCategorie.setSelection(categorieEntities.indexOf(categorieEntity), true);
                                 break;
                             }
                         }
                     }
-                });
+                })
+                .subscribe();
     }
 }
