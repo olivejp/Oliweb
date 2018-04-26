@@ -98,6 +98,7 @@ public class FirebaseAnnonceRepository {
                     Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
                     if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
                         for (String photoUrl : annonceFromFirebase.getPhotos()) {
+                            Log.d(TAG, "Try to save : " + photoUrl);
                             firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl, uidUtilisateur);
                         }
                     }

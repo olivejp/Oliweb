@@ -11,6 +11,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
+import java.util.UUID;
 
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -42,11 +43,11 @@ public class FirebasePhotoRepository {
     }
 
     public void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto, String uidUser) {
+        Log.d(TAG, "savePhotoFromFirebaseStorageToLocal : " + urlPhoto);
         boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
-
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
 
-        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE, uidUser);
+        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE, UUID.randomUUID().toString());
         if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
             httpsReference.getFile(pairUriFile.second).addOnSuccessListener(taskSnapshot -> {
                 // Local temp file has been created

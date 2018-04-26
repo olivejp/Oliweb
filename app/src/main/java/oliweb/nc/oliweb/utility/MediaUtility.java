@@ -199,6 +199,7 @@ public class MediaUtility {
             newFile = createInternalMediaFile(context, fileName);
         }
         if (newFile != null) {
+            Log.d(TAG, "createNewMediaFileUri : " + newFile.getAbsolutePath());
             return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
         }
         return null;
