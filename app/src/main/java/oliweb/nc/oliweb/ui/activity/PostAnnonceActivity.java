@@ -30,6 +30,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 
 import java.io.File;
@@ -545,6 +546,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
             GlideApp.with(imageView)
                     .load(Uri.parse(photoEntity.getUriLocal()))
                     .apply(RequestOptions.circleCropTransform())
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
                     .into(imageView);
             return true;
         }
