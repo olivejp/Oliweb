@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
+import android.util.Log;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,7 +42,49 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
         return this.utilisateurDao.findSingleByUuid(UuidUtilisateur);
     }
 
-    public Single<AtomicBoolean> save(UtilisateurEntity utilisateurEntity) {
+    private Single<UtilisateurEntity> insertSingle(UtilisateurEntity utilisateurEntity) {
+        return Single.create(e -> {
+            try {
+                Long[] ids = dao.insert(utilisateurEntity);
+                if (ids.length == 1) {
+                    findSingleByUid(utilisateurEntity.getUuidUtilisateur())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(e::onSuccess)
+                            .subscribe();
+                } else {
+                    e.onError(new RuntimeException("Failed to insert into UtilisateurRepository"));
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+                e.onError(exception);
+            }
+        });
+    }
+
+    /**
+     * You have to subscribe to this Single on a background thread
+     * because it queries the Database which only accept background queries.
+     */
+    private Single<UtilisateurEntity> updateSingle(UtilisateurEntity entity) {
+        return Single.create(e -> {
+            try {
+                int updatedCount = dao.update(entity);
+                if (updatedCount == 1) {
+                    findSingleByUid(entity.getUuidUtilisateur())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(e::onSuccess)
+                            .subscribe();
+                } else {
+                    e.onError(new RuntimeException("Failed to update into UtilisateurRepository"));
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+                e.onError(exception);
+            }
+        });
+    }
+
+    public Single<UtilisateurEntity> saveWithSingle(UtilisateurEntity utilisateurEntity) {
         return Single.create(emitter -> existByUid(utilisateurEntity.getUuidUtilisateur())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)

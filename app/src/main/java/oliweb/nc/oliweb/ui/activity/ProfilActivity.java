@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
@@ -35,6 +36,8 @@ import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NE
 public class ProfilActivity extends AppCompatActivity {
     public static final String UID_USER = "uidUser";
     public static final String UPDATE = "availableUpdate";
+
+    private DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF);
 
     private String uidUser;
     private boolean availableUpdate;
@@ -152,13 +155,11 @@ public class ProfilActivity extends AppCompatActivity {
             utilisateurEntity.setTelephone(textTelephone.getText().toString());
 
             viewModel.saveUtilisateur(utilisateurEntity)
-                    .doOnSuccess(atomicBoolean -> {
-                        if (atomicBoolean.get()) {
-                            UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntity);
-                            FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
+                    .doOnSuccess(utilisateurEntitySaved -> {
+                            UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntitySaved);
+                            USER_REF.child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
                                     Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
                             );
-                        }
                     }).subscribe();
 
             return true;

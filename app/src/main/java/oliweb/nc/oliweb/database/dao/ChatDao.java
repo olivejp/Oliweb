@@ -26,4 +26,8 @@ public interface ChatDao extends AbstractDao<ChatEntity> {
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidSeller")
     LiveData<List<ChatEntity>> findByUidSeller(String uidSeller);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM chat WHERE uidChat = :uidChat")
+    Single<Integer> countById(String uidChat);
 }

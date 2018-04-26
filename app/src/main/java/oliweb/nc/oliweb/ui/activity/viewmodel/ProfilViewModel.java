@@ -12,8 +12,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -121,8 +119,8 @@ public class ProfilViewModel extends AndroidViewModel {
         return this.utilisateurRepository.findByUid(uidUser);
     }
 
-    public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
-        return this.utilisateurRepository.save(utilisateurEntity)
+    public Single<UtilisateurEntity> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
+        return this.utilisateurRepository.saveWithSingle(utilisateurEntity)
                 .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io());
     }
 }

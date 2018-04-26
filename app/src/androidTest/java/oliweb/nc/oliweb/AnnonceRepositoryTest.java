@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -56,20 +55,8 @@ public class AnnonceRepositoryTest {
         categorieEntity.setName("cat1");
         categorieEntity.setCouleur("123456");
 
-        CategorieEntity categorieEntity1 = new CategorieEntity();
-        categorieEntity1.setName("cat2");
-        categorieEntity1.setCouleur("123456");
-
-        CategorieEntity categorieEntity2 = new CategorieEntity();
-        categorieEntity2.setName("cat3");
-        categorieEntity2.setCouleur("123456");
-
-        CategorieEntity categorieEntity3 = new CategorieEntity();
-        categorieEntity3.setName("cat4");
-        categorieEntity3.setCouleur("123456");
-
-        TestObserver<AtomicBoolean> subscriberInsertCategorie = new TestObserver<>();
-        this.categorieRepository.insertSingle(categorieEntity, categorieEntity1, categorieEntity2, categorieEntity3).subscribe(subscriberInsertCategorie);
+        TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
+        this.categorieRepository.saveWithSingle(categorieEntity).subscribe(subscriberInsertCategorie);
         waitTerminalEvent(subscriberInsertCategorie, 5);
 
         TestObserver<List<CategorieEntity>> subscriberGetListCategorie = new TestObserver<>();
@@ -84,8 +71,8 @@ public class AnnonceRepositoryTest {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setUuidUtilisateur(UID_USER);
 
-        TestObserver<AtomicBoolean> subscriberInsertUtilisateur = new TestObserver<>();
-        this.utilisateurRepository.insertSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
+        TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
+        this.utilisateurRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
         waitTerminalEvent(subscriberInsertUtilisateur, 5);
 
         TestObserver<List<UtilisateurEntity>> subscriberGetUtilisateur = new TestObserver<>();
@@ -135,7 +122,12 @@ public class AnnonceRepositoryTest {
         checkCount(0, annonceRepository.count());
 
         AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
-        AnnonceEntity annonceEntityAfterInsert = saveSingleTest(annonceEntity);
+        saveSingleTest(annonceEntity);
+
+        checkCount(1, annonceRepository.count());
+
+        deleteAllTest();
+        checkCount(0, annonceRepository.count());
     }
 
     @Test

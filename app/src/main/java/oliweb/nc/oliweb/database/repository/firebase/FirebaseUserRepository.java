@@ -2,18 +2,16 @@ package oliweb.nc.oliweb.database.repository.firebase;
 
 import android.util.Log;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
-import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
@@ -36,14 +34,12 @@ public class FirebaseUserRepository {
         return instance;
     }
 
-    public Single<AtomicBoolean> insertUserIntoFirebase(FirebaseUser firebaseUser) {
-        return Single.create(emitter -> USER_REF.child(firebaseUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+    public Single<AtomicBoolean> insertUserIntoFirebase(UtilisateurEntity utilisateurEntity) {
+        return Single.create(emitter -> USER_REF.child(utilisateurEntity.getUuidUtilisateur()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
-                    String token = FirebaseInstanceId.getInstance().getToken();
-                    UtilisateurFirebase utilisateurFirebase = UtilisateurConverter.convertFbUserToUtilisateurFirebase(firebaseUser, token);
-                    USER_REF.child(firebaseUser.getUid()).setValue(utilisateurFirebase)
+                    USER_REF.child(utilisateurEntity.getUuidUtilisateur()).setValue(utilisateurEntity)
                             .addOnSuccessListener(aVoid -> {
                                 Log.d(TAG, "Utilisateur correctement créé dans Firebase");
                                 emitter.onSuccess(new AtomicBoolean(true));

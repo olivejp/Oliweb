@@ -49,14 +49,14 @@ public class UserRepositoryTest {
         subscriber.assertNoErrors();
     }
 
-    private void insertUser(@Nullable String uidUser, @Nullable String profile, @Nullable String email) {
+    private UtilisateurEntity insertUser(@Nullable String uidUser, @Nullable String profile, @Nullable String email) {
         UtilisateurEntity utilisateurEntity = initUtilisateur(uidUser, profile, email);
-        TestObserver<AtomicBoolean> subscriberInsert = new TestObserver<>();
-        userRepository.insertSingle(utilisateurEntity).subscribe(subscriberInsert);
+        TestObserver<UtilisateurEntity> subscriberInsert = new TestObserver<>();
+        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
-        subscriberInsert.assertValueAt(0, AtomicBoolean::get);
+        return subscriberInsert.values().get(0);
     }
 
     private void existByUid(String uid, boolean expectedResult) {
@@ -76,6 +76,7 @@ public class UserRepositoryTest {
     public void deleteThenQuery() {
         deleteAll();
         existByUid(UID_USER, false);
+        checkCount(0, userRepository.count());
     }
 
 
@@ -102,6 +103,8 @@ public class UserRepositoryTest {
 
         // existById should return a single value with a AtomicBoolean == true
         existByUid(UID_USER, true);
+
+        checkCount(1, userRepository.count());
     }
 
     @Test
@@ -157,20 +160,18 @@ public class UserRepositoryTest {
         deleteAll();
 
         // Insert a new user
-        insertUser(null, null, null);
+        UtilisateurEntity utilisateurEntity = insertUser(null, null, null);
 
         // Updated the user
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUuidUtilisateur(UID_USER);
         utilisateurEntity.setProfile(profileUpdated);
         utilisateurEntity.setEmail(emailUpdated);
 
         // Try to send updated utilisateur to database
-        TestObserver<AtomicBoolean> subscriberUpdate = new TestObserver<>();
-        userRepository.updateSingle(utilisateurEntity).subscribe(subscriberUpdate);
+        TestObserver<UtilisateurEntity> subscriberUpdate = new TestObserver<>();
+        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberUpdate);
         waitTerminalEvent(subscriberUpdate, 5);
         subscriberUpdate.assertNoErrors();
-        subscriberUpdate.assertValueAt(0, AtomicBoolean::get);
+        subscriberUpdate.assertValueAt(0, entity -> entity.getUuidUtilisateur().equals(UID_USER) && entity.getProfile().equals(profileUpdated) && entity.getEmail().equals(emailUpdated));
 
         // Query the updated values
         TestObserver<UtilisateurEntity> subscriberFindByUidSaved = new TestObserver<>();
@@ -194,26 +195,24 @@ public class UserRepositoryTest {
         UtilisateurEntity utilisateurEntity = initUtilisateur(null, null, null);
 
         // Save (insert) the new user
-        TestObserver<AtomicBoolean> subscriberSave = new TestObserver<>();
-        userRepository.save(utilisateurEntity).subscribe(subscriberSave);
+        TestObserver<UtilisateurEntity> subscriberSave = new TestObserver<>();
+        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberSave);
         waitTerminalEvent(subscriberSave, 5);
         subscriberSave.assertNoErrors();
-        subscriberSave.assertValueAt(0, AtomicBoolean::get);
+        UtilisateurEntity userInserted = subscriberSave.values().get(0);
 
         checkCount(1, userRepository.count());
 
         // Updated the user
-        UtilisateurEntity userUpdated = new UtilisateurEntity();
-        userUpdated.setUuidUtilisateur(UID_USER);
-        userUpdated.setProfile(UPDATED_PROFILE);
-        userUpdated.setEmail(EMAIL_UPDATED);
+        userInserted.setProfile(UPDATED_PROFILE);
+        userInserted.setEmail(EMAIL_UPDATED);
 
         // Save (update) the updated user
-        TestObserver<AtomicBoolean> subscriberSave1 = new TestObserver<>();
-        userRepository.save(userUpdated).subscribe(subscriberSave1);
+        TestObserver<UtilisateurEntity> subscriberSave1 = new TestObserver<>();
+        userRepository.saveWithSingle(userInserted).subscribe(subscriberSave1);
         waitTerminalEvent(subscriberSave1, 5);
         subscriberSave1.assertNoErrors();
-        subscriberSave1.assertValueAt(0, AtomicBoolean::get);
+        subscriberSave1.assertValueAt(0, entity -> entity.getProfile().equals(UPDATED_PROFILE) && entity.getEmail().equals(EMAIL_UPDATED));
 
         checkCount(1, userRepository.count());
 

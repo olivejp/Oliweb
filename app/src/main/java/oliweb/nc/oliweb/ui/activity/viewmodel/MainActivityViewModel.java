@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,23 +80,30 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
+    /**
+     * Will try to insert UtilisateurEntity into the local DB and then try to insert into Firebase
+     *
+     * @param firebaseUser
+     * @return
+     */
     public Single<AtomicBoolean> registerUser(FirebaseUser firebaseUser) {
         return Single.create(emitter -> {
             UtilisateurEntity entity = UtilisateurConverter.convertFbToEntity(firebaseUser);
-            utilisateurRepository.save(entity)
+            entity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
+            utilisateurRepository.saveWithSingle(entity)
                     .doOnSuccess(saveSuccessful -> {
-                        if (saveSuccessful.get()) {
-                            Log.d(TAG, "Utilisateur créé dans la base de données");
-                            firebaseUserRespository.insertUserIntoFirebase(firebaseUser)
-                                    .doOnSuccess(insertedIntoFirebase -> {
-                                        if (insertedIntoFirebase.get()) {
-                                            emitter.onSuccess(new AtomicBoolean(true));
-                                        } else {
-                                            emitter.onSuccess(new AtomicBoolean(false));
-                                        }
-                                    })
-                                    .doOnError(emitter::onError).subscribe();
-                        }
+                        Log.d(TAG, "Utilisateur créé dans la base de données");
+                        firebaseUserRespository.insertUserIntoFirebase(entity)
+                                .doOnSuccess(insertedIntoFirebase -> {
+                                    if (insertedIntoFirebase.get()) {
+                                        Log.d(TAG, "Utilisateur créé dans la base Firebase");
+                                        emitter.onSuccess(new AtomicBoolean(true));
+                                    } else {
+                                        Log.d(TAG, "Echec de la création de l'utilisateur dans Firebase");
+                                        emitter.onSuccess(new AtomicBoolean(false));
+                                    }
+                                })
+                                .doOnError(emitter::onError).subscribe();
                     })
                     .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
                     .subscribe();

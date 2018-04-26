@@ -2,11 +2,7 @@ package oliweb.nc.oliweb.database.repository.local;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import io.reactivex.Single;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AbstractDao;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -33,26 +29,6 @@ public abstract class AbstractRepository<T> {
         this.dao = dao;
     }
 
-    /**
-     * You have to subscribe to this Single on a background thread
-     * because it queries the Database which only accept background queries.
-     */
-    public Single<AtomicBoolean> insertSingle(T... entities) {
-        return Single.create(e -> {
-            try {
-                Long[] ids = dao.insert(entities);
-                if (ids.length == entities.length) {
-                    e.onSuccess(new AtomicBoolean(true));
-                } else {
-                    e.onSuccess(new AtomicBoolean(false));
-                }
-            } catch (Exception exception) {
-                Log.e("AbstractRepository", exception.getMessage());
-                e.onError(exception);
-            }
-        });
-    }
-
     public void insert(T... entities) {
         AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.INSERT);
         repositoryTask.execute(entities);
@@ -71,26 +47,6 @@ public abstract class AbstractRepository<T> {
     public void update(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {
         AbstractRepositoryCudTask<T> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.UPDATE, onRespositoryPostExecute);
         repositoryTask.execute(entities);
-    }
-
-    /**
-     * You have to subscribe to this Single on a background thread
-     * because it queries the Database which only accept background queries.
-     */
-    public Single<AtomicBoolean> updateSingle(T... entities) {
-        return Single.create(e -> {
-            try {
-                int updatedCount = dao.update(entities);
-                if (updatedCount == entities.length) {
-                    e.onSuccess(new AtomicBoolean(true));
-                } else {
-                    e.onSuccess(new AtomicBoolean(false));
-                }
-            } catch (Exception exception) {
-                Log.e("AbstractRepositoryCudTa", exception.getMessage());
-                e.onError(exception);
-            }
-        });
     }
 
     public void delete(T... entities) {
