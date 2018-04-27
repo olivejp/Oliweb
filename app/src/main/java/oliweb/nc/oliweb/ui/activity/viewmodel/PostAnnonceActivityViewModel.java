@@ -6,8 +6,6 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +37,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private ArrayList<PhotoEntity> listPhoto = new ArrayList<>();
     private PhotoEntity photoEntityUpdated;
     private MutableLiveData<ArrayList<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
-    private int countPhoto = 0;
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -49,8 +46,8 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application);
     }
 
-    public LiveData<UtilisateurEntity> getConnectedUser() {
-        return this.utilisateurRepository.findByUid(FirebaseAuth.getInstance().getCurrentUser().getUid());
+    public LiveData<UtilisateurEntity> getConnectedUser(String uid) {
+        return this.utilisateurRepository.findByUid(uid);
     }
 
     public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {
@@ -85,7 +82,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
         }
-        this.liveListPhoto.setValue(this.listPhoto);
+        this.liveListPhoto.postValue(this.listPhoto);
     }
 
     public void setAnnonce(AnnonceEntity annonce) {
@@ -96,12 +93,15 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.annonce;
     }
 
-    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone) {
+    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone, long idCategorie) {
+        if (this.annonce == null) {
+            createNewAnnonce();
+        }
         return Single.create(emitter -> {
             annonce.setTitre(titre);
             annonce.setDescription(description);
             annonce.setPrix(prix);
-            annonce.setIdCategorie(categorie.getIdCategorie());
+            annonce.setIdCategorie(idCategorie);
             annonce.setStatut(StatusRemote.TO_SEND);
             annonce.setContactByEmail(email ? "O" : "N");
             annonce.setContactByTel(telephone ? "O" : "N");
@@ -179,4 +179,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         this.categorie = categorie;
     }
 
+    public CategorieEntity getCategorie() {
+        return categorie;
+    }
 }

@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
 import java.io.IOException;
@@ -244,7 +245,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int prix = Integer.parseInt(textViewPrix.getText().toString());
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked())
+        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), viewModel.getCategorie().getIdCategorie())
                 .doOnSuccess(annonce -> viewModel.savePhotos(annonce, dataReturn -> {
                     if (dataReturn.isSuccessful()) {
                         if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
@@ -473,7 +474,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .doOnSuccess(this::defineSpinnerCategorie)
                 .subscribe();
 
-        viewModel.getConnectedUser().observe(this, this::changeUserContactMethod);
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            viewModel.getConnectedUser(FirebaseAuth.getInstance().getCurrentUser().getUid()).observe(this, this::changeUserContactMethod);
+        }
     }
 
     private void initViewModelDataDependingOnMode(Bundle bundle) {
