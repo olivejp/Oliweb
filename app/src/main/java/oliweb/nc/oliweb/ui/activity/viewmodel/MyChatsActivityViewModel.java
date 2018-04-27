@@ -6,21 +6,27 @@ import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
+import java.util.List;
 
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseChatRepository;
+import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Constants;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
+
+    private static final String TAG = MyChatsActivityViewModel.class.getName();
 
     public enum TypeRechercheChat {
         PAR_ANNONCE,
@@ -33,24 +39,34 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     private boolean twoPane;
-    private FirebaseQueryLiveData listChatsLiveData;
     private String selectedUidChat;
     private String selectedUidUtilisateur;
     private AnnonceEntity selectedAnnonce;
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
+    private ChatRepository chatRepository;
+    private FirebaseChatRepository firebaseChatRepository;
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
+        this.chatRepository = ChatRepository.getInstance(application);
+        this.firebaseChatRepository = FirebaseChatRepository.getInstance(application);
+        this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
     }
 
-    public LiveData<DataSnapshot> getFirebaseChatsByUidUser(String uidUser) {
-        Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true);
-        if (listChatsLiveData == null) {
-            listChatsLiveData = new FirebaseQueryLiveData(query, false);
-        }
-        return listChatsLiveData;
+    public LiveData<List<ChatEntity>> getFirebaseChatsByUidUser() {
+        firebaseChatRepository.sync(selectedUidUtilisateur);
+        return chatRepository.findByUidUser(selectedUidUtilisateur);
+    }
+
+    public LiveData<List<ChatEntity>> getFirebaseChatsByUidAnnonce() {
+        return chatRepository.findByUidAnnonce(selectedAnnonce.getUUID());
+    }
+
+    public Single<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
+        return this.firebaseAnnonceRepository.findByUidAnnonce(uidAnnonce);
     }
 
     public boolean isTwoPane() {
@@ -67,10 +83,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public AnnonceEntity getSelectedAnnonce() {
         return selectedAnnonce;
-    }
-
-    public String getSelectedUidUtilisateur() {
-        return selectedUidUtilisateur;
     }
 
     public TypeRechercheChat getTypeRechercheChat() {

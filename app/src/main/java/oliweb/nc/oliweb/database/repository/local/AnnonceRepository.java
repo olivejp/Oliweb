@@ -4,6 +4,7 @@ import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,6 +25,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     private static AnnonceRepository INSTANCE;
     private AnnonceDao annonceDao;
+    private int coutSuccess;
 
     private AnnonceRepository(Context context) {
         super(context);
@@ -106,6 +108,26 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
                     }
                 })
                 .subscribe());
+    }
+
+    public Single<List<AnnonceEntity>> saveWithSingle(List<AnnonceEntity> annonceEntityList) {
+        return Single.create(emitter -> {
+            coutSuccess = 0;
+            ArrayList<AnnonceEntity> listResult = new ArrayList<>();
+            for (AnnonceEntity annonce : annonceEntityList) {
+                saveWithSingle(annonce)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(annonceEntity -> {
+                            listResult.add(annonceEntity);
+                            coutSuccess++;
+                            if (coutSuccess == annonceEntityList.size()) {
+                                emitter.onSuccess(listResult);
+                            }
+                        })
+                        .doOnError(emitter::onError)
+                        .subscribe();
+            }
+        });
     }
 
     public LiveData<AnnonceEntity> findById(long idAnnonce) {

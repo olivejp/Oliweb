@@ -34,12 +34,12 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
         return INSTANCE;
     }
 
-    public LiveData<UtilisateurEntity> findByUid(String UuidUtilisateur) {
-        return this.utilisateurDao.findByUuid(UuidUtilisateur);
+    public LiveData<UtilisateurEntity> findByUid(String uuidUtilisateur) {
+        return this.utilisateurDao.findByUuid(uuidUtilisateur);
     }
 
-    public Single<UtilisateurEntity> findSingleByUid(String UuidUtilisateur) {
-        return this.utilisateurDao.findSingleByUuid(UuidUtilisateur);
+    public Single<UtilisateurEntity> findSingleByUid(String uuidUtilisateur) {
+        return this.utilisateurDao.findSingleByUuid(uuidUtilisateur);
     }
 
     private Single<UtilisateurEntity> insertSingle(UtilisateurEntity utilisateurEntity) {

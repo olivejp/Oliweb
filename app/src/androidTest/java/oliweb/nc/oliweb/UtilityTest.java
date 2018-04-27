@@ -50,5 +50,6 @@ class UtilityTest {
         waitTerminalEvent(subscriberCount, 5);
         subscriberCount.assertNoErrors();
         subscriberCount.assertValueAt(0, count -> count.equals(countExpected));
+        subscriberCount.dispose();
     }
 }
