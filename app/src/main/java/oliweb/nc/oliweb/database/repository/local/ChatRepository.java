@@ -118,6 +118,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
                 .subscribe());
     }
 
+
     private Single<AtomicBoolean> existById(String uidChat) {
         return Single.create(e -> chatDao.countById(uidChat)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -136,8 +137,12 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
         return this.chatDao.findById(uidChat);
     }
 
-    public LiveData<List<ChatEntity>> findByUidSeller(String uidSeller) {
-        return this.chatDao.findByUidSeller(uidSeller);
+    public LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce) {
+        return this.chatDao.findByUidAnnonce(uidAnnonce);
+    }
+
+    public LiveData<List<ChatEntity>> findByUidUser(String uidSeller) {
+        return this.chatDao.findByUidUser(uidSeller);
     }
 
 }

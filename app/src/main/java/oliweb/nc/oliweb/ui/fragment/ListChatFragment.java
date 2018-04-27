@@ -12,44 +12,31 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
-import oliweb.nc.oliweb.ui.adapter.ChatFirebaseAdapter;
-import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_UTILISATEUR;
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -57,16 +44,8 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 
 public class ListChatFragment extends Fragment {
 
-    public final static String BACKSTACK_MESSAGE_FRAGMENT = "BACKSTACK_MESSAGE_FRAGMENT";
-
+    private static final String TAG = ListChatFragment.class.getName();
     private AppCompatActivity appCompatActivity;
-    private DatabaseReference chatReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
-    private ChatFirebaseAdapter adapter;
-    private ChatAdapter chatAdapter;
-    private List<ChatFirebase> listChats = new ArrayList<>();
-
-    private GenericTypeIndicator<HashMap<String, ChatFirebase>> genericClassDetail = new GenericTypeIndicator<HashMap<String, ChatFirebase>>() {
-    };
 
     private MyChatsActivityViewModel viewModel;
 
@@ -92,21 +71,7 @@ public class ListChatFragment extends Fragment {
         popup.show();
     };
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (adapter != null) {
-            adapter.startListening();
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (adapter != null) {
-            adapter.stopListening();
-        }
-    }
+    private View.OnClickListener onClickListener = v -> callListMessage((String) v.getTag());
 
     @Override
     public void onDestroyView() {
@@ -137,73 +102,46 @@ public class ListChatFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
+        // Conditions de garde
+        if (viewModel.getTypeRechercheChat() != PAR_ANNONCE && viewModel.getTypeRechercheChat() != PAR_UTILISATEUR) {
+            return view;
+        }
+
+        // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
+        ChatAdapter chatAdapter = new ChatAdapter(onClickListener, onPopupClickListener);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
+        recyclerView.setAdapter(chatAdapter);
+        recyclerView.setLayoutManager(linearLayoutManager);
 
-        Query query;
+        // Selon les types de recherche
         if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
-            query = chatReference.orderByChild("uidAnnonce").equalTo(viewModel.getSelectedAnnonce().getUUID());
-            loadQuery(query);
-        } else if (viewModel.getTypeRechercheChat() == PAR_UTILISATEUR) {
-            //            query = chatReference.orderByChild("members/" + viewModel.getSelectedUidUtilisateur()).equalTo(true);
-            //            loadQuery(query);
-
-            // Implémentation d'un nouvel adapter
-            chatAdapter = new ChatAdapter(v -> callListMessage((String) v.getTag()), onPopupClickListener);
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
-            recyclerView.setAdapter(chatAdapter);
-            recyclerView.setLayoutManager(linearLayoutManager);
-            viewModel.getFirebaseChatsByUidUser(viewModel.getSelectedUidUtilisateur()).observe(appCompatActivity, dataSnapshot -> {
-                if (dataSnapshot != null) {
-                    listChats.clear();
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        listChats.add(data.getValue(ChatFirebase.class));
-                    }
-                    chatAdapter.setListChats(listChats);
-                }
-            });
+            viewModel.getFirebaseChatsByUidAnnonce().observe(appCompatActivity, chatAdapter::setListChats);
+        } else {
+            viewModel.getFirebaseChatsByUidUser().observe(appCompatActivity, chatAdapter::setListChats);
         }
         return view;
     }
 
-    private void loadQuery(Query query) {
-        FirebaseRecyclerOptions<ChatFirebase> options = new FirebaseRecyclerOptions.Builder<ChatFirebase>()
-                .setQuery(query, ChatFirebase.class)
-                .build();
-
-        adapter = new ChatFirebaseAdapter(options,
-                v -> callListMessage((String) v.getTag()),
-                onPopupClickListener);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(linearLayoutManager);
-    }
-
     private void openAnnonceDetail(ChatFirebase chatFirebase) {
-        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_ANNONCE_REF)
-                .child(chatFirebase.getUidAnnonce())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                        if (annonceDto != null) {
-                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
-                            Intent intent = new Intent();
-                            intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
-                            Bundle bundle = new Bundle();
-                            bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
-                            intent.putExtras(bundle);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(appCompatActivity, "Oups... cette annonce a été supprimée", Toast.LENGTH_LONG).show();
-                        }
+        viewModel.findFirebaseByUidAnnonce(chatFirebase.getUidAnnonce())
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(annonceDto -> {
+                    if (annonceDto != null) {
+                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                        Intent intent = new Intent();
+                        intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                        intent.putExtras(bundle);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(appCompatActivity, "Oups... cette annonce n'est plus disponible", Toast.LENGTH_LONG).show();
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // Do nothing
-                    }
-                });
+                })
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .subscribe();
     }
 
     private void callListMessage(String uidChat) {

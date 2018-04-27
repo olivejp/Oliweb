@@ -26,7 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -44,7 +44,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private View.OnClickListener clickListener;
     private View.OnClickListener popupClickListener;
-    private List<ChatFirebase> listChats;
+    private List<ChatEntity> listChats;
 
     public ChatAdapter(View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
@@ -63,8 +63,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         ChatViewHolder holder = (ChatViewHolder) viewHolder;
-        ChatFirebase model = listChats.get(position);
-        holder.constraintLayout.setTag(model.getUid());
+        ChatEntity model = listChats.get(position);
+        holder.constraintLayout.setTag(model.getUidChat());
         holder.lastMessage.setText(model.getLastMessage());
         holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
         holder.constraintLayout.setOnClickListener(clickListener);
@@ -86,11 +86,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // Do nothing
             }
         });
-
         retreivePhoto(holder, model);
     }
 
-    public void setListChats(final List<ChatFirebase> newListChats) {
+    public void setListChats(final List<ChatEntity> newListChats) {
         if (listChats == null) {
             listChats = newListChats;
             notifyItemRangeInserted(0, newListChats.size());
@@ -108,14 +107,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listChats.get(oldItemPosition).getUid().equals(newListChats.get(newItemPosition).getUid());
+                    return listChats.get(oldItemPosition).getUidChat().equals(newListChats.get(newItemPosition).getUidChat());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                    ChatFirebase newChat = newListChats.get(newItemPosition);
-                    ChatFirebase oldChat = listChats.get(oldItemPosition);
-                    return newChat.getUid().equals(oldChat.getUid())
+                    ChatEntity newChat = newListChats.get(newItemPosition);
+                    ChatEntity oldChat = listChats.get(oldItemPosition);
+                    return newChat.getUidChat().equals(oldChat.getUidChat())
                             && newChat.getLastMessage().equals(oldChat.getLastMessage())
                             && newChat.getUpdateTimestamp() == (oldChat.getUpdateTimestamp());
                 }
@@ -130,7 +129,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return listChats.size();
     }
 
-    private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatFirebase model) {
+    private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
         if (model.getUidBuyer().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
             ref = ref.child(model.getUidSeller());

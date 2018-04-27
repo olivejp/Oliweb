@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
@@ -147,6 +148,28 @@ public class FirebaseAnnonceRepository {
                 emitter.onError(new RuntimeException(databaseError.getMessage()));
             }
         }));
+    }
+
+    public Single<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
+        return Single.create(e ->
+            ANNONCE_REF.child(uidAnnonce)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
+                            if (annonceDto != null) {
+                                e.onSuccess(annonceDto);
+                            } else {
+                                e.onSuccess(null);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            e.onError(new RuntimeException(databaseError.getMessage()));
+                        }
+                    })
+        );
     }
 
 }

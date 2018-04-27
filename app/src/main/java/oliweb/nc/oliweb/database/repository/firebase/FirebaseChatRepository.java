@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.database.repository.firebase;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,7 +42,23 @@ public class FirebaseChatRepository {
         return instance;
     }
 
-    public Single<List<ChatEntity>> getAllChatByUidUser(String uidUser) {
+    public void sync(String uidUser) {
+        retreiveFromFirebaseByUidUser(uidUser)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(atomicBoolean -> {
+                    if (atomicBoolean.get()) {
+                        Log.e(TAG, "Retreive chats from firebase successful");
+                    }
+                })
+                .doOnError(t -> Log.e(TAG, t.getLocalizedMessage(), t))
+                .subscribe();
+    }
+
+    /**
+     * @param uidUser
+     * @return a Single<List<ChatEntity>> containing all the ChatEntity from Firebase where User is in the members.
+     */
+    private Single<List<ChatEntity>> getAllChatByUidUser(String uidUser) {
         return Single.create(e -> CHAT_REF.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     ArrayList<ChatEntity> listChat = new ArrayList<>();
@@ -71,27 +88,23 @@ public class FirebaseChatRepository {
                 }));
     }
 
-    public Single<AtomicBoolean> retreiveFromFirebaseByUidUser(String uidUser) {
-        return Single.create(e -> {
-            getAllChatByUidUser(uidUser)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(chatEntities -> {
-                        countSuccesses = 0;
-                        for (ChatEntity chat : chatEntities) {
-                            chatRepository.saveWithSingle(chat)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnSuccess(chatEntity -> {
-                                        countSuccesses++;
-                                        if (countSuccesses == chatEntities.size()) {
-                                            e.onSuccess(new AtomicBoolean(true));
-                                        }
-                                    })
-                                    .doOnError(e::onError)
-                                    .subscribe();
-                        }
-                    })
-                    .doOnError(e::onError)
-                    .subscribe();
-        });
+    /**
+     * Get a list of ChatEntity from Firebase then for each ChatEntity try to insert it to the
+     * local DB.
+     *
+     * @param uidUser
+     * @return
+     */
+    private Single<AtomicBoolean> retreiveFromFirebaseByUidUser(String uidUser) {
+        return Single.create(e ->
+                getAllChatByUidUser(uidUser)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(chatEntities -> chatRepository.saveWithSingle(chatEntities)
+                                .doOnSuccess(list -> e.onSuccess(new AtomicBoolean(true)))
+                                .doOnError(e::onError)
+                                .subscribe())
+                        .doOnError(e::onError)
+                        .subscribe()
+        );
     }
 }

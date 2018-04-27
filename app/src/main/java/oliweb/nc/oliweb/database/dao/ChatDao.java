@@ -24,10 +24,14 @@ public interface ChatDao extends AbstractDao<ChatEntity> {
     Single<ChatEntity> findSingleById(String uidChat);
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE uidSeller = :uidSeller")
-    LiveData<List<ChatEntity>> findByUidSeller(String uidSeller);
+    @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce")
+    LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM chat WHERE uidChat = :uidChat")
     Single<Integer> countById(String uidChat);
+
+    @Transaction
+    @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser")
+    LiveData<List<ChatEntity>> findByUidUser(String uidUser);
 }
