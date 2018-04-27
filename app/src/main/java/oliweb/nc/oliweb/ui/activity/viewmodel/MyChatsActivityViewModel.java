@@ -15,6 +15,7 @@ import com.google.firebase.database.ServerValue;
 import java.util.HashMap;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
@@ -39,13 +40,18 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private AnnonceEntity selectedAnnonce;
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
+    private ChatRepository chatRepository;
     private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
+        this.chatRepository = ChatRepository.getInstance(application);
     }
 
     public LiveData<DataSnapshot> getFirebaseChatsByUidUser(String uidUser) {
+        // TODO - Récupération des chats à partir de la BD locale
+
+        // Récupération des chats dans Firebase
         Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true);
         if (listChatsLiveData == null) {
             listChatsLiveData = new FirebaseQueryLiveData(query, false);

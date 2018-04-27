@@ -4,6 +4,7 @@ import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,11 +21,32 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
     private static final String TAG = ChatRepository.class.getName();
     private static ChatRepository INSTANCE;
     private ChatDao chatDao;
+    private int countSuccess;
 
     private ChatRepository(Context context) {
         super(context);
         this.dao = this.db.getChatDao();
         this.chatDao = (ChatDao) this.dao;
+    }
+
+    public Single<List<ChatEntity>> saveWithSingle(List<ChatEntity> chatEntities) {
+        return Single.create(emitter -> {
+            countSuccess = 0;
+            ArrayList<ChatEntity> listResult = new ArrayList<>();
+            for (ChatEntity chat : chatEntities) {
+                saveWithSingle(chat)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(chatSaved -> {
+                            listResult.add(chatSaved);
+                            countSuccess++;
+                            if (countSuccess == chatEntities.size()) {
+                                emitter.onSuccess(listResult);
+                            }
+                        })
+                        .doOnError(emitter::onError)
+                        .subscribe();
+            }
+        });
     }
 
     public static synchronized ChatRepository getInstance(Context context) {

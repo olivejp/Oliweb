@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
@@ -65,6 +66,8 @@ public class AnnonceRepositoryTest {
         if (subscriberGetListCategorie.values() != null && !subscriberGetListCategorie.values().isEmpty()) {
             listCategorie = subscriberGetListCategorie.values().get(0);
         }
+        subscriberInsertCategorie.dispose();
+        subscriberGetListCategorie.dispose();
     }
 
     private void initUsers() {
@@ -81,6 +84,8 @@ public class AnnonceRepositoryTest {
         if (subscriberGetUtilisateur.values() != null && !subscriberGetUtilisateur.values().isEmpty()) {
             listUtilisateur = subscriberGetUtilisateur.values().get(0);
         }
+        subscriberInsertUtilisateur.dispose();
+        subscriberGetUtilisateur.dispose();
     }
 
     private void deleteAllTest() {
@@ -88,6 +93,7 @@ public class AnnonceRepositoryTest {
         annonceRepository.deleteAll().subscribe(subscriber);
         waitTerminalEvent(subscriber, 5);
         subscriber.assertNoErrors();
+        subscriber.dispose();
     }
 
     private AnnonceEntity saveSingleTest(AnnonceEntity annonceEntity) {
@@ -96,7 +102,9 @@ public class AnnonceRepositoryTest {
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
-        return subscriberInsert.values().get(0);
+        AnnonceEntity annonceEntity1 = subscriberInsert.values().get(0);
+        subscriberInsert.dispose();
+        return annonceEntity1;
     }
 
     /**
@@ -158,5 +166,27 @@ public class AnnonceRepositoryTest {
         Assert.assertEquals("nouvelle description", annonceEntityAfterUpdate.getDescription());
         Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUUID());
         Assert.assertEquals(UID_USER, annonceEntityAfterUpdate.getUuidUtilisateur());
+    }
+
+    @Test
+    public void saveMultipleAnnonce() {
+        // Erase all the database
+        deleteAllTest();
+
+        AnnonceEntity annonceEntity1 = initAnnonce("uidAnnonce1", UID_USER, StatusRemote.TO_SEND, "titre1", "description1", listCategorie.get(0).getIdCategorie());
+        AnnonceEntity annonceEntity2 = initAnnonce("uidAnnonce2", UID_USER, StatusRemote.TO_SEND, "titre2", "description2", listCategorie.get(0).getIdCategorie());
+
+        ArrayList<AnnonceEntity> list = new ArrayList<>();
+        list.add(annonceEntity1);
+        list.add(annonceEntity2);
+
+        TestObserver<List<AnnonceEntity>> subscriberInsert = new TestObserver<>();
+        annonceRepository.saveWithSingle(list).subscribe(subscriberInsert);
+
+        waitTerminalEvent(subscriberInsert, 5);
+        subscriberInsert.assertNoErrors();
+        subscriberInsert.assertValueCount(1); // Une seule liste
+        subscriberInsert.assertValue(annonceEntities -> annonceEntities.size() == 2);
+        subscriberInsert.dispose();
     }
 }
