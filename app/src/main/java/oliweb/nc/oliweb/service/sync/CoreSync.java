@@ -34,6 +34,7 @@ import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Constants;
 
+import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
@@ -92,7 +93,7 @@ class CoreSync {
      */
     private void manageNotificationDependingOnAnnonceToSend() {
         mNotificationCreated = false;
-        isAnotherAnnonceWithStatus(StatusRemote.TO_SEND, count -> {
+        isAnotherAnnonceWithStatus(TO_SEND, count -> {
             if (count > 0 && !mNotificationCreated) {
                 createNotification();
                 mNotificationCreated = true;
@@ -115,7 +116,7 @@ class CoreSync {
      */
     private void syncToSend() {
         annonceFullRepository
-                .getAllAnnoncesByStatus(StatusRemote.TO_SEND.getValue())
+                .getAllAnnoncesByStatus(TO_SEND)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(annoncesFulls -> {
                     if (annoncesFulls != null && !annoncesFulls.isEmpty()) {
@@ -164,7 +165,7 @@ class CoreSync {
     private void sendPhotosToFbStorage(long idAnnonce) {
         Log.d(TAG, "Starting sendPhotosToFbStorage");
         photoRepository
-                .getAllPhotosByStatusAndIdAnnonce(StatusRemote.TO_SEND.getValue(), idAnnonce)
+                .getAllPhotosByStatusAndIdAnnonce(TO_SEND.getValue(), idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(listPhoto -> {
                     if (listPhoto != null && !listPhoto.isEmpty()) {

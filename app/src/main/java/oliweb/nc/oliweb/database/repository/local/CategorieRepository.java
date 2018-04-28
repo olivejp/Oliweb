@@ -34,17 +34,17 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
         return INSTANCE;
     }
 
-    private Single<CategorieEntity> insertSingle(CategorieEntity utilisateurEntity) {
+    private Single<CategorieEntity> insertSingle(CategorieEntity categorieEntity) {
         return Single.create(e -> {
             try {
-                Long[] ids = dao.insert(utilisateurEntity);
+                Long[] ids = dao.insert(categorieEntity);
                 if (ids.length == 1) {
-                    findSingleById(utilisateurEntity.getIdCategorie())
+                    findSingleById(ids[0])
                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
-                    e.onError(new RuntimeException("Failed to insert into UtilisateurRepository"));
+                    e.onError(new RuntimeException("Failed to insert into CategorieRepository"));
                 }
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());

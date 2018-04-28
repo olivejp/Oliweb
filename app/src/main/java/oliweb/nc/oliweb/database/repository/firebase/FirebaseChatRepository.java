@@ -29,7 +29,6 @@ public class FirebaseChatRepository {
 
     private static FirebaseChatRepository instance;
     private ChatRepository chatRepository;
-    private int countSuccesses;
 
     private FirebaseChatRepository() {
     }

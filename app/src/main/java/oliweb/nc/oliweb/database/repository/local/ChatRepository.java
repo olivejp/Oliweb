@@ -7,7 +7,9 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.ChatDao;
@@ -21,32 +23,11 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
     private static final String TAG = ChatRepository.class.getName();
     private static ChatRepository INSTANCE;
     private ChatDao chatDao;
-    private int countSuccess;
 
     private ChatRepository(Context context) {
         super(context);
         this.dao = this.db.getChatDao();
         this.chatDao = (ChatDao) this.dao;
-    }
-
-    public Single<List<ChatEntity>> saveWithSingle(List<ChatEntity> chatEntities) {
-        return Single.create(emitter -> {
-            countSuccess = 0;
-            ArrayList<ChatEntity> listResult = new ArrayList<>();
-            for (ChatEntity chat : chatEntities) {
-                saveWithSingle(chat)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(chatSaved -> {
-                            listResult.add(chatSaved);
-                            countSuccess++;
-                            if (countSuccess == chatEntities.size()) {
-                                emitter.onSuccess(listResult);
-                            }
-                        })
-                        .doOnError(emitter::onError)
-                        .subscribe();
-            }
-        });
     }
 
     public static synchronized ChatRepository getInstance(Context context) {
@@ -118,6 +99,27 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
                 .subscribe());
     }
 
+    public Maybe<List<ChatEntity>> saveWithSingle(List<ChatEntity> chatEntities) {
+        AtomicInteger countSuccess = new AtomicInteger();
+        return Maybe.create(emitter -> {
+            countSuccess.set(0);
+            ArrayList<ChatEntity> listResult = new ArrayList<>();
+            for (ChatEntity chat : chatEntities) {
+                saveWithSingle(chat)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(chatSaved -> {
+                            listResult.add(chatSaved);
+                            countSuccess.getAndIncrement();
+                            if (countSuccess.get() == chatEntities.size()) {
+                                emitter.onSuccess(listResult);
+                                emitter.onComplete();
+                            }
+                        })
+                        .doOnError(emitter::onError)
+                        .subscribe();
+            }
+        });
+    }
 
     private Single<AtomicBoolean> existById(String uidChat) {
         return Single.create(e -> chatDao.countById(uidChat)
