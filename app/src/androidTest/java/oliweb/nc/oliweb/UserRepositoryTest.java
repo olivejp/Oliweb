@@ -230,7 +230,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testGetAll() {
+    public void getAllTest() {
         // Erase all the database
         deleteAll();
 

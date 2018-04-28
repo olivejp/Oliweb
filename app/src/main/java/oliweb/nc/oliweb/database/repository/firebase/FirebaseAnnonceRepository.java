@@ -11,6 +11,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
@@ -73,7 +74,6 @@ public class FirebaseAnnonceRepository {
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
-
 
     public void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
         Log.d(TAG, "checkAnnonceExistInLocalOrSaveIt called with annonceDto = " + annonceDto.toString());
@@ -152,24 +152,70 @@ public class FirebaseAnnonceRepository {
 
     public Single<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
         return Single.create(e ->
-            ANNONCE_REF.child(uidAnnonce)
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                            if (annonceDto != null) {
-                                e.onSuccess(annonceDto);
-                            } else {
-                                e.onSuccess(null);
+                ANNONCE_REF.child(uidAnnonce)
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
+                                if (annonceDto != null) {
+                                    e.onSuccess(annonceDto);
+                                } else {
+                                    e.onSuccess(null);
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            e.onError(new RuntimeException(databaseError.getMessage()));
-                        }
-                    })
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                e.onError(new RuntimeException(databaseError.getMessage()));
+                            }
+                        })
         );
     }
 
+    /**
+     * Insert or Update an annonce into the Firebase Database
+     *
+     * @param annonceDto
+     * @return
+     */
+    public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
+        DatabaseReference dbRef;
+        if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
+            dbRef = ANNONCE_REF.push();
+            annonceDto.setUuid(dbRef.getKey());
+        } else {
+            dbRef = ANNONCE_REF.child(annonceDto.getUuid());
+        }
+
+        return Single.create(emitter -> dbRef.setValue(annonceDto)
+                .addOnFailureListener(emitter::onError)
+                .addOnSuccessListener(o ->
+                        setDatePublication(annonceDto)
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnError(emitter::onError)
+                                .doOnSuccess(datePublication ->
+                                        findByUidAnnonce(annonceDto.getUuid())
+                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                .doOnError(emitter::onError)
+                                                .doOnSuccess(emitter::onSuccess)
+                                                .subscribe()
+                                )
+                                .subscribe()
+                ));
+    }
+
+    private Single<Long> setDatePublication(AnnonceDto annonceDto) {
+        return Single.create(e -> {
+                    DatabaseReference dbRef = ANNONCE_REF.child(annonceDto.getUuid());
+                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP)
+                            .addOnFailureListener(e::onError)
+                            .addOnSuccessListener(aVoid ->
+                                    findByUidAnnonce(annonceDto.getUuid())
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .doOnError(e::onError)
+                                            .doOnSuccess(annonceDtoRead -> e.onSuccess(annonceDtoRead.getDatePublication()))
+                                            .subscribe());
+                }
+        );
+    }
 }

@@ -12,7 +12,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -27,6 +26,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
@@ -53,6 +53,7 @@ class CoreSync {
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
     private AnnonceFullRepository annonceFullRepository;
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private int nbAnnonceCompletedTask = 0;
     private NotificationCompat.Builder mBuilder;
@@ -70,6 +71,7 @@ class CoreSync {
             fireStorage = FirebaseStorage.getInstance().getReference();
             instance.photoRepository = PhotoRepository.getInstance(context);
             instance.annonceRepository = AnnonceRepository.getInstance(context);
+            instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.notificationManager = NotificationManagerCompat.from(context);
             instance.mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
@@ -134,52 +136,25 @@ class CoreSync {
      * @param annonceFull to send to Firebase
      */
     private void sendAnnonceToFirebaseDatabase(AnnonceFull annonceFull) {
-        DatabaseReference dbRef;
-        if (annonceFull.getAnnonce().getUUID() != null) {
-            // Update
-            dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).child(annonceFull.getAnnonce().getUUID());
-        } else {
-            // Create
-            dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).push();
-            annonceFull.getAnnonce().setUUID(dbRef.getKey());
-        }
-
         AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFull);
-
-        dbRef.setValue(annonceDto)
-                .addOnSuccessListener(o -> {
-                    // Mise à jour de la date de publication
-                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP)
-                            .addOnSuccessListener(aVoid ->
-                                    dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                            // Récupération de la date de publication donnée par Firebase
-                                            AnnonceDto annonceDto1 = dataSnapshot.getValue(AnnonceDto.class);
-                                            if (annonceDto1 != null) {
-                                                // Mise à jour dans la DB locale
-                                                annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
-                                                annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                                                annonceRepository.update(dataReturn -> {
-                                                    if (dataReturn.isSuccessful()) {
-                                                        sendPhotosToFbStorage(annonceFull.annonce.getIdAnnonce());
-                                                    }
-                                                }, annonceFull.getAnnonce());
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-                                            // Do nothing
-                                        }
-                                    })
-                            );
+        firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annonceDtoSaved -> {
+                    AnnonceEntity annonceEntityToSaved = AnnonceConverter.convertDtoToEntity(annonceDtoSaved);
+                    annonceEntityToSaved.setStatut(StatusRemote.SEND);
+                    annonceRepository.saveWithSingle(annonceEntityToSaved)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(annonceEntitySaved -> sendPhotosToFbStorage(annonceEntitySaved.getIdAnnonce()))
+                            .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))
+                            .subscribe();
                 })
-                .addOnFailureListener(e -> {
+                .doOnError(saveToFirebaseException -> {
                     annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
                     annonceRepository.update(annonceFull.getAnnonce());
-                });
+                })
+                .subscribe();
     }
+
 
     /**
      * List all the photos for an Annonce and try to send them to Fb Storage
