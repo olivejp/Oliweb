@@ -230,4 +230,24 @@ public class AnnonceEntity implements Parcelable {
             return new AnnonceEntity[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "AnnonceEntity{" +
+                "idAnnonce=" + idAnnonce +
+                ", UUID='" + UUID + '\'' +
+                ", titre='" + titre + '\'' +
+                ", description='" + description + '\'' +
+                ", datePublication=" + datePublication +
+                ", prix=" + prix +
+                ", contactByTel='" + contactByTel + '\'' +
+                ", contactByEmail='" + contactByEmail + '\'' +
+                ", contactByMsg='" + contactByMsg + '\'' +
+                ", statut=" + statut +
+                ", UuidUtilisateur='" + UuidUtilisateur + '\'' +
+                ", idCategorie=" + idCategorie +
+                ", debattre='" + debattre + '\'' +
+                ", favorite=" + favorite +
+                '}';
+    }
 }

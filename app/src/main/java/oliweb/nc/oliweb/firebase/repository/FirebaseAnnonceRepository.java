@@ -133,7 +133,7 @@ public class FirebaseAnnonceRepository {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot == null || dataSnapshot.getValue() == null) {
-                    emitter.onError(new RuntimeException("Datasnapshot is empty"));
+                    emitter.onComplete();
                     return;
                 }
 

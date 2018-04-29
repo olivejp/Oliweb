@@ -90,4 +90,18 @@ public class UtilisateurEntity {
     public void setTokenDevice(String tokenDevice) {
         this.tokenDevice = tokenDevice;
     }
+
+    @Override
+    public String toString() {
+        return "UtilisateurEntity{" +
+                "UuidUtilisateur='" + UuidUtilisateur + '\'' +
+                ", telephone='" + telephone + '\'' +
+                ", email='" + email + '\'' +
+                ", profile='" + profile + '\'' +
+                ", dateCreation=" + dateCreation +
+                ", dateLastConnexion=" + dateLastConnexion +
+                ", photoUrl='" + photoUrl + '\'' +
+                ", tokenDevice='" + tokenDevice + '\'' +
+                '}';
+    }
 }

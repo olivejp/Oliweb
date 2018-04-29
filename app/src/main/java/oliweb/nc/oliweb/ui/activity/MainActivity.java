@@ -323,8 +323,12 @@ public class MainActivity extends AppCompatActivity
             liveCountAllFavorite.observe(this, observeNumberFavoriteBadge);
         } else {
             // On stoppe les observers
-            liveCountAllActiveAnnonce.removeObserver(observeNumberAnnonceBadge);
-            liveCountAllFavorite.removeObserver(observeNumberFavoriteBadge);
+            if (liveCountAllActiveAnnonce != null) {
+                liveCountAllActiveAnnonce.removeObserver(observeNumberAnnonceBadge);
+            }
+            if (liveCountAllFavorite != null) {
+                liveCountAllFavorite.removeObserver(observeNumberFavoriteBadge);
+            }
 
             TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
             TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();
@@ -346,7 +350,7 @@ public class MainActivity extends AppCompatActivity
                 viewModel.registerUser(mFirebaseUser)
                         .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                         .doOnSuccess(userExist -> {
-                            if (!userExist.get()) {
+                            if (userExist.get()) {
                                 Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " enregistré", Snackbar.LENGTH_LONG).show();
                             }
                         })

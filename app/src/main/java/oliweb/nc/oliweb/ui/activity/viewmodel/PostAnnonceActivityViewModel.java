@@ -5,10 +5,12 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -20,13 +22,14 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by orlanth23 on 31/01/2018.
  */
 
 public class PostAnnonceActivityViewModel extends AndroidViewModel {
+
+    private static final String TAG = PostAnnonceActivityViewModel.class.getName();
 
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
@@ -94,6 +97,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone, long idCategorie) {
+        Log.d(TAG, "Starting saveAnnonce");
         if (this.annonce == null) {
             createNewAnnonce();
         }
@@ -110,18 +114,36 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
             annonceRepository.saveWithSingle(annonce)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(emitter::onSuccess)
-                    .doOnError(emitter::onError)
+                    .doOnSuccess(t -> {
+                        Log.d(TAG, "doOnSuccess saveWithSingle " + t);
+                        emitter.onSuccess(t);
+                    })
+                    .doOnError(exception -> {
+                        Log.d(TAG, "doOnError saveWithSingle " + exception.getLocalizedMessage(), exception);
+                        emitter.onError(exception);
+                    })
                     .subscribe();
         });
     }
 
-    public void savePhotos(AnnonceEntity annonce, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    public Maybe<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
+        Log.d(TAG, "Starting savePhotos annonce : " + annonce);
         for (PhotoEntity photo : listPhoto) {
             photo.setIdAnnonce(annonce.getIdAnnonce());
         }
-        this.photoRepository.save(listPhoto, onRespositoryPostExecute);
-
+        return Maybe.create(emitter ->
+                this.photoRepository.saveWithSingle(listPhoto)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(e -> {
+                            Log.d(TAG, "savePhotos.doOnError e : " + e.getLocalizedMessage(), e);
+                            emitter.onError(e);
+                        })
+                        .doOnSuccess(listPhotos -> {
+                            Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
+                            emitter.onSuccess(listPhotos);
+                        })
+                        .subscribe()
+        );
     }
 
     public void updatePhotos() {

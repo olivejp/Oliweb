@@ -7,6 +7,7 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
@@ -38,7 +39,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
         return this.utilisateurDao.findByUuid(uuidUtilisateur);
     }
 
-    public Single<UtilisateurEntity> findSingleByUid(String uuidUtilisateur) {
+    public Maybe<UtilisateurEntity> findSingleByUid(String uuidUtilisateur) {
         return this.utilisateurDao.findSingleByUuid(uuidUtilisateur);
     }
 

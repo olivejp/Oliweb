@@ -235,6 +235,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void saveAnnonce() {
+        Log.d(TAG, "Starting saveAnnonce");
         if (!checkIfAnnonceIsValid()) {
             return;
         }
@@ -246,18 +247,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Save the annonce to the local DB
         viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), viewModel.getCategorie().getIdCategorie())
-                .doOnSuccess(annonce -> viewModel.savePhotos(annonce, dataReturn -> {
-                    if (dataReturn.isSuccessful()) {
-                        if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
-                            SyncService.launchSynchroForAll(getApplicationContext());
-                        }
-                        setResult(RESULT_OK);
-                        finish();
-                    } else {
-                        Log.e(TAG, dataReturn.getThrowable().getLocalizedMessage(), dataReturn.getThrowable());
-                    }
-                }))
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .doOnSuccess(annonce -> {
+                    Log.d(TAG, "saveAnnonce.doOnSuccess annonce : " + annonce);
+                    viewModel.savePhotos(annonce)
+                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .doOnSuccess(listPhotos -> {
+                                Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
+                                if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
+                                    SyncService.launchSynchroForAll(getApplicationContext());
+                                }
+                                setResult(RESULT_OK);
+                                finish();
+                            })
+                            .doOnError(exception -> Log.e(TAG, "savePhotos.doOnError " + exception.getLocalizedMessage(), exception))
+                            .subscribe();
+                })
+                .doOnError(throwable -> Log.e(TAG, "saveAnnonce.doOnError " + throwable.getLocalizedMessage(), throwable))
                 .subscribe();
     }
 

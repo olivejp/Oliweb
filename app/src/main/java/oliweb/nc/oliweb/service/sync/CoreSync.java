@@ -240,6 +240,7 @@ class CoreSync {
      * @param idAnnonce of the AnnonceFull we want to send.
      */
     private void updateAnnonceFullFromDbToFirebase(long idAnnonce) {
+        Log.d(TAG, "Starting updateAnnonceFullFromDbToFirebase " + idAnnonce);
         annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(annonceFull -> {
@@ -270,6 +271,7 @@ class CoreSync {
      * @param idAnnonce id de l'annonce à supprimer
      */
     private void deletePhotoByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting deletePhotoByIdAnnonce " + idAnnonce);
         photoRepository
                 .findAllPhotosByIdAnnonce(idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -278,18 +280,21 @@ class CoreSync {
     }
 
     private void deletePhotosFromMultiService(List<PhotoEntity> listPhotoEntity) {
+        Log.d(TAG, "Starting deletePhotosFromMultiService " + listPhotoEntity);
         deletePhotosFromFirebaseStorage(listPhotoEntity);
         deletePhotosFromDevice(listPhotoEntity);
         deletePhotosFromDatabase(listPhotoEntity);
     }
 
     private void deletePhotosFromDatabase(List<PhotoEntity> listPhotoEntity) {
+        Log.d(TAG, "Starting deletePhotosFromDatabase " + listPhotoEntity);
         for (PhotoEntity photo : listPhotoEntity) {
             photoRepository.delete(photo);
         }
     }
 
     private void deletePhotoFromDevice(PhotoEntity photoToDelete, @Nullable CustomOnSuccessListener listener) {
+        Log.d(TAG, "Starting deletePhotoFromDevice " + photoToDelete);
         // Suppression du fichier physique
         if (contentResolver.delete(Uri.parse(photoToDelete.getUriLocal()), null, null) != 0) {
             Log.d(TAG, "Successful deleting physical photo : " + photoToDelete.getUriLocal());
@@ -305,6 +310,7 @@ class CoreSync {
     }
 
     private void deletePhotosFromDevice(List<PhotoEntity> listPhotoToDelete) {
+        Log.d(TAG, "Starting deletePhotosFromDevice " + listPhotoToDelete);
         if (listPhotoToDelete != null && !listPhotoToDelete.isEmpty()) {
             for (PhotoEntity photo : listPhotoToDelete) {
                 deletePhotoFromDevice(photo, null);
@@ -313,6 +319,7 @@ class CoreSync {
     }
 
     private void deletePhotoFromFirebaseStorage(PhotoEntity photoEntity, @Nullable CustomOnSuccessListener listener) {
+        Log.d(TAG, "Starting deletePhotoFromFirebaseStorage " + photoEntity.toString());
         // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
         if (photoEntity.getFirebasePath() != null) {
             // Suppression firebase ... puis suppression dans la DB
@@ -341,6 +348,7 @@ class CoreSync {
      * @param listPhotoEntity List des photos à supprimer de Firebase Storage
      */
     private void deletePhotosFromFirebaseStorage(List<PhotoEntity> listPhotoEntity) {
+        Log.d(TAG, "Starting deletePhotosFromFirebaseStorage " + listPhotoEntity);
         if (listPhotoEntity != null && !listPhotoEntity.isEmpty()) {
             for (PhotoEntity photo : listPhotoEntity) {
                 deletePhotoFromFirebaseStorage(photo, null);
@@ -355,6 +363,12 @@ class CoreSync {
      * @param annonce à supprimer de Firebase Database
      */
     private void deleteAnnonceFromFirebaseDatabase(AnnonceEntity annonce) {
+        Log.d(TAG, "Starting deleteAnnonceFromFirebaseDatabase " + annonce);
+        // Condition de garde
+        if (annonce == null || annonce.getUUID() == null) {
+            return;
+        }
+
         // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
         fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
                 .child(annonce.getUUID())
@@ -367,6 +381,8 @@ class CoreSync {
     }
 
     private void deleteChatFromFirebaseByAnnonceUid(String uidAnnonce) {
+        Log.d(TAG, "Starting deleteChatFromFirebaseByAnnonceUid " + uidAnnonce);
+
         // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
         fireDb.getReference(FIREBASE_DB_CHATS_REF)
                 .orderByChild("uidAnnonce")
@@ -393,6 +409,8 @@ class CoreSync {
     }
 
     private void deleteMessageFromFirebase(String uidChat) {
+        Log.d(TAG, "Starting deleteMessageFromFirebase " + uidChat);
+
         fireDb.getReference(FIREBASE_DB_MESSAGES_REF)
                 .child(uidChat)
                 .removeValue();
@@ -402,11 +420,14 @@ class CoreSync {
      * Read all annonces with TO_DELETE status
      */
     private void syncToDelete() {
+        Log.d(TAG, "Starting syncToDelete");
         syncDeleteAnnonce();
         syncDeletePhoto();
     }
 
     private void syncDeleteAnnonce() {
+        Log.d(TAG, "Starting syncDeleteAnnonce");
+
         // Read all annonces with TO_DELETE status to delete them on remote and local
         annonceRepository
                 .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
@@ -435,6 +456,8 @@ class CoreSync {
     }
 
     private void syncDeletePhoto() {
+        Log.d(TAG, "Starting syncDeletePhoto");
+
         // Read all PhotoEntities with TO_DELETE status to delete them on remote storage and local and on Firebase Database
         photoRepository
                 .getAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
@@ -460,6 +483,8 @@ class CoreSync {
     }
 
     private void createNotification() {
+        Log.d(TAG, "Starting createNotification");
+
         mBuilderAnnonce.setContentTitle("Oliweb - Envoi de vos annonces")
                 .setContentText("Téléchargement en cours")
                 .setSmallIcon(R.drawable.ic_sync_white_48dp)
@@ -472,12 +497,16 @@ class CoreSync {
     }
 
     private void updateProgressBar(int max, int current, int notificationId) {
+        Log.d(TAG, "Starting updateProgressBar max : " + max + " current : " + current + " notificationId : " + notificationId);
+
         mBuilderAnnonce.setProgress(max, current, false);
         mBuilderAnnonce.setContentText("Téléchargement en cours - " + current + "/" + max);
         notificationManager.notify(notificationId, mBuilderAnnonce.build());
     }
 
     private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+        Log.d(TAG, "Starting isAnotherAnnonceWithStatus " + statusRemote.getValue());
+
         // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
         annonceRepository
                 .countFlowableAllAnnoncesByStatus(statusRemote.getValue())
@@ -487,6 +516,8 @@ class CoreSync {
     }
 
     private void isAnotherPhotoWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+        Log.d(TAG, "Starting isAnotherPhotoWithStatus " + statusRemote.getValue());
+
         // Read all photos with statusRemote, when reach 0, then run onCheckedListener
         photoRepository
                 .countFlowableAllPhotosByStatus(statusRemote.getValue())

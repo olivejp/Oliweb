@@ -15,14 +15,15 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -87,27 +88,43 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @return
      */
     public Single<AtomicBoolean> registerUser(FirebaseUser firebaseUser) {
-        return Single.create(emitter -> {
-            UtilisateurEntity entity = UtilisateurConverter.convertFbToEntity(firebaseUser);
-            entity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
-            utilisateurRepository.saveWithSingle(entity)
-                    .doOnSuccess(saveSuccessful -> {
-                        Log.d(TAG, "Utilisateur créé dans la base de données");
-                        firebaseUserRespository.insertUserIntoFirebase(entity)
-                                .doOnSuccess(insertedIntoFirebase -> {
-                                    if (insertedIntoFirebase.get()) {
-                                        Log.d(TAG, "Utilisateur créé dans la base Firebase");
-                                        emitter.onSuccess(new AtomicBoolean(true));
-                                    } else {
-                                        Log.d(TAG, "Echec de la création de l'utilisateur dans Firebase");
-                                        emitter.onSuccess(new AtomicBoolean(false));
-                                    }
-                                })
-                                .doOnError(emitter::onError).subscribe();
-                    })
-                    .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
-                    .subscribe();
-        });
+        Log.d(TAG, "Starting registerUser firebaseUser : " + firebaseUser);
+        return Single.create(emitter ->
+                utilisateurRepository.existByUid(firebaseUser.getUid())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(exist -> {
+                            Log.d(TAG, "existByUid.doOnSuccess exist : " + exist);
+                            if (!exist.get()) {
+                                UtilisateurEntity entity = UtilisateurConverter.convertFbToEntity(firebaseUser);
+                                entity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
+                                utilisateurRepository.saveWithSingle(entity)
+                                        .doOnSuccess(user -> {
+                                            Log.d(TAG, "Utilisateur créé dans la base de données");
+                                            firebaseUserRespository.insertUserIntoFirebase(entity)
+                                                    .doOnSuccess(result -> {
+                                                        Log.d(TAG, "insertUserIntoFirebase.doOnSuccess result : " + result);
+                                                        if (result.get()) {
+                                                            emitter.onSuccess(new AtomicBoolean(true));
+                                                        } else {
+                                                            emitter.onSuccess(new AtomicBoolean(false));
+                                                        }
+                                                    })
+                                                    .doOnError(e1 -> {
+                                                        Log.d(TAG, "insertUserIntoFirebase.doOnError e1 : " + e1.getLocalizedMessage(), e1);
+                                                        emitter.onError(e1);
+                                                    })
+                                                    .subscribe();
+                                        })
+                                        .doOnError(e -> {
+                                            Log.d(TAG, "saveWithSingle.doOnError e : " + e.getLocalizedMessage(), e);
+                                            emitter.onError(e);
+                                        })
+                                        .subscribe();
+                            }
+                        })
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {

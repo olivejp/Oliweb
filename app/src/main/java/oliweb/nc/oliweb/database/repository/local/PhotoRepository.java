@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -47,21 +47,19 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     }
 
     public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        if (photoEntity.getIdPhoto() != null) {
+        Log.d(TAG, "Starting save photoEntity : " + photoEntity);
+        if (photoEntity != null) {
             this.photoDao.findSingleById(photoEntity.getIdPhoto())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe((photoEntity1, throwable) -> {
-                        if (throwable != null) {
-                            // This user don't exists already, create it
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(photoSaved -> {
+                        if (photoSaved != null) {
                             insert(onRespositoryPostExecute, photoEntity);
                         } else {
-                            if (photoEntity1 != null) {
-                                // User exists, just update it
-                                update(onRespositoryPostExecute, photoEntity);
-                            }
+                            update(onRespositoryPostExecute, photoEntity);
                         }
-                    });
+                    })
+                    .doOnError(exception -> Log.e(TAG, "save " + exception.getLocalizedMessage(), exception))
+                    .subscribe();
         } else {
             insert(onRespositoryPostExecute, photoEntity);
         }
@@ -74,6 +72,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
      * @param onRespositoryPostExecute
      */
     public void save(List<PhotoEntity> listPhoto, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        Log.d(TAG, "Starting save listPhoto : " + listPhoto);
         for (PhotoEntity photoEntity : listPhoto) {
             save(photoEntity, onRespositoryPostExecute);
         }
@@ -81,6 +80,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
 
 
     private Single<AtomicBoolean> existById(Long idAnnonce) {
+        Log.d(TAG, "Starting existById idAnnonce : " + idAnnonce);
         return Single.create(e -> photoDao.countById(idAnnonce)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
@@ -89,6 +89,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     }
 
     private Single<PhotoEntity> insertSingle(PhotoEntity entity) {
+        Log.d(TAG, "Starting insertSingle photoEntity : " + entity);
         return Single.create(e -> {
             try {
                 Long[] ids = dao.insert(entity);
@@ -112,6 +113,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
      * because it queries the Database which only accept background queries.
      */
     private Single<PhotoEntity> updateSingle(PhotoEntity entity) {
+        Log.d(TAG, "Starting updateSingle photoEntity : " + entity);
         return Single.create(e -> {
             try {
                 int updatedCount = dao.update(entity);
@@ -124,18 +126,20 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                     e.onError(new RuntimeException("Failed to update into PhotoRepository"));
                 }
             } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
+                Log.e(TAG, "updateSingle catch exception : " + exception.getMessage());
                 e.onError(exception);
             }
         });
     }
 
     public Single<PhotoEntity> saveWithSingle(PhotoEntity photoEntity) {
+        Log.d(TAG, "Starting saveWithSingle photoEntity : " + photoEntity);
         return Single.create(emitter -> existById(photoEntity.getIdAnnonce())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)
-                .doOnSuccess(atomicBoolean -> {
-                    if (atomicBoolean.get()) {
+                .doOnSuccess(result -> {
+                    Log.d(TAG, "saveWithSingle.doOnSuccess result : " + result.get());
+                    if (result.get()) {
                         updateSingle(photoEntity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
@@ -150,21 +154,48 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                 .subscribe());
     }
 
-
+    public Single<List<PhotoEntity>> saveWithSingle(List<PhotoEntity> photoEntities) {
+        Log.d(TAG, "Starting saveWithSingle photoEntities : " + photoEntities);
+        return Single.create(emitter -> {
+            AtomicInteger countSuccess = new AtomicInteger();
+            ArrayList<PhotoEntity> listResult = new ArrayList<>();
+            for (PhotoEntity annonce : photoEntities) {
+                saveWithSingle(annonce)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(photoEntity -> {
+                            Log.d(TAG, "saveWithSingle.doOnSuccess photoEntity : " + photoEntity);
+                            listResult.add(photoEntity);
+                            countSuccess.getAndIncrement();
+                            if (countSuccess.get() == photoEntities.size()) {
+                                emitter.onSuccess(listResult);
+                            }
+                        })
+                        .doOnError(e -> {
+                            Log.d(TAG, "saveWithSingle.doOnError excpetion : " + e.getLocalizedMessage());
+                            emitter.onError(e);
+                        })
+                        .subscribe();
+            }
+        });
+    }
 
     public Single<PhotoEntity> findSingleById(long idPhoto) {
+        Log.d(TAG, "Starting findSingleById idPhoto : " + idPhoto);
         return this.photoDao.findSingleById(idPhoto);
     }
 
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting findAllByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findByIdAnnonce(idAnnonce);
     }
 
     public Maybe<List<PhotoEntity>> getAllPhotosByStatus(String status) {
+        Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
         return this.photoDao.getAllPhotosByStatus(status);
     }
 
     public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(long idAnnonce, StatusRemote... status) {
+        Log.d(TAG, "Starting getAllPhotosByStatusAndIdAnnonce idAnnonce : " + idAnnonce + " status : " + Arrays.toString(status));
         AtomicInteger countSuccess = new AtomicInteger();
         return Maybe.create(e -> {
             ArrayList<PhotoEntity> listResult = new ArrayList<>();
@@ -188,14 +219,17 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     }
 
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
     }
 
     public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting countAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.countAllPhotosByIdAnnonce(idAnnonce);
     }
 
     public Flowable<Integer> countFlowableAllPhotosByStatus(String status) {
+        Log.d(TAG, "Starting countFlowableAllPhotosByStatus status : " + status);
         return this.photoDao.countFlowableAllPhotosByStatus(status);
     }
 

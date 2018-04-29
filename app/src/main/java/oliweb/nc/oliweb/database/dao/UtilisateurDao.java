@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 
@@ -21,7 +22,7 @@ public interface UtilisateurDao extends AbstractDao<UtilisateurEntity> {
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
-    Single<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
+    Maybe<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM utilisateur")

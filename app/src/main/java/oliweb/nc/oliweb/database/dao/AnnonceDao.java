@@ -23,7 +23,7 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    Single<AnnonceEntity> findSingleById(Long idAnnonce);
+    Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut = :status")

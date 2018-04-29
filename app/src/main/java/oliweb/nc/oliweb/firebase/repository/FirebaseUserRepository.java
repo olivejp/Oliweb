@@ -35,19 +35,23 @@ public class FirebaseUserRepository {
     }
 
     public Single<AtomicBoolean> insertUserIntoFirebase(UtilisateurEntity utilisateurEntity) {
+        Log.d(TAG, "Starting insertUserIntoFirebase");
         return Single.create(emitter -> USER_REF.child(utilisateurEntity.getUuidUtilisateur()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
                     USER_REF.child(utilisateurEntity.getUuidUtilisateur()).setValue(utilisateurEntity)
                             .addOnSuccessListener(aVoid -> {
-                                Log.d(TAG, "Utilisateur correctement créé dans Firebase");
+                                Log.d(TAG, "Utilisateur correctement créé dans Firebase " + utilisateurEntity.toString());
                                 emitter.onSuccess(new AtomicBoolean(true));
                             })
                             .addOnFailureListener(exception -> {
-                                Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase");
+                                Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase " + utilisateurEntity.toString());
                                 emitter.onError(exception);
                             });
+                } else {
+                    Log.d(TAG, "Utilisateur's already in the Firebase Database");
+                    emitter.onSuccess(new AtomicBoolean(false));
                 }
             }
 

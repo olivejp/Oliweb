@@ -49,6 +49,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     private Single<AnnonceEntity> insertSingle(AnnonceEntity entity) {
+        Log.d(TAG, "Starting insertSingle " + entity.toString());
         return Single.create(e -> {
             try {
                 Long[] ids = dao.insert(entity);
@@ -56,6 +57,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
                     findSingleById(ids[0])
                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
+                            .doOnError(e::onError)
                             .subscribe();
                 } else {
                     e.onError(new RuntimeException("Failed to insert into AnnonceRepository"));
@@ -72,6 +74,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
      * because it queries the Database which only accept background queries.
      */
     private Single<AnnonceEntity> updateSingle(AnnonceEntity entity) {
+        Log.d(TAG, "Starting updateSingle " + entity.toString());
         return Single.create(e -> {
             try {
                 int updatedCount = dao.update(entity);
@@ -91,9 +94,13 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public Single<AnnonceEntity> saveWithSingle(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting saveWithSingle " + annonceEntity.toString());
         return Single.create(emitter -> existById(annonceEntity.getIdAnnonce())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(emitter::onError)
+                .doOnError(e -> {
+                    Log.e(TAG, e.getLocalizedMessage(), e);
+                    emitter.onError(e);
+                })
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         updateSingle(annonceEntity)
@@ -131,18 +138,22 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public LiveData<AnnonceEntity> findById(long idAnnonce) {
+        Log.d(TAG, "Starting findById " + idAnnonce);
         return this.annonceDao.findById(idAnnonce);
     }
 
     public LiveData<AnnonceEntity> findByUid(String uidAnnonce) {
+        Log.d(TAG, "Starting findByUid " + uidAnnonce);
         return this.annonceDao.findByUid(uidAnnonce);
     }
 
-    public Single<AnnonceEntity> findSingleById(long idAnnonce) {
+    public Maybe<AnnonceEntity> findSingleById(long idAnnonce) {
+        Log.d(TAG, "Starting findSingleById " + idAnnonce);
         return this.annonceDao.findSingleById(idAnnonce);
     }
 
     public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status) {
+        Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
         return this.annonceDao.getAllAnnonceByStatus(status);
     }
 
