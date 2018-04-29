@@ -200,21 +200,24 @@ public class FirebaseAnnonceRepository {
             dbRef = ANNONCE_REF.child(annonceDto.getUuid());
         }
 
-        return Single.create(emitter -> dbRef.setValue(annonceDto)
-                .addOnFailureListener(emitter::onError)
-                .addOnSuccessListener(o ->
-                        setDatePublication(annonceDto)
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(emitter::onError)
-                                .doOnSuccess(datePublication ->
-                                        findByUidAnnonce(annonceDto.getUuid())
-                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                .doOnError(emitter::onError)
-                                                .doOnSuccess(emitter::onSuccess)
-                                                .subscribe()
-                                )
-                                .subscribe()
-                ));
+        return Single.create(emitter ->
+                FirebaseUtility.getServerTimestamp()
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(datePublication -> {
+                            annonceDto.setDatePublication(datePublication);
+                            dbRef.setValue(annonceDto)
+                                    .addOnFailureListener(emitter::onError)
+                                    .addOnSuccessListener(o ->
+                                            findByUidAnnonce(annonceDto.getUuid())
+                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                    .doOnError(emitter::onError)
+                                                    .doOnSuccess(emitter::onSuccess)
+                                                    .subscribe()
+                                    );
+                        })
+                        .subscribe()
+        );
     }
 
     public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
@@ -248,26 +251,6 @@ public class FirebaseAnnonceRepository {
                                             .doOnSuccess(annonceDtoRead -> e.onSuccess(annonceDtoRead.getDatePublication()))
                                             .subscribe());
                 }
-        );
-    }
-
-    private Single<Long> getServerTimestamp() {
-        return Single.create(emitter ->
-                TIME_REF.child("now").setValue(ServerValue.TIMESTAMP)
-                        .addOnFailureListener(emitter::onError)
-                        .addOnSuccessListener(aVoid ->
-                                TIME_REF.child("now").addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        emitter.onSuccess(dataSnapshot.getValue(Long.class));
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-                                        emitter.onError(new RuntimeException(databaseError.getMessage()));
-                                    }
-                                })
-                        )
         );
     }
 }
