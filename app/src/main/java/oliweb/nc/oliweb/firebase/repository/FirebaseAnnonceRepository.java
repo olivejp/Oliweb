@@ -29,12 +29,14 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_TIME_REF;
 
 // TODO Faire des tests sur ce repository
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
     private DatabaseReference ANNONCE_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
+    private DatabaseReference TIME_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_TIME_REF);
 
     private static FirebaseAnnonceRepository instance;
 
@@ -116,19 +118,21 @@ public class FirebaseAnnonceRepository {
     }
 
     private void checkAnnonceLocalRepository(String uidUser, AnnonceDto annonceDto, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
-        Log.d(TAG, "checkAnnonceLocalRepository called with uidUser = " + uidUser);
+        Log.d(TAG, "checkAnnonceLocalRepository called with uidUser : " + uidUser + " annonceDto : " + annonceDto);
         annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid())
                 .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                 .doOnSuccess(integer -> {
+                    Log.d(TAG, "countByUidUtilisateurAndUidAnnonce.doOnSuccess integer : " + integer);
                     if (integer != null && integer == 0) {
                         shouldAskQuestion.postValue(new AtomicBoolean(true));
                     }
                 })
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
+                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .subscribe();
     }
 
     private Observable<AnnonceDto> getAllAnnonceFromFbByUidUser(String uidUtilisateur) {
+        Log.d(TAG, "getAllAnnonceFromFbByUidUser uidUtilisateur : " + uidUtilisateur);
         return Observable.create(emitter -> queryByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -158,6 +162,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public Single<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
+        Log.d(TAG, "findByUidAnnonce uidAnnonce : " + uidAnnonce);
         return Single.create(e ->
                 ANNONCE_REF.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -186,6 +191,7 @@ public class FirebaseAnnonceRepository {
      * @return
      */
     public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
+        Log.d(TAG, "saveAnnonceToFirebase annonceDto : " + annonceDto);
         DatabaseReference dbRef;
         if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
             dbRef = ANNONCE_REF.push();
@@ -212,6 +218,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
+        Log.d(TAG, "saveAnnonceToFirebase idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
                 annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
                         .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -229,6 +236,7 @@ public class FirebaseAnnonceRepository {
     }
 
     private Single<Long> setDatePublication(AnnonceDto annonceDto) {
+        Log.d(TAG, "setDatePublication annonceDto : " + annonceDto);
         return Single.create(e -> {
                     DatabaseReference dbRef = ANNONCE_REF.child(annonceDto.getUuid());
                     dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP)
@@ -240,6 +248,26 @@ public class FirebaseAnnonceRepository {
                                             .doOnSuccess(annonceDtoRead -> e.onSuccess(annonceDtoRead.getDatePublication()))
                                             .subscribe());
                 }
+        );
+    }
+
+    private Single<Long> getServerTimestamp() {
+        return Single.create(emitter ->
+                TIME_REF.child("now").setValue(ServerValue.TIMESTAMP)
+                        .addOnFailureListener(emitter::onError)
+                        .addOnSuccessListener(aVoid ->
+                                TIME_REF.child("now").addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        emitter.onSuccess(dataSnapshot.getValue(Long.class));
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        emitter.onError(new RuntimeException(databaseError.getMessage()));
+                                    }
+                                })
+                        )
         );
     }
 }

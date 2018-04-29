@@ -156,7 +156,7 @@ class CoreSync {
      * @param annonceFulls to send to Firebase
      */
     private void sendAnnonceToFirebaseDatabase(List<AnnonceFull> annonceFulls) {
-        Log.d(TAG, "Starting sendAnnonceToFirebaseDatabase");
+        Log.d(TAG, "Starting sendAnnonceToFirebaseDatabase annonceFulls : " + annonceFulls);
         nbAnnonceCompletedTask = 0;
         nbPhotoCompletedTask = 0;
         for (AnnonceFull annonceFull : annonceFulls) {
@@ -164,8 +164,13 @@ class CoreSync {
             AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFull);
             firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(this::updateAndSaveAnnonceToLocalDb)
+                    .doOnSuccess(annonceFbSaved -> {
+                        Log.d(TAG, "saveAnnonceToFirebase.doOnSuccess annonceFbSaved : " + annonceFbSaved);
+                        annonceFull.getAnnonce().setDatePublication(annonceFbSaved.getDatePublication());
+                        updateAndSaveAnnonceToLocalDb(annonceFull.getAnnonce());
+                    })
                     .doOnError(saveToFirebaseException -> {
+                        Log.d(TAG, "saveAnnonceToFirebase.doOnError saveToFirebaseException : " + saveToFirebaseException.getLocalizedMessage(), saveToFirebaseException);
                         annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
                         annonceRepository.update(annonceFull.getAnnonce());
                     })
@@ -173,11 +178,10 @@ class CoreSync {
         }
     }
 
-    private void updateAndSaveAnnonceToLocalDb(AnnonceDto annonceDto) {
-        Log.d(TAG, "Starting updateAndSaveAnnonceToLocalDb");
-        AnnonceEntity annonceEntityToSaved = AnnonceConverter.convertDtoToEntity(annonceDto);
-        annonceEntityToSaved.setStatut(StatusRemote.SEND);
-        annonceRepository.saveWithSingle(annonceEntityToSaved)
+    private void updateAndSaveAnnonceToLocalDb(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting updateAndSaveAnnonceToLocalDb annonceDto : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.SEND);
+        annonceRepository.saveWithSingle(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(annonceEntitySaved -> sendPhotosToFbStorageByIdAnnonce(annonceEntitySaved.getIdAnnonce()))
                 .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))

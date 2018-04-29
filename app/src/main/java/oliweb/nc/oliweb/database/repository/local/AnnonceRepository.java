@@ -5,8 +5,10 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -25,7 +27,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     private static AnnonceRepository INSTANCE;
     private AnnonceDao annonceDao;
-    private int coutSuccess;
 
     private AnnonceRepository(Context context) {
         super(context);
@@ -117,22 +118,28 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
                 .subscribe());
     }
 
-    public Single<List<AnnonceEntity>> saveWithSingle(List<AnnonceEntity> annonceEntityList) {
-        return Single.create(emitter -> {
-            coutSuccess = 0;
-            ArrayList<AnnonceEntity> listResult = new ArrayList<>();
-            for (AnnonceEntity annonce : annonceEntityList) {
-                saveWithSingle(annonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(annonceEntity -> {
-                            listResult.add(annonceEntity);
-                            coutSuccess++;
-                            if (coutSuccess == annonceEntityList.size()) {
-                                emitter.onSuccess(listResult);
-                            }
-                        })
-                        .doOnError(emitter::onError)
-                        .subscribe();
+    public Maybe<List<AnnonceEntity>> saveWithSingle(List<AnnonceEntity> annonceEntityList) {
+        Log.d(TAG, "Starting saveWithSingle annonceEntityList : " + annonceEntityList);
+        return Maybe.create(emitter -> {
+            if (annonceEntityList == null || annonceEntityList.isEmpty()) {
+                emitter.onSuccess(Collections.emptyList());
+            } else {
+                AtomicInteger countSuccess = new AtomicInteger();
+                ArrayList<AnnonceEntity> listResult = new ArrayList<>();
+                for (AnnonceEntity annonce : annonceEntityList) {
+                    saveWithSingle(annonce)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(annonceEntity -> {
+                                Log.d(TAG, "saveWithSingle.doOnSuccess annonceEntity : " + annonceEntity);
+                                listResult.add(annonceEntity);
+                                countSuccess.getAndIncrement();
+                                if (countSuccess.get() == annonceEntityList.size()) {
+                                    emitter.onSuccess(listResult);
+                                }
+                            })
+                            .doOnError(emitter::onError)
+                            .subscribe();
+                }
             }
         });
     }
@@ -170,6 +177,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public Single<Integer> countByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
+        Log.d(TAG, "Starting countByUidUtilisateurAndUidAnnonce uidUtilisateur : " + uidUtilisateur + " uidAnnonce : " + uidAnnonce);
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 

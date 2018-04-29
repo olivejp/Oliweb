@@ -55,6 +55,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
+        Log.d(TAG, "Starting shouldIAskQuestionToRetreiveData uidUtilisateur : " + uidUtilisateur);
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new MutableLiveData<>();
         }

@@ -50,6 +50,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     // TODO : Peut faire mieux
     public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
+        Log.d(TAG, "Starting shouldIAskQuestionToRetreiveData uidUtilisateur : " + uidUtilisateur);
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new MutableLiveData<>();
         }
@@ -70,6 +71,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      * @param onRespositoryPostExecute
      */
     public void deleteAnnonceById(long idAnnonce, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        Log.d(TAG, "Starting deleteAnnonceById idAnnonce : " + idAnnonce);
         this.annonceRepository.findSingleById(idAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(annonceEntity -> updateAnnonceToDelete(annonceEntity, onRespositoryPostExecute))
@@ -77,6 +79,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     }
 
     private void updateAnnonceToDelete(AnnonceEntity annonceEntity, AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+        Log.d(TAG, "Starting updateAnnonceToDelete annonceEntity : " + annonceEntity);
         // Update annonce status
         annonceEntity.setStatut(StatusRemote.TO_DELETE);
         annonceRepository.update(onRespositoryPostExecute, annonceEntity);
@@ -89,6 +92,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     }
 
     private void updateAllPhotosToDelete(List<PhotoEntity> photoEntities) {
+        Log.d(TAG, "Starting updateAllPhotosToDelete photoEntities : " + photoEntities);
         for (PhotoEntity photoEntity : photoEntities) {
             photoEntity.setStatut(StatusRemote.TO_DELETE);
             photoRepository.update(dataReturn -> {

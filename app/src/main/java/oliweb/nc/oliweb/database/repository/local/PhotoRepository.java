@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -154,27 +155,32 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                 .subscribe());
     }
 
-    public Single<List<PhotoEntity>> saveWithSingle(List<PhotoEntity> photoEntities) {
+    public Maybe<List<PhotoEntity>> saveWithSingle(List<PhotoEntity> photoEntities) {
         Log.d(TAG, "Starting saveWithSingle photoEntities : " + photoEntities);
-        return Single.create(emitter -> {
-            AtomicInteger countSuccess = new AtomicInteger();
-            ArrayList<PhotoEntity> listResult = new ArrayList<>();
-            for (PhotoEntity annonce : photoEntities) {
-                saveWithSingle(annonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(photoEntity -> {
-                            Log.d(TAG, "saveWithSingle.doOnSuccess photoEntity : " + photoEntity);
-                            listResult.add(photoEntity);
-                            countSuccess.getAndIncrement();
-                            if (countSuccess.get() == photoEntities.size()) {
-                                emitter.onSuccess(listResult);
-                            }
-                        })
-                        .doOnError(e -> {
-                            Log.d(TAG, "saveWithSingle.doOnError excpetion : " + e.getLocalizedMessage());
-                            emitter.onError(e);
-                        })
-                        .subscribe();
+        return Maybe.create(emitter -> {
+            if (photoEntities == null || photoEntities.isEmpty()) {
+                emitter.onSuccess(Collections.emptyList());
+            } else {
+                AtomicInteger countSuccess = new AtomicInteger();
+                ArrayList<PhotoEntity> listResult = new ArrayList<>();
+
+                for (PhotoEntity annonce : photoEntities) {
+                    saveWithSingle(annonce)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnSuccess(photoEntity -> {
+                                Log.d(TAG, "saveWithSingle.doOnSuccess photoEntity : " + photoEntity);
+                                listResult.add(photoEntity);
+                                countSuccess.getAndIncrement();
+                                if (countSuccess.get() == photoEntities.size()) {
+                                    emitter.onSuccess(listResult);
+                                }
+                            })
+                            .doOnError(e -> {
+                                Log.d(TAG, "saveWithSingle.doOnError excpetion : " + e.getLocalizedMessage());
+                                emitter.onError(e);
+                            })
+                            .subscribe();
+                }
             }
         });
     }
