@@ -17,11 +17,13 @@ import com.firebase.ui.auth.AuthUI;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -64,6 +66,12 @@ public class Utility {
         if (inputManager != null) {
             inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
         }
+    }
+
+    public static List<String> statusToAvoid() {
+        List<String> list = new ArrayList<>();
+        Collections.addAll(list, StatusRemote.TO_DELETE.getValue(), StatusRemote.DELETED.getValue(), StatusRemote.FAILED_TO_DELETE.getValue());
+        return list;
     }
 
     /**

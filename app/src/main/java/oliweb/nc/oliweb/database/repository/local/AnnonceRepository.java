@@ -150,8 +150,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.countFlowableAllAnnoncesByStatus(status);
     }
 
-    public LiveData<Integer> countAllAnnoncesByUser(String uidUser) {
-        return this.annonceDao.countAllAnnoncesByUser(uidUser);
+    public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {
+        return this.annonceDao.countAllAnnoncesByUser(uidUser, statusToAvoid);
     }
 
     public LiveData<Integer> countAllFavoritesByUser(String uidUser) {

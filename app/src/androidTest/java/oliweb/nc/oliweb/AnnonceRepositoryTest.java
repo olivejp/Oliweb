@@ -52,6 +52,12 @@ public class AnnonceRepositoryTest {
     }
 
     private void initCategories() {
+        TestObserver<Integer> subscriber = new TestObserver<>();
+        categorieRepository.deleteAll().subscribe(subscriber);
+        waitTerminalEvent(subscriber, 5);
+        subscriber.assertNoErrors();
+        subscriber.dispose();
+
         CategorieEntity categorieEntity = new CategorieEntity();
         categorieEntity.setName("cat1");
         categorieEntity.setCouleur("123456");

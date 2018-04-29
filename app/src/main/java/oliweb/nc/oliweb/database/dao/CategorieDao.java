@@ -30,4 +30,8 @@ public interface CategorieDao extends AbstractDao<CategorieEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM categorie WHERE idCategorie = :idCategorie")
     Single<Integer> countById(Long idCategorie);
+
+    @Transaction
+    @Query("SELECT * FROM categorie")
+    Single<List<CategorieEntity>> getAll();
 }

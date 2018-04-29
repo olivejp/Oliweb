@@ -108,7 +108,7 @@ public class AnnonceConverter {
             return annonceEntity;
         } catch (Exception exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
+            return null;
         }
-        return null;
     }
 }

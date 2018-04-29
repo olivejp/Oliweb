@@ -110,8 +110,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         });
     }
 
-    public LiveData<Integer> countAllAnnoncesByUser(String uid) {
-        return this.annonceRepository.countAllAnnoncesByUser(uid);
+    public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {
+        return this.annonceRepository.countAllAnnoncesByUser(uid, statusToAvoid);
     }
 
     public LiveData<Integer> countAllFavoritesByUser(String uid) {

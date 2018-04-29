@@ -24,6 +24,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -161,7 +162,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 viewModel.deleteAnnonceById(idAnnonce, dataReturn -> {
                     if (dataReturn.getNb() > 0) {
                         Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
-                        SyncService.launchSynchroForAll(getApplicationContext());
+                        if (NetworkReceiver.checkConnection(this)) {
+                            SyncService.launchSynchroForAll(getApplicationContext());
+                        }
                     }
                 });
             }

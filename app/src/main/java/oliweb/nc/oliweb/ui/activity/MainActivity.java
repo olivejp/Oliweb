@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.app.SearchManager;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -63,6 +64,10 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
+
+    private LiveData<Integer> liveCountAllActiveAnnonce;
+    private LiveData<Integer> liveCountAllFavorite;
+
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -308,14 +313,18 @@ public class MainActivity extends AppCompatActivity
     private void activeBadges(String uid, boolean active) {
         if (active) {
             // On lance les observers pour récupérer les badges
-            viewModel.countAllAnnoncesByUser(uid).removeObservers(this);
-            viewModel.countAllFavoritesByUser(uid).removeObservers(this);
-            viewModel.countAllAnnoncesByUser(uid).observe(this, observeNumberAnnonceBadge);
-            viewModel.countAllFavoritesByUser(uid).observe(this, observeNumberFavoriteBadge);
+            liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uid, Utility.statusToAvoid());
+            liveCountAllFavorite = viewModel.countAllFavoritesByUser(uid);
+
+            liveCountAllActiveAnnonce.removeObservers(this);
+            liveCountAllFavorite.removeObservers(this);
+
+            liveCountAllActiveAnnonce.observe(this, observeNumberAnnonceBadge);
+            liveCountAllFavorite.observe(this, observeNumberFavoriteBadge);
         } else {
             // On stoppe les observers
-            viewModel.countAllAnnoncesByUser(uid).removeObserver(observeNumberAnnonceBadge);
-            viewModel.countAllFavoritesByUser(uid).removeObserver(observeNumberFavoriteBadge);
+            liveCountAllActiveAnnonce.removeObserver(observeNumberAnnonceBadge);
+            liveCountAllFavorite.removeObserver(observeNumberFavoriteBadge);
 
             TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
             TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();

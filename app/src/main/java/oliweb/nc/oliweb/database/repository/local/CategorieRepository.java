@@ -115,4 +115,27 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
     public LiveData<CategorieEntity> findById(Long id) {
         return this.categorieDao.findById(id);
     }
+
+
+    public Single<List<CategorieEntity>> getAll() {
+        return categorieDao.getAll();
+    }
+
+
+    /**
+     * @return Single to be observe. This Single emit an integer which represent the number of annonce correctly deleted
+     */
+    public Single<Integer> deleteAll() {
+        return Single.create(e -> categorieDao.getAll()
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(categories -> {
+                    if (categories != null && !categories.isEmpty()) {
+                        e.onSuccess(categorieDao.delete(categories));
+                    } else {
+                        e.onSuccess(0);
+                    }
+                })
+                .doOnError(e::onError)
+                .subscribe());
+    }
 }
