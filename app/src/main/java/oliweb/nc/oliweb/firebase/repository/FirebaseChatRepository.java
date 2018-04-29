@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository.firebase;
+package oliweb.nc.oliweb.firebase.repository;
 
 import android.content.Context;
 import android.util.Log;

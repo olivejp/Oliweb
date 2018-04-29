@@ -26,19 +26,22 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Constants;
 
+import static oliweb.nc.oliweb.database.entity.StatusRemote.FAILED_TO_SEND;
 import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
+import static oliweb.nc.oliweb.utility.Constants.notificationSyncPhotoId;
 
 /**
  * Created by orlanth23 on 18/12/2017.
@@ -51,16 +54,21 @@ class CoreSync {
     private static CoreSync instance;
     private static FirebaseDatabase fireDb;
     private static StorageReference fireStorage;
+
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
     private AnnonceFullRepository annonceFullRepository;
+    private FirebasePhotoStorage photoStorage;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private int nbAnnonceCompletedTask = 0;
-    private NotificationCompat.Builder mBuilder;
+    private int nbPhotoCompletedTask = 0;
+    private NotificationCompat.Builder mBuilderAnnonce;
+    private NotificationCompat.Builder mBuilderPhoto;
     private NotificationManagerCompat notificationManager;
     private ContentResolver contentResolver;
-    private boolean mNotificationCreated;
+    private boolean mNotificationAnnonceCreated;
+    private boolean mNotificationPhotoCreated;
 
     private CoreSync() {
     }
@@ -74,8 +82,9 @@ class CoreSync {
             instance.annonceRepository = AnnonceRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
+            instance.photoStorage = FirebasePhotoStorage.getInstance();
             instance.notificationManager = NotificationManagerCompat.from(context);
-            instance.mBuilder = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
+            instance.mBuilderAnnonce = new NotificationCompat.Builder(context, Constants.CHANNEL_ID);
             instance.contentResolver = context.getContentResolver();
         }
         return instance;
@@ -92,20 +101,36 @@ class CoreSync {
      * Manage notification, depending on count annonce to send in the database
      */
     private void manageNotificationDependingOnAnnonceToSend() {
-        mNotificationCreated = false;
+        mNotificationAnnonceCreated = false;
+        mNotificationPhotoCreated = false;
         isAnotherAnnonceWithStatus(TO_SEND, count -> {
-            if (count > 0 && !mNotificationCreated) {
+            if (count > 0 && !mNotificationAnnonceCreated) {
                 createNotification();
-                mNotificationCreated = true;
+                mNotificationAnnonceCreated = true;
             }
-
-            if (mNotificationCreated) {
+            if (mNotificationAnnonceCreated) {
                 if (count == 0) {
-                    mBuilder.setContentText("Téléchargement terminé").setProgress(0, 0, false);
-                    notificationManager.notify(notificationSyncAnnonceId, mBuilder.build());
+                    mBuilderAnnonce.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                    notificationManager.notify(notificationSyncAnnonceId, mBuilderAnnonce.build());
                     notificationManager.cancel(notificationSyncAnnonceId);
                 } else {
                     updateProgressBar(count, nbAnnonceCompletedTask++, notificationSyncAnnonceId);
+                }
+            }
+        });
+
+        isAnotherPhotoWithStatus(TO_SEND, countPhoto -> {
+            if (countPhoto > 0 && !mNotificationPhotoCreated) {
+                createNotification();
+                mNotificationPhotoCreated = true;
+            }
+            if (mNotificationPhotoCreated) {
+                if (countPhoto == 0) {
+                    mBuilderPhoto.setContentText("Téléchargement terminé").setProgress(0, 0, false);
+                    notificationManager.notify(notificationSyncPhotoId, mBuilderPhoto.build());
+                    notificationManager.cancel(notificationSyncPhotoId);
+                } else {
+                    updateProgressBar(countPhoto, nbPhotoCompletedTask++, notificationSyncPhotoId);
                 }
             }
         });
@@ -115,18 +140,12 @@ class CoreSync {
      * Liste toutes les annonces à envoyer
      */
     private void syncToSend() {
+        Log.d(TAG, "Starting syncToSend");
         annonceFullRepository
-                .getAllAnnoncesByStatus(TO_SEND)
+                .getAllAnnoncesByStatus(TO_SEND, FAILED_TO_SEND)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(annoncesFulls -> {
-                    if (annoncesFulls != null && !annoncesFulls.isEmpty()) {
-                        nbAnnonceCompletedTask = 0;
-                        for (AnnonceFull annonceFull : annoncesFulls) {
-                            Log.d(TAG, "Tentative d'envoi d'une annonce : " + annonceFull.toString());
-                            sendAnnonceToFirebaseDatabase(annonceFull);
-                        }
-                    }
-                })
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .doOnSuccess(this::sendAnnonceToFirebaseDatabase)
                 .subscribe();
     }
 
@@ -134,39 +153,48 @@ class CoreSync {
      * Create/update an annonce to Firebase from an AnnonceFull from the Database
      * If operation succeed we try to send the photo of this AnnonceFull.
      *
-     * @param annonceFull to send to Firebase
+     * @param annonceFulls to send to Firebase
      */
-    private void sendAnnonceToFirebaseDatabase(AnnonceFull annonceFull) {
-        AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFull);
-        firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(annonceDtoSaved -> {
-                    AnnonceEntity annonceEntityToSaved = AnnonceConverter.convertDtoToEntity(annonceDtoSaved);
-                    annonceEntityToSaved.setStatut(StatusRemote.SEND);
-                    annonceRepository.saveWithSingle(annonceEntityToSaved)
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnSuccess(annonceEntitySaved -> sendPhotosToFbStorage(annonceEntitySaved.getIdAnnonce()))
-                            .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))
-                            .subscribe();
-                })
-                .doOnError(saveToFirebaseException -> {
-                    annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
-                    annonceRepository.update(annonceFull.getAnnonce());
-                })
-                .subscribe();
+    private void sendAnnonceToFirebaseDatabase(List<AnnonceFull> annonceFulls) {
+        Log.d(TAG, "Starting sendAnnonceToFirebaseDatabase");
+        nbAnnonceCompletedTask = 0;
+        nbPhotoCompletedTask = 0;
+        for (AnnonceFull annonceFull : annonceFulls) {
+            Log.d(TAG, "Tentative d'envoi d'une annonce : " + annonceFull.toString());
+            AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFull);
+            firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(this::updateAndSaveAnnonceToLocalDb)
+                    .doOnError(saveToFirebaseException -> {
+                        annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
+                        annonceRepository.update(annonceFull.getAnnonce());
+                    })
+                    .subscribe();
+        }
     }
 
+    private void updateAndSaveAnnonceToLocalDb(AnnonceDto annonceDto) {
+        Log.d(TAG, "Starting updateAndSaveAnnonceToLocalDb");
+        AnnonceEntity annonceEntityToSaved = AnnonceConverter.convertDtoToEntity(annonceDto);
+        annonceEntityToSaved.setStatut(StatusRemote.SEND);
+        annonceRepository.saveWithSingle(annonceEntityToSaved)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(annonceEntitySaved -> sendPhotosToFbStorageByIdAnnonce(annonceEntitySaved.getIdAnnonce()))
+                .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))
+                .subscribe();
+    }
 
     /**
      * List all the photos for an Annonce and try to send them to Fb Storage
      *
      * @param idAnnonce of the AnnonceFull we try to send to Fb
      */
-    private void sendPhotosToFbStorage(long idAnnonce) {
-        Log.d(TAG, "Starting sendPhotosToFbStorage");
+    private void sendPhotosToFbStorageByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting sendPhotosToFbStorageByIdAnnonce");
         photoRepository
-                .getAllPhotosByStatusAndIdAnnonce(TO_SEND.getValue(), idAnnonce)
+                .getAllPhotosByStatusAndIdAnnonce(idAnnonce, TO_SEND, FAILED_TO_SEND)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(listPhoto -> {
                     if (listPhoto != null && !listPhoto.isEmpty()) {
                         for (PhotoEntity photo : listPhoto) {
@@ -186,28 +214,23 @@ class CoreSync {
      */
     private void sendPhotoToFirebaseStorage(PhotoEntity photo) {
         Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
-        File file = new File(photo.getUriLocal());
-        String fileName = file.getName();
-        StorageReference storageReference = fireStorage.child(fileName);
-        storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                .addOnSuccessListener(taskSnapshot -> {
-                    Log.d(TAG, "Succeed to send the photo to Fb Storage : " + taskSnapshot.getDownloadUrl());
-                    photo.setStatut(StatusRemote.SEND);
-                    if (taskSnapshot.getDownloadUrl() != null) {
-                        photo.setFirebasePath(taskSnapshot.getDownloadUrl().toString());
-                    }
-                    photoRepository.save(photo, dataReturn -> {
-                        Log.d(TAG, "Succeed to save URL path for the photo");
-                        if (dataReturn.isSuccessful()) {
-                            updateAnnonceFullFromDbToFirebase(photo.getIdAnnonce());
-                        }
-                    });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to upload image");
+
+        this.photoStorage.savePhotoToStorage(photo)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(exception -> {
+                    Log.e(TAG, exception.getLocalizedMessage(), exception);
                     photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                    photoRepository.update(photo);
-                });
+                    photoRepository.save(photo);
+                })
+                .doOnSuccess(downloadPath -> {
+                    photo.setFirebasePath(downloadPath);
+                    photoRepository.saveWithSingle(photo)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
+                            .doOnSuccess(photoEntity -> firebaseAnnonceRepository.saveAnnonceToFirebase(photo.getIdAnnonce()))
+                            .subscribe();
+                })
+                .subscribe();
     }
 
     /**
@@ -437,7 +460,7 @@ class CoreSync {
     }
 
     private void createNotification() {
-        mBuilder.setContentTitle("Oliweb - Envoi de vos annonces")
+        mBuilderAnnonce.setContentTitle("Oliweb - Envoi de vos annonces")
                 .setContentText("Téléchargement en cours")
                 .setSmallIcon(R.drawable.ic_sync_white_48dp)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
@@ -445,19 +468,28 @@ class CoreSync {
         // Issue the initial notification with zero progress
         int progressMax = 100;
         int progressCurrent = 0;
-        mBuilder.setProgress(progressMax, progressCurrent, false);
+        mBuilderAnnonce.setProgress(progressMax, progressCurrent, false);
     }
 
     private void updateProgressBar(int max, int current, int notificationId) {
-        mBuilder.setProgress(max, current, false);
-        mBuilder.setContentText("Téléchargement en cours - " + current + "/" + max);
-        notificationManager.notify(notificationId, mBuilder.build());
+        mBuilderAnnonce.setProgress(max, current, false);
+        mBuilderAnnonce.setContentText("Téléchargement en cours - " + current + "/" + max);
+        notificationManager.notify(notificationId, mBuilderAnnonce.build());
     }
 
     private void isAnotherAnnonceWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
         // Read all annonces with statusRemote, when reach 0, then run onCheckedListener
         annonceRepository
                 .countFlowableAllAnnoncesByStatus(statusRemote.getValue())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnNext(onCheckedListener::run)
+                .subscribe();
+    }
+
+    private void isAnotherPhotoWithStatus(StatusRemote statusRemote, OnCheckedListener onCheckedListener) {
+        // Read all photos with statusRemote, when reach 0, then run onCheckedListener
+        photoRepository
+                .countFlowableAllPhotosByStatus(statusRemote.getValue())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnNext(onCheckedListener::run)
                 .subscribe();

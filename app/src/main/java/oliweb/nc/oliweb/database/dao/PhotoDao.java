@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -43,4 +44,12 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE idAnnonce = :idAnnonce")
     Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM photo WHERE idPhoto = :idPhoto")
+    Single<Integer> countById(Long idPhoto);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM photo WHERE statut = :status")
+    Flowable<Integer> countFlowableAllPhotosByStatus(String status);
 }

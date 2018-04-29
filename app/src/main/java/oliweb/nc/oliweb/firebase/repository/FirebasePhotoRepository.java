@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository.firebase;
+package oliweb.nc.oliweb.firebase.repository;
 
 import android.content.Context;
 import android.net.Uri;
@@ -13,6 +13,7 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.UUID;
 
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
@@ -42,7 +43,7 @@ public class FirebasePhotoRepository {
         return instance;
     }
 
-    public void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto, String uidUser) {
+    public void savePhotoFromFirebaseStorageToLocal(Context context, final long idAnnonce, final String urlPhoto) {
         Log.d(TAG, "savePhotoFromFirebaseStorageToLocal : " + urlPhoto);
         boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
@@ -73,5 +74,18 @@ public class FirebasePhotoRepository {
                 Log.d(TAG, "Download failed for image : " + urlPhoto);
             });
         }
+    }
+
+    public void updatePhotosStatusByIdAnnonce(Long idAnnonce, StatusRemote statusRemote) {
+        photoRepository.findAllPhotosByIdAnnonce(idAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(listPhotos -> {
+                    for (PhotoEntity photo : listPhotos) {
+                        photo.setStatut(statusRemote);
+                        photoRepository.save(photo);
+                    }
+                })
+                .subscribe();
     }
 }

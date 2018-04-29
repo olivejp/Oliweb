@@ -16,7 +16,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;

@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.database.repository.firebase;
+package oliweb.nc.oliweb.firebase.repository;
 
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
@@ -24,6 +24,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
@@ -38,6 +39,7 @@ public class FirebaseAnnonceRepository {
     private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
+    private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoRepository firebasePhotoRepository;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
@@ -50,6 +52,7 @@ public class FirebaseAnnonceRepository {
             instance = new FirebaseAnnonceRepository();
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
+        instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
         instance.firebasePhotoRepository = FirebasePhotoRepository.getInstance(context);
         return instance;
     }
@@ -100,7 +103,7 @@ public class FirebaseAnnonceRepository {
                     if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
                         for (String photoUrl : annonceFromFirebase.getPhotos()) {
                             Log.d(TAG, "Try to save : " + photoUrl);
-                            firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl, uidUtilisateur);
+                            firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl);
                         }
                     }
                 })
@@ -202,6 +205,23 @@ public class FirebaseAnnonceRepository {
                                 )
                                 .subscribe()
                 ));
+    }
+
+    public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
+        return Single.create(emitter ->
+                annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
+                        .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(annonceFullEntity -> {
+                            AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFullEntity);
+                            saveAnnonceToFirebase(annonceDto)
+                                    .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                                    .doOnError(emitter::onError)
+                                    .doOnSuccess(emitter::onSuccess)
+                                    .subscribe();
+                        })
+                        .subscribe()
+        );
     }
 
     private Single<Long> setDatePublication(AnnonceDto annonceDto) {

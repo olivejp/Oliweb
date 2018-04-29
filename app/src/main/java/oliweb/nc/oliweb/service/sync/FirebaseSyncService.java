@@ -11,7 +11,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import oliweb.nc.oliweb.database.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 /**
