@@ -89,7 +89,7 @@ public class FirebaseAnnonceRepository {
                         getAnnonceFromFirebaseToLocalDb(context, annonceDto);
                     }
                 })
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .subscribe();
     }
 
