@@ -11,7 +11,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
@@ -20,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -29,14 +27,12 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_TIME_REF;
 
 // TODO Faire des tests sur ce repository
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
     private DatabaseReference ANNONCE_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-    private DatabaseReference TIME_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_TIME_REF);
 
     private static FirebaseAnnonceRepository instance;
 
@@ -73,28 +69,43 @@ public class FirebaseAnnonceRepository {
      * @param shouldAskQuestion
      */
     public void checkFirebaseRepository(final String uidUtilisateur, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
-        Log.d(TAG, "checkFirebaseRepository called with uidUtilisateur = " + uidUtilisateur);
-        getAllAnnonceFromFbByUidUser(uidUtilisateur)
+        Log.d(TAG, "Starting checkFirebaseRepository called with uidUtilisateur = " + uidUtilisateur);
+        getAllAnnonceByUidUser(uidUtilisateur)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnNext(annonceDto -> checkAnnonceLocalRepository(uidUtilisateur, annonceDto, shouldAskQuestion))
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
 
     public void checkAnnonceExistInLocalOrSaveIt(Context context, AnnonceDto annonceDto) {
-        Log.d(TAG, "checkAnnonceExistInLocalOrSaveIt called with annonceDto = " + annonceDto.toString());
+        Log.d(TAG, "Starting checkAnnonceExistInLocalOrSaveIt called with annonceDto = " + annonceDto.toString());
         annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(integer -> {
                     if (integer == null || integer.equals(0)) {
-                        getAnnonceFromFirebaseToLocalDb(context, annonceDto);
+                        getAnnonceFromFbToLocalDb(context, annonceDto);
                     }
                 })
                 .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .subscribe();
     }
 
-    private void getAnnonceFromFirebaseToLocalDb(Context context, final AnnonceDto annonceFromFirebase) {
-        Log.d(TAG, "getAnnonceFromFirebaseToLocalDb called with annonceDto = " + annonceFromFirebase.toString());
+    private void checkAnnonceLocalRepository(String uidUser, AnnonceDto annonceDto, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
+        Log.d(TAG, "Starting checkAnnonceLocalRepository called with uidUser : " + uidUser + " annonceDto : " + annonceDto);
+        annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(integer -> {
+                    Log.d(TAG, "countByUidUtilisateurAndUidAnnonce.doOnSuccess integer : " + integer);
+                    if (integer != null && integer == 0) {
+                        shouldAskQuestion.postValue(new AtomicBoolean(true));
+                    }
+                })
+                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
+                .subscribe();
+    }
+
+    private void getAnnonceFromFbToLocalDb(Context context, final AnnonceDto annonceFromFirebase) {
+        Log.d(TAG, "Starting getAnnonceFromFbToLocalDb called with annonceDto = " + annonceFromFirebase.toString());
         try {
             AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceFromFirebase);
             String uidUtilisateur = annonceFromFirebase.getUtilisateur().getUuid();
@@ -117,22 +128,8 @@ public class FirebaseAnnonceRepository {
         }
     }
 
-    private void checkAnnonceLocalRepository(String uidUser, AnnonceDto annonceDto, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
-        Log.d(TAG, "checkAnnonceLocalRepository called with uidUser : " + uidUser + " annonceDto : " + annonceDto);
-        annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid())
-                .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                .doOnSuccess(integer -> {
-                    Log.d(TAG, "countByUidUtilisateurAndUidAnnonce.doOnSuccess integer : " + integer);
-                    if (integer != null && integer == 0) {
-                        shouldAskQuestion.postValue(new AtomicBoolean(true));
-                    }
-                })
-                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
-                .subscribe();
-    }
-
-    private Observable<AnnonceDto> getAllAnnonceFromFbByUidUser(String uidUtilisateur) {
-        Log.d(TAG, "getAllAnnonceFromFbByUidUser uidUtilisateur : " + uidUtilisateur);
+    private Observable<AnnonceDto> getAllAnnonceByUidUser(String uidUtilisateur) {
+        Log.d(TAG, "Starting getAllAnnonceByUidUser uidUtilisateur : " + uidUtilisateur);
         return Observable.create(emitter -> queryByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -162,7 +159,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public Single<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
-        Log.d(TAG, "findByUidAnnonce uidAnnonce : " + uidAnnonce);
+        Log.d(TAG, "Starting findByUidAnnonce uidAnnonce : " + uidAnnonce);
         return Single.create(e ->
                 ANNONCE_REF.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -191,7 +188,7 @@ public class FirebaseAnnonceRepository {
      * @return
      */
     public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
-        Log.d(TAG, "saveAnnonceToFirebase annonceDto : " + annonceDto);
+        Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
         DatabaseReference dbRef;
         if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
             dbRef = ANNONCE_REF.push();
@@ -221,7 +218,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
-        Log.d(TAG, "saveAnnonceToFirebase idAnnonce : " + idAnnonce);
+        Log.d(TAG, "Starting saveAnnonceToFirebase idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
                 annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
                         .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -238,19 +235,29 @@ public class FirebaseAnnonceRepository {
         );
     }
 
-    private Single<Long> setDatePublication(AnnonceDto annonceDto) {
-        Log.d(TAG, "setDatePublication annonceDto : " + annonceDto);
-        return Single.create(e -> {
-                    DatabaseReference dbRef = ANNONCE_REF.child(annonceDto.getUuid());
-                    dbRef.child("datePublication").setValue(ServerValue.TIMESTAMP)
-                            .addOnFailureListener(e::onError)
-                            .addOnSuccessListener(aVoid ->
-                                    findByUidAnnonce(annonceDto.getUuid())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .doOnError(e::onError)
-                                            .doOnSuccess(annonceDtoRead -> e.onSuccess(annonceDtoRead.getDatePublication()))
-                                            .subscribe());
-                }
-        );
+    /**
+     * Suppression d'une annonce sur Firebase Database
+     * La suppression est basée sur l'UID de l'annonce.
+     *
+     * @param annonce à supprimer de Firebase Database
+     */
+    public Single<AtomicBoolean> delete(AnnonceEntity annonce) {
+        Log.d(TAG, "Starting delete " + annonce);
+        return Single.create(emitter -> {
+            if (annonce == null || annonce.getUUID() == null) {
+                emitter.onSuccess(new AtomicBoolean(true));
+            } else {
+                ANNONCE_REF.child(annonce.getUUID())
+                        .removeValue()
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUUID() + " exception : " + e.getLocalizedMessage());
+                            emitter.onError(e);
+                        })
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUUID());
+                            emitter.onSuccess(new AtomicBoolean(true));
+                        });
+            }
+        });
     }
 }

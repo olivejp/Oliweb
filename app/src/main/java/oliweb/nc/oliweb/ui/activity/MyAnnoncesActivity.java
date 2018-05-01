@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -159,16 +160,22 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
             long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
             if (idAnnonce != 0) {
-                viewModel.deleteAnnonceById(idAnnonce, dataReturn -> {
-                    if (dataReturn.getNb() > 0) {
-                        Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
-                        if (NetworkReceiver.checkConnection(this)) {
-                            SyncService.launchSynchroForAll(getApplicationContext());
-                        }
-                    }
-                });
+                viewModel.deleteAnnonceById(idAnnonce)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(exception -> Log.e(TAG, "deleteAnnonceById.doOnError exception : " + exception.getLocalizedMessage(), exception))
+                        .doOnSuccess(result -> {
+                            Log.d(TAG, "deleteAnnonceById.doOnSuccess result : " + result);
+                            if (result.get()) {
+                                Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
+                                if (NetworkReceiver.checkConnection(this)) {
+                                    SyncService.launchSynchroForAll(getApplicationContext());
+                                }
+                            }
+                        })
+                        .subscribe();
             }
         }
+
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
             if (Build.VERSION.SDK_INT >= 23) {
                 if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

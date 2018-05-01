@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 
@@ -21,7 +22,7 @@ public interface ChatDao extends AbstractDao<ChatEntity> {
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidChat = :uidChat")
-    Single<ChatEntity> findSingleById(String uidChat);
+    Maybe<ChatEntity> findSingleById(String uidChat);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce")

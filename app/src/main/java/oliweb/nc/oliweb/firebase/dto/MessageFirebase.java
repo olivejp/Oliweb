@@ -5,9 +5,8 @@ package oliweb.nc.oliweb.firebase.dto;
  */
 
 public class MessageFirebase {
-    private String uidAnnonce;
+    private String uidMessage;
     private String uidAuthor;
-    private String uidReceiver;
     private String message;
     private long timestamp;
     private boolean read;
@@ -15,21 +14,20 @@ public class MessageFirebase {
     public MessageFirebase() {
     }
 
-    public MessageFirebase(String uidAnnonce, String uidAuthor, String uidReceiver, String message, long timestamp, boolean read) {
-        this.uidAnnonce = uidAnnonce;
+    public MessageFirebase(String uidMessage, String uidAuthor, String message, long timestamp, boolean read) {
+        this.uidMessage = uidMessage;
         this.uidAuthor = uidAuthor;
-        this.uidReceiver = uidReceiver;
         this.message = message;
         this.timestamp = timestamp;
         this.read = read;
     }
 
-    public String getUidAnnonce() {
-        return uidAnnonce;
+    public String getUidMessage() {
+        return uidMessage;
     }
 
-    public void setUidAnnonce(String uidAnnonce) {
-        this.uidAnnonce = uidAnnonce;
+    public void setUidMessage(String uidMessage) {
+        this.uidMessage = uidMessage;
     }
 
     public String getUidAuthor() {
@@ -38,14 +36,6 @@ public class MessageFirebase {
 
     public void setUidAuthor(String uidAuthor) {
         this.uidAuthor = uidAuthor;
-    }
-
-    public String getUidReceiver() {
-        return uidReceiver;
-    }
-
-    public void setUidReceiver(String uidReceiver) {
-        this.uidReceiver = uidReceiver;
     }
 
     public String getMessage() {
@@ -75,9 +65,8 @@ public class MessageFirebase {
     @Override
     public String toString() {
         return "MessageFirebase{" +
-                "uidAnnonce='" + uidAnnonce + '\'' +
+                "uidMessage='" + uidMessage + '\'' +
                 ", uidAuthor='" + uidAuthor + '\'' +
-                ", uidReceiver='" + uidReceiver + '\'' +
                 ", message='" + message + '\'' +
                 ", timestamp=" + timestamp +
                 ", read=" + read +

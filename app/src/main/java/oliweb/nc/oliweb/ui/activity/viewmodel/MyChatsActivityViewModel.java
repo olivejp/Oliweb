@@ -5,24 +5,19 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
-
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
+import oliweb.nc.oliweb.firebase.service.FirebaseChatService;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.utility.Constants;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 
@@ -46,18 +41,19 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private FirebaseChatRepository firebaseChatRepository;
+    private FirebaseChatService firebaseChatService;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         this.chatRepository = ChatRepository.getInstance(application);
-        this.firebaseChatRepository = FirebaseChatRepository.getInstance(application);
+        this.firebaseChatRepository = FirebaseChatRepository.getInstance();
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
+        this.firebaseChatService = FirebaseChatService.getInstance(application);
     }
 
     public LiveData<List<ChatEntity>> getFirebaseChatsByUidUser() {
-        firebaseChatRepository.sync(selectedUidUtilisateur);
+        firebaseChatService.sync(selectedUidUtilisateur);
         return chatRepository.findByUidUser(selectedUidUtilisateur);
     }
 
@@ -113,27 +109,11 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedAnnonce = annonceEntity;
     }
 
-    public ChatFirebase createChat(AnnonceEntity annonce) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).push();
-
-        HashMap<String, Boolean> hash = new HashMap<>();
-        hash.put(FirebaseAuth.getInstance().getCurrentUser().getUid(), true);
-        hash.put(annonce.getUuidUtilisateur(), true);
-
-        ChatFirebase chatFirebase = new ChatFirebase();
-        chatFirebase.setUid(ref.getKey());
-        chatFirebase.setUidAnnonce(annonce.getUUID());
-        chatFirebase.setMembers(hash);
-        chatFirebase.setUidBuyer(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        chatFirebase.setUidSeller(annonce.getUuidUtilisateur());
-
-        return chatFirebase;
+    public Single<ChatFirebase> createChat(String uidUserBuyer, AnnonceEntity annonce) {
+        return firebaseChatRepository.createChat(uidUserBuyer, annonce);
     }
 
-    public void updateChat(String uidChat, MessageFirebase messageFirebase) {
-        // Mise à jour du dernier message dans le chat ainsi que la date de mise à jour.
-        chatRef.child(uidChat).child("lastMessage")
-                .setValue(messageFirebase.getMessage())
-                .addOnSuccessListener(aVoid1 -> chatRef.child(uidChat).child("updateTimestamp").setValue(ServerValue.TIMESTAMP));
+    public Single<AtomicBoolean> updateChat(String uidChat, MessageFirebase messageFirebase) {
+        return firebaseChatRepository.updateChat(uidChat, messageFirebase);
     }
 }

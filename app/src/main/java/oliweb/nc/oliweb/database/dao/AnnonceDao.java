@@ -26,8 +26,8 @@ public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
     Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE statut = :status")
-    Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status);
+    @Query("SELECT * FROM annonce WHERE statut IN (:status)")
+    Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")

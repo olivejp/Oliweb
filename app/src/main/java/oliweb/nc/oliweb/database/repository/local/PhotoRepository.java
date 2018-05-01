@@ -239,4 +239,25 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return this.photoDao.countFlowableAllPhotosByStatus(status);
     }
 
+    public Maybe<Integer> deleteAllByIdAnnonce(Long idAnnonce) {
+        Log.d(TAG, "Starting deleteAllByIdAnnonce idAnnonce : " + idAnnonce);
+        return Maybe.create(emitter -> {
+            findAllPhotosByIdAnnonce(idAnnonce)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(emitter::onError)
+                    .doOnSuccess(listPhotos -> {
+                        Log.d(TAG, "findAllPhotosByIdAnnonce.doOnSuccess listPhotos : " + listPhotos);
+                        if (listPhotos == null || listPhotos.isEmpty()) {
+                            emitter.onSuccess(0);
+                        } else {
+                            try {
+                                emitter.onSuccess(photoDao.delete(listPhotos));
+                            } catch (Exception e) {
+                                emitter.onError(e);
+                            }
+                        }
+                    })
+                    .subscribe();
+        });
+    }
 }

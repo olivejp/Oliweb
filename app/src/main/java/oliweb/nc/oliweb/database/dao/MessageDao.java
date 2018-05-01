@@ -1,12 +1,11 @@
 package oliweb.nc.oliweb.database.dao;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
 
-import java.util.List;
-
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 
 /**
@@ -15,6 +14,11 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 @Dao
 public interface MessageDao extends AbstractDao<MessageEntity> {
     @Transaction
-    @Query("SELECT * FROM message WHERE uidChat = :uidChat")
-    LiveData<List<MessageEntity>> findByUidChat(String uidChat);
+    @Query("SELECT * FROM message WHERE uidMessage = :uidMessage")
+    Maybe<MessageEntity> findSingleById(String uidMessage);
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM message WHERE uidMessage = :uidMessage")
+    Single<Integer> countById(String uidMessage);
+
 }

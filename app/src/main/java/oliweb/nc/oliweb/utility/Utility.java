@@ -68,11 +68,18 @@ public class Utility {
         }
     }
 
-    public static List<String> statusToAvoid() {
+    public static List<String> allStatusToAvoid() {
         List<String> list = new ArrayList<>();
         Collections.addAll(list, StatusRemote.TO_DELETE.getValue(), StatusRemote.DELETED.getValue(), StatusRemote.FAILED_TO_DELETE.getValue());
         return list;
     }
+
+    public static List<String> allStatusToDelete() {
+        List<String> list = new ArrayList<>();
+        Collections.addAll(list, StatusRemote.TO_DELETE.getValue(), StatusRemote.FAILED_TO_DELETE.getValue());
+        return list;
+    }
+
 
     /**
      * Va renvoyer la date du jour au format yyyyMMddHHmmss en Long

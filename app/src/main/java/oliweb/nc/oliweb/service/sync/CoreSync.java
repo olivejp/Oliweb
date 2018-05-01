@@ -34,6 +34,7 @@ import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Constants;
+import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.database.entity.StatusRemote.FAILED_TO_SEND;
 import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
@@ -361,66 +362,6 @@ class CoreSync {
     }
 
     /**
-     * Suppression d'une annonce sur Firebase Database
-     * La suppression est basée sur l'UID de l'annonce.
-     *
-     * @param annonce à supprimer de Firebase Database
-     */
-    private void deleteAnnonceFromFirebaseDatabase(AnnonceEntity annonce) {
-        Log.d(TAG, "Starting deleteAnnonceFromFirebaseDatabase " + annonce);
-        // Condition de garde
-        if (annonce == null || annonce.getUUID() == null) {
-            return;
-        }
-
-        // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
-        fireDb.getReference(FIREBASE_DB_ANNONCE_REF)
-                .child(annonce.getUUID())
-                .removeValue()
-                .addOnFailureListener(e -> Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUUID()))
-                .addOnSuccessListener(aVoid -> {
-                    deleteChatFromFirebaseByAnnonceUid(annonce.getUUID());
-                    Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUUID());
-                });
-    }
-
-    private void deleteChatFromFirebaseByAnnonceUid(String uidAnnonce) {
-        Log.d(TAG, "Starting deleteChatFromFirebaseByAnnonceUid " + uidAnnonce);
-
-        // Si un chemin firebase est trouvé, on va également supprimer sur Firebase.
-        fireDb.getReference(FIREBASE_DB_CHATS_REF)
-                .orderByChild("uidAnnonce")
-                .equalTo(uidAnnonce)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot data : dataSnapshot.getChildren()) {
-                            ChatFirebase chat = data.getValue(ChatFirebase.class);
-                            if (chat != null) {
-                                fireDb.getReference(FIREBASE_DB_CHATS_REF)
-                                        .child(chat.getUid())
-                                        .removeValue()
-                                        .addOnSuccessListener(aVoid -> deleteMessageFromFirebase(chat.getUid()));
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // Do nothing
-                    }
-                });
-    }
-
-    private void deleteMessageFromFirebase(String uidChat) {
-        Log.d(TAG, "Starting deleteMessageFromFirebase " + uidChat);
-
-        fireDb.getReference(FIREBASE_DB_MESSAGES_REF)
-                .child(uidChat)
-                .removeValue();
-    }
-
-    /**
      * Read all annonces with TO_DELETE status
      */
     private void syncToDelete() {
@@ -432,27 +373,47 @@ class CoreSync {
     private void syncDeleteAnnonce() {
         Log.d(TAG, "Starting syncDeleteAnnonce");
 
-        // Read all annonces with TO_DELETE status to delete them on remote and local
         annonceRepository
-                .getAllAnnonceByStatus(StatusRemote.TO_DELETE.getValue())
+                .getAllAnnonceByStatus(Utility.allStatusToDelete())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(listAnnoncesToDelete -> {
+                    Log.d(TAG, "getAllAnnonceByStatus.doOnSuccess listAnnoncesToDelete : " + listAnnoncesToDelete);
                     if (listAnnoncesToDelete != null && !listAnnoncesToDelete.isEmpty()) {
                         for (AnnonceEntity annonce : listAnnoncesToDelete) {
 
-                            // We delete only when it left 0 photos for this annonce
-                            photoRepository.countAllPhotosByIdAnnonce(annonce.getIdAnnonce())
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(Schedulers.io())
-                                    .doOnSuccess(integer -> {
-                                        if (integer == null || integer.equals(0)) {
-                                            annonceRepository.delete(annonce);
+                            // First delete Annonce on Firebase
+                            firebaseAnnonceRepository.delete(annonce)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(e1 -> Log.e(TAG, e1.getLocalizedMessage(), e1))
+                                    .doOnSuccess(successDeleteFromFb -> {
+                                        if (successDeleteFromFb.get()) {
+
+                                            // Second delete Photo from Firebase
+                                            firebasePhotoRepository.deleteByUidAnnonce(annonce.getUUID())
+                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                    .doOnError(e2 -> Log.e(TAG, e2.getLocalizedMessage(), e2))
+                                                    .doOnSuccess(atomicBoolean1 -> {
+                                                        if (atomicBoolean1.get()) {
+
+                                                        }
+                                                    })
+                                                    .subscribe();
                                         }
                                     })
                                     .subscribe();
 
-                            deletePhotoByIdAnnonce(annonce.getIdAnnonce());
-                            deleteAnnonceFromFirebaseDatabase(annonce);
+
+                            photoRepository.deleteAllByIdAnnonce(annonce.getIdAnnonce())
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(exceptionDeletePhotos -> Log.e(TAG, "deleteAllByIdAnnonce.doOnError " + exceptionDeletePhotos.getLocalizedMessage(), exceptionDeletePhotos))
+                                    .doOnSuccess(countPhotosDeleted -> {
+                                        annonceRepository.delete(annonce);
+                                        deletePho(annonce);
+                                        deleteAnnonceFromFirebaseDatabase(annonce);
+                                    })
+                                    .subscribe();
+
+
                         }
                     }
                 })

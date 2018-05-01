@@ -159,7 +159,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.findSingleById(idAnnonce);
     }
 
-    public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(String status) {
+    public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
         return this.annonceDao.getAllAnnonceByStatus(status);
     }

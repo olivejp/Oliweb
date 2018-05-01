@@ -47,7 +47,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
-                    e.onError(new RuntimeException("Failed to insert into UtilisateurRepository"));
+                    e.onError(new RuntimeException("Failed to insert into ChatRepository"));
                 }
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());
@@ -70,7 +70,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
-                    e.onError(new RuntimeException("Failed to update into UtilisateurRepository"));
+                    e.onError(new RuntimeException("Failed to update into ChatRepository"));
                 }
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());
@@ -130,7 +130,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
     }
 
 
-    public Single<ChatEntity> findSingleById(String uidChat) {
+    public Maybe<ChatEntity> findSingleById(String uidChat) {
         return this.chatDao.findSingleById(uidChat);
     }
 

@@ -124,8 +124,8 @@ public class MessageEntity implements Parcelable {
         this.uidAuthor = in.readString();
         this.timestamp = (Long) in.readValue(Long.class.getClassLoader());
         this.uidChat = in.readString();
-        int tmpStatut = in.readInt();
-        this.statusRemote = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
+        int tmpStatusRemote = in.readInt();
+        this.statusRemote = tmpStatusRemote == -1 ? null : StatusRemote.values()[tmpStatusRemote];
     }
 
     public static final Creator<MessageEntity> CREATOR = new Creator<MessageEntity>() {
