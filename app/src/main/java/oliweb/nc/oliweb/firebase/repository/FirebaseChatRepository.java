@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -280,6 +281,7 @@ public class FirebaseChatRepository {
     public void sync(String uidUser) {
         Log.d(TAG, "Starting sync uidUser : " + uidUser);
         getAllChatByUidUser(uidUser)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(ChatConverter::convertDtoToEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

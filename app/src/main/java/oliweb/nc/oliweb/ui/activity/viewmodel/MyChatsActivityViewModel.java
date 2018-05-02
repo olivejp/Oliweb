@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -53,9 +52,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<ChatEntity>> getFirebaseChatsByUidUser() {
-        firebaseChatRepository.sync(selectedUidUtilisateur)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe();
+        firebaseChatRepository.sync(selectedUidUtilisateur);
         return chatRepository.findByUidUser(selectedUidUtilisateur);
     }
 

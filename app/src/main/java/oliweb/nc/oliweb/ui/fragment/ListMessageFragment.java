@@ -223,7 +223,7 @@ public class ListMessageFragment extends Fragment {
     private void findOrCreateChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
         findChat(userUid, annonce, chat -> {
             if (chat == null) {
-                ChatFirebase finalChat = viewModel.createChat(annonce);
+                ChatFirebase finalChat = viewModel.createChat(userUid, annonce);
                 chatRef.child(finalChat.getUid())
                         .setValue(finalChat)
                         .addOnSuccessListener(aVoid -> {
