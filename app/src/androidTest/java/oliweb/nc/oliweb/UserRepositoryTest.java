@@ -79,6 +79,14 @@ public class UserRepositoryTest {
         checkCount(0, userRepository.count());
     }
 
+    @Test
+    public void deleteThenFind() {
+        deleteAll();
+        TestObserver<UtilisateurEntity> testObserver = new TestObserver<>();
+        userRepository.findSingleByUid(UID_USER).subscribe(testObserver);
+        waitTerminalEvent(testObserver, 5);
+        testObserver.assertNoErrors();
+    }
 
     /**
      * Delete All users when the table is empty should not throw a exception

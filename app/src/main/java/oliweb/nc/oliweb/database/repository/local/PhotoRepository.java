@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
@@ -227,6 +228,21 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
+    }
+
+    public Observable<PhotoEntity> observeAllPhotosByIdAnnonce(long idAnnonce) {
+        Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
+        return Observable.create(emitter -> {
+            this.photoDao.findAllSingleByIdAnnonce(idAnnonce).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(emitter::onError)
+                    .doOnSuccess(listPhoto -> {
+                        for (PhotoEntity photo : listPhoto) {
+                            emitter.onNext(photo);
+                        }
+                        emitter.onComplete();
+                    })
+                    .subscribe();
+        });
     }
 
     public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {

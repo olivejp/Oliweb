@@ -32,7 +32,7 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 public class FirebaseChatRepository {
 
     private static final String TAG = FirebaseChatRepository.class.getName();
-    private DatabaseReference CHAT_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
+    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
 
     private static FirebaseChatRepository instance;
     private FirebaseMessageRepository fbMessageRepository;
@@ -56,9 +56,9 @@ public class FirebaseChatRepository {
      * @param uidUser
      * @return a Single<List<ChatEntity>> containing all the ChatEntity from Firebase where User is in the members.
      */
-    public Single<List<ChatFirebase>> getAllChatByUidUser(String uidUser) {
+    private Single<List<ChatFirebase>> getAllChatByUidUser(String uidUser) {
         Log.d(TAG, "Starting getAllChatByUidUser uidUser : " + uidUser);
-        return Single.create(e -> CHAT_REF.orderByChild("members/" + uidUser).equalTo(true)
+        return Single.create(e -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     ArrayList<ChatFirebase> listChat = new ArrayList<>();
 
@@ -89,7 +89,7 @@ public class FirebaseChatRepository {
     private Single<ChatFirebase> getChatByUid(String uidChat) {
         Log.d(TAG, "Starting getChatByUid uidChat : " + uidChat);
         return Single.create(emitter ->
-                CHAT_REF.child(uidChat)
+                chatRef.child(uidChat)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -111,9 +111,10 @@ public class FirebaseChatRepository {
      * @param userUid
      * @param uidAnnonce
      */
-    private Maybe<ChatFirebase> findChat(String userUid, String uidAnnonce) {
+    public Maybe<ChatFirebase> findChat(String userUid, String uidAnnonce) {
+        Log.d(TAG, "Starting findChat userUid : " + userUid + " uidAnnonce : " + uidAnnonce);
         return Maybe.create(emitter ->
-                CHAT_REF.orderByChild("members/" + userUid)
+                chatRef.orderByChild("members/" + userUid)
                         .equalTo(true)
                         .addListenerForSingleValueEvent(
                                 new ValueEventListener() {
@@ -143,20 +144,20 @@ public class FirebaseChatRepository {
         );
     }
 
-    public Single<AtomicBoolean> removeChatByUid(String uidChat) {
+    private Single<AtomicBoolean> removeChatByUid(String uidChat) {
         Log.d(TAG, "Starting removeChatByUid uidChat : " + uidChat);
         return Single.create(emitter ->
-                CHAT_REF.child(uidChat)
+                chatRef.child(uidChat)
                         .removeValue()
                         .addOnSuccessListener(aVoid -> emitter.onSuccess(new AtomicBoolean(true)))
                         .addOnFailureListener(emitter::onError)
         );
     }
 
-    public Single<List<ChatFirebase>> getChatsByUidAnnonce(String uidAnnonce) {
+    private Single<List<ChatFirebase>> getChatsByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting getChatByUidAnnonce uidAnnonce : " + uidAnnonce);
         return Single.create(emitter ->
-                CHAT_REF.orderByChild("uidAnnonce")
+                chatRef.orderByChild("uidAnnonce")
                         .equalTo(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -178,13 +179,14 @@ public class FirebaseChatRepository {
     }
 
     public Single<ChatFirebase> createChat(String uidUserBuyer, AnnonceEntity annonce) {
+        Log.d(TAG, "Starting createChat uidUserBuyer : " + uidUserBuyer + " annonce : " + annonce);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {
                             try {
-                                DatabaseReference ref = CHAT_REF.push();
+                                DatabaseReference ref = chatRef.push();
                                 HashMap<String, Boolean> hash = new HashMap<>();
                                 hash.put(uidUserBuyer, true);
                                 hash.put(annonce.getUuidUtilisateur(), true);
@@ -216,6 +218,7 @@ public class FirebaseChatRepository {
      * @return True if everything works fine, otherwise an excpetion is thrown
      */
     public Single<AtomicBoolean> updateChat(String uidChat, MessageFirebase messageFirebase) {
+        Log.d(TAG, "Starting updateChat uidChat : " + uidChat + " messageFirebase : " + messageFirebase);
         return Single.create(emitter ->
                 getChatByUid(uidChat)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -228,7 +231,7 @@ public class FirebaseChatRepository {
                                             try {
                                                 chatFirebase.setLastMessage(messageFirebase.getMessage());
                                                 chatFirebase.setUpdateTimestamp(timestamp);
-                                                CHAT_REF.child(uidChat)
+                                                chatRef.child(uidChat)
                                                         .setValue(chatFirebase)
                                                         .addOnSuccessListener(aVoid1 -> emitter.onSuccess(new AtomicBoolean(true)))
                                                         .addOnFailureListener(emitter::onError);

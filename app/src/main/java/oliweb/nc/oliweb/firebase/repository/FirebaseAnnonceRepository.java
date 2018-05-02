@@ -24,11 +24,11 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
-// TODO Faire des tests sur ce repository
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
@@ -38,7 +38,7 @@ public class FirebaseAnnonceRepository {
 
     private AnnonceRepository annonceRepository;
     private AnnonceFullRepository annonceFullRepository;
-    private FirebasePhotoRepository firebasePhotoRepository;
+    private FirebasePhotoStorage firebasePhotoStorage;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
@@ -51,7 +51,7 @@ public class FirebaseAnnonceRepository {
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
         instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
-        instance.firebasePhotoRepository = FirebasePhotoRepository.getInstance(context);
+        instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
         return instance;
     }
 
@@ -117,7 +117,7 @@ public class FirebaseAnnonceRepository {
                         if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
                             for (String photoUrl : annonceFromFirebase.getPhotos()) {
                                 Log.d(TAG, "Try to save : " + photoUrl);
-                                firebasePhotoRepository.savePhotoFromFirebaseStorageToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl);
+                                firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl);
                             }
                         }
                     })

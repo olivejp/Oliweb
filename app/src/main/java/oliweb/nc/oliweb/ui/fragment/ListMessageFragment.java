@@ -21,17 +21,15 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
-import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
@@ -120,14 +118,14 @@ public class ListMessageFragment extends Fragment {
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
-                findChat(uidUser, annonce, chat -> {
-                    if (chat != null) {
-                        Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
-                        attachFirebaseRefToAdapter(query);
-                    } else {
-                        initializeAdapterLater = true;
-                    }
-                });
+                viewModel.findByUidUserAndUidAnnonce(FirebaseAuth.getInstance().getCurrentUser().getUid(), annonce.getUUID())
+                        .observe(appCompatActivity, chatEntity -> {
+                            if (chatEntity == null) {
+
+                            } else {
+
+                            }
+                        });
                 break;
             case PAR_CHAT:
                 uidChat = viewModel.getSelectedUidChat();
@@ -246,32 +244,11 @@ public class ListMessageFragment extends Fragment {
      * @param listener
      */
     private void findChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
-        chatRef.orderByChild("members/" + userUid)
-                .equalTo(true)
-                .addListenerForSingleValueEvent(
-                        new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                boolean found = false;
-                                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                    ChatFirebase chat = data.getValue(ChatFirebase.class);
-                                    if (chat != null && chat.getUidAnnonce().equals(annonce.getUUID())) {
-                                        listener.afterFoundChat(chat);
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if (!found) {
-                                    listener.afterFoundChat(null);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                // Do nothing
-                            }
-                        }
-                );
+        viewModel.findChat(userUid, annonce.getUUID())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(listener::afterFoundChat)
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .subscribe();
     }
 
     public interface ListeningForChat {

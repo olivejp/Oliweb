@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
@@ -25,7 +26,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
 
     private static final String TAG = AnnonceRepository.class.getName();
 
-    private static AnnonceRepository INSTANCE;
+    private static AnnonceRepository instance;
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
@@ -35,13 +36,13 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public static synchronized AnnonceRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AnnonceRepository(context);
+        if (instance == null) {
+            instance = new AnnonceRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
-    public Single<AtomicBoolean> existById(Long idAnnonce) {
+    private Single<AtomicBoolean> existById(Long idAnnonce) {
         return Single.create(e -> annonceDao.countById(idAnnonce)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
@@ -159,9 +160,20 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
         return this.annonceDao.findSingleById(idAnnonce);
     }
 
-    public Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status) {
+    public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
-        return this.annonceDao.getAllAnnonceByStatus(status);
+        return Observable.create(emitter -> {
+            this.annonceDao.getAllAnnonceByStatus(status)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(emitter::onError)
+                    .doOnSuccess(listAnnonceStatus -> {
+                        for (AnnonceEntity annonce : listAnnonceStatus) {
+                            emitter.onNext(annonce);
+                        }
+                        emitter.onComplete();
+                    })
+                    .subscribe();
+        });
     }
 
     public Flowable<Integer> countFlowableAllAnnoncesByStatus(String status) {

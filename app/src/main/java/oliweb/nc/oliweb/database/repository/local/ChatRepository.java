@@ -147,4 +147,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
         return this.chatDao.findByUidUser(uidSeller);
     }
 
+    public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+        return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
+    }
 }

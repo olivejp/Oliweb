@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -16,7 +17,6 @@ import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
-import oliweb.nc.oliweb.firebase.service.FirebaseChatService;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
@@ -41,19 +41,18 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private FirebaseChatRepository firebaseChatRepository;
-    private FirebaseChatService firebaseChatService;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private MutableLiveData<ChatEntity> liveChat;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         this.chatRepository = ChatRepository.getInstance(application);
-        this.firebaseChatRepository = FirebaseChatRepository.getInstance();
+        this.firebaseChatRepository = FirebaseChatRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
-        this.firebaseChatService = FirebaseChatService.getInstance(application);
     }
 
     public LiveData<List<ChatEntity>> getFirebaseChatsByUidUser() {
-        firebaseChatService.sync(selectedUidUtilisateur);
+        firebaseChatRepository.sync(selectedUidUtilisateur);
         return chatRepository.findByUidUser(selectedUidUtilisateur);
     }
 
@@ -115,5 +114,11 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public Single<AtomicBoolean> updateChat(String uidChat, MessageFirebase messageFirebase) {
         return firebaseChatRepository.updateChat(uidChat, messageFirebase);
+    }
+
+    public LiveData<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+        // TODO : This method should return a ChatEntity
+        // Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
+        return liveChat;
     }
 }

@@ -21,8 +21,11 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Single;
 import oliweb.nc.oliweb.BuildConfig;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 
 /**
@@ -309,5 +312,23 @@ public class MediaUtility {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static Single<AtomicBoolean> deletePhotoFromDevice(ContentResolver contentResolver, PhotoEntity photoToDelete) {
+        Log.d(TAG, "Starting deletePhotoFromDevice " + photoToDelete);
+        return Single.create(emitter -> {
+            try {
+                if (contentResolver.delete(Uri.parse(photoToDelete.getUriLocal()), null, null) != 0) {
+                    Log.d(TAG, "Successful deleting physical photo : " + photoToDelete.getUriLocal());
+                    emitter.onSuccess(new AtomicBoolean(true));
+                } else {
+                    Log.e(TAG, "Fail to delete physical photo : " + photoToDelete.getUriLocal());
+                    emitter.onSuccess(new AtomicBoolean(false));
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Exception encountered to delete physical photo : " + photoToDelete.getUriLocal());
+                emitter.onError(e);
+            }
+        });
     }
 }

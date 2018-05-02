@@ -35,4 +35,8 @@ public interface ChatDao extends AbstractDao<ChatEntity> {
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser")
     LiveData<List<ChatEntity>> findByUidUser(String uidUser);
+
+    @Transaction
+    @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND uidAnnonce = :uidAnnonce LIMIT 1")
+    Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
 }
