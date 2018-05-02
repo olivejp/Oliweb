@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,7 +18,6 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
@@ -201,28 +199,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return this.photoDao.getAllPhotosByStatus(status);
     }
 
-    public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(long idAnnonce, StatusRemote... status) {
-        Log.d(TAG, "Starting getAllPhotosByStatusAndIdAnnonce idAnnonce : " + idAnnonce + " status : " + Arrays.toString(status));
-        AtomicInteger countSuccess = new AtomicInteger();
-        return Maybe.create(e -> {
-            ArrayList<PhotoEntity> listResult = new ArrayList<>();
-            countSuccess.set(0);
-            for (StatusRemote statut : status) {
-                this.photoDao.getAllPhotosByStatusAndIdAnnonce(statut.getValue(), idAnnonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .doOnSuccess(list -> {
-                            listResult.addAll(list);
-                            countSuccess.getAndIncrement();
-                            if (countSuccess.get() == status.length) {
-                                e.onSuccess(listResult);
-                                e.onComplete();
-                            }
-
-                        })
-                        .subscribe();
-            }
-        });
+    public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(long idAnnonce, List<String> status) {
+        Log.d(TAG, "Starting getAllPhotosByStatusAndIdAnnonce idAnnonce : " + idAnnonce + " status : " + status);
+        return this.photoDao.getAllPhotosByStatusAndIdAnnonce(status, idAnnonce);
     }
 
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
@@ -234,6 +213,22 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return Observable.create(emitter -> {
             this.photoDao.findAllSingleByIdAnnonce(idAnnonce).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(emitter::onError)
+                    .doOnSuccess(listPhoto -> {
+                        for (PhotoEntity photo : listPhoto) {
+                            emitter.onNext(photo);
+                        }
+                        emitter.onComplete();
+                    })
+                    .subscribe();
+        });
+    }
+
+    public Observable<PhotoEntity> observeAllPhotosByStatus(String status) {
+        Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
+        return Observable.create(emitter -> {
+            this.photoDao.getAllPhotosByStatus(status)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(emitter::onError)
                     .doOnSuccess(listPhoto -> {
                         for (PhotoEntity photo : listPhoto) {

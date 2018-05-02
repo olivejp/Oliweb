@@ -3,10 +3,7 @@ package oliweb.nc.oliweb.database.repository.local;
 import android.content.Context;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -40,14 +37,12 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
         return this.messageDao.findSingleById(uidMessage);
     }
 
-
     private Single<MessageEntity> insertSingle(MessageEntity messageEntity) {
         return Single.create(e -> {
             try {
                 Long[] ids = dao.insert(messageEntity);
                 if (ids.length == 1) {
                     findSingleById(messageEntity.getUidChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
@@ -83,7 +78,6 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
         });
     }
 
-
     private Single<AtomicBoolean> existById(String uidMessage) {
         return Single.create(e -> messageDao.countById(uidMessage)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -91,8 +85,6 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
                 .doOnError(e::onError)
                 .subscribe());
     }
-
-
 
     public Single<MessageEntity> saveWithSingle(MessageEntity messageEntity) {
         return Single.create(emitter -> existById(messageEntity.getUidChat())
@@ -112,27 +104,5 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
                     }
                 })
                 .subscribe());
-    }
-
-    public Maybe<List<MessageEntity>> saveWithSingle(List<MessageEntity> messageEntities) {
-        AtomicInteger countSuccess = new AtomicInteger();
-        return Maybe.create(emitter -> {
-            countSuccess.set(0);
-            ArrayList<MessageEntity> listResult = new ArrayList<>();
-            for (MessageEntity chat : messageEntities) {
-                saveWithSingle(chat)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(chatSaved -> {
-                            listResult.add(chatSaved);
-                            countSuccess.getAndIncrement();
-                            if (countSuccess.get() == messageEntities.size()) {
-                                emitter.onSuccess(listResult);
-                                emitter.onComplete();
-                            }
-                        })
-                        .doOnError(emitter::onError)
-                        .subscribe();
-            }
-        });
     }
 }

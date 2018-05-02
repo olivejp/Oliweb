@@ -207,7 +207,6 @@ public class FirebaseAnnonceRepository {
                                     .addOnFailureListener(emitter::onError)
                                     .addOnSuccessListener(o ->
                                             findByUidAnnonce(annonceDto.getUuid())
-                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                                     .doOnError(emitter::onError)
                                                     .doOnSuccess(emitter::onSuccess)
                                                     .subscribe()
@@ -224,9 +223,8 @@ public class FirebaseAnnonceRepository {
                         .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annonceFullEntity -> {
-                            AnnonceDto annonceDto = AnnonceConverter.convertEntityToDto(annonceFullEntity);
+                            AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFullEntity);
                             saveAnnonceToFirebase(annonceDto)
-                                    .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(emitter::onSuccess)
                                     .subscribe();

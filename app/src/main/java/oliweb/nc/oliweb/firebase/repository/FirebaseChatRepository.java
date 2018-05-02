@@ -13,15 +13,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Maybe;
-import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
@@ -182,7 +180,6 @@ public class FirebaseChatRepository {
         Log.d(TAG, "Starting createChat uidUserBuyer : " + uidUserBuyer + " annonce : " + annonce);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {
                             try {
@@ -221,11 +218,9 @@ public class FirebaseChatRepository {
         Log.d(TAG, "Starting updateChat uidChat : " + uidChat + " messageFirebase : " + messageFirebase);
         return Single.create(emitter ->
                 getChatByUid(uidChat)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(chatFirebase ->
                                 FirebaseUtility.getServerTimestamp()
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                         .doOnError(emitter::onError)
                                         .doOnSuccess(timestamp -> {
                                             try {
@@ -255,17 +250,14 @@ public class FirebaseChatRepository {
         Log.d(TAG, "Starting deleteChatByAnnonceUid uidAnnonce : " + uidAnnonce);
         return Single.create(emitter ->
                 getChatsByUidAnnonce(uidAnnonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(listChats -> {
-                            for (ChatFirebase chat : listChats) {
+                        .flattenAsObservable(list -> list)
+                        .doOnNext(chat ->
                                 fbMessageRepository.deleteMessageByUidChat(chat.getUid())
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                         .doOnError(emitter::onError)
                                         .doOnSuccess(atomicBoolean -> {
                                             if (atomicBoolean.get()) {
                                                 removeChatByUid(chat.getUid())
-                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                                         .doOnError(emitter::onError)
                                                         .doOnSuccess(emitter::onSuccess)
                                                         .subscribe();
@@ -273,9 +265,8 @@ public class FirebaseChatRepository {
                                                 emitter.onError(new RuntimeException("deleteMessageByUidChat return false"));
                                             }
                                         })
-                                        .subscribe();
-                            }
-                        })
+                                        .subscribe()
+                        )
                         .subscribe());
     }
 
@@ -286,48 +277,34 @@ public class FirebaseChatRepository {
      * @param uidUser
      * @return
      */
-    public Single<AtomicBoolean> sync(String uidUser) {
+    public void sync(String uidUser) {
         Log.d(TAG, "Starting sync uidUser : " + uidUser);
-        return Single.create(e ->
-                getAllChatByUidUser(uidUser)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .doOnSuccess(listChats -> syncChats(listChats)
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(e::onError)
-                                .doOnNext(nbSuccess -> {
-                                    if (nbSuccess == listChats.size()) {
-                                        e.onSuccess(new AtomicBoolean(true));
-                                    }
-                                })
-                                .subscribe()
-                        )
-                        .subscribe()
-        );
+        getAllChatByUidUser(uidUser)
+                .flattenAsObservable(chatFirebases -> chatFirebases)
+                .map(ChatConverter::convertDtoToEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnNext(this::saveChat)
+                .subscribe();
     }
 
-    private Observable<Integer> syncChats(List<ChatFirebase> listChats) {
-        Log.d(TAG, "Starting syncChats listChats : " + listChats);
-        AtomicReference<Integer> nbSuccess = new AtomicReference<>(0);
-        return Observable.create(e -> {
-            for (ChatFirebase chat : listChats) {
-                chatRepository.saveWithSingle(ChatConverter.convertDtoToEntity(chat))
-                        .doOnSuccess(chatEntity ->
-                                fbMessageRepository.getAllMessagesByUidChat(chatEntity.getUidChat())
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                        .doOnError(e::onError)
-                                        .doOnSuccess(listMessageFirebase ->
-                                                messageRepository.saveWithSingle(MessageConverter.convertDtoToEntity(chat.getUid(), listMessageFirebase))
-                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                        .doOnSuccess(listMessageEntity -> e.onNext(nbSuccess.getAndSet(nbSuccess.get() + 1)))
-                                                        .doOnError(e::onError)
-                                                        .subscribe()
-                                        )
-                                        .subscribe()
-                        )
-                        .doOnError(e::onError)
-                        .subscribe();
-            }
-        });
+    private void saveChat(ChatEntity chatEntity) {
+        Log.d(TAG, "Starting saveChat chatEntity : " + chatEntity);
+        chatRepository.saveWithSingle(chatEntity)
+                .doOnSuccess(this::saveMessagesFromChat)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+    private void saveMessagesFromChat(ChatEntity chatEntity) {
+        fbMessageRepository.getAllMessagesByUidChat(chatEntity.getUidChat())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(messageFirebases -> messageFirebases)
+                .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getUidChat(), messageFirebase))
+                .doOnNext(messageEntity ->
+                        messageRepository.saveWithSingle(messageEntity)
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .subscribe()
+                )
+                .subscribe();
     }
 }

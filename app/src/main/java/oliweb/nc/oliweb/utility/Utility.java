@@ -80,6 +80,11 @@ public class Utility {
         return list;
     }
 
+    public static List<String> allStatusToSend() {
+        List<String> list = new ArrayList<>();
+        Collections.addAll(list, StatusRemote.TO_SEND.getValue(), StatusRemote.FAILED_TO_SEND.getValue());
+        return list;
+    }
 
     /**
      * Va renvoyer la date du jour au format yyyyMMddHHmmss en Long

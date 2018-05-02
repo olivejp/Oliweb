@@ -21,7 +21,7 @@ public interface AnnonceFullDao {
     Single<AnnonceFull> findSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE statut = :statut")
-    Maybe<List<AnnonceFull>> getAllAnnonceByStatus(String statut);
+    @Query("SELECT * FROM annonce WHERE statut IN (:statutList)")
+    Maybe<List<AnnonceFull>> getAllAnnonceByStatus(List<String> statutList);
 
 }

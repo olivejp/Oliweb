@@ -62,7 +62,7 @@ public class AnnonceConverter {
      * @param annonceFull
      * @return
      */
-    public static AnnonceDto convertEntityToDto(AnnonceFull annonceFull) {
+    public static AnnonceDto convertFullEntityToDto(AnnonceFull annonceFull) {
         AnnonceDto annonceDto = new AnnonceDto();
         UtilisateurEntity utilisateurEntity = annonceFull.getUtilisateur().get(0);
         UtilisateurDto utilisateurDto = new UtilisateurDto(utilisateurEntity.getProfile(), utilisateurEntity.getUuidUtilisateur(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());

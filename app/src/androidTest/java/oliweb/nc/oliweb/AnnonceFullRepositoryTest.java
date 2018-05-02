@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 import static oliweb.nc.oliweb.database.entity.StatusRemote.FAILED_TO_SEND;
@@ -139,7 +140,7 @@ public class AnnonceFullRepositoryTest {
 
         // Call getAllAnnoncesByStatus
         TestObserver<List<AnnonceFull>> testObserver = new TestObserver<>();
-        annonceFullRepository.getAllAnnoncesByStatus(FAILED_TO_SEND, SEND).subscribe(testObserver);
+        annonceFullRepository.getAllAnnoncesByStatus(Utility.allStatusToSend()).subscribe(testObserver);
         UtilityTest.waitTerminalEvent(testObserver, 5);
         testObserver.assertNoErrors();
         testObserver.assertValue(annonceFulls -> annonceFulls.size() == 2);
