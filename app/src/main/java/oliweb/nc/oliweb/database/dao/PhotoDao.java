@@ -38,6 +38,10 @@ public interface PhotoDao extends AbstractDao<PhotoEntity> {
     Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
 
     @Transaction
+    @Query("SELECT * FROM photo WHERE statut IN (:statut)")
+    Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> statut);
+
+    @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:listStatut) AND idAnnonce = :idAnnonce")
     Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(List<String> listStatut, Long idAnnonce);
 

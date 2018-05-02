@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import io.reactivex.schedulers.Schedulers;
@@ -21,8 +20,6 @@ import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
-
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
 /**
  * Created by orlanth23 on 18/12/2017.
@@ -67,15 +64,39 @@ class CoreSync {
     }
 
     /**
-     * Liste toutes les annonces à envoyer
+     * Liste toutes les annonces et photos à envoyer
      */
     private void syncToSend() {
+        sendAnnonces();
+        sendPhotos();
+    }
+
+    /**
+     * Read all annonces with TO_DELETE status
+     */
+    private void syncToDelete() {
+        Log.d(TAG, "Starting syncToDelete");
+        deleteAnnonces();
+        deletePhotos();
+    }
+
+    private void sendAnnonces() {
         Log.d(TAG, "Starting syncToSend");
         annonceFullRepository
                 .observeAllAnnoncesByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .doOnNext(this::sendAnnonceToFirebaseDatabase)
+                .doOnNext(this::sendAnnonceToRemoteDatabase)
+                .subscribe();
+    }
+
+    private void sendPhotos() {
+        Log.d(TAG, "Starting sendPhotos");
+        photoRepository
+                .observeAllPhotosByStatus(Utility.allStatusToSend())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .doOnNext(this::sendPhotoToRemote)
                 .subscribe();
     }
 
@@ -85,8 +106,8 @@ class CoreSync {
      *
      * @param annonceFull to send to Firebase
      */
-    private void sendAnnonceToFirebaseDatabase(AnnonceFull annonceFull) {
-        Log.d(TAG, "Starting sendAnnonceToFirebaseDatabase annonceFull : " + annonceFull);
+    private void sendAnnonceToRemoteDatabase(AnnonceFull annonceFull) {
+        Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceFull : " + annonceFull);
         AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
         firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
                 .map(annonceDto1 -> {
@@ -95,7 +116,7 @@ class CoreSync {
                     annonceEntity.setStatut(StatusRemote.SEND);
                     return annonceEntity;
                 })
-                .doOnSuccess(this::saveToLocalDb)
+                .doOnSuccess(this::saveAnnonceToLocalDb)
                 .doOnError(saveToFirebaseException -> {
                     Log.d(TAG, "saveAnnonceToFirebase.doOnError saveToFirebaseException : " + saveToFirebaseException.getLocalizedMessage(), saveToFirebaseException);
                     annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
@@ -104,22 +125,22 @@ class CoreSync {
                 .subscribe();
     }
 
-    private void saveToLocalDb(AnnonceEntity annonceEntity) {
+    private void saveAnnonceToLocalDb(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting saveAnnonceToLocalDb annonceEntity : " + annonceEntity);
         annonceRepository.saveWithSingle(annonceEntity)
-                .doOnSuccess(annonceEntitySaved -> {
-                    Log.d(TAG, "Starting sendPhotosToFbStorageByIdAnnonce");
-                    photoRepository
-                            .getAllPhotosByStatusAndIdAnnonce(annonceEntitySaved.getIdAnnonce(), Utility.allStatusToSend())
-                            .flattenAsObservable(list -> list)
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnNext(this::savePhoto)
-                            .subscribe();
-                })
+                .doOnSuccess(annonceEntitySaved ->
+                        photoRepository
+                                .getAllPhotosByStatusAndIdAnnonce(annonceEntitySaved.getIdAnnonce(), Utility.allStatusToSend())
+                                .flattenAsObservable(list -> list)
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .doOnNext(this::sendPhotoToRemote)
+                                .subscribe()
+                )
                 .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))
                 .subscribe();
     }
 
-    private void savePhoto(PhotoEntity photo) {
+    private void sendPhotoToRemote(PhotoEntity photo) {
         Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
         this.photoStorage.sendToRemote(photo)
                 .doOnError(exception -> {
@@ -129,50 +150,17 @@ class CoreSync {
                 })
                 .doOnSuccess(downloadPath -> {
                     photo.setFirebasePath(downloadPath);
+                    photo.setStatut(StatusRemote.SEND);
                     photoRepository.saveWithSingle(photo)
                             .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
-                            .doOnSuccess(photoEntity -> firebaseAnnonceRepository.saveAnnonceToFirebase(photo.getIdAnnonce()))
+                            .doOnSuccess(photoEntity ->
+                                    firebaseAnnonceRepository.saveAnnonceToFirebase(photo.getIdAnnonce())
+                                            .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
+                                            .subscribe()
+                            )
                             .subscribe();
                 })
                 .subscribe();
-    }
-
-    /**
-     * Update the AnnonceFull to the Fb Database.
-     * In this method we only send the annonce.
-     *
-     * @param idAnnonce of the AnnonceFull we want to send.
-     */
-    private void updateAnnonceFullFromDbToFirebase(long idAnnonce) {
-        Log.d(TAG, "Starting updateAnnonceFullFromDbToFirebase " + idAnnonce);
-        annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(annonceFull -> {
-                    DatabaseReference dbRef = fireDb.getReference(FIREBASE_DB_ANNONCE_REF).child(annonceFull.getAnnonce().getUUID());
-
-                    // Conversion de notre annonce en DTO
-                    AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
-
-                    dbRef.setValue(annonceDto)
-                            .addOnSuccessListener(o -> {
-                                annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                                annonceRepository.update(annonceFull.getAnnonce());
-                            })
-                            .addOnFailureListener(e -> {
-                                annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
-                                annonceRepository.update(annonceFull.getAnnonce());
-                            });
-                })
-                .subscribe();
-    }
-
-    /**
-     * Read all annonces with TO_DELETE status
-     */
-    private void syncToDelete() {
-        Log.d(TAG, "Starting syncToDelete");
-        syncDeleteAnnonce();
-        syncDeletePhoto();
     }
 
     /**
@@ -183,56 +171,71 @@ class CoreSync {
      * 4 - Suppression des photos dans la base locale
      * 5 - Suppression de l'annonce dans la base locale
      */
-    private void syncDeleteAnnonce() {
-        Log.d(TAG, "Starting syncDeleteAnnonce");
+    private void deleteAnnonces() {
+        Log.d(TAG, "Starting deleteAnnonces");
         annonceRepository
                 .getAllAnnonceByStatus(Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(annonceEntity ->
-                        photoRepository
-                                .observeAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .doOnNext(photo -> {
-                                    // 1 - Suppression des photos du firebase Storage
-                                    photoStorage.delete(photo)
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnSuccess(atomicBoolean -> {
-                                                if (atomicBoolean.get()) {
-                                                    Log.d(TAG, "syncDeleteAnnonce : Delete from Firebase Storage Successful");
-                                                    // 2 - Suppression de l'annonce de firebase
-                                                    firebaseAnnonceRepository.delete(annonceEntity)
-                                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                            .doOnSuccess(deleteResult -> {
-                                                                if (deleteResult.get()) {
-                                                                    Log.d(TAG, "syncDeleteAnnonce : Delete from Firebase Database Successful");
-                                                                    // 3 - Suppression du device
-                                                                    MediaUtility.deletePhotoFromDevice(contentResolver, photo)
-                                                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                            .doOnSuccess(deleteDeviceResult -> {
-                                                                                if (deleteDeviceResult.get()) {
-                                                                                    Log.d(TAG, "syncDeleteAnnonce : Delete from Local Storage Successful");
-                                                                                    // 4 - Suppression de la base locale
-                                                                                    photoRepository.delete(datareturn -> {
-                                                                                        if (datareturn.isSuccessful()) {
-                                                                                            Log.d(TAG, "syncDeleteAnnonce : Delete from Local Database Successful");
-                                                                                        } else {
-                                                                                            Log.e(TAG, datareturn.getThrowable().getLocalizedMessage(), datareturn.getThrowable());
-                                                                                        }
-                                                                                    }, photo);
-                                                                                }
-                                                                            })
-                                                                            .subscribe();
-                                                                }
-                                                            })
-                                                            .subscribe();
-                                                }
-                                            })
-                                            .subscribe();
-                                })
-                                .subscribe()
-                )
+                .doOnNext(this::getAllPhotosToDelete)
                 .subscribe();
+    }
+
+    private void getAllPhotosToDelete(AnnonceEntity annonceEntity) {
+        photoRepository
+                .observeAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnNext(photo -> deletePhotoFromRemoteStorage(photo, annonceEntity))
+                .subscribe();
+    }
+
+    // 1 - Suppression des photos du firebase Storage
+    private void deletePhotoFromRemoteStorage(PhotoEntity photo, AnnonceEntity annonceEntity) {
+        photoStorage.delete(photo)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(atomicBoolean -> {
+                    if (atomicBoolean.get()) {
+                        deleteFromLocalDb(photo, annonceEntity);
+                    }
+                })
+                .subscribe();
+    }
+
+    // 2 - Suppression de l'annonce de firebase
+    private void deleteFromLocalDb(PhotoEntity photo, AnnonceEntity annonceEntity) {
+        Log.d(TAG, "deleteAnnonces : Delete from Firebase Storage Successful");
+        firebaseAnnonceRepository.delete(annonceEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(deleteResult -> {
+                    if (deleteResult.get()) {
+                        deleteFromLocalStorage(photo);
+                    }
+                })
+                .subscribe();
+    }
+
+    // 3 - Suppression du device
+    private void deleteFromLocalStorage(PhotoEntity photo) {
+        Log.d(TAG, "deleteAnnonces : Delete from Firebase Database Successful");
+        MediaUtility.deletePhotoFromDevice(contentResolver, photo)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(deleteDeviceResult -> {
+                    if (deleteDeviceResult.get()) {
+                        deleteFromLocalDb(photo);
+                    }
+                })
+                .subscribe();
+    }
+
+    // 4 - Suppression de la base locale
+    private void deleteFromLocalDb(PhotoEntity photo) {
+        Log.d(TAG, "deleteAnnonces : Delete from Local Storage Successful");
+        photoRepository.delete(datareturn -> {
+            if (datareturn.isSuccessful()) {
+                Log.d(TAG, "deleteAnnonces : Delete from Local Database Successful");
+            } else {
+                Log.e(TAG, datareturn.getThrowable().getLocalizedMessage(), datareturn.getThrowable());
+            }
+        }, photo);
     }
 
     /**
@@ -243,24 +246,24 @@ class CoreSync {
      * 3 - Supprimer sur le storage local
      * 4 - Supprimer sur la database locale
      */
-    private void syncDeletePhoto() {
-        Log.d(TAG, "Starting syncDeletePhoto");
-
-        // Read all PhotoEntities with TO_DELETE status to delete them on remote storage and local and on Firebase Database
+    private void deletePhotos() {
+        Log.d(TAG, "Starting deletePhotos");
         photoRepository
                 .observeAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnNext(photoEntity -> {
-                    if (photoEntity.getFirebasePath() != null) {
-                        // 1 - Supprimer de Firebase storage
-                        photoStorage.delete(photoEntity)
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .doOnSuccess(list -> {
-                                    // 2 - Supprimer de Firebase database (mise à jour de l'annonce)
-                                    annonceRepository.findById(photoEntity.getIdAnnonce())
-                                })
-                                .subscribe();
-                    }
+                .filter(photoEntity -> photoEntity.getFirebasePath() != null)
+                .doOnNext(this::deleteFromStorage)
+                .subscribe();
+    }
+
+    // TODO finir cette méthode
+    // 1 - Supprimer de Firebase storage
+    private void deleteFromStorage(PhotoEntity photoEntity) {
+        photoStorage.delete(photoEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(list -> {
+                    // 2 - Supprimer de Firebase database (mise à jour de l'annonce)
+                    annonceRepository.findById(photoEntity.getIdAnnonce());
                 })
                 .subscribe();
     }

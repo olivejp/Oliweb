@@ -82,7 +82,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     private Single<AtomicBoolean> existById(Long idAnnonce) {
         Log.d(TAG, "Starting existById idAnnonce : " + idAnnonce);
         return Single.create(e -> photoDao.countById(idAnnonce)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
                 .doOnError(e::onError)
                 .subscribe());
@@ -95,7 +94,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                 Long[] ids = dao.insert(entity);
                 if (ids.length == 1) {
                     findSingleById(ids[0])
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
@@ -119,7 +117,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
                 int updatedCount = dao.update(entity);
                 if (updatedCount == 1) {
                     findSingleById(entity.getIdAnnonce())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
@@ -211,33 +208,21 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
 
     public Observable<PhotoEntity> observeAllPhotosByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
-        return Observable.create(emitter -> {
-            this.photoDao.findAllSingleByIdAnnonce(idAnnonce).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(listPhoto -> {
-                        for (PhotoEntity photo : listPhoto) {
-                            emitter.onNext(photo);
-                        }
-                        emitter.onComplete();
-                    })
-                    .subscribe();
-        });
+        return this.photoDao.findAllSingleByIdAnnonce(idAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .flattenAsObservable(list -> list);
     }
 
     public Observable<PhotoEntity> observeAllPhotosByStatus(String status) {
         Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
-        return Observable.create(emitter -> {
-            this.photoDao.getAllPhotosByStatus(status)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(listPhoto -> {
-                        for (PhotoEntity photo : listPhoto) {
-                            emitter.onNext(photo);
-                        }
-                        emitter.onComplete();
-                    })
-                    .subscribe();
-        });
+        return this.photoDao.getAllPhotosByStatus(status)
+                .flattenAsObservable(list -> list);
+    }
+
+    public Observable<PhotoEntity> observeAllPhotosByStatus(List<String> status) {
+        Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
+        return this.photoDao.getAllPhotosByStatus(status)
+                .flattenAsObservable(list -> list);
     }
 
     public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {
@@ -250,25 +235,25 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return this.photoDao.countFlowableAllPhotosByStatus(status);
     }
 
-    public Maybe<Integer> deleteAllByIdAnnonce(Long idAnnonce) {
+    public Single<Integer> deleteAllByIdAnnonce(Long idAnnonce) {
         Log.d(TAG, "Starting deleteAllByIdAnnonce idAnnonce : " + idAnnonce);
-        return Maybe.create(emitter -> {
-            findAllPhotosByIdAnnonce(idAnnonce)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(listPhotos -> {
-                        Log.d(TAG, "findAllPhotosByIdAnnonce.doOnSuccess listPhotos : " + listPhotos);
-                        if (listPhotos == null || listPhotos.isEmpty()) {
-                            emitter.onSuccess(0);
-                        } else {
-                            try {
-                                emitter.onSuccess(photoDao.delete(listPhotos));
-                            } catch (Exception e) {
-                                emitter.onError(e);
+        return Single.create(emitter ->
+                findAllPhotosByIdAnnonce(idAnnonce)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(listPhotos -> {
+                            Log.d(TAG, "findAllPhotosByIdAnnonce.doOnSuccess listPhotos : " + listPhotos);
+                            if (listPhotos == null || listPhotos.isEmpty()) {
+                                emitter.onSuccess(0);
+                            } else {
+                                try {
+                                    emitter.onSuccess(photoDao.delete(listPhotos));
+                                } catch (Exception e) {
+                                    emitter.onError(e);
+                                }
                             }
-                        }
-                    })
-                    .subscribe();
-        });
+                        })
+                        .subscribe()
+        );
     }
 }
