@@ -12,6 +12,8 @@ import android.support.v4.content.FileProvider;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.google.android.gms.common.util.IOUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -330,5 +332,18 @@ public class MediaUtility {
                 emitter.onError(e);
             }
         });
+    }
+
+    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) throws IOException {
+        OutputStream outStream = new FileOutputStream(file.getAbsoluteFile());
+
+        byte[] buffer = new byte[8 * 1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, bytesRead);
+        }
+
+        IOUtils.closeQuietly(inputStream);
+        IOUtils.closeQuietly(outStream);
     }
 }
