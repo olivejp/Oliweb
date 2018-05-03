@@ -24,7 +24,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity>
 
     private UtilisateurRepository(Context context) {
         super(context);
-        this.utilisateurDao = this.db.utilisateurDao();
+        this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
     }
 

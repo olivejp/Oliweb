@@ -33,7 +33,7 @@ public class AnnonceConverter {
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annoncePhotos.setPhotos(new ArrayList<>());
 
-        annonceEntity.setUUID(annonceDto.getUuid());
+        annonceEntity.setUuid(annonceDto.getUuid());
         annonceEntity.setTitre(annonceDto.getTitre());
         annonceEntity.setDescription(annonceDto.getDescription());
         annonceEntity.setDatePublication(annonceDto.getDatePublication());
@@ -78,7 +78,7 @@ public class AnnonceConverter {
         annonceDto.setDescription(annonceFull.getAnnonce().getDescription());
         annonceDto.setTitre(annonceFull.getAnnonce().getTitre());
         annonceDto.setPrix(annonceFull.getAnnonce().getPrix());
-        annonceDto.setUuid(annonceFull.getAnnonce().getUUID());
+        annonceDto.setUuid(annonceFull.getAnnonce().getUuid());
 
         annonceDto.setContactEmail(annonceFull.getAnnonce().getContactByEmail() != null && annonceFull.getAnnonce().getContactByEmail().equals("O"));
         annonceDto.setContactTel(annonceFull.getAnnonce().getContactByTel() != null && annonceFull.getAnnonce().getContactByTel().equals("O"));
@@ -96,7 +96,7 @@ public class AnnonceConverter {
     public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
         try {
             AnnonceEntity annonceEntity = new AnnonceEntity();
-            annonceEntity.setUUID(annonceDto.getUuid());
+            annonceEntity.setUuid(annonceDto.getUuid());
             annonceEntity.setStatut(StatusRemote.SEND);
             annonceEntity.setTitre(annonceDto.getTitre());
             annonceEntity.setDescription(annonceDto.getDescription());

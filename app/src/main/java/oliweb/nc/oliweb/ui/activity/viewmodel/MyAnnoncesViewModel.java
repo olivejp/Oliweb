@@ -75,7 +75,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annonceEntity -> {
-                            Log.d(TAG, "findSingleById.doOnSuccess annonceEntity : " + annonceEntity);
+                            Log.d(TAG, "findSingleByUid.doOnSuccess annonceEntity : " + annonceEntity);
                             annonceEntity.setStatut(StatusRemote.TO_DELETE);
                             annonceRepository.saveWithSingle(annonceEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

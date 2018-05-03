@@ -14,7 +14,7 @@ import com.google.firebase.database.Exclude;
 public class UtilisateurEntity {
     @NonNull
     @PrimaryKey
-    private String UuidUtilisateur;
+    private String uuidUtilisateur;
     private String telephone;
     private String email;
     private String profile;
@@ -26,11 +26,11 @@ public class UtilisateurEntity {
     @Exclude
     @NonNull
     public String getUuidUtilisateur() {
-        return UuidUtilisateur;
+        return uuidUtilisateur;
     }
 
     public void setUuidUtilisateur(@NonNull String uuidUtilisateur) {
-        UuidUtilisateur = uuidUtilisateur;
+        this.uuidUtilisateur = uuidUtilisateur;
     }
 
     public String getProfile() {
@@ -94,7 +94,7 @@ public class UtilisateurEntity {
     @Override
     public String toString() {
         return "UtilisateurEntity{" +
-                "UuidUtilisateur='" + UuidUtilisateur + '\'' +
+                "uuidUtilisateur='" + uuidUtilisateur + '\'' +
                 ", telephone='" + telephone + '\'' +
                 ", email='" + email + '\'' +
                 ", profile='" + profile + '\'' +

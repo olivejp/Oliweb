@@ -146,7 +146,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public LiveData<AnnonceEntity> findById(long idAnnonce) {
-        Log.d(TAG, "Starting findById " + idAnnonce);
+        Log.d(TAG, "Starting findByUid " + idAnnonce);
         return this.annonceDao.findById(idAnnonce);
     }
 
@@ -156,7 +156,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity> {
     }
 
     public Maybe<AnnonceEntity> findSingleById(long idAnnonce) {
-        Log.d(TAG, "Starting findSingleById " + idAnnonce);
+        Log.d(TAG, "Starting findSingleByUid " + idAnnonce);
         return this.annonceDao.findSingleById(idAnnonce);
     }
 

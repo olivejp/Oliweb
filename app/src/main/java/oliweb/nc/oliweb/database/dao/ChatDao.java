@@ -16,21 +16,22 @@ import oliweb.nc.oliweb.database.entity.ChatEntity;
  */
 @Dao
 public interface ChatDao extends AbstractDao<ChatEntity> {
-    @Transaction
-    @Query("SELECT * FROM chat WHERE uidChat = :uidChat")
-    LiveData<ChatEntity> findById(String uidChat);
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE uidChat = :uidChat")
-    Maybe<ChatEntity> findSingleById(String uidChat);
+    @Query("SELECT * FROM chat")
+    Single<List<ChatEntity>> getAll();
+
+    @Transaction
+    @Query("SELECT COUNT(*) FROM chat")
+    Single<Integer> count();
+
+    @Transaction
+    @Query("SELECT * FROM chat WHERE idChat = :idChat")
+    Maybe<ChatEntity> findById(Long idChat);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce")
     LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM chat WHERE uidChat = :uidChat")
-    Single<Integer> countById(String uidChat);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser")

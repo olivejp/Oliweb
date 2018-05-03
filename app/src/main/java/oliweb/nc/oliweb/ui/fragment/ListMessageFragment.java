@@ -32,7 +32,6 @@ import butterknife.OnClick;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageFirebaseAdapter;
@@ -115,10 +114,11 @@ public class ListMessageFragment extends Fragment {
         linearLayout.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayout);
 
+        // TODO finir la méthode
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
-                viewModel.findByUidUserAndUidAnnonce(FirebaseAuth.getInstance().getCurrentUser().getUid(), annonce.getUUID())
+                viewModel.findOrCreateChat(FirebaseAuth.getInstance().getCurrentUser().getUid(), annonce)
                         .observe(appCompatActivity, chatEntity -> {
                             if (chatEntity == null) {
 
@@ -161,10 +161,10 @@ public class ListMessageFragment extends Fragment {
                 if (adapter == null && annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
-                    findOrCreateChat(uidUser, annonce, chat -> {
-                        sendMessage(chat.getUid(), messageToSend);
+                    viewModel.findOrCreateChat(uidUser, annonce).observe(appCompatActivity, chatEntity -> {
+                        // sendMessage(chatEntity, messageToSend);
                         if (initializeAdapterLater) {
-                            Query query = messageRef.child(chat.getUid()).orderByChild("timestamp");
+                            Query query = messageRef.child(chatEntity.getUidChat()).orderByChild("timestamp");
                             attachFirebaseRefToAdapter(query);
                         }
                     });
@@ -180,6 +180,11 @@ public class ListMessageFragment extends Fragment {
      * @param messageToSend le message à envoyer
      */
     private void sendMessage(String uidChat, String messageToSend) {
+        viewModel.sendMessage(messageToSend)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribe();
+
+
         DatabaseReference newMessageRef = messageRef.child(uidChat).push();
 
         // Génération du message à envoyer
@@ -210,48 +215,5 @@ public class ListMessageFragment extends Fragment {
                     Log.d(TAG, "Un message n'a pas réussi à être envoyé." + e.getLocalizedMessage());
                     imageSend.setEnabled(true);
                 });
-    }
-
-    /**
-     * Recherche dans Firebase si on a déjà un chat pour cet utilisateur et pour cette annonce
-     * Sinon on le créer
-     *
-     * @param userUid  uid de notre utilisateur
-     * @param annonce  annonce pour laquelle on veut correspondre
-     * @param listener listener qui récupérera le chat trouvé ou créé
-     */
-    private void findOrCreateChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
-        findChat(userUid, annonce, chat -> {
-            if (chat == null) {
-                ChatFirebase finalChat = viewModel.createChat(userUid, annonce);
-                chatRef.child(finalChat.getUid())
-                        .setValue(finalChat)
-                        .addOnSuccessListener(aVoid -> {
-                            chatRef.child(finalChat.getUid()).child("creationTimestamp").setValue(ServerValue.TIMESTAMP);
-                            listener.afterFoundChat(finalChat);
-                        });
-            } else {
-                listener.afterFoundChat(chat);
-            }
-        });
-    }
-
-    /**
-     * Essaye de trouver un chat existant pour cet utilisateur et pour cette annonce
-     *
-     * @param userUid
-     * @param annonce
-     * @param listener
-     */
-    private void findChat(String userUid, AnnonceEntity annonce, @NonNull ListeningForChat listener) {
-        viewModel.findChat(userUid, annonce.getUUID())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(listener::afterFoundChat)
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .subscribe();
-    }
-
-    public interface ListeningForChat {
-        void afterFoundChat(ChatFirebase chat);
     }
 }

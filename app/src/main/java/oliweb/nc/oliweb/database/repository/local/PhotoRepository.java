@@ -182,7 +182,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     }
 
     public Single<PhotoEntity> findSingleById(long idPhoto) {
-        Log.d(TAG, "Starting findSingleById idPhoto : " + idPhoto);
+        Log.d(TAG, "Starting findSingleByUid idPhoto : " + idPhoto);
         return this.photoDao.findSingleById(idPhoto);
     }
 

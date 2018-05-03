@@ -170,7 +170,7 @@ public class AnnonceRepositoryTest {
         Assert.assertEquals(idAnnonceAfterInsert, annonceEntityAfterUpdate.getIdAnnonce());
         Assert.assertEquals("bouloup", annonceEntityAfterUpdate.getTitre());
         Assert.assertEquals("nouvelle description", annonceEntityAfterUpdate.getDescription());
-        Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUUID());
+        Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUuid());
         Assert.assertEquals(UID_USER, annonceEntityAfterUpdate.getUuidUtilisateur());
     }
 

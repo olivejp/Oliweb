@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subscribers.TestSubscriber;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
@@ -23,6 +24,12 @@ class UtilityTest {
         }
     }
 
+    static void waitTerminalEvent(TestSubscriber testSubscriber, int countDown) {
+        if (!testSubscriber.awaitTerminalEvent(countDown, TimeUnit.SECONDS)) {
+            Assert.assertTrue(false);
+        }
+    }
+
     static UtilisateurEntity initUtilisateur(@Nullable String uidUser, @Nullable String profile, @Nullable String email) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setProfile((profile == null || profile.isEmpty()) ? "orlanth23" : profile);
@@ -33,7 +40,7 @@ class UtilityTest {
 
     static AnnonceEntity initAnnonce(String UUID, String uidUser, StatusRemote statusRemote, String titre, String description, Long idCategorie) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceEntity.setUUID(UUID);
+        annonceEntity.setUuid(UUID);
         annonceEntity.setUuidUtilisateur(uidUser);
         annonceEntity.setStatut(statusRemote);
         annonceEntity.setTitre(titre);

@@ -79,7 +79,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void createNewAnnonce() {
         this.annonce = new AnnonceEntity();
-        this.annonce.setUUID(null);
+        this.annonce.setUuid(null);
         this.annonce.setStatut(StatusRemote.TO_SEND);
         this.annonce.setFavorite(0);
         if (this.liveListPhoto == null) {

@@ -17,11 +17,11 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 @Dao
 public interface UtilisateurDao extends AbstractDao<UtilisateurEntity> {
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
     LiveData<UtilisateurEntity> findByUuid(String UuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
     Maybe<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
 
     @Transaction
@@ -33,6 +33,6 @@ public interface UtilisateurDao extends AbstractDao<UtilisateurEntity> {
     Single<Integer> count();
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM utilisateur WHERE UuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT COUNT(*) FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
     Single<Integer> countByUid(String UuidUtilisateur);
 }

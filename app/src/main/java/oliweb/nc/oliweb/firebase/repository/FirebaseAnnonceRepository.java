@@ -121,7 +121,7 @@ public class FirebaseAnnonceRepository {
                             }
                         }
                     })
-                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUUID() + ", UidUtilisateur : " + uidUtilisateur))
+                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUuid() + ", UidUtilisateur : " + uidUtilisateur))
                     .subscribe();
         } catch (Exception exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
@@ -242,17 +242,17 @@ public class FirebaseAnnonceRepository {
     public Single<AtomicBoolean> delete(AnnonceEntity annonce) {
         Log.d(TAG, "Starting delete " + annonce);
         return Single.create(emitter -> {
-            if (annonce == null || annonce.getUUID() == null) {
+            if (annonce == null || annonce.getUuid() == null) {
                 emitter.onSuccess(new AtomicBoolean(true));
             } else {
-                ANNONCE_REF.child(annonce.getUUID())
+                ANNONCE_REF.child(annonce.getUuid())
                         .removeValue()
                         .addOnFailureListener(e -> {
-                            Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUUID() + " exception : " + e.getLocalizedMessage());
+                            Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUuid() + " exception : " + e.getLocalizedMessage());
                             emitter.onError(e);
                         })
                         .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUUID());
+                            Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUuid());
                             emitter.onSuccess(new AtomicBoolean(true));
                         });
             }

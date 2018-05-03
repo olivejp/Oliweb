@@ -20,15 +20,15 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 @Entity(tableName = "annonce", foreignKeys = {
         @ForeignKey(entity = CategorieEntity.class, parentColumns = "idCategorie", childColumns = "idCategorie"),
-        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "UuidUtilisateur", childColumns = "UuidUtilisateur", onDelete = CASCADE)},
+        @ForeignKey(entity = UtilisateurEntity.class, parentColumns = "uuidUtilisateur", childColumns = "uuidUtilisateur", onDelete = CASCADE)},
         indices = {
-                @Index("UuidUtilisateur"),
+                @Index("uuidUtilisateur"),
                 @Index("idCategorie")})
 public class AnnonceEntity implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idAnnonce;
-    private String UUID;
+    private String uuid;
     private String titre;
     private String description;
     private Long datePublication;
@@ -38,7 +38,7 @@ public class AnnonceEntity implements Parcelable {
     private String contactByMsg;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
-    private String UuidUtilisateur;
+    private String uuidUtilisateur;
     private long idCategorie;
     private String debattre;
     private Integer favorite;
@@ -47,12 +47,13 @@ public class AnnonceEntity implements Parcelable {
     }
 
     @Ignore
-    public AnnonceEntity(String UUID, String titre, String description, StatusRemote statut, String uuidUtilisateur, long idCategorie) {
-        this.UUID = UUID;
+    public AnnonceEntity(@NonNull Long idAnnonce, String uuid, String titre, String description, StatusRemote statut, String uuidUtilisateur, long idCategorie) {
+        this.idAnnonce = idAnnonce;
+        this.uuid = uuid;
         this.titre = titre;
         this.description = description;
         this.statut = statut;
-        UuidUtilisateur = uuidUtilisateur;
+        this.uuidUtilisateur = uuidUtilisateur;
         this.idCategorie = idCategorie;
     }
 
@@ -66,12 +67,12 @@ public class AnnonceEntity implements Parcelable {
         this.idAnnonce = idAnnonce;
     }
 
-    public String getUUID() {
-        return UUID;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setUUID(String UUID) {
-        this.UUID = UUID;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public String getTitre() {
@@ -141,11 +142,11 @@ public class AnnonceEntity implements Parcelable {
 
     @Exclude
     public String getUuidUtilisateur() {
-        return UuidUtilisateur;
+        return uuidUtilisateur;
     }
 
     public void setUuidUtilisateur(String uuidUtilisateur) {
-        UuidUtilisateur = uuidUtilisateur;
+        this.uuidUtilisateur = uuidUtilisateur;
     }
 
     @Exclude
@@ -185,7 +186,7 @@ public class AnnonceEntity implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeValue(this.idAnnonce);
-        dest.writeString(this.UUID);
+        dest.writeString(this.uuid);
         dest.writeString(this.titre);
         dest.writeString(this.description);
         dest.writeValue(this.datePublication);
@@ -194,7 +195,7 @@ public class AnnonceEntity implements Parcelable {
         dest.writeString(this.contactByEmail);
         dest.writeString(this.contactByMsg);
         dest.writeInt(this.statut == null ? -1 : this.statut.ordinal());
-        dest.writeString(this.UuidUtilisateur);
+        dest.writeString(this.uuidUtilisateur);
         dest.writeLong(this.idCategorie);
         dest.writeString(this.debattre);
         dest.writeValue(this.favorite);
@@ -203,7 +204,7 @@ public class AnnonceEntity implements Parcelable {
 
     protected AnnonceEntity(Parcel in) {
         this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
-        this.UUID = in.readString();
+        this.uuid = in.readString();
         this.titre = in.readString();
         this.description = in.readString();
         this.datePublication = (Long) in.readValue(Long.class.getClassLoader());
@@ -213,7 +214,7 @@ public class AnnonceEntity implements Parcelable {
         this.contactByMsg = in.readString();
         int tmpStatut = in.readInt();
         this.statut = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
-        this.UuidUtilisateur = in.readString();
+        this.uuidUtilisateur = in.readString();
         this.idCategorie = in.readLong();
         this.debattre = in.readString();
         this.favorite = (Integer) in.readValue(Integer.class.getClassLoader());
@@ -235,7 +236,7 @@ public class AnnonceEntity implements Parcelable {
     public String toString() {
         return "AnnonceEntity{" +
                 "idAnnonce=" + idAnnonce +
-                ", UUID='" + UUID + '\'' +
+                ", uuid='" + uuid + '\'' +
                 ", titre='" + titre + '\'' +
                 ", description='" + description + '\'' +
                 ", datePublication=" + datePublication +
@@ -244,7 +245,7 @@ public class AnnonceEntity implements Parcelable {
                 ", contactByEmail='" + contactByEmail + '\'' +
                 ", contactByMsg='" + contactByMsg + '\'' +
                 ", statut=" + statut +
-                ", UuidUtilisateur='" + UuidUtilisateur + '\'' +
+                ", uuidUtilisateur='" + uuidUtilisateur + '\'' +
                 ", idCategorie=" + idCategorie +
                 ", debattre='" + debattre + '\'' +
                 ", favorite=" + favorite +

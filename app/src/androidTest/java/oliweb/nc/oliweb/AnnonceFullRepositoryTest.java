@@ -124,7 +124,7 @@ public class AnnonceFullRepositoryTest {
         annonceEntity.setIdCategorie(listCategorie.get(0).getIdCategorie());
         annonceEntity.setDescription("Description_1");
         annonceEntity.setStatut(FAILED_TO_SEND);
-        annonceEntity.setUUID("UUID1");
+        annonceEntity.setUuid("UUID1");
 
         AnnonceEntity annonceEntity2 = new AnnonceEntity();
         annonceEntity2.setTitre("Titre_2");
@@ -132,7 +132,7 @@ public class AnnonceFullRepositoryTest {
         annonceEntity2.setIdCategorie(listCategorie.get(0).getIdCategorie());
         annonceEntity2.setDescription("Description_2");
         annonceEntity2.setStatut(SEND);
-        annonceEntity2.setUUID("UUID2");
+        annonceEntity2.setUuid("UUID2");
 
         saveSingleTest(annonceEntity);
         saveSingleTest(annonceEntity2);
@@ -147,7 +147,7 @@ public class AnnonceFullRepositoryTest {
         List<AnnonceFull> listResult = testObserver.values().get(0);
         int indexOfFirst;
         int indexOfSecond;
-        if (listResult.get(0).getAnnonce().getUUID().equals("UUID1")) {
+        if (listResult.get(0).getAnnonce().getUuid().equals("UUID1")) {
             indexOfFirst = 0;
             indexOfSecond = 1;
         } else {

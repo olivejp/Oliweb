@@ -13,7 +13,6 @@ public class StatusConverter {
     }
 
     @TypeConverter
-
     public static StatusRemote getValue(String value) {
         if (value.equals(StatusRemote.TO_SEND.getValue())) {
             return StatusRemote.TO_SEND;
@@ -32,12 +31,16 @@ public class StatusConverter {
         } else if (value.equals(StatusRemote.TO_INSERT.getValue())) {
             return StatusRemote.TO_INSERT;
         } else {
-            throw new IllegalArgumentException("Could not recognize status");
+            return StatusRemote.TO_SEND;
         }
     }
 
     @TypeConverter
     public static String toValue(StatusRemote origine) {
-        return origine.getValue();
+        if (origine == null) {
+            return StatusRemote.TO_SEND.getValue();
+        } else {
+            return origine.getValue();
+        }
     }
 }

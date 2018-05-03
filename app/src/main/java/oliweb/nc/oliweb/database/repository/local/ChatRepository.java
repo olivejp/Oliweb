@@ -6,7 +6,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Maybe;
@@ -21,7 +20,7 @@ import oliweb.nc.oliweb.database.entity.ChatEntity;
 
 public class ChatRepository extends AbstractRepository<ChatEntity> {
     private static final String TAG = ChatRepository.class.getName();
-    private static ChatRepository INSTANCE;
+    private static ChatRepository instance;
     private ChatDao chatDao;
 
     private ChatRepository(Context context) {
@@ -31,72 +30,70 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
     }
 
     public static synchronized ChatRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new ChatRepository(context);
+        if (instance == null) {
+            instance = new ChatRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
-    private Single<ChatEntity> insertSingle(ChatEntity chatEntity) {
-        return Single.create(e -> {
-            try {
-                Long[] ids = dao.insert(chatEntity);
-                if (ids.length == 1) {
-                    findSingleById(chatEntity.getUidChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnSuccess(e::onSuccess)
-                            .subscribe();
-                } else {
-                    e.onError(new RuntimeException("Failed to insert into ChatRepository"));
-                }
-            } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
-                e.onError(exception);
-            }
-        });
+    private Maybe<ChatEntity> insertSingle(ChatEntity chatEntity) {
+        Long[] ids = dao.insert(chatEntity);
+        if (ids.length == 1) {
+            return findById(ids[0]);
+        } else {
+            return Maybe.empty();
+        }
     }
 
-    /**
-     * You have to subscribe to this Single on a background thread
-     * because it queries the Database which only accept background queries.
-     */
-    private Single<ChatEntity> updateSingle(ChatEntity chatEntity) {
-        return Single.create(e -> {
-            try {
-                int updatedCount = dao.update(chatEntity);
-                if (updatedCount == 1) {
-                    findSingleById(chatEntity.getUidChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnSuccess(e::onSuccess)
-                            .subscribe();
-                } else {
-                    e.onError(new RuntimeException("Failed to update into ChatRepository"));
-                }
-            } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
-                e.onError(exception);
-            }
-        });
+    private Maybe<ChatEntity> updateSingle(ChatEntity chatEntity) {
+        int updatedCount = dao.update(chatEntity);
+        if (updatedCount == 1) {
+            return findById(chatEntity.getIdChat());
+        } else {
+            return Maybe.empty();
+        }
     }
 
     public Single<ChatEntity> saveWithSingle(ChatEntity chatEntity) {
-        return Single.create(emitter -> existById(chatEntity.getUidChat())
+        return Single.create(emitter -> findById(chatEntity.getIdChat())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)
-                .doOnSuccess(atomicBoolean -> {
-                    if (atomicBoolean.get()) {
+                .doOnSuccess(chatEntityRead ->
                         updateSingle(chatEntity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
-                                .subscribe();
-                    } else {
+                                .doOnComplete(() -> Log.e(TAG, "Failed to update"))
+                                .subscribe()
+                )
+                .doOnComplete(() ->
                         insertSingle(chatEntity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
-                                .subscribe();
+                                .doOnComplete(() -> Log.e(TAG, "Failed to insert"))
+                                .subscribe()
+                ).subscribe()
+        );
+    }
+
+    /**
+     * @return Single to be observe. This Single emit an integer which represent the number of chat correctly deleted
+     */
+    public Single<Integer> deleteAll() {
+        return Single.create(e -> chatDao.getAll()
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(e::onError)
+                .doOnSuccess(chatEntities -> {
+                    if (chatEntities != null && !chatEntities.isEmpty()) {
+                        e.onSuccess(chatDao.delete(chatEntities));
+                    } else {
+                        e.onSuccess(0);
                     }
                 })
                 .subscribe());
+    }
+
+    public Single<List<ChatEntity>> getAll() {
+        return chatDao.getAll();
     }
 
     public Maybe<List<ChatEntity>> saveWithSingle(List<ChatEntity> chatEntities) {
@@ -112,7 +109,6 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
                             countSuccess.getAndIncrement();
                             if (countSuccess.get() == chatEntities.size()) {
                                 emitter.onSuccess(listResult);
-                                emitter.onComplete();
                             }
                         })
                         .doOnError(emitter::onError)
@@ -121,22 +117,8 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
         });
     }
 
-    private Single<AtomicBoolean> existById(String uidChat) {
-        return Single.create(e -> chatDao.countById(uidChat)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
-                .doOnError(e::onError)
-                .subscribe());
-    }
-
-
-    public Maybe<ChatEntity> findSingleById(String uidChat) {
-        return this.chatDao.findSingleById(uidChat);
-    }
-
-
-    public LiveData<ChatEntity> findById(String uidChat) {
-        return this.chatDao.findById(uidChat);
+    public Maybe<ChatEntity> findById(Long idChat) {
+        return this.chatDao.findById(idChat);
     }
 
     public LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce) {
@@ -145,6 +127,10 @@ public class ChatRepository extends AbstractRepository<ChatEntity> {
 
     public LiveData<List<ChatEntity>> findByUidUser(String uidSeller) {
         return this.chatDao.findByUidUser(uidSeller);
+    }
+
+    public Single<Integer> count() {
+        return this.chatDao.count();
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {

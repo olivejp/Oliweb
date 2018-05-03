@@ -23,7 +23,7 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity> {
 
     private CategorieRepository(Context context) {
         super(context);
-        this.categorieDao = db.categorieDao();
+        this.categorieDao = db.getCategorieDao();
         this.dao = categorieDao;
     }
 

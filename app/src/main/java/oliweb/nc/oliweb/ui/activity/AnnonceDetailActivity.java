@@ -20,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Date;
@@ -120,7 +119,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         if (annoncePhotos != null) {
             // Récupération de l'annonce
-            viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUUID()).observe(this, dataSnapshot -> {
+            viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUuid()).observe(this, dataSnapshot -> {
                 if (dataSnapshot != null) {
                     AnnonceDto dto = dataSnapshot.getValue(AnnonceDto.class);
                     if (dto != null) {
@@ -250,7 +249,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, PostAnnonceActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
-        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUUID());
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUuid());
         intent.putExtras(bundle);
         startActivityForResult(intent, CALL_POST_ANNONCE);
     }

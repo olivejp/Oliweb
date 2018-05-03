@@ -16,7 +16,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
@@ -97,7 +96,7 @@ public class AnnonceBeautyAdapter extends
 
         // Transition
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            viewHolderBeauty.imageView.setTransitionName(annonce.getUUID());
+            viewHolderBeauty.imageView.setTransitionName(annonce.getUuid());
             viewHolderBeauty.textTitreAnnonce.setTransitionName(annonce.getTitre());
         }
 
@@ -170,14 +169,14 @@ public class AnnonceBeautyAdapter extends
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUUID().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUUID());
+                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUuid().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUuid());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                     AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
                     AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
-                    return newAnnonce.getUUID().equals(oldAnnonce.getUUID())
+                    return newAnnonce.getUuid().equals(oldAnnonce.getUuid())
                             && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
                             && (newAnnonce.isFavorite() == oldAnnonce.isFavorite())

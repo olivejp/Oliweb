@@ -15,7 +15,8 @@ import android.support.annotation.NonNull;
 @Entity(tableName = "chat")
 public class ChatEntity implements Parcelable {
     @NonNull
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    private Long idChat;
     private String uidChat;
     private String uidBuyer;
     private String uidSeller;
@@ -30,7 +31,8 @@ public class ChatEntity implements Parcelable {
     }
 
     @Ignore
-    public ChatEntity(@NonNull String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote) {
+    public ChatEntity(@NonNull Long idChat, String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote) {
+        this.idChat = idChat;
         this.uidChat = uidChat;
         this.uidBuyer = uidBuyer;
         this.uidSeller = uidSeller;
@@ -42,6 +44,14 @@ public class ChatEntity implements Parcelable {
     }
 
     @NonNull
+    public Long getIdChat() {
+        return idChat;
+    }
+
+    public void setIdChat(@NonNull Long idChat) {
+        this.idChat = idChat;
+    }
+
     public String getUidChat() {
         return uidChat;
     }
@@ -114,6 +124,7 @@ public class ChatEntity implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idChat);
         dest.writeString(this.uidChat);
         dest.writeString(this.uidBuyer);
         dest.writeString(this.uidSeller);
@@ -125,6 +136,7 @@ public class ChatEntity implements Parcelable {
     }
 
     protected ChatEntity(Parcel in) {
+        this.idChat = (Long) in.readValue(Long.class.getClassLoader());
         this.uidChat = in.readString();
         this.uidBuyer = in.readString();
         this.uidSeller = in.readString();
@@ -132,8 +144,8 @@ public class ChatEntity implements Parcelable {
         this.lastMessage = in.readString();
         this.creationTimestamp = (Long) in.readValue(Long.class.getClassLoader());
         this.updateTimestamp = (Long) in.readValue(Long.class.getClassLoader());
-        int tmpStatut = in.readInt();
-        this.statusRemote = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
+        int tmpStatusRemote = in.readInt();
+        this.statusRemote = tmpStatusRemote == -1 ? null : StatusRemote.values()[tmpStatusRemote];
     }
 
     public static final Creator<ChatEntity> CREATOR = new Creator<ChatEntity>() {

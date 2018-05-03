@@ -191,7 +191,7 @@ public class FirebaseChatRepository {
 
                                 ChatFirebase chatFirebase = new ChatFirebase();
                                 chatFirebase.setUid(ref.getKey());
-                                chatFirebase.setUidAnnonce(annonce.getUUID());
+                                chatFirebase.setUidAnnonce(annonce.getUuid());
                                 chatFirebase.setMembers(hash);
                                 chatFirebase.setUidBuyer(uidUserBuyer);
                                 chatFirebase.setUidSeller(annonce.getUuidUtilisateur());
@@ -301,7 +301,7 @@ public class FirebaseChatRepository {
         fbMessageRepository.getAllMessagesByUidChat(chatEntity.getUidChat())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(messageFirebases -> messageFirebases)
-                .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getUidChat(), messageFirebase))
+                .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
                 .doOnNext(messageEntity ->
                         messageRepository.saveWithSingle(messageEntity)
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

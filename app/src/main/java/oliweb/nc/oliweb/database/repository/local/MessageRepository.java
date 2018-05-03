@@ -42,7 +42,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
             try {
                 Long[] ids = dao.insert(messageEntity);
                 if (ids.length == 1) {
-                    findSingleById(messageEntity.getUidChat())
+                    findSingleById(messageEntity.getUidMessage())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
                 } else {
@@ -64,7 +64,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
             try {
                 int updatedCount = dao.update(messageEntity);
                 if (updatedCount == 1) {
-                    findSingleById(messageEntity.getUidChat())
+                    findSingleById(messageEntity.getUidMessage())
                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnSuccess(e::onSuccess)
                             .subscribe();
@@ -87,7 +87,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity> {
     }
 
     public Single<MessageEntity> saveWithSingle(MessageEntity messageEntity) {
-        return Single.create(emitter -> existById(messageEntity.getUidChat())
+        return Single.create(emitter -> existById(messageEntity.getUidMessage())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)
                 .doOnSuccess(atomicBoolean -> {

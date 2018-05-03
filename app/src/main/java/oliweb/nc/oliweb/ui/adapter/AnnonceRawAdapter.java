@@ -69,7 +69,7 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.normalLayoutRaw.setOnClickListener(this.onClickListener);
 
         // Attribution des données au valeurs graphiques
-        viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUUID()));
+        viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUuid()));
         viewHolderRaw.textTitreAnnonce.setText(viewHolderRaw.singleAnnonce.getTitre());
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
 
@@ -107,7 +107,7 @@ public class AnnonceRawAdapter extends
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUUID().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUUID());
+                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUuid().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUuid());
                 }
 
                 @Override
@@ -116,7 +116,7 @@ public class AnnonceRawAdapter extends
                     AnnoncePhotos oldAnnonce = listAnnonces.get(oldItemPosition);
                     AnnonceEntity oldA = oldAnnonce.getAnnonceEntity();
                     AnnonceEntity newA = newAnnonce.getAnnonceEntity();
-                    return newA.getUUID().equals(oldA.getUUID())
+                    return newA.getUuid().equals(oldA.getUuid())
                             && newA.getTitre().equals(oldA.getTitre())
                             && newA.getDescription().equals(oldA.getDescription())
                             && newA.isFavorite() == oldA.isFavorite()

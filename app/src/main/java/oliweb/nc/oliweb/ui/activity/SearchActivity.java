@@ -227,7 +227,7 @@ public class SearchActivity extends AppCompatActivity {
     private View.OnClickListener onClickListenerFavorite = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Log.d(TAG, "Click on add to favorite");
-        searchActivityViewModel.isAnnonceFavorite(viewHolder.getAnnoncePhotos().getAnnonceEntity().getUUID())
+        searchActivityViewModel.isAnnonceFavorite(viewHolder.getAnnoncePhotos().getAnnonceEntity().getUuid())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(integer -> {

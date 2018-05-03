@@ -16,16 +16,17 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
  * Created by orlanth23 on 19/04/2018.
  */
 
-@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "uidChat", childColumns = "uidChat", onDelete = CASCADE), indices = @Index("uidChat"))
+@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = @Index("idChat"))
 public class MessageEntity implements Parcelable {
     @NonNull
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    private Long idMessage;
     private String uidMessage;
     private String message;
     private String read;
     private String uidAuthor;
     private Long timestamp;
-    private String uidChat;
+    private Long idChat;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statusRemote;
 
@@ -33,17 +34,34 @@ public class MessageEntity implements Parcelable {
     }
 
     @Ignore
-    public MessageEntity(@NonNull String uidMessage, String message, String read, String uidAuthor, Long timestamp, String uidChat, StatusRemote statusRemote) {
+    public MessageEntity(@NonNull Long idMessage, String uidMessage, String message, String read, String uidAuthor, Long timestamp, Long idChat, StatusRemote statusRemote) {
+        this.idMessage = idMessage;
         this.uidMessage = uidMessage;
         this.message = message;
         this.read = read;
         this.uidAuthor = uidAuthor;
         this.timestamp = timestamp;
-        this.uidChat = uidChat;
+        this.idChat = idChat;
         this.statusRemote = statusRemote;
     }
 
     @NonNull
+    public Long getIdMessage() {
+        return idMessage;
+    }
+
+    public void setIdMessage(@NonNull Long idMessage) {
+        this.idMessage = idMessage;
+    }
+
+    public Long getIdChat() {
+        return idChat;
+    }
+
+    public void setIdChat(Long idChat) {
+        this.idChat = idChat;
+    }
+
     public String getUidMessage() {
         return uidMessage;
     }
@@ -84,14 +102,6 @@ public class MessageEntity implements Parcelable {
         this.timestamp = timestamp;
     }
 
-    public String getUidChat() {
-        return uidChat;
-    }
-
-    public void setUidChat(String uidChat) {
-        this.uidChat = uidChat;
-    }
-
     public StatusRemote getStatusRemote() {
         return statusRemote;
     }
@@ -100,7 +110,6 @@ public class MessageEntity implements Parcelable {
         this.statusRemote = statusRemote;
     }
 
-
     @Override
     public int describeContents() {
         return 0;
@@ -108,22 +117,24 @@ public class MessageEntity implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idMessage);
         dest.writeString(this.uidMessage);
         dest.writeString(this.message);
         dest.writeString(this.read);
         dest.writeString(this.uidAuthor);
         dest.writeValue(this.timestamp);
-        dest.writeString(this.uidChat);
+        dest.writeValue(this.idChat);
         dest.writeInt(this.statusRemote == null ? -1 : this.statusRemote.ordinal());
     }
 
     protected MessageEntity(Parcel in) {
+        this.idMessage = (Long) in.readValue(Long.class.getClassLoader());
         this.uidMessage = in.readString();
         this.message = in.readString();
         this.read = in.readString();
         this.uidAuthor = in.readString();
         this.timestamp = (Long) in.readValue(Long.class.getClassLoader());
-        this.uidChat = in.readString();
+        this.idChat = (Long) in.readValue(Long.class.getClassLoader());
         int tmpStatusRemote = in.readInt();
         this.statusRemote = tmpStatusRemote == -1 ? null : StatusRemote.values()[tmpStatusRemote];
     }

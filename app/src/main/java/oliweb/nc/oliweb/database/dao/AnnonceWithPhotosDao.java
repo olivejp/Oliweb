@@ -19,14 +19,14 @@ public interface AnnonceWithPhotosDao {
     LiveData<AnnoncePhotos> findById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND favorite <> 1")
+    @Query("SELECT * FROM annonce WHERE uuidUtilisateur = :uuidUtilisateur AND statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND favorite <> 1")
     LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE UuidUtilisateur = :uuidUtilisateur AND favorite = 1")
+    @Query("SELECT * FROM annonce WHERE uuidUtilisateur = :uuidUtilisateur AND favorite = 1")
     LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE UUID = :uidAnnonce")
+    @Query("SELECT * FROM annonce WHERE uuid = :uidAnnonce")
     LiveData<AnnoncePhotos> findAnnonceByUidAnnonce(String uidAnnonce);
 }

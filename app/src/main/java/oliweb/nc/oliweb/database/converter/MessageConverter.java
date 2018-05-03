@@ -12,21 +12,20 @@ public class MessageConverter {
     private MessageConverter() {
     }
 
-    public static MessageEntity convertDtoToEntity(String uidChat, MessageFirebase messageFirebase) {
+    public static MessageEntity convertDtoToEntity(Long idChat, MessageFirebase messageFirebase) {
         MessageEntity messageEntity = new MessageEntity();
-        messageEntity.setUidChat(messageFirebase.getUidMessage());
+        messageEntity.setIdChat(idChat);
         messageEntity.setMessage(messageFirebase.getMessage());
         messageEntity.setTimestamp(messageFirebase.getTimestamp());
         messageEntity.setUidAuthor(messageFirebase.getUidAuthor());
-        messageEntity.setUidChat(uidChat);
         messageEntity.setStatusRemote(StatusRemote.SEND);
         return messageEntity;
     }
 
-    public static List<MessageEntity> convertDtoToEntity(String uidChat, List<MessageFirebase> messagesFirebase) {
+    public static List<MessageEntity> convertDtoToEntity(Long idChat, List<MessageFirebase> messagesFirebase) {
         ArrayList<MessageEntity> listResult = new ArrayList<>();
         for (MessageFirebase message : messagesFirebase) {
-            listResult.add(convertDtoToEntity(uidChat, message));
+            listResult.add(convertDtoToEntity(idChat, message));
         }
         return listResult;
     }
