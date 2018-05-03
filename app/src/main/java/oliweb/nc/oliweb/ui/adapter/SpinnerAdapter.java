@@ -54,7 +54,7 @@ public class SpinnerAdapter extends BaseAdapter {
         }
 
         ButterKnife.bind(this, convertView);
-        txtidCategory.setText(String.valueOf(navCategorieItems.get(position).getIdCategorie()));
+        txtidCategory.setText(String.valueOf(navCategorieItems.get(position).getId()));
         txtTitle.setText(navCategorieItems.get(position).getName());
         return convertView;
     }

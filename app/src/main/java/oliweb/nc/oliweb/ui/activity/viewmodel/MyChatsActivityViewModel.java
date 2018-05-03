@@ -163,7 +163,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setMessage(message);
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
-        messageEntity.setIdChat(currentChat.getIdChat());
+        messageEntity.setIdChat(currentChat.getId());
         messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
         return messageRepository.saveWithSingle(messageEntity);
     }

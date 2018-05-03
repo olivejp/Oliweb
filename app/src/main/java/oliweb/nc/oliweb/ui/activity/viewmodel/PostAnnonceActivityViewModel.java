@@ -70,7 +70,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
-        return this.annonceRepository.findById(idAnnonce);
+        return this.annonceRepository.findLiveById(idAnnonce);
     }
 
     public LiveData<AnnonceEntity> findAnnonceByUid(String uidAnnonce) {
@@ -129,7 +129,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public Maybe<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
         Log.d(TAG, "Starting savePhotos annonce : " + annonce);
         for (PhotoEntity photo : listPhoto) {
-            photo.setIdAnnonce(annonce.getIdAnnonce());
+            photo.setIdAnnonce(annonce.getId());
         }
         return Maybe.create(emitter ->
                 this.photoRepository.saveWithSingle(listPhoto)

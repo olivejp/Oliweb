@@ -9,8 +9,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-import com.google.firebase.database.Exclude;
-
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 /**
@@ -20,7 +18,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
 @Entity(tableName = "photo",
         foreignKeys = @ForeignKey(entity = AnnonceEntity.class, parentColumns = "idAnnonce", childColumns = "idAnnonce", onDelete = CASCADE),
         indices = @Index(value = "idAnnonce"))
-public class PhotoEntity implements Parcelable {
+public class PhotoEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idPhoto;
@@ -30,7 +28,11 @@ public class PhotoEntity implements Parcelable {
     private StatusRemote statut;
     private Long idAnnonce;
 
-    @Exclude
+    @NonNull
+    public Long getId() {
+        return idPhoto;
+    }
+
     @NonNull
     public Long getIdPhoto() {
         return idPhoto;
@@ -40,7 +42,6 @@ public class PhotoEntity implements Parcelable {
         this.idPhoto = idPhoto;
     }
 
-    @Exclude
     public String getUriLocal() {
         return uriLocal;
     }
@@ -57,7 +58,6 @@ public class PhotoEntity implements Parcelable {
         this.firebasePath = firebasePath;
     }
 
-    @Exclude
     public StatusRemote getStatut() {
         return statut;
     }
@@ -66,7 +66,6 @@ public class PhotoEntity implements Parcelable {
         this.statut = statut;
     }
 
-    @Exclude
     public Long getIdAnnonce() {
         return idAnnonce;
     }

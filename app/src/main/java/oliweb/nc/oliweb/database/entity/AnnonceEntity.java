@@ -24,7 +24,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
         indices = {
                 @Index("uuidUtilisateur"),
                 @Index("idCategorie")})
-public class AnnonceEntity implements Parcelable {
+public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idAnnonce;
@@ -57,7 +57,12 @@ public class AnnonceEntity implements Parcelable {
         this.idCategorie = idCategorie;
     }
 
-    @Exclude
+    @NonNull
+    @Override
+    public Long getId() {
+        return idAnnonce;
+    }
+
     @NonNull
     public Long getIdAnnonce() {
         return idAnnonce;

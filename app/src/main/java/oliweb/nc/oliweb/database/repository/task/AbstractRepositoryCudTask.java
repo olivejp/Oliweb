@@ -10,19 +10,19 @@ import oliweb.nc.oliweb.database.dao.AbstractDao;
  * Created by orlanth23 on 28/01/2018.
  */
 
-public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, DataReturn> {
+public class AbstractRepositoryCudTask<T, U> extends AsyncTask<T, Void, DataReturn<U>> {
 
     private TypeTask typeTask;
-    private AbstractDao<T> dao;
+    private AbstractDao<T, U> dao;
     private OnRespositoryPostExecute postExecute;
 
-    public AbstractRepositoryCudTask(AbstractDao<T> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
+    public AbstractRepositoryCudTask(AbstractDao<T, U> dao, TypeTask typeTask, @Nullable OnRespositoryPostExecute postExecute) {
         this.typeTask = typeTask;
         this.dao = dao;
         this.postExecute = postExecute;
     }
 
-    public AbstractRepositoryCudTask(AbstractDao<T> dao, TypeTask typeTask) {
+    public AbstractRepositoryCudTask(AbstractDao<T, U> dao, TypeTask typeTask) {
         this.typeTask = typeTask;
         this.dao = dao;
         this.postExecute = null;
@@ -44,7 +44,7 @@ public class AbstractRepositoryCudTask<T> extends AsyncTask<T, Void, DataReturn>
                 break;
             case INSERT:
                 try {
-                    Long[] ids = this.dao.insert(entities);
+                    U[] ids = this.dao.insert(entities);
                     dataReturn.setNb(ids.length);
                     dataReturn.setIds(ids);
                 } catch (RuntimeException e) {

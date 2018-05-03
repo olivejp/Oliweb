@@ -14,14 +14,14 @@ import oliweb.nc.oliweb.database.entity.AnnonceFull;
  * Created by orlanth23 on 28/01/2018.
  */
 @Dao
-public interface AnnonceFullDao {
+public abstract class AnnonceFullDao {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    Single<AnnonceFull> findSingleByIdAnnonce(long idAnnonce);
+    public abstract Single<AnnonceFull> findSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:statutList)")
-    Maybe<List<AnnonceFull>> getAllAnnonceByStatus(List<String> statutList);
+    public abstract Maybe<List<AnnonceFull>> getAllAnnonceByStatus(List<String> statutList);
 
 }

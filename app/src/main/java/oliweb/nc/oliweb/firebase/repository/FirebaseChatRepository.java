@@ -301,7 +301,7 @@ public class FirebaseChatRepository {
         fbMessageRepository.getAllMessagesByUidChat(chatEntity.getUidChat())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(messageFirebases -> messageFirebases)
-                .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
+                .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getId(), messageFirebase))
                 .doOnNext(messageEntity ->
                         messageRepository.saveWithSingle(messageEntity)
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

@@ -13,7 +13,7 @@ import android.support.annotation.NonNull;
  */
 
 @Entity(tableName = "chat")
-public class ChatEntity implements Parcelable {
+public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idChat;
@@ -41,6 +41,12 @@ public class ChatEntity implements Parcelable {
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
         this.statusRemote = statusRemote;
+    }
+
+    @NonNull
+    @Override
+    public Long getId() {
+        return idChat;
     }
 
     @NonNull

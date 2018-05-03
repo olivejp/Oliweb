@@ -31,6 +31,7 @@ public class ChatRepositoryTest {
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
         chatRepository = ChatRepository.getInstance(appContext);
+        UtilityTest.cleanBase(appContext);
     }
 
     private void deleteAllTest() {
@@ -125,7 +126,7 @@ public class ChatRepositoryTest {
         chatRepository.saveWithSingle(chatSaved).subscribe(testObserverUpdate);
         waitTerminalEvent(testObserverUpdate, 5);
         testObserverUpdate.assertNoErrors();
-        testObserverUpdate.assertValue(chatEntity -> chatSaved.getIdChat().equals(chatEntity.getIdChat()) && chatEntity.getUidSeller().equals("newUidSeller"));
+        testObserverUpdate.assertValue(chatEntity -> chatSaved.getId().equals(chatEntity.getId()) && chatEntity.getUidSeller().equals("newUidSeller"));
         testObserverUpdate.dispose();
     }
 

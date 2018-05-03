@@ -16,52 +16,60 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 @Dao
-public interface AnnonceDao extends AbstractDao<AnnonceEntity> {
+public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
+
+    @Override
     @Transaction
     @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    LiveData<AnnonceEntity> findById(Long idAnnonce);
+    public abstract Maybe<AnnonceEntity> findById(Long idAnnonce);
+
+    @Override
+    @Transaction
+    @Query("SELECT * FROM annonce")
+    public abstract Single<List<AnnonceEntity>> getAll();
+
+    @Override
+    @Transaction
+    @Query("SELECT COUNT(*) FROM annonce")
+    public abstract Single<Integer> count();
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
+    public abstract LiveData<AnnonceEntity> findLiveById(Long idAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
+    public abstract Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")
-    Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
+    public abstract Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
-    Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
+    public abstract Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUser AND statut NOT IN (:statutToAvoid)")
-    LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statutToAvoid);
+    public abstract LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statutToAvoid);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUser AND favorite = 1")
-    LiveData<Integer> countAllFavoritesByUser(String uidUser);
+    public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUtilisateur AND uuid = :uidAnnonce")
-    Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
-
-    @Transaction
-    @Query("SELECT * FROM annonce")
-    Single<List<AnnonceEntity>> getAll();
+    public abstract Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE uuid = :uidAnnonce AND favorite = 1")
-    Single<Integer> isAnnonceFavorite(String uidAnnonce);
+    public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uuid = :uidAnnonce AND favorite = 0")
-    LiveData<AnnonceEntity> findByUid(String uidAnnonce);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM annonce")
-    Single<Integer> count();
+    public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE idAnnonce = :idAnnonce")
-    Single<Integer> countById(Long idAnnonce);
+    public abstract Single<Integer> countById(Long idAnnonce);
 }

@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
@@ -47,17 +46,12 @@ public class AnnonceRepositoryTest {
         annonceRepository = AnnonceRepository.getInstance(appContext);
         categorieRepository = CategorieRepository.getInstance(appContext);
         utilisateurRepository = UtilisateurRepository.getInstance(appContext);
+        UtilityTest.cleanBase(appContext);
         initCategories();
         initUsers();
     }
 
     private void initCategories() {
-        TestObserver<Integer> subscriber = new TestObserver<>();
-        categorieRepository.deleteAll().subscribe(subscriber);
-        waitTerminalEvent(subscriber, 5);
-        subscriber.assertNoErrors();
-        subscriber.dispose();
-
         CategorieEntity categorieEntity = new CategorieEntity();
         categorieEntity.setName("cat1");
         categorieEntity.setCouleur("123456");
@@ -135,7 +129,7 @@ public class AnnonceRepositoryTest {
         deleteAllTest();
         checkCount(0, annonceRepository.count());
 
-        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
+        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getId());
         saveSingleTest(annonceEntity);
 
         checkCount(1, annonceRepository.count());
@@ -151,13 +145,13 @@ public class AnnonceRepositoryTest {
 
         checkCount(0, annonceRepository.count());
 
-        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getIdCategorie());
+        AnnonceEntity annonceEntity = initAnnonce("uidAnnonce", UID_USER, StatusRemote.TO_SEND, "titre", "description", listCategorie.get(0).getId());
 
         AnnonceEntity annonceEntityAfterInsert = saveSingleTest(annonceEntity);
 
-        Long idAnnonceAfterInsert = annonceEntityAfterInsert.getIdAnnonce();
+        Long idAnnonceAfterInsert = annonceEntityAfterInsert.getId();
         Assert.assertNotNull(annonceEntityAfterInsert);
-        Assert.assertNotNull(annonceEntityAfterInsert.getIdAnnonce());
+        Assert.assertNotNull(annonceEntityAfterInsert.getId());
 
         checkCount(1, annonceRepository.count());
 
@@ -167,7 +161,7 @@ public class AnnonceRepositoryTest {
 
         checkCount(1, annonceRepository.count());
 
-        Assert.assertEquals(idAnnonceAfterInsert, annonceEntityAfterUpdate.getIdAnnonce());
+        Assert.assertEquals(idAnnonceAfterInsert, annonceEntityAfterUpdate.getId());
         Assert.assertEquals("bouloup", annonceEntityAfterUpdate.getTitre());
         Assert.assertEquals("nouvelle description", annonceEntityAfterUpdate.getDescription());
         Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUuid());
@@ -179,20 +173,15 @@ public class AnnonceRepositoryTest {
         // Erase all the database
         deleteAllTest();
 
-        AnnonceEntity annonceEntity1 = initAnnonce("uidAnnonce1", UID_USER, StatusRemote.TO_SEND, "titre1", "description1", listCategorie.get(0).getIdCategorie());
-        AnnonceEntity annonceEntity2 = initAnnonce("uidAnnonce2", UID_USER, StatusRemote.TO_SEND, "titre2", "description2", listCategorie.get(0).getIdCategorie());
+        AnnonceEntity annonceEntity1 = initAnnonce("uidAnnonce1", UID_USER, StatusRemote.TO_SEND, "titre1", "description1", listCategorie.get(0).getId());
 
-        ArrayList<AnnonceEntity> list = new ArrayList<>();
-        list.add(annonceEntity1);
-        list.add(annonceEntity2);
-
-        TestObserver<List<AnnonceEntity>> subscriberInsert = new TestObserver<>();
-        annonceRepository.saveWithSingle(list).subscribe(subscriberInsert);
+        TestObserver<AnnonceEntity> subscriberInsert = new TestObserver<>();
+        annonceRepository.saveWithSingle(annonceEntity1).subscribe(subscriberInsert);
 
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1); // Une seule liste
-        subscriberInsert.assertValue(annonceEntities -> annonceEntities.size() == 2);
+        subscriberInsert.assertValue(annonceEntity -> annonceEntity.getUuid().equals("uidAnnonce1"));
         subscriberInsert.dispose();
     }
 }

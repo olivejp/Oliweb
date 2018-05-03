@@ -24,7 +24,7 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
  * Created by 2761oli on 29/01/2018.
  */
 
-public class PhotoRepository extends AbstractRepository<PhotoEntity> {
+public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     private static final String TAG = PhotoRepository.class.getName();
     private static PhotoRepository INSTANCE;
     private PhotoDao photoDao;
@@ -49,7 +49,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
     public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         Log.d(TAG, "Starting save photoEntity : " + photoEntity);
         if (photoEntity != null) {
-            this.photoDao.findSingleById(photoEntity.getIdPhoto())
+            this.photoDao.findSingleById(photoEntity.getId())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnSuccess(photoSaved -> {
                         if (photoSaved != null) {
@@ -84,70 +84,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity> {
         return Single.create(e -> photoDao.countById(idAnnonce)
                 .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
                 .doOnError(e::onError)
-                .subscribe());
-    }
-
-    private Single<PhotoEntity> insertSingle(PhotoEntity entity) {
-        Log.d(TAG, "Starting insertSingle photoEntity : " + entity);
-        return Single.create(e -> {
-            try {
-                Long[] ids = dao.insert(entity);
-                if (ids.length == 1) {
-                    findSingleById(ids[0])
-                            .doOnSuccess(e::onSuccess)
-                            .subscribe();
-                } else {
-                    e.onError(new RuntimeException("Failed to insert into PhotoRepository"));
-                }
-            } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
-                e.onError(exception);
-            }
-        });
-    }
-
-    /**
-     * You have to subscribe to this Single on a background thread
-     * because it queries the Database which only accept background queries.
-     */
-    private Single<PhotoEntity> updateSingle(PhotoEntity entity) {
-        Log.d(TAG, "Starting updateSingle photoEntity : " + entity);
-        return Single.create(e -> {
-            try {
-                int updatedCount = dao.update(entity);
-                if (updatedCount == 1) {
-                    findSingleById(entity.getIdAnnonce())
-                            .doOnSuccess(e::onSuccess)
-                            .subscribe();
-                } else {
-                    e.onError(new RuntimeException("Failed to update into PhotoRepository"));
-                }
-            } catch (Exception exception) {
-                Log.e(TAG, "updateSingle catch exception : " + exception.getMessage());
-                e.onError(exception);
-            }
-        });
-    }
-
-    public Single<PhotoEntity> saveWithSingle(PhotoEntity photoEntity) {
-        Log.d(TAG, "Starting saveWithSingle photoEntity : " + photoEntity);
-        return Single.create(emitter -> existById(photoEntity.getIdAnnonce())
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(emitter::onError)
-                .doOnSuccess(result -> {
-                    Log.d(TAG, "saveWithSingle.doOnSuccess result : " + result.get());
-                    if (result.get()) {
-                        updateSingle(photoEntity)
-                                .doOnSuccess(emitter::onSuccess)
-                                .doOnError(emitter::onError)
-                                .subscribe();
-                    } else {
-                        insertSingle(photoEntity)
-                                .doOnSuccess(emitter::onSuccess)
-                                .doOnError(emitter::onError)
-                                .subscribe();
-                    }
-                })
                 .subscribe());
     }
 

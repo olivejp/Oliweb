@@ -117,7 +117,7 @@ public class FirebaseAnnonceRepository {
                         if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
                             for (String photoUrl : annonceFromFirebase.getPhotos()) {
                                 Log.d(TAG, "Try to save : " + photoUrl);
-                                firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getIdAnnonce(), photoUrl);
+                                firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photoUrl);
                             }
                         }
                     })

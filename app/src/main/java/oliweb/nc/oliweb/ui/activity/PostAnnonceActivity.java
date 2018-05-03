@@ -246,7 +246,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         int prix = Integer.parseInt(textViewPrix.getText().toString());
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), viewModel.getCategorie().getIdCategorie())
+        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), viewModel.getCategorie().getId())
                 .doOnSuccess(annonce -> {
                     Log.d(TAG, "saveAnnonce.doOnSuccess annonce : " + annonce);
                     viewModel.savePhotos(annonce)
@@ -506,7 +506,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             viewModel.setAnnonce(annonceEntity);
 
             // Récupération des photos de cette annonce dans l'adapter
-            viewModel.getListPhotoByIdAnnonce(annonceEntity.getIdAnnonce())
+            viewModel.getListPhotoByIdAnnonce(annonceEntity.getId())
                     .observe(PostAnnonceActivity.this, photoEntities -> {
                         if (photoEntities != null && !photoEntities.isEmpty()) {
                             initPhotosViews(new ArrayList<>(photoEntities));
@@ -666,7 +666,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .doOnSuccess(categorieEntities -> {
                     if (categorieEntities != null && annonce.getIdCategorie() != null) {
                         for (CategorieEntity categorieEntity : categorieEntities) {
-                            if (categorieEntity.getIdCategorie().equals(annonce.getIdCategorie())) {
+                            if (categorieEntity.getId().equals(annonce.getIdCategorie())) {
                                 spinnerCategorie.setSelection(categorieEntities.indexOf(categorieEntity), true);
                                 break;
                             }

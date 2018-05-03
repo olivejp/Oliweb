@@ -1,9 +1,9 @@
 package oliweb.nc.oliweb.database.repository.task;
 
-public class DataReturn {
+public class DataReturn<U> {
     private int nb;
     private TypeTask typeTask;
-    private Long[] ids;
+    private U[] ids;
     private boolean successful;
     private Throwable throwable;
 
@@ -26,11 +26,11 @@ public class DataReturn {
         this.typeTask = typeTask;
     }
 
-    public Long[] getIds() {
+    public U[] getIds() {
         return ids;
     }
 
-    public void setIds(Long[] ids) {
+    public void setIds(U[] ids) {
         this.ids = ids;
     }
 

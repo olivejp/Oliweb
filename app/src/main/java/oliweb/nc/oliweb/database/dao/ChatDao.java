@@ -15,29 +15,32 @@ import oliweb.nc.oliweb.database.entity.ChatEntity;
  * Created by orlanth23 on 18/04/2018.
  */
 @Dao
-public interface ChatDao extends AbstractDao<ChatEntity> {
+public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
 
-    @Transaction
-    @Query("SELECT * FROM chat")
-    Single<List<ChatEntity>> getAll();
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM chat")
-    Single<Integer> count();
-
+    @Override
     @Transaction
     @Query("SELECT * FROM chat WHERE idChat = :idChat")
-    Maybe<ChatEntity> findById(Long idChat);
+    public abstract Maybe<ChatEntity> findById(Long idChat);
+
+    @Override
+    @Transaction
+    @Query("SELECT * FROM chat")
+    public abstract Single<List<ChatEntity>> getAll();
+
+    @Override
+    @Transaction
+    @Query("SELECT COUNT(*) FROM chat")
+    public abstract Single<Integer> count();
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce")
-    LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce);
+    public abstract LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser")
-    LiveData<List<ChatEntity>> findByUidUser(String uidUser);
+    public abstract LiveData<List<ChatEntity>> findByUidUser(String uidUser);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND uidAnnonce = :uidAnnonce LIMIT 1")
-    Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
+    public abstract Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
 }

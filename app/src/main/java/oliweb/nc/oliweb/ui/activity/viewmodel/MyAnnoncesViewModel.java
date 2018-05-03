@@ -71,7 +71,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     public Maybe<AtomicBoolean> deleteAnnonceById(long idAnnonce) {
         Log.d(TAG, "Starting deleteAnnonceById idAnnonce : " + idAnnonce);
         return Maybe.create(emitter ->
-                this.annonceRepository.findSingleById(idAnnonce)
+                this.annonceRepository.findById(idAnnonce)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annonceEntity -> {
@@ -82,7 +82,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(annonceUpdated -> {
                                                 Log.d(TAG, "saveWithSingle.doOnSuccess annonceUpdated : " + annonceUpdated);
-                                                photoRepository.findAllPhotosByIdAnnonce(annonceUpdated.getIdAnnonce())
+                                                photoRepository.findAllPhotosByIdAnnonce(annonceUpdated.getId())
                                                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                                         .doOnSuccess(this::updateAllPhotosToDelete)
                                                         .subscribe();

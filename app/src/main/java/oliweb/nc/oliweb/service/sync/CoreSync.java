@@ -130,7 +130,7 @@ class CoreSync {
         annonceRepository.saveWithSingle(annonceEntity)
                 .doOnSuccess(annonceEntitySaved ->
                         photoRepository
-                                .getAllPhotosByStatusAndIdAnnonce(annonceEntitySaved.getIdAnnonce(), Utility.allStatusToSend())
+                                .getAllPhotosByStatusAndIdAnnonce(annonceEntitySaved.getId(), Utility.allStatusToSend())
                                 .flattenAsObservable(list -> list)
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .doOnNext(this::sendPhotoToRemote)
@@ -182,7 +182,7 @@ class CoreSync {
 
     private void getAllPhotosToDelete(AnnonceEntity annonceEntity) {
         photoRepository
-                .observeAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
+                .observeAllPhotosByIdAnnonce(annonceEntity.getId())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnNext(photo -> deletePhotoFromRemoteStorage(photo, annonceEntity))
                 .subscribe();

@@ -28,6 +28,7 @@ public class PhotoRepositoryTest {
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
         photoRepository = PhotoRepository.getInstance(appContext);
+        UtilityTest.cleanBase(appContext);
     }
 
     /**

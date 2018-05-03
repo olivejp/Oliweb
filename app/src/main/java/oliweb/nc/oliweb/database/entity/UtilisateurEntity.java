@@ -1,19 +1,19 @@
 package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
-
-import com.google.firebase.database.Exclude;
 
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Entity(tableName = "utilisateur")
-public class UtilisateurEntity {
+@Entity(tableName = "utilisateur", indices = {@Index(value = "uuidUtilisateur", unique = true)})
+public class UtilisateurEntity extends AbstractEntity<Long> {
     @NonNull
     @PrimaryKey
+    private Long idUtilisateur;
     private String uuidUtilisateur;
     private String telephone;
     private String email;
@@ -23,8 +23,20 @@ public class UtilisateurEntity {
     private String photoUrl;
     private String tokenDevice;
 
-    @Exclude
     @NonNull
+    public Long getId() {
+        return idUtilisateur;
+    }
+
+    @NonNull
+    public Long getIdUtilisateur() {
+        return idUtilisateur;
+    }
+
+    public void setIdUtilisateur(@NonNull Long idUtilisateur) {
+        this.idUtilisateur = idUtilisateur;
+    }
+
     public String getUuidUtilisateur() {
         return uuidUtilisateur;
     }
@@ -57,7 +69,6 @@ public class UtilisateurEntity {
         this.email = email;
     }
 
-    @Exclude
     public Long getDateCreation() {
         return dateCreation;
     }
@@ -66,7 +77,6 @@ public class UtilisateurEntity {
         this.dateCreation = dateCreation;
     }
 
-    @Exclude
     public Long getDateLastConnexion() {
         return dateLastConnexion;
     }
@@ -94,7 +104,8 @@ public class UtilisateurEntity {
     @Override
     public String toString() {
         return "UtilisateurEntity{" +
-                "uuidUtilisateur='" + uuidUtilisateur + '\'' +
+                "idUtilisateur=" + idUtilisateur +
+                ", uuidUtilisateur='" + uuidUtilisateur + '\'' +
                 ", telephone='" + telephone + '\'' +
                 ", email='" + email + '\'' +
                 ", profile='" + profile + '\'' +

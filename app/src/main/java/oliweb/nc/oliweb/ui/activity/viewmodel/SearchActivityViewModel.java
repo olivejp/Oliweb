@@ -71,7 +71,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     Log.d(TAG, "Favorite successfully added");
                     if (liveListAnnonce.getValue() != null && !liveListAnnonce.getValue().isEmpty()) {
                         int index = liveListAnnonce.getValue().indexOf(annoncePhotos);
-                        liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(annonceEntity1.getIdAnnonce());
+                        liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(annonceEntity1.getId());
                     }
                     liveListAnnonce.postValue(liveListAnnonce.getValue());
                 })

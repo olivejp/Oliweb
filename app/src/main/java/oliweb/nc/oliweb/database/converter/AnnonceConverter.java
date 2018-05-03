@@ -69,7 +69,7 @@ public class AnnonceConverter {
         annonceDto.setUtilisateur(utilisateurDto);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
-        annonceDto.setCategorie(new CategorieDto(categorieEntity.getIdCategorie(), categorieEntity.getName()));
+        annonceDto.setCategorie(new CategorieDto(categorieEntity.getId(), categorieEntity.getName()));
 
         if (annonceFull.getAnnonce().getDatePublication() != null) {
             annonceDto.setDatePublication(annonceFull.getAnnonce().getDatePublication());

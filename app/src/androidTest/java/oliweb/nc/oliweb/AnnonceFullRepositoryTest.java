@@ -25,7 +25,7 @@ import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 import static oliweb.nc.oliweb.database.entity.StatusRemote.FAILED_TO_SEND;
-import static oliweb.nc.oliweb.database.entity.StatusRemote.SEND;
+import static oliweb.nc.oliweb.database.entity.StatusRemote.TO_SEND;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -50,11 +50,15 @@ public class AnnonceFullRepositoryTest {
         annonceFullRepository = AnnonceFullRepository.getInstance(appContext);
         categorieRepository = CategorieRepository.getInstance(appContext);
         utilisateurRepository = UtilisateurRepository.getInstance(appContext);
+        UtilityTest.cleanBase(appContext);
         initCategories();
         initUsers();
     }
 
     private void initCategories() {
+        TestObserver<Integer> testDeleteCategories =  categorieRepository.deleteAll().test();
+        waitTerminalEvent(testDeleteCategories, 5);
+
         CategorieEntity categorieEntity = new CategorieEntity();
         categorieEntity.setName("cat1");
         categorieEntity.setCouleur("123456");
@@ -74,6 +78,9 @@ public class AnnonceFullRepositoryTest {
     }
 
     private void initUsers() {
+        TestObserver<Integer> testDeleteUsers =  utilisateurRepository.deleteAll().test();
+        waitTerminalEvent(testDeleteUsers, 5);
+
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setUuidUtilisateur(UID_USER);
 
@@ -121,7 +128,7 @@ public class AnnonceFullRepositoryTest {
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annonceEntity.setTitre("Titre_1");
         annonceEntity.setUuidUtilisateur(UID_USER);
-        annonceEntity.setIdCategorie(listCategorie.get(0).getIdCategorie());
+        annonceEntity.setIdCategorie(listCategorie.get(0).getId());
         annonceEntity.setDescription("Description_1");
         annonceEntity.setStatut(FAILED_TO_SEND);
         annonceEntity.setUuid("UUID1");
@@ -129,9 +136,9 @@ public class AnnonceFullRepositoryTest {
         AnnonceEntity annonceEntity2 = new AnnonceEntity();
         annonceEntity2.setTitre("Titre_2");
         annonceEntity2.setUuidUtilisateur(UID_USER);
-        annonceEntity2.setIdCategorie(listCategorie.get(0).getIdCategorie());
+        annonceEntity2.setIdCategorie(listCategorie.get(0).getId());
         annonceEntity2.setDescription("Description_2");
-        annonceEntity2.setStatut(SEND);
+        annonceEntity2.setStatut(TO_SEND);
         annonceEntity2.setUuid("UUID2");
 
         saveSingleTest(annonceEntity);

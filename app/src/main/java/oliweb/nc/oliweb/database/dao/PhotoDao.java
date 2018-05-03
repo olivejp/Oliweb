@@ -16,44 +16,55 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 @Dao
-public interface PhotoDao extends AbstractDao<PhotoEntity> {
+public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
+    @Override
     @Transaction
     @Query("SELECT * FROM photo WHERE idPhoto = :idPhoto")
-    LiveData<PhotoEntity> findById(long idPhoto);
+    public abstract Maybe<PhotoEntity> findById(Long idPhoto);
+
+    @Override
+    @Transaction
+    @Query("SELECT * FROM photo")
+    public abstract Single<List<PhotoEntity>> getAll();
+
+    @Override
+    @Transaction
+    @Query("SELECT COUNT(*) FROM photo")
+    public abstract Single<Integer> count();
 
     @Transaction
     @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
-    LiveData<List<PhotoEntity>> findByIdAnnonce(long idAnnonce);
+    public abstract LiveData<List<PhotoEntity>> findByIdAnnonce(Long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE idPhoto = :idPhoto")
-    Single<PhotoEntity> findSingleById(long idPhoto);
+    public abstract Single<PhotoEntity> findSingleById(long idPhoto);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
-    Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce);
+    public abstract Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut = :statut")
-    Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
+    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:statut)")
-    Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> statut);
+    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> statut);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:listStatut) AND idAnnonce = :idAnnonce")
-    Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(List<String> listStatut, Long idAnnonce);
+    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(List<String> listStatut, Long idAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE idAnnonce = :idAnnonce")
-    Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
+    public abstract Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE idPhoto = :idPhoto")
-    Single<Integer> countById(Long idPhoto);
+    public abstract Single<Integer> countById(Long idPhoto);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE statut = :status")
-    Flowable<Integer> countFlowableAllPhotosByStatus(String status);
+    public abstract Flowable<Integer> countFlowableAllPhotosByStatus(String status);
 }

@@ -138,7 +138,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     public void askToDelete(AnnoncePhotos annoncePhotos) {
         // Création d'un bundle dans lequel on va passer nos items
         Bundle bundle = new Bundle();
-        bundle.putLong(ARG_NOTICE_BUNDLE_ID_ANNONCE, annoncePhotos.getAnnonceEntity().getIdAnnonce());
+        bundle.putLong(ARG_NOTICE_BUNDLE_ID_ANNONCE, annoncePhotos.getAnnonceEntity().getId());
         DialogInfos dialogInfos = new DialogInfos();
         dialogInfos.setMessage(String.format("Supprimer l'annonce %s ?%n%nVous perdrez tous les informations relatives à cette annonce (Chats, Messages).", annoncePhotos.getAnnonceEntity().getTitre()))
                 .setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO)
@@ -247,7 +247,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         Bundle bundle = new Bundle();
         intent.setClass(this, PostAnnonceActivity.class);
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
-        bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getIdAnnonce());
+        bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getId());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CODE_POST);
         overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
