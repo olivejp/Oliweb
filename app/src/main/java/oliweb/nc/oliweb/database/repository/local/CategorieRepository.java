@@ -14,7 +14,7 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 
 public class CategorieRepository extends AbstractRepository<CategorieEntity, Long> {
     private static final String TAG = CategorieRepository.class.getName();
-    private static CategorieRepository INSTANCE;
+    private static CategorieRepository instance;
     private CategorieDao categorieDao;
 
     private CategorieRepository(Context context) {
@@ -24,10 +24,10 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity, Lon
     }
 
     public static synchronized CategorieRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new CategorieRepository(context);
+        if (instance == null) {
+            instance = new CategorieRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public Single<List<CategorieEntity>> getListCategorie() {

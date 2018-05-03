@@ -12,7 +12,7 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 
 public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     private static final String TAG = MessageRepository.class.getName();
-    private static MessageRepository INSTANCE;
+    private static MessageRepository instance;
     private MessageDao messageDao;
 
     private MessageRepository(Context context) {
@@ -22,10 +22,10 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     }
 
     public static synchronized MessageRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new MessageRepository(context);
+        if (instance == null) {
+            instance = new MessageRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public Maybe<MessageEntity> findSingleById(String uidMessage) {

@@ -17,7 +17,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceFull;
  */
 
 public class AnnonceFullRepository {
-    private static AnnonceFullRepository INSTANCE;
+    private static AnnonceFullRepository instance;
     private AnnonceFullDao annonceFullDao;
 
     private AnnonceFullRepository(Context context) {
@@ -26,10 +26,10 @@ public class AnnonceFullRepository {
     }
 
     public static synchronized AnnonceFullRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AnnonceFullRepository(context);
+        if (instance == null) {
+            instance = new AnnonceFullRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public Single<AnnonceFull> findAnnoncesByIdAnnonce(long idAnnonce) {

@@ -17,7 +17,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 
 public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity, Long> {
     private static final String TAG = UtilisateurRepository.class.getName();
-    private static UtilisateurRepository INSTANCE;
+    private static UtilisateurRepository instance;
     private UtilisateurDao utilisateurDao;
 
     private UtilisateurRepository(Context context) {
@@ -27,10 +27,10 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
     }
 
     public static synchronized UtilisateurRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new UtilisateurRepository(context);
+        if (instance == null) {
+            instance = new UtilisateurRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public LiveData<UtilisateurEntity> findByUid(String uuidUtilisateur) {

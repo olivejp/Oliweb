@@ -14,7 +14,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
  */
 
 public class AnnonceWithPhotosRepository {
-    private static AnnonceWithPhotosRepository INSTANCE;
+    private static AnnonceWithPhotosRepository instance;
     private AnnonceWithPhotosDao annonceWithPhotosDao;
 
     private AnnonceWithPhotosRepository(Context context) {
@@ -23,10 +23,10 @@ public class AnnonceWithPhotosRepository {
     }
 
     public static synchronized AnnonceWithPhotosRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AnnonceWithPhotosRepository(context);
+        if (instance == null) {
+            instance = new AnnonceWithPhotosRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur) {

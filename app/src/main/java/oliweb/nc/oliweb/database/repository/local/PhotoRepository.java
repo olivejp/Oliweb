@@ -8,7 +8,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Flowable;
@@ -26,7 +25,7 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     private static final String TAG = PhotoRepository.class.getName();
-    private static PhotoRepository INSTANCE;
+    private static PhotoRepository instance;
     private PhotoDao photoDao;
 
     private PhotoRepository(Context context) {
@@ -36,10 +35,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     }
 
     public static synchronized PhotoRepository getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new PhotoRepository(context);
+        if (instance == null) {
+            instance = new PhotoRepository(context);
         }
-        return INSTANCE;
+        return instance;
     }
 
     public void save(PhotoEntity photoEntity) {
@@ -65,27 +64,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         }
     }
 
-    /**
-     * Attention le postExecute de l'interface OnRespositoryPostExecute sera appelé autant de fois qu'il y aura de photos supprimées.
-     *
-     * @param listPhoto
-     * @param onRespositoryPostExecute
-     */
-    public void save(List<PhotoEntity> listPhoto, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        Log.d(TAG, "Starting save listPhoto : " + listPhoto);
-        for (PhotoEntity photoEntity : listPhoto) {
-            save(photoEntity, onRespositoryPostExecute);
-        }
-    }
-
-
-    private Single<AtomicBoolean> existById(Long idAnnonce) {
-        Log.d(TAG, "Starting existById idAnnonce : " + idAnnonce);
-        return Single.create(e -> photoDao.countById(idAnnonce)
-                .doOnSuccess(count -> e.onSuccess(new AtomicBoolean(count != null && count == 1)))
-                .doOnError(e::onError)
-                .subscribe());
-    }
 
     public Maybe<List<PhotoEntity>> saveWithSingle(List<PhotoEntity> photoEntities) {
         Log.d(TAG, "Starting saveWithSingle photoEntities : " + photoEntities);
