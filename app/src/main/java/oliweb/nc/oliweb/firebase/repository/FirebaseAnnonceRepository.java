@@ -109,7 +109,7 @@ public class FirebaseAnnonceRepository {
         try {
             AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceFromFirebase);
             String uidUtilisateur = annonceFromFirebase.getUtilisateur().getUuid();
-            annonceEntity.setUuidUtilisateur(uidUtilisateur);
+            annonceEntity.setUidUser(uidUtilisateur);
             annonceRepository.saveWithSingle(annonceEntity)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnSuccess(annonceEntity1 -> {
@@ -121,7 +121,7 @@ public class FirebaseAnnonceRepository {
                             }
                         }
                     })
-                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUuid() + ", UidUtilisateur : " + uidUtilisateur))
+                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid() + ", UidUtilisateur : " + uidUtilisateur))
                     .subscribe();
         } catch (Exception exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
@@ -242,17 +242,17 @@ public class FirebaseAnnonceRepository {
     public Single<AtomicBoolean> delete(AnnonceEntity annonce) {
         Log.d(TAG, "Starting delete " + annonce);
         return Single.create(emitter -> {
-            if (annonce == null || annonce.getUuid() == null) {
+            if (annonce == null || annonce.getUid() == null) {
                 emitter.onSuccess(new AtomicBoolean(true));
             } else {
-                ANNONCE_REF.child(annonce.getUuid())
+                ANNONCE_REF.child(annonce.getUid())
                         .removeValue()
                         .addOnFailureListener(e -> {
-                            Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUuid() + " exception : " + e.getLocalizedMessage());
+                            Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUid() + " exception : " + e.getLocalizedMessage());
                             emitter.onError(e);
                         })
                         .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUuid());
+                            Log.d(TAG, "Successful delete annonce on Firebase Database : " + annonce.getUid());
                             emitter.onSuccess(new AtomicBoolean(true));
                         });
             }

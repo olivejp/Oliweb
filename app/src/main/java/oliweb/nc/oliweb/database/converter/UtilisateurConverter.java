@@ -24,7 +24,7 @@ public class UtilisateurConverter {
 
     public static UtilisateurEntity convertFbToEntity(FirebaseUser firebaseUser) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUuidUtilisateur(firebaseUser.getUid());
+        utilisateurEntity.setUid(firebaseUser.getUid());
         utilisateurEntity.setProfile(firebaseUser.getDisplayName());
         utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
         utilisateurEntity.setEmail(firebaseUser.getEmail());

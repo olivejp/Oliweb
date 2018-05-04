@@ -123,8 +123,8 @@ public class AnnonceRepositoryTest {
         Assert.assertEquals(idAnnonceAfterInsert, annonceEntityAfterUpdate.getId());
         Assert.assertEquals("bouloup", annonceEntityAfterUpdate.getTitre());
         Assert.assertEquals("nouvelle description", annonceEntityAfterUpdate.getDescription());
-        Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUuid());
-        Assert.assertEquals(UID_USER, annonceEntityAfterUpdate.getUuidUtilisateur());
+        Assert.assertEquals("uidAnnonce", annonceEntityAfterUpdate.getUid());
+        Assert.assertEquals(UID_USER, annonceEntityAfterUpdate.getUidUser());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class AnnonceRepositoryTest {
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1); // Une seule liste
-        subscriberInsert.assertValue(annonceEntity -> annonceEntity.getUuid().equals("uidAnnonce1"));
+        subscriberInsert.assertValue(annonceEntity -> annonceEntity.getUid().equals("uidAnnonce1"));
         subscriberInsert.dispose();
     }
 }

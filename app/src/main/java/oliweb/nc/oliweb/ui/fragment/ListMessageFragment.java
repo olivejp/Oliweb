@@ -158,7 +158,7 @@ public class ListMessageFragment extends Fragment {
                 sendMessage(uidChat, messageToSend);
                 break;
             case PAR_ANNONCE:
-                if (adapter == null && annonce.getUuidUtilisateur().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                if (adapter == null && annonce.getUidUser().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
                     viewModel.findOrCreateChat(uidUser, annonce).observe(appCompatActivity, chatEntity -> {

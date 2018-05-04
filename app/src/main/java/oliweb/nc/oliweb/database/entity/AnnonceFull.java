@@ -19,7 +19,7 @@ public class AnnonceFull {
     @Relation(parentColumn = "idCategorie", entityColumn = "idCategorie")
     public List<CategorieEntity> categorie;
 
-    @Relation(parentColumn = "uuidUtilisateur", entityColumn = "uuidUtilisateur")
+    @Relation(parentColumn = "uidUser", entityColumn = "uid")
     public List<UtilisateurEntity> utilisateur;
 
     public AnnonceEntity getAnnonce() {

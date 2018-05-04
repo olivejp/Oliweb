@@ -65,7 +65,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<ChatEntity>> getFirebaseChatsByUidAnnonce() {
-        return chatRepository.findByUidAnnonce(selectedAnnonce.getUuid());
+        return chatRepository.findByUidAnnonce(selectedAnnonce.getUid());
     }
 
     public Single<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
@@ -123,8 +123,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         ChatEntity chatEntity = new ChatEntity();
         chatEntity.setStatusRemote(StatusRemote.TO_SEND);
         chatEntity.setUidBuyer(uidBuyer);
-        chatEntity.setUidAnnonce(annonce.getUuid());
-        chatEntity.setUidSeller(annonce.getUuidUtilisateur());
+        chatEntity.setUidAnnonce(annonce.getUid());
+        chatEntity.setUidSeller(annonce.getUidUser());
         return chatEntity;
     }
 
@@ -133,7 +133,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         if (liveChat == null) {
             liveChat = new MutableLiveData<>();
         }
-        chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUuid())
+        chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatEntity -> {

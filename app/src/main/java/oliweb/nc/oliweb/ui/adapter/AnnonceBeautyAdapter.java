@@ -96,7 +96,7 @@ public class AnnonceBeautyAdapter extends
 
         // Transition
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            viewHolderBeauty.imageView.setTransitionName(annonce.getUuid());
+            viewHolderBeauty.imageView.setTransitionName(annonce.getUid());
             viewHolderBeauty.textTitreAnnonce.setTransitionName(annonce.getTitre());
         }
 
@@ -169,14 +169,14 @@ public class AnnonceBeautyAdapter extends
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUuid().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUuid());
+                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUid().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUid());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                     AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
                     AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
-                    return newAnnonce.getUuid().equals(oldAnnonce.getUuid())
+                    return newAnnonce.getUid().equals(oldAnnonce.getUid())
                             && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
                             && (newAnnonce.isFavorite() == oldAnnonce.isFavorite())

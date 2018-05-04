@@ -187,14 +187,14 @@ public class FirebaseChatRepository {
                                 DatabaseReference ref = chatRef.push();
                                 HashMap<String, Boolean> hash = new HashMap<>();
                                 hash.put(uidUserBuyer, true);
-                                hash.put(annonce.getUuidUtilisateur(), true);
+                                hash.put(annonce.getUidUser(), true);
 
                                 ChatFirebase chatFirebase = new ChatFirebase();
                                 chatFirebase.setUid(ref.getKey());
-                                chatFirebase.setUidAnnonce(annonce.getUuid());
+                                chatFirebase.setUidAnnonce(annonce.getUid());
                                 chatFirebase.setMembers(hash);
                                 chatFirebase.setUidBuyer(uidUserBuyer);
-                                chatFirebase.setUidSeller(annonce.getUuidUtilisateur());
+                                chatFirebase.setUidSeller(annonce.getUidUser());
                                 chatFirebase.setCreationTimestamp(timestamp);
                                 chatFirebase.setUpdateTimestamp(timestamp);
                                 ref.setValue(chatFirebase)

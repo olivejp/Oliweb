@@ -61,7 +61,7 @@ public class PostAnnonceTest {
         testSaveAnnonce.assertNoErrors();
         testSaveAnnonce.assertValueCount(1);
         List<AnnonceEntity> listAnnonce = testSaveAnnonce.values();
-        Assert.assertEquals(UID_USER, listAnnonce.get(0).getUuidUtilisateur());
+        Assert.assertEquals(UID_USER, listAnnonce.get(0).getUidUser());
     }
 
     @After

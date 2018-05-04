@@ -42,15 +42,15 @@ class UtilityTest {
     static UtilisateurEntity initUtilisateur(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setProfile((profile.isEmpty()) ? "orlanth23" : profile);
-        utilisateurEntity.setUuidUtilisateur((uidUser.isEmpty()) ? UID_USER : uidUser);
+        utilisateurEntity.setUid((uidUser.isEmpty()) ? UID_USER : uidUser);
         utilisateurEntity.setEmail((email.isEmpty()) ? "orlanth23@hotmail.com" : email);
         return utilisateurEntity;
     }
 
     static AnnonceEntity initAnnonce(String UUID, String uidUser, StatusRemote statusRemote, String titre, String description, Long idCategorie) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceEntity.setUuid(UUID);
-        annonceEntity.setUuidUtilisateur(uidUser);
+        annonceEntity.setUid(UUID);
+        annonceEntity.setUidUser(uidUser);
         annonceEntity.setStatut(statusRemote);
         annonceEntity.setTitre(titre);
         annonceEntity.setDescription(description);
@@ -110,7 +110,7 @@ class UtilityTest {
 
     private static void initUsers(UtilisateurRepository utilisateurRepository) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUuidUtilisateur(UID_USER);
+        utilisateurEntity.setUid(UID_USER);
 
         TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
         utilisateurRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);

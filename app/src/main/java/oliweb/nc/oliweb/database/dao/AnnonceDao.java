@@ -50,23 +50,23 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUser AND statut NOT IN (:statutToAvoid)")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND statut NOT IN (:statutToAvoid)")
     public abstract LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statutToAvoid);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUser AND favorite = 1")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND favorite = 1")
     public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uuidUtilisateur = :uidUtilisateur AND uuid = :uidAnnonce")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUtilisateur AND uid = :uidAnnonce")
     public abstract Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uuid = :uidAnnonce AND favorite = 1")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND favorite = 1")
     public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE uuid = :uidAnnonce AND favorite = 0")
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
     public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
     @Transaction

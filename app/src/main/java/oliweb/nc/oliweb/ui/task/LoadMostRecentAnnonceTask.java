@@ -118,7 +118,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
                 if (annonceDto != null) {
                     boolean trouve = false;
                     for (AnnoncePhotos anno : oldList) {
-                        if (anno.getAnnonceEntity().getUuid().equals(annonceDto.getUuid())) {
+                        if (anno.getAnnonceEntity().getUid().equals(annonceDto.getUuid())) {
                             trouve = true;
                             break;
                         }

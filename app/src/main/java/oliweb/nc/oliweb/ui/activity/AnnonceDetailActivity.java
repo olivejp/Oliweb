@@ -119,7 +119,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         if (annoncePhotos != null) {
             // Récupération de l'annonce
-            viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUuid()).observe(this, dataSnapshot -> {
+            viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUid()).observe(this, dataSnapshot -> {
                 if (dataSnapshot != null) {
                     AnnonceDto dto = dataSnapshot.getValue(AnnonceDto.class);
                     if (dto != null) {
@@ -130,12 +130,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             });
 
             // Récupération du vendeur
-            viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUuidUtilisateur()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
+            viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
                 if (dataSnapshot != null) {
                     seller = dataSnapshot.getValue(UtilisateurFirebase.class);
                     if (seller != null && seller.getPhotoPath() != null) {
                         imageProfilSeller.setOnClickListener(v -> {
-                            ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUuidUtilisateur(), false);
+                            ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUidUser(), false);
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .add(R.id.frame_annonce_detail, fragment)
@@ -184,7 +184,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
-        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUuidUtilisateur());
+        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUidUser());
 
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
         description.setText(annonce.getDescription());
@@ -249,7 +249,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, PostAnnonceActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
-        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUuid());
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUid());
         intent.putExtras(bundle);
         startActivityForResult(intent, CALL_POST_ANNONCE);
     }

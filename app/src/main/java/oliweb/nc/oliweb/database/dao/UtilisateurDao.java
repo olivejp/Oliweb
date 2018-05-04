@@ -19,7 +19,7 @@ public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, L
 
     @Override
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE idUtilisateur = :idUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE idUser = :idUtilisateur")
     public abstract Maybe<UtilisateurEntity> findById(Long idUtilisateur);
 
     @Override
@@ -33,18 +33,18 @@ public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, L
     public abstract Single<Integer> count();
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
     public abstract Maybe<UtilisateurEntity> findById(String UuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
     public abstract LiveData<UtilisateurEntity> findByUuid(String UuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
     public abstract Maybe<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM utilisateur WHERE uuidUtilisateur = :UuidUtilisateur")
+    @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :UuidUtilisateur")
     public abstract Single<Integer> countByUid(String UuidUtilisateur);
 }

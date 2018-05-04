@@ -36,11 +36,11 @@ public class FirebaseUserRepository {
 
     public Single<AtomicBoolean> insertUserIntoFirebase(UtilisateurEntity utilisateurEntity) {
         Log.d(TAG, "Starting insertUserIntoFirebase");
-        return Single.create(emitter -> USER_REF.child(utilisateurEntity.getUuidUtilisateur()).addListenerForSingleValueEvent(new ValueEventListener() {
+        return Single.create(emitter -> USER_REF.child(utilisateurEntity.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null && dataSnapshot.getValue(UtilisateurFirebase.class) == null) {
-                    USER_REF.child(utilisateurEntity.getUuidUtilisateur()).setValue(utilisateurEntity)
+                    USER_REF.child(utilisateurEntity.getUid()).setValue(utilisateurEntity)
                             .addOnSuccessListener(aVoid -> {
                                 Log.d(TAG, "Utilisateur correctement créé dans Firebase " + utilisateurEntity.toString());
                                 emitter.onSuccess(new AtomicBoolean(true));

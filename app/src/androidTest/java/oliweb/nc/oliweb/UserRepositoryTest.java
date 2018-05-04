@@ -146,7 +146,7 @@ public class UserRepositoryTest {
         userRepository.findSingleByUid("123").subscribe(subscriberFindByUid);
         waitTerminalEvent(subscriberFindByUid, 5);
         subscriberFindByUid.assertNoErrors();
-        subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), "email") && Objects.equals(utilisateurEntity.getProfile(), "profile") && Objects.equals(utilisateurEntity.getUuidUtilisateur(), "123"));
+        subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), "email") && Objects.equals(utilisateurEntity.getProfile(), "profile") && Objects.equals(utilisateurEntity.getUid(), "123"));
     }
 
     @Test
@@ -170,7 +170,7 @@ public class UserRepositoryTest {
         userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberUpdate);
         waitTerminalEvent(subscriberUpdate, 5);
         subscriberUpdate.assertNoErrors();
-        subscriberUpdate.assertValueAt(0, entity -> entity.getUuidUtilisateur().equals("123") && entity.getProfile().equals(profileUpdated) && entity.getEmail().equals(emailUpdated));
+        subscriberUpdate.assertValueAt(0, entity -> entity.getUid().equals("123") && entity.getProfile().equals(profileUpdated) && entity.getEmail().equals(emailUpdated));
 
         // Query the updated values
         TestObserver<UtilisateurEntity> subscriberFindByUidSaved = new TestObserver<>();
@@ -178,7 +178,7 @@ public class UserRepositoryTest {
         waitTerminalEvent(subscriberFindByUidSaved, 5);
         subscriberFindByUidSaved.assertNoErrors();
         subscriberFindByUidSaved.assertValueAt(0, utilisateurEntityUpdated -> {
-            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUuidUtilisateur(), "123");
+            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), "123");
             boolean updatedProfile = utilisateurEntityUpdated.getProfile().equals(profileUpdated);
             boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(emailUpdated);
             return sameUid && updatedProfile && updatedEmail;
@@ -221,7 +221,7 @@ public class UserRepositoryTest {
         waitTerminalEvent(subscriberFindByUidSaved, 5);
         subscriberFindByUidSaved.assertNoErrors();
         subscriberFindByUidSaved.assertValue(utilisateurEntityUpdated -> {
-            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUuidUtilisateur(), "123");
+            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), "123");
             boolean updatedProfile = utilisateurEntityUpdated.getProfile().equals(UPDATED_PROFILE);
             boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(EMAIL_UPDATED);
             return sameUid && updatedProfile && updatedEmail;
@@ -250,10 +250,10 @@ public class UserRepositoryTest {
         boolean isFirstTrue = false;
         boolean isSecondTrue = false;
         for (UtilisateurEntity user : listRetour) {
-            if (user.getProfile().equals("UTILISATEUR_1") && user.getEmail().equals("EMAIL1") && user.getUuidUtilisateur().equals("UID_USER_1")) {
+            if (user.getProfile().equals("UTILISATEUR_1") && user.getEmail().equals("EMAIL1") && user.getUid().equals("UID_USER_1")) {
                 isFirstTrue = true;
             }
-            if (user.getProfile().equals("UTILISATEUR_2") && user.getEmail().equals("EMAIL2") && user.getUuidUtilisateur().equals("UID_USER_2")) {
+            if (user.getProfile().equals("UTILISATEUR_2") && user.getEmail().equals("EMAIL2") && user.getUid().equals("UID_USER_2")) {
                 isSecondTrue = true;
             }
         }

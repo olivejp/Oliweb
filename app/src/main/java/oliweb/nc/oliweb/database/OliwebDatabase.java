@@ -29,15 +29,15 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 16, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
+@Database(version = 17, entities = {UtilisateurEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
-    private static OliwebDatabase INSTANCE;
+    private static OliwebDatabase instance;
 
     public static synchronized OliwebDatabase getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = buildDatabase(context.getApplicationContext());
+        if (instance == null) {
+            instance = buildDatabase(context.getApplicationContext());
         }
-        return INSTANCE;
+        return instance;
     }
 
     private static OliwebDatabase buildDatabase(final Context context) {

@@ -81,7 +81,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void createNewAnnonce() {
         this.currentAnnonce = new AnnonceEntity();
-        this.currentAnnonce.setUuid(null);
+        this.currentAnnonce.setUid(null);
         this.currentAnnonce.setStatut(StatusRemote.TO_SEND);
         this.currentAnnonce.setFavorite(0);
         if (this.liveListPhoto == null) {
@@ -112,7 +112,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
             currentAnnonce.setContactByEmail(email ? "O" : "N");
             currentAnnonce.setContactByTel(telephone ? "O" : "N");
             currentAnnonce.setContactByMsg(message ? "O" : "N");
-            currentAnnonce.setUuidUtilisateur(uidUser);
+            currentAnnonce.setUidUser(uidUser);
 
             annonceRepository.saveWithSingle(currentAnnonce)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

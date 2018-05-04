@@ -9,12 +9,12 @@ import android.support.annotation.NonNull;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Entity(tableName = "utilisateur", indices = {@Index(value = "uuidUtilisateur", unique = true)})
+@Entity(tableName = "utilisateur", indices = {@Index(value = "uid", unique = true)})
 public class UtilisateurEntity extends AbstractEntity<Long> {
     @NonNull
     @PrimaryKey
-    private Long idUtilisateur;
-    private String uuidUtilisateur;
+    private Long idUser;
+    private String uid;
     private String telephone;
     private String email;
     private String profile;
@@ -25,24 +25,24 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
 
     @NonNull
     public Long getId() {
-        return idUtilisateur;
+        return idUser;
     }
 
     @NonNull
-    public Long getIdUtilisateur() {
-        return idUtilisateur;
+    public Long getIdUser() {
+        return idUser;
     }
 
-    public void setIdUtilisateur(@NonNull Long idUtilisateur) {
-        this.idUtilisateur = idUtilisateur;
+    public void setIdUser(@NonNull Long idUser) {
+        this.idUser = idUser;
     }
 
-    public String getUuidUtilisateur() {
-        return uuidUtilisateur;
+    public String getUid() {
+        return uid;
     }
 
-    public void setUuidUtilisateur(@NonNull String uuidUtilisateur) {
-        this.uuidUtilisateur = uuidUtilisateur;
+    public void setUid(@NonNull String uid) {
+        this.uid = uid;
     }
 
     public String getProfile() {
@@ -104,8 +104,8 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
     @Override
     public String toString() {
         return "UtilisateurEntity{" +
-                "idUtilisateur=" + idUtilisateur +
-                ", uuidUtilisateur='" + uuidUtilisateur + '\'' +
+                "idUser=" + idUser +
+                ", uid='" + uid + '\'' +
                 ", telephone='" + telephone + '\'' +
                 ", email='" + email + '\'' +
                 ", profile='" + profile + '\'' +
