@@ -153,22 +153,22 @@ class CoreSync {
      */
     private void sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "Sending " + photoEntity.getUriLocal() + " to Firebase storage");
-        this.photoStorage.sendPhotoToRemote(photoEntity)
+        this.photoStorage.savePhotoToRemote(photoEntity)
                 .doOnError(exception -> {
                     Log.e(TAG, exception.getLocalizedMessage(), exception);
                     photoEntity.setStatut(StatusRemote.FAILED_TO_SEND);
                     photoRepository.save(photoEntity);
                 })
-                .map(downloadPath -> {
-                    photoEntity.setFirebasePath(downloadPath);
+                .map(downloadUri -> {
+                    photoEntity.setFirebasePath(downloadUri.toString());
                     photoEntity.setStatut(StatusRemote.SEND);
                     return photoEntity;
                 })
-                .doOnSuccess(downloadPath ->
-                        photoRepository.saveWithSingle(photoEntity)
+                .doOnSuccess(photoEntityToSave ->
+                        photoRepository.saveWithSingle(photoEntityToSave)
                                 .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
                                 .doOnSuccess(photoEntitySaved ->
-                                        firebaseAnnonceRepository.saveAnnonceToFirebase(photoEntity.getIdAnnonce())
+                                        firebaseAnnonceRepository.saveAnnonceToFirebase(photoEntitySaved.getIdAnnonce())
                                                 .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
                                                 .subscribe()
                                 )

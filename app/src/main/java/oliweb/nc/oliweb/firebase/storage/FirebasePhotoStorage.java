@@ -46,22 +46,20 @@ public class FirebasePhotoStorage {
      * @param photo to store
      * @return the download path of the downloaded photo
      */
-    public Single<String> sendPhotoToRemote(PhotoEntity photo) {
-        Log.d(TAG, "Starting sendPhotoToRemote photo : " + photo);
+    public Single<Uri> savePhotoToRemote(PhotoEntity photo) {
+        Log.d(TAG, "Starting savePhotoToRemote photo : " + photo);
         return Single.create(e -> {
             File file = new File(photo.getUriLocal());
             String fileName = file.getName();
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                    .addOnFailureListener(e::onError)
                     .addOnSuccessListener(taskSnapshot ->
-                            storageReference.getDownloadUrl().addOnSuccessListener(
-                                    uri -> {
-                                        Log.d(TAG, "Succeed to send the photo to Fb Storage : " + uri);
-                                        e.onSuccess(uri.toString());
-                                    }
-                            )
-                    )
-                    .addOnFailureListener(e::onError);
+                            // Récupération du lien pour télécharger l'image
+                            storageReference.getDownloadUrl()
+                                    .addOnFailureListener(e::onError)
+                                    .addOnSuccessListener(e::onSuccess)
+                    );
         });
     }
 
@@ -77,19 +75,14 @@ public class FirebasePhotoStorage {
                 Log.d(TAG, "Download successful for image : " + urlPhoto + " to URI : " + pairUriFile.first);
 
                 // Save photo to DB now
-                PhotoEntity photoEntity = new PhotoEntity();
-                photoEntity.setStatut(StatusRemote.SEND);
-                photoEntity.setFirebasePath(urlPhoto);
-                photoEntity.setUriLocal(pairUriFile.first.toString());
-                photoEntity.setIdAnnonce(idAnnonce);
-
-                photoRepository.save(photoEntity, dataReturn -> {
-                    if (dataReturn.isSuccessful()) {
-                        Log.d(TAG, "Insert into DB successful");
-                    } else {
-                        Log.d(TAG, "Insert into DB fail");
-                    }
-                });
+                if (pairUriFile.first != null) {
+                    PhotoEntity photoEntity = new PhotoEntity();
+                    photoEntity.setStatut(StatusRemote.SEND);
+                    photoEntity.setFirebasePath(urlPhoto);
+                    photoEntity.setUriLocal(pairUriFile.first.toString());
+                    photoEntity.setIdAnnonce(idAnnonce);
+                    photoRepository.saveWithSingle(photoEntity).subscribe();
+                }
 
             }).addOnFailureListener(exception -> Log.d(TAG, "Download failed for image : " + urlPhoto));
         }
