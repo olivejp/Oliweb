@@ -46,17 +46,21 @@ public class FirebasePhotoStorage {
      * @param photo to store
      * @return the download path of the downloaded photo
      */
-    public Single<String> sendToRemote(PhotoEntity photo) {
-        Log.d(TAG, "Starting sendToRemote photo : " + photo);
+    public Single<String> sendPhotoToRemote(PhotoEntity photo) {
+        Log.d(TAG, "Starting sendPhotoToRemote photo : " + photo);
         return Single.create(e -> {
             File file = new File(photo.getUriLocal());
             String fileName = file.getName();
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                    .addOnSuccessListener(taskSnapshot -> {
-                        Log.d(TAG, "Succeed to send the photo to Fb Storage : " + taskSnapshot.getDownloadUrl());
-                        e.onSuccess(taskSnapshot.getDownloadUrl().toString());
-                    })
+                    .addOnSuccessListener(taskSnapshot ->
+                            storageReference.getDownloadUrl().addOnSuccessListener(
+                                    uri -> {
+                                        Log.d(TAG, "Succeed to send the photo to Fb Storage : " + uri);
+                                        e.onSuccess(uri.toString());
+                                    }
+                            )
+                    )
                     .addOnFailureListener(e::onError);
         });
     }
@@ -87,10 +91,7 @@ public class FirebasePhotoStorage {
                     }
                 });
 
-            }).addOnFailureListener(exception -> {
-                // Handle any errors
-                Log.d(TAG, "Download failed for image : " + urlPhoto);
-            });
+            }).addOnFailureListener(exception -> Log.d(TAG, "Download failed for image : " + urlPhoto));
         }
     }
 

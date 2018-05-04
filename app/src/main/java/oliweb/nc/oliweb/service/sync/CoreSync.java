@@ -102,7 +102,7 @@ class CoreSync {
 
     /**
      * Create/update an annonce to Firebase from an AnnonceFull from the Database
-     * If operation succeed we try to send the photo of this AnnonceFull.
+     * If operation succeed we try to save the annonce in the local DB
      *
      * @param annonceFull to send to Firebase
      */
@@ -112,9 +112,8 @@ class CoreSync {
         firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
                 .map(annonceDto1 -> {
                     annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
-                    AnnonceEntity annonceEntity = annonceFull.getAnnonce();
-                    annonceEntity.setStatut(StatusRemote.SEND);
-                    return annonceEntity;
+                    annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
+                    return annonceFull.getAnnonce();
                 })
                 .doOnSuccess(this::saveAnnonceToLocalDb)
                 .doOnError(saveToFirebaseException -> {
@@ -125,6 +124,12 @@ class CoreSync {
                 .subscribe();
     }
 
+    /**
+     * Update the annonce in the local DB
+     * If operation succeed we try to send the photos to Firebase Storage
+     *
+     * @param annonceEntity
+     */
     private void saveAnnonceToLocalDb(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting saveAnnonceToLocalDb annonceEntity : " + annonceEntity);
         annonceRepository.saveWithSingle(annonceEntity)
@@ -140,26 +145,35 @@ class CoreSync {
                 .subscribe();
     }
 
-    private void sendPhotoToRemote(PhotoEntity photo) {
-        Log.d(TAG, "Sending " + photo.getUriLocal() + " to Firebase storage");
-        this.photoStorage.sendToRemote(photo)
+    /**
+     * Try to send the photoEntity to storage
+     * If succeed try to update
+     *
+     * @param photoEntity
+     */
+    private void sendPhotoToRemote(PhotoEntity photoEntity) {
+        Log.d(TAG, "Sending " + photoEntity.getUriLocal() + " to Firebase storage");
+        this.photoStorage.sendPhotoToRemote(photoEntity)
                 .doOnError(exception -> {
                     Log.e(TAG, exception.getLocalizedMessage(), exception);
-                    photo.setStatut(StatusRemote.FAILED_TO_SEND);
-                    photoRepository.save(photo);
+                    photoEntity.setStatut(StatusRemote.FAILED_TO_SEND);
+                    photoRepository.save(photoEntity);
                 })
-                .doOnSuccess(downloadPath -> {
-                    photo.setFirebasePath(downloadPath);
-                    photo.setStatut(StatusRemote.SEND);
-                    photoRepository.saveWithSingle(photo)
-                            .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
-                            .doOnSuccess(photoEntity ->
-                                    firebaseAnnonceRepository.saveAnnonceToFirebase(photo.getIdAnnonce())
-                                            .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
-                                            .subscribe()
-                            )
-                            .subscribe();
+                .map(downloadPath -> {
+                    photoEntity.setFirebasePath(downloadPath);
+                    photoEntity.setStatut(StatusRemote.SEND);
+                    return photoEntity;
                 })
+                .doOnSuccess(downloadPath ->
+                        photoRepository.saveWithSingle(photoEntity)
+                                .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
+                                .doOnSuccess(photoEntitySaved ->
+                                        firebaseAnnonceRepository.saveAnnonceToFirebase(photoEntity.getIdAnnonce())
+                                                .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
+                                                .subscribe()
+                                )
+                                .subscribe()
+                )
                 .subscribe();
     }
 
