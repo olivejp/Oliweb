@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="50dp"
-        tools:text="Vous n'avez encore posté aucune annonce.\nAppuyez sur le + pour saisir une annonce." />
+        tools:text="Vous n'avez encore posté aucune currentAnnonce.\nAppuyez sur le + pour saisir une currentAnnonce." />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_empty_add"

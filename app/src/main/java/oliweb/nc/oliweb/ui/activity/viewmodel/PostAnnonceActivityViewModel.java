@@ -35,11 +35,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private PhotoRepository photoRepository;
     private UtilisateurRepository utilisateurRepository;
     private CategorieRepository categorieRepository;
-    private AnnonceEntity annonce;
-    private CategorieEntity categorie;
-    private ArrayList<PhotoEntity> listPhoto = new ArrayList<>();
-    private PhotoEntity photoEntityUpdated;
-    private MutableLiveData<ArrayList<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
+
+    private AnnonceEntity currentAnnonce;
+    private CategorieEntity currentCategorie;
+    private PhotoEntity currentPhoto;
+    private List<PhotoEntity> currentListPhoto = new ArrayList<>();
+
+    private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -53,10 +55,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.utilisateurRepository.findByUid(uid);
     }
 
-    public LiveData<ArrayList<PhotoEntity>> getLiveListPhoto() {
+    public LiveData<List<PhotoEntity>> getLiveListPhoto() {
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
-            this.liveListPhoto.setValue(listPhoto);
+            this.liveListPhoto.setValue(currentListPhoto);
         }
         return this.liveListPhoto;
     }
@@ -65,143 +67,131 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.photoRepository.findAllByIdAnnonce(idAnnonce);
     }
 
-    public Single<List<CategorieEntity>> getLiveDataListCategorie() {
+    public Single<List<CategorieEntity>> getListCategorie() {
         return categorieRepository.getListCategorie();
     }
 
-    public LiveData<AnnonceEntity> findAnnonceById(long idAnnonce) {
+    public LiveData<AnnonceEntity> getAnnonceById(long idAnnonce) {
         return this.annonceRepository.findLiveById(idAnnonce);
     }
 
-    public LiveData<AnnonceEntity> findAnnonceByUid(String uidAnnonce) {
+    public LiveData<AnnonceEntity> getAnnonceByUid(String uidAnnonce) {
         return this.annonceRepository.findByUid(uidAnnonce);
     }
 
     public void createNewAnnonce() {
-        this.annonce = new AnnonceEntity();
-        this.annonce.setUuid(null);
-        this.annonce.setStatut(StatusRemote.TO_SEND);
-        this.annonce.setFavorite(0);
+        this.currentAnnonce = new AnnonceEntity();
+        this.currentAnnonce.setUuid(null);
+        this.currentAnnonce.setStatut(StatusRemote.TO_SEND);
+        this.currentAnnonce.setFavorite(0);
         if (this.liveListPhoto == null) {
             this.liveListPhoto = new MutableLiveData<>();
         }
-        this.liveListPhoto.postValue(this.listPhoto);
+        this.liveListPhoto.postValue(this.currentListPhoto);
     }
 
-    public void setAnnonce(AnnonceEntity annonce) {
-        this.annonce = annonce;
+    public void setCurrentAnnonce(AnnonceEntity currentAnnonce) {
+        this.currentAnnonce = currentAnnonce;
     }
 
-    public AnnonceEntity getAnnonce() {
-        return this.annonce;
+    public AnnonceEntity getCurrentAnnonce() {
+        return this.currentAnnonce;
     }
 
-    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone, long idCategorie) {
+    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone) {
         Log.d(TAG, "Starting saveAnnonce");
-        if (this.annonce == null) {
+        if (this.currentAnnonce == null) {
             createNewAnnonce();
         }
         return Single.create(emitter -> {
-            annonce.setTitre(titre);
-            annonce.setDescription(description);
-            annonce.setPrix(prix);
-            annonce.setIdCategorie(idCategorie);
-            annonce.setStatut(StatusRemote.TO_SEND);
-            annonce.setContactByEmail(email ? "O" : "N");
-            annonce.setContactByTel(telephone ? "O" : "N");
-            annonce.setContactByMsg(message ? "O" : "N");
-            annonce.setUuidUtilisateur(uidUser);
+            currentAnnonce.setTitre(titre);
+            currentAnnonce.setDescription(description);
+            currentAnnonce.setPrix(prix);
+            currentAnnonce.setIdCategorie(currentCategorie.getIdCategorie());
+            currentAnnonce.setStatut(StatusRemote.TO_SEND);
+            currentAnnonce.setContactByEmail(email ? "O" : "N");
+            currentAnnonce.setContactByTel(telephone ? "O" : "N");
+            currentAnnonce.setContactByMsg(message ? "O" : "N");
+            currentAnnonce.setUuidUtilisateur(uidUser);
 
-            annonceRepository.saveWithSingle(annonce)
+            annonceRepository.saveWithSingle(currentAnnonce)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(t -> {
-                        Log.d(TAG, "doOnSuccess saveWithSingle " + t);
-                        emitter.onSuccess(t);
-                    })
-                    .doOnError(exception -> {
-                        Log.d(TAG, "doOnError saveWithSingle " + exception.getLocalizedMessage(), exception);
-                        emitter.onError(exception);
-                    })
+                    .doOnSuccess(emitter::onSuccess)
+                    .doOnError(emitter::onError)
                     .subscribe();
         });
     }
 
     public Maybe<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
-        Log.d(TAG, "Starting savePhotos annonce : " + annonce);
-        for (PhotoEntity photo : listPhoto) {
+        Log.d(TAG, "Starting savePhotos currentAnnonce : " + annonce);
+        for (PhotoEntity photo : currentListPhoto) {
             photo.setIdAnnonce(annonce.getId());
         }
         return Maybe.create(emitter ->
-                this.photoRepository.saveWithSingle(listPhoto)
+                this.photoRepository.saveWithSingle(currentListPhoto)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e -> {
-                            Log.d(TAG, "savePhotos.doOnError e : " + e.getLocalizedMessage(), e);
-                            emitter.onError(e);
-                        })
-                        .doOnSuccess(listPhotos -> {
-                            Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
-                            emitter.onSuccess(listPhotos);
-                        })
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(emitter::onSuccess)
                         .subscribe()
         );
     }
 
     public void updatePhotos() {
-        this.liveListPhoto.postValue(this.listPhoto);
+        this.liveListPhoto.postValue(this.currentListPhoto);
     }
 
     public void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUriLocal(path);
         photoEntity.setStatut(StatusRemote.TO_SEND);
-        this.listPhoto.add(photoEntity);
-        this.liveListPhoto.postValue(this.listPhoto);
+        this.currentListPhoto.add(photoEntity);
+        this.liveListPhoto.postValue(this.currentListPhoto);
     }
 
     public boolean canHandleAnotherPhoto() {
-        return this.listPhoto.size() < 4;
+        return this.currentListPhoto.size() < 4;
     }
 
     public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
         boolean retour = false;
-        if (this.listPhoto.contains(photoEntity)) {
+        if (this.currentListPhoto.contains(photoEntity)) {
 
             if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
                 photoEntity.setStatut(StatusRemote.TO_DELETE);
                 this.photoRepository.update(photoEntity);
                 retour = true;
             } else {
-                retour = this.listPhoto.remove(photoEntity);
+                retour = this.currentListPhoto.remove(photoEntity);
             }
 
-            this.liveListPhoto.postValue(this.listPhoto);
+            this.liveListPhoto.postValue(this.currentListPhoto);
         }
         return retour;
     }
 
 
-    public ArrayList<PhotoEntity> getListPhoto() {
-        return this.listPhoto;
+    public List<PhotoEntity> getCurrentListPhoto() {
+        return this.currentListPhoto;
     }
 
-    public void setListPhoto(ArrayList<PhotoEntity> list) {
-        this.listPhoto = list;
+    public void setCurrentListPhoto(List<PhotoEntity> list) {
+        this.currentListPhoto = list;
     }
 
     public void setUpdatedPhoto(PhotoEntity photo) {
-        this.photoEntityUpdated = photo;
+        this.currentPhoto = photo;
     }
 
     public PhotoEntity getUpdatedPhoto() {
-        return this.photoEntityUpdated;
+        return this.currentPhoto;
     }
 
 
     public void setCurrentCategorie(CategorieEntity categorie) {
-        this.categorie = categorie;
+        this.currentCategorie = categorie;
     }
 
-    public CategorieEntity getCategorie() {
-        return categorie;
+    public CategorieEntity getCurrentCategorie() {
+        return currentCategorie;
     }
 }

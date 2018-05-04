@@ -184,7 +184,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
-                viewModel.setAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
+                viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
             }
 
             if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
@@ -192,7 +192,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             }
 
             if (savedInstanceState.containsKey(SAVE_LIST_PHOTO)) {
-                initPhotosViews(savedInstanceState.getParcelableArrayList(SAVE_LIST_PHOTO));
+                displayPhotos(savedInstanceState.getParcelableArrayList(SAVE_LIST_PHOTO));
             }
 
             // S'il y avait un fragment, je le remet
@@ -210,7 +210,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             setResult(RESULT_CANCELED);
             finish();
         } else if (savedInstanceState == null) {
-            initViewModelDataDependingOnMode(bundle);
+            initViewModel(bundle);
         }
     }
 
@@ -244,13 +244,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
         String titre = textViewTitre.getText().toString();
         String description = textViewDescription.getText().toString();
         int prix = Integer.parseInt(textViewPrix.getText().toString());
+        boolean contactEmail = checkBoxEmail.isChecked();
+        boolean contactMsg = checkBoxMsg.isChecked();
+        boolean contactTel = checkBoxTel.isChecked();
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonce(titre, description, prix, uidUser, checkBoxEmail.isChecked(), checkBoxMsg.isChecked(), checkBoxTel.isChecked(), viewModel.getCategorie().getId())
+        viewModel.saveAnnonce(titre, description, prix, uidUser, contactEmail, contactMsg, contactTel)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(annonce -> {
                     Log.d(TAG, "saveAnnonce.doOnSuccess annonce : " + annonce);
                     viewModel.savePhotos(annonce)
-                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnSuccess(listPhotos -> {
                                 Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
                                 if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
@@ -304,45 +307,40 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @SuppressWarnings("squid:S3776")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != RESULT_CANCELED) {
-            switch (requestCode) {
-                case DIALOG_REQUEST_IMAGE:
-                    if (resultCode == RESULT_OK) {
-                        try {
-                            if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
-                                viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
-                            } else {
-                                Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
-                            }
-                        } catch (IOException e) {
-                            Log.e(TAG, e.getMessage(), e);
-                        }
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+        if (requestCode == DIALOG_REQUEST_IMAGE) {
+            try {
+                if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
+                    viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
+                } else {
+                    Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        } else if (requestCode == DIALOG_GALLERY_IMAGE) {
+            // Insertion multiple
+            if (data.getClipData() != null) {
+                int i = -1;
+                ClipData.Item item;
+                while (i++ < data.getClipData().getItemCount() - 1) {
+                    if (viewModel.canHandleAnotherPhoto()) {
+                        item = data.getClipData().getItemAt(i);
+                        insertPhotoFromGallery(item.getUri());
                     }
-                    break;
-                case DIALOG_GALLERY_IMAGE:
-                    if (resultCode == RESULT_OK) {
-                        // Insertion multiple
-                        if (data.getClipData() != null) {
-                            int i = -1;
-                            ClipData.Item item;
-                            while (i++ < data.getClipData().getItemCount() - 1) {
-                                if (viewModel.canHandleAnotherPhoto()) {
-                                    item = data.getClipData().getItemAt(i);
-                                    insertFromGallery(item.getUri());
-                                }
-                            }
-                        } else {
-                            // Insertion simple
-                            Uri uri = data.getData();
-                            if (uri != null) {
-                                insertFromGallery(uri);
-                            }
-                        }
-                    }
-                    break;
+                }
+            } else {
+                // Insertion simple
+                Uri uri = data.getData();
+                if (uri != null) {
+                    insertPhotoFromGallery(uri);
+                }
             }
         }
     }
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -350,8 +348,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         outState.putString(BUNDLE_KEY_UID_ANNONCE, uidAnnonce);
         outState.putString(BUNDLE_KEY_MODE, mode);
         outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
-        outState.putParcelable(SAVE_ANNONCE, viewModel.getAnnonce());
-        outState.putParcelableArrayList(SAVE_LIST_PHOTO, viewModel.getListPhoto());
+        outState.putParcelable(SAVE_ANNONCE, viewModel.getCurrentAnnonce());
+        outState.putParcelableArrayList(SAVE_LIST_PHOTO, new ArrayList<>(viewModel.getCurrentListPhoto()));
         Fragment frag = getSupportFragmentManager().findFragmentByTag(TAG_WORKING_IMAGE);
         if (frag != null) {
             getSupportFragmentManager().putFragment(outState, TAG_WORKING_IMAGE, frag);
@@ -472,10 +470,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void initObservers() {
         // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, this::initPhotosViews);
+        viewModel.getLiveListPhoto().observe(this, this::displayPhotos);
 
         // Alimentation du spinner avec la liste des catégories
-        viewModel.getLiveDataListCategorie().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        viewModel.getListCategorie().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(this::defineSpinnerCategorie)
                 .subscribe();
 
@@ -484,7 +482,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    private void initViewModelDataDependingOnMode(Bundle bundle) {
+    private void initViewModel(Bundle bundle) {
         if (mode.equals(Constants.PARAM_CRE)) {
             setTitle("Ajouter une annonce");
             viewModel.createNewAnnonce();
@@ -492,31 +490,24 @@ public class PostAnnonceActivity extends AppCompatActivity {
             setTitle("Modifier une annonce");
             if (bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
                 idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
-                viewModel.findAnnonceById(idAnnonce).observe(this, this::initAnnonce);
+                viewModel.getAnnonceById(idAnnonce).observe(this, this::initAnnonce);
             }
             if (bundle.containsKey(BUNDLE_KEY_UID_ANNONCE)) {
                 uidAnnonce = bundle.getString(BUNDLE_KEY_UID_ANNONCE);
-                viewModel.findAnnonceByUid(uidAnnonce).observe(this, this::initAnnonce);
+                viewModel.getAnnonceByUid(uidAnnonce).observe(this, this::initAnnonce);
             }
         }
     }
 
     private void initAnnonce(AnnonceEntity annonceEntity) {
         if (annonceEntity != null) {
-            viewModel.setAnnonce(annonceEntity);
-
-            // Récupération des photos de cette annonce dans l'adapter
-            viewModel.getListPhotoByIdAnnonce(annonceEntity.getId())
-                    .observe(PostAnnonceActivity.this, photoEntities -> {
-                        if (photoEntities != null && !photoEntities.isEmpty()) {
-                            initPhotosViews(new ArrayList<>(photoEntities));
-                        }
-                    });
             displayAnnonce(annonceEntity);
+            viewModel.setCurrentAnnonce(annonceEntity);
+            viewModel.getListPhotoByIdAnnonce(annonceEntity.getId()).observe(this, this::displayPhotos);
         }
     }
 
-    private void initImageViewToDefault() {
+    private void clearImageViews() {
         for (Pair pair : arrayImageViews) {
             ImageView imageView = (ImageView) pair.first;
             FrameLayout frame = (FrameLayout) pair.second;
@@ -529,18 +520,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    private void initPhotosViews(ArrayList<PhotoEntity> photoEntities) {
-        initImageViewToDefault();
-        if (photoEntities != null && !photoEntities.isEmpty()) {
-            viewModel.setListPhoto(photoEntities);
-            for (PhotoEntity photo : photoEntities) {
-                if (!photo.getStatut().equals(StatusRemote.TO_DELETE)) {
-                    boolean insertion = false;
-                    int i = 0;
-                    while (!insertion && i < arrayImageViews.size()) {
-                        insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
-                        i++;
-                    }
+    private void displayPhotos(List<PhotoEntity> photoEntities) {
+        clearImageViews();
+        if (photoEntities == null || photoEntities.isEmpty()) {
+            return;
+        }
+        viewModel.setCurrentListPhoto(photoEntities);
+        for (PhotoEntity photo : photoEntities) {
+            if (!photo.getStatut().equals(StatusRemote.TO_DELETE)) {
+                boolean insertion = false;
+                int i = 0;
+                while (!insertion && i < arrayImageViews.size()) {
+                    insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
+                    i++;
                 }
             }
         }
@@ -562,15 +554,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return false;
     }
 
-    /**
-     * Le paramètre uri représente une image dans la gallerie.
-     * nouvelleUri correspond à l'emplacement de destination de cette image.
-     * car on veut la déplacer dans le répertoire spécifique à Oliweb.
-     * On va donc copier l'image présente dans uri et la mettre dans nouvelleUri.
-     *
-     * @param uri
-     */
-    private void insertFromGallery(Uri uri) {
+    private void insertPhotoFromGallery(Uri uri) {
         try {
             Uri newUri = generateNewUri();
             if (newUri != null) {
@@ -645,24 +629,20 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Display the different fields of the annonce
-     *
-     * @param annonce that we want to show
-     */
     private void displayAnnonce(AnnonceEntity annonce) {
-        // Récupération du titre, de la description et du prix
         textViewTitre.setText(annonce.getTitre());
         textViewDescription.setText(annonce.getDescription());
         textViewPrix.setText(String.valueOf(annonce.getPrix()));
-
         checkBoxMsg.setChecked(annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O"));
         checkBoxEmail.setChecked(annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O"));
         checkBoxTel.setChecked(annonce.getContactByTel() != null && annonce.getContactByTel().equals("O"));
+        selectCategorieInSpinner(annonce);
+    }
 
-        // Récupération et sélection dans le spinner de la bonne catégorie
-        viewModel.getLiveDataListCategorie()
+    private void selectCategorieInSpinner(AnnonceEntity annonce) {
+        viewModel.getListCategorie()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(categorieEntities -> {
                     if (categorieEntities != null && annonce.getIdCategorie() != null) {
                         for (CategorieEntity categorieEntity : categorieEntities) {

@@ -20,11 +20,11 @@ Comportement en mode Hors Connexion
 
 
 
-Je veux pouvoir avoir un historique des conversations concernant une annonce en particulier et par auteur.
+Je veux pouvoir avoir un historique des conversations concernant une currentAnnonce en particulier et par auteur.
 Pour chaque conversation je voudrai avoir la photo de l'auteur à côté de la conversation.
 
 - La photo ne sera pas stockée dans le content provider (mais elle pourrait être mise en cache par Glide).
-- Toutes les conversations ainsi que tous les messages qu'elles contiendraient doivent être visibles hors connexion par l'auteur de l'annonce.
+- Toutes les conversations ainsi que tous les messages qu'elles contiendraient doivent être visibles hors connexion par l'auteur de l'currentAnnonce.
 
 
 Informations nécessaires pour les messages : 
@@ -44,7 +44,7 @@ Pré requis pour utiliser le service de messagerie
 - Être connecté à ce compte même si l'appareil est hors connexion
 
 
-Le service d'alerte permettra de créer des alertes pour prévenir une personne qu'une annonce correspond à ces critères de recherche.
+Le service d'alerte permettra de créer des alertes pour prévenir une personne qu'une currentAnnonce correspond à ces critères de recherche.
 
 Exemple : Si je recherche un téléphone de marque Samsung pour un prix compris entre 0 et 50 000 xpf.
 Je créé donc une alerte pour la catégorie "Technologique" + avec le mot clé : "Samsung" et dont le prix est dans la fourchette 0 - 50 000.

@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
+import android.util.Log;
 
 import java.util.List;
 
@@ -32,14 +33,17 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     }
 
     public LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce) {
+        Log.d(TAG, "Starting findByUidAnnonce uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidAnnonce(uidAnnonce);
     }
 
     public LiveData<List<ChatEntity>> findByUidUser(String uidSeller) {
+        Log.d(TAG, "Starting findByUidUser uidSeller : " + uidSeller);
         return this.chatDao.findByUidUser(uidSeller);
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+        Log.d(TAG, "Starting findByUidUserAndUidAnnonce uidUser : " + uidUser + " uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 }
