@@ -169,7 +169,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return retour;
     }
 
-
     public List<PhotoEntity> getCurrentListPhoto() {
         return this.currentListPhoto;
     }
@@ -186,12 +185,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.currentPhoto;
     }
 
-
     public void setCurrentCategorie(CategorieEntity categorie) {
         this.currentCategorie = categorie;
-    }
-
-    public CategorieEntity getCurrentCategorie() {
-        return currentCategorie;
     }
 }

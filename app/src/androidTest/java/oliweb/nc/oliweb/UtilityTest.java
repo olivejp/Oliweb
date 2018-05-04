@@ -1,7 +1,7 @@
 package oliweb.nc.oliweb;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 
 import junit.framework.Assert;
 
@@ -12,6 +12,7 @@ import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subscribers.TestSubscriber;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
@@ -24,6 +25,7 @@ import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 class UtilityTest {
 
     static final String UID_USER = "123456";
+    static final String CATEGORIE_NAME = "CATEGORIE_NAME";
 
     static void waitTerminalEvent(TestObserver testObserver, int countDown) {
         if (!testObserver.awaitTerminalEvent(countDown, TimeUnit.SECONDS)) {
@@ -37,11 +39,11 @@ class UtilityTest {
         }
     }
 
-    static UtilisateurEntity initUtilisateur(@Nullable String uidUser, @Nullable String profile, @Nullable String email) {
+    static UtilisateurEntity initUtilisateur(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setProfile((profile == null || profile.isEmpty()) ? "orlanth23" : profile);
-        utilisateurEntity.setUuidUtilisateur((uidUser == null || uidUser.isEmpty()) ? UID_USER : uidUser);
-        utilisateurEntity.setEmail((email == null || email.isEmpty()) ? "orlanth23@hotmail.com" : email);
+        utilisateurEntity.setProfile((profile.isEmpty()) ? "orlanth23" : profile);
+        utilisateurEntity.setUuidUtilisateur((uidUser.isEmpty()) ? UID_USER : uidUser);
+        utilisateurEntity.setEmail((email.isEmpty()) ? "orlanth23@hotmail.com" : email);
         return utilisateurEntity;
     }
 
@@ -88,5 +90,32 @@ class UtilityTest {
         waitTerminalEvent(testUtilisateur,5);
         waitTerminalEvent(testMessage,5);
         waitTerminalEvent(testPhoto,5);
+
+        // Remplissage par défaut
+        initCategories(categorieRepository);
+        initUsers(utilisateurRepository);
+    }
+
+    private static void initCategories(CategorieRepository categorieRepository) {
+        CategorieEntity categorieEntity = new CategorieEntity();
+        categorieEntity.setName(CATEGORIE_NAME);
+        categorieEntity.setCouleur("123456");
+
+        TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
+        categorieRepository.saveWithSingle(categorieEntity).subscribe(subscriberInsertCategorie);
+        waitTerminalEvent(subscriberInsertCategorie, 5);
+
+        subscriberInsertCategorie.dispose();
+    }
+
+    private static void initUsers(UtilisateurRepository utilisateurRepository) {
+        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
+        utilisateurEntity.setUuidUtilisateur(UID_USER);
+
+        TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
+        utilisateurRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
+        waitTerminalEvent(subscriberInsertUtilisateur, 5);
+
+        subscriberInsertUtilisateur.dispose();
     }
 }

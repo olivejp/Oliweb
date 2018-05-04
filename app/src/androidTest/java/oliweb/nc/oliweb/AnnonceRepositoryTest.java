@@ -16,10 +16,8 @@ import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initAnnonce;
@@ -36,56 +34,17 @@ public class AnnonceRepositoryTest {
     private static final String UID_USER = "123456";
     private AnnonceRepository annonceRepository;
     private CategorieRepository categorieRepository;
-    private UtilisateurRepository utilisateurRepository;
     private List<CategorieEntity> listCategorie;
-    private List<UtilisateurEntity> listUtilisateur;
+
 
     @Before
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
+        UtilityTest.cleanBase(appContext);
         annonceRepository = AnnonceRepository.getInstance(appContext);
         categorieRepository = CategorieRepository.getInstance(appContext);
-        utilisateurRepository = UtilisateurRepository.getInstance(appContext);
-        UtilityTest.cleanBase(appContext);
-        initCategories();
-        initUsers();
-    }
-
-    private void initCategories() {
-        CategorieEntity categorieEntity = new CategorieEntity();
-        categorieEntity.setName("cat1");
-        categorieEntity.setCouleur("123456");
-
-        TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
-        this.categorieRepository.saveWithSingle(categorieEntity).subscribe(subscriberInsertCategorie);
-        waitTerminalEvent(subscriberInsertCategorie, 5);
-
-        TestObserver<List<CategorieEntity>> subscriberGetListCategorie = new TestObserver<>();
-        this.categorieRepository.getListCategorie().subscribe(subscriberGetListCategorie);
-        waitTerminalEvent(subscriberInsertCategorie, 5);
-        if (subscriberGetListCategorie.values() != null && !subscriberGetListCategorie.values().isEmpty()) {
-            listCategorie = subscriberGetListCategorie.values().get(0);
-        }
-        subscriberInsertCategorie.dispose();
-        subscriberGetListCategorie.dispose();
-    }
-
-    private void initUsers() {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUuidUtilisateur(UID_USER);
-
-        TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
-        this.utilisateurRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
-        waitTerminalEvent(subscriberInsertUtilisateur, 5);
-
-        TestObserver<List<UtilisateurEntity>> subscriberGetUtilisateur = new TestObserver<>();
-        this.utilisateurRepository.getAll().subscribe(subscriberGetUtilisateur);
-        waitTerminalEvent(subscriberInsertUtilisateur, 5);
-        if (subscriberGetUtilisateur.values() != null && !subscriberGetUtilisateur.values().isEmpty()) {
-            listUtilisateur = subscriberGetUtilisateur.values().get(0);
-        }
-        subscriberInsertUtilisateur.dispose();
-        subscriberGetUtilisateur.dispose();
+        TestObserver<List<CategorieEntity>> listTestObs = categorieRepository.getListCategorie().test();
+        listCategorie = listTestObs.values().get(0);
     }
 
     private void deleteAllTest() {
