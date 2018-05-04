@@ -1,7 +1,5 @@
 package oliweb.nc.oliweb.database.converter;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,21 +92,16 @@ public class AnnonceConverter {
     }
 
     public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
-        try {
-            AnnonceEntity annonceEntity = new AnnonceEntity();
-            annonceEntity.setUid(annonceDto.getUuid());
-            annonceEntity.setStatut(StatusRemote.SEND);
-            annonceEntity.setTitre(annonceDto.getTitre());
-            annonceEntity.setDescription(annonceDto.getDescription());
-            annonceEntity.setDatePublication(annonceDto.getDatePublication());
-            annonceEntity.setPrix(annonceDto.getPrix());
-            annonceEntity.setFavorite(0);
-            annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
-            annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
-            return annonceEntity;
-        } catch (Exception exception) {
-            Log.e(TAG, exception.getLocalizedMessage(), exception);
-            return null;
-        }
+        AnnonceEntity annonceEntity = new AnnonceEntity();
+        annonceEntity.setUid(annonceDto.getUuid());
+        annonceEntity.setStatut(StatusRemote.SEND);
+        annonceEntity.setTitre(annonceDto.getTitre());
+        annonceEntity.setDescription(annonceDto.getDescription());
+        annonceEntity.setDatePublication(annonceDto.getDatePublication());
+        annonceEntity.setPrix(annonceDto.getPrix());
+        annonceEntity.setFavorite(0);
+        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+        annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
+        return annonceEntity;
     }
 }

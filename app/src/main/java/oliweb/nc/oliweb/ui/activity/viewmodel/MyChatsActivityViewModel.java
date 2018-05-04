@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -68,7 +69,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatRepository.findByUidAnnonce(selectedAnnonce.getUid());
     }
 
-    public Single<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
+    public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
         return this.firebaseAnnonceRepository.findByUidAnnonce(uidAnnonce);
     }
 

@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
@@ -191,12 +192,11 @@ public class MediaUtility {
      *
      * @param context
      * @param type
-     * @param prefixName
      * @return
      */
     @Nullable
-    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type, String prefixName) {
-        String fileName = generateMediaName(type, prefixName);
+    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
+        String fileName = generateMediaName(type);
         File newFile;
         if (externalStorage) {
             newFile = createExternalMediaFile(fileName);
@@ -253,10 +253,10 @@ public class MediaUtility {
      * Génération d'un nom d'image ou de vidéo
      *
      * @param type
-     * @param prefixName
      * @return
      */
-    private static String generateMediaName(MediaType type, String prefixName) {
+    private static String generateMediaName(MediaType type) {
+        String prefixName = UUID.randomUUID().toString();
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         if (type.equals(MediaType.IMAGE)) {
             return File.separator + String.valueOf(prefixName) + "_IMG_" + timeStamp + ".jpg";
@@ -271,15 +271,15 @@ public class MediaUtility {
      * Copie un fichier dans un autre
      *
      * @param context
-     * @param src
-     * @param dst
+     * @param uriSource
+     * @param uriDestination
      * @return false si le fichier source n'a pas pu être lu
      * @throws IOException
      */
-    public static boolean copyAndResizeUriImages(Context context, Uri src, Uri dst) throws IOException {
-        Bitmap bitmapSrc = getBitmapFromUri(context, src);
+    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) throws IOException {
+        Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
-            Log.e(TAG, "L'image avec l'uri : " + src.toString() + " n'a pas pu être récupérée.");
+            Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
             return false;
         }
 
@@ -289,7 +289,7 @@ public class MediaUtility {
             return false;
         }
 
-        OutputStream out = context.getContentResolver().openOutputStream(dst);
+        OutputStream out = context.getContentResolver().openOutputStream(uriDestination);
         try {
             bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
         } finally {
@@ -301,9 +301,9 @@ public class MediaUtility {
         return true;
     }
 
-    public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri dst) {
+    public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
         try {
-            OutputStream out = contentResolver.openOutputStream(dst);
+            OutputStream out = contentResolver.openOutputStream(uriDestination);
             bitmapToSave.compress(Bitmap.CompressFormat.PNG, 100, out);
             if (out != null) {
                 out.flush();

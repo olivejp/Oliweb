@@ -35,7 +35,7 @@ public class DeletingFileTest {
 
     @Test
     public void createAndDeleteFile() throws IOException {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(context, false, MediaUtility.MediaType.IMAGE, "TEST_A_JPO");
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(context, false, MediaUtility.MediaType.IMAGE);
         context.grantUriPermission(context.getApplicationContext().getPackageName(), pair.first, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         Assert.assertNotNull(pair.first);

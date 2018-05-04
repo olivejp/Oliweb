@@ -88,6 +88,7 @@ public class SyncService extends IntentService {
                             Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local");
                             String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
                             handleActionSyncFromFirebase(uidUtilisateur);
+                            handleActionSyncAll();
                             break;
                         default:
                             break;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/menu_fb_sync"
+        android:id="@+id/menu_synchronyze"
         android:icon="@drawable/ic_sync_white_48dp"
-        android:title="Sync" />
+        android:title="Synchronyser" />
 </menu>

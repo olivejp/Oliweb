@@ -127,6 +127,7 @@ public class ListChatFragment extends Fragment {
     private void openAnnonceDetail(ChatFirebase chatFirebase) {
         viewModel.findFirebaseByUidAnnonce(chatFirebase.getUidAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .doOnSuccess(annonceDto -> {
                     if (annonceDto != null) {
                         AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
@@ -140,7 +141,6 @@ public class ListChatFragment extends Fragment {
                         Toast.makeText(appCompatActivity, "Oups... cette annonce n'est plus disponible", Toast.LENGTH_LONG).show();
                     }
                 })
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .subscribe();
     }
 

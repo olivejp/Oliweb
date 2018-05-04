@@ -9,7 +9,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
@@ -68,7 +67,7 @@ public class FirebasePhotoStorage {
         boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
 
-        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE, UUID.randomUUID().toString());
+        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
         if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
             httpsReference.getFile(pairUriFile.second).addOnSuccessListener(taskSnapshot -> {
                 // Local temp file has been created
@@ -79,7 +78,7 @@ public class FirebasePhotoStorage {
                     PhotoEntity photoEntity = new PhotoEntity();
                     photoEntity.setStatut(StatusRemote.SEND);
                     photoEntity.setFirebasePath(urlPhoto);
-                    photoEntity.setUriLocal(pairUriFile.first.toString());
+                    photoEntity.setUriLocal(pairUriFile.second.toString());
                     photoEntity.setIdAnnonce(idAnnonce);
                     photoRepository.saveWithSingle(photoEntity).subscribe();
                 }

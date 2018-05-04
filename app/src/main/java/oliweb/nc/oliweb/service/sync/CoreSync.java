@@ -6,6 +6,9 @@ import android.util.Log;
 
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -76,8 +79,9 @@ class CoreSync {
      */
     private void syncToDelete() {
         Log.d(TAG, "Starting syncToDelete");
-        deleteAnnonces();
-        deletePhotos();
+        deleteAnnonces()
+                .doOnSuccess(atomic -> deletePhotos())
+                .subscribe();
     }
 
     private void sendAnnonces() {
@@ -93,8 +97,9 @@ class CoreSync {
     private void sendPhotos() {
         Log.d(TAG, "Starting sendPhotos");
         photoRepository
-                .observeAllPhotosByStatus(Utility.allStatusToSend())
+                .getAllPhotosByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .flattenAsObservable(list -> list)
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .doOnNext(this::sendPhotoToRemote)
                 .subscribe();
@@ -111,6 +116,7 @@ class CoreSync {
         AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
         firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
                 .map(annonceDto1 -> {
+                    annonceFull.getAnnonce().setUid(annonceDto1.getUuid());
                     annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
                     annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
                     return annonceFull.getAnnonce();
@@ -185,13 +191,16 @@ class CoreSync {
      * 4 - Suppression des photos dans la base locale
      * 5 - Suppression de l'annonce dans la base locale
      */
-    private void deleteAnnonces() {
-        Log.d(TAG, "Starting deleteAnnonces");
-        annonceRepository
-                .getAllAnnonceByStatus(Utility.allStatusToDelete())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(this::getAllPhotosToDelete)
-                .subscribe();
+    private Single<AtomicBoolean> deleteAnnonces() {
+        return Single.create(emitter -> {
+            Log.d(TAG, "Starting deleteAnnonces");
+            annonceRepository
+                    .getAllAnnonceByStatus(Utility.allStatusToDelete())
+                    .doOnError(emitter::onError)
+                    .doOnNext(this::getAllPhotosToDelete)
+                    .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                    .subscribe();
+        });
     }
 
     private void getAllPhotosToDelete(AnnonceEntity annonceEntity) {
@@ -263,8 +272,9 @@ class CoreSync {
     private void deletePhotos() {
         Log.d(TAG, "Starting deletePhotos");
         photoRepository
-                .observeAllPhotosByStatus(StatusRemote.TO_DELETE.getValue())
+                .getAllPhotosByStatus(Utility.allStatusToDelete())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .flattenAsObservable(list -> list)
                 .filter(photoEntity -> photoEntity.getFirebasePath() != null)
                 .doOnNext(this::deleteFromStorage)
                 .subscribe();

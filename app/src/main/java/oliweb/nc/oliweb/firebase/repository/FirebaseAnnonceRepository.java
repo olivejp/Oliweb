@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -81,12 +82,12 @@ public class FirebaseAnnonceRepository {
         Log.d(TAG, "Starting checkAnnonceExistInLocalOrSaveIt called with annonceDto = " + annonceDto.toString());
         annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .doOnSuccess(integer -> {
                     if (integer == null || integer.equals(0)) {
                         getAnnonceFromFbToLocalDb(context, annonceDto);
                     }
                 })
-                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .subscribe();
     }
 
@@ -111,7 +112,7 @@ public class FirebaseAnnonceRepository {
             String uidUtilisateur = annonceFromFirebase.getUtilisateur().getUuid();
             annonceEntity.setUidUser(uidUtilisateur);
             annonceRepository.saveWithSingle(annonceEntity)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid() + ", uidUtilisateur : " + uidUtilisateur))
                     .doOnSuccess(annonceEntity1 -> {
                         Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
                         if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
@@ -121,7 +122,6 @@ public class FirebaseAnnonceRepository {
                             }
                         }
                     })
-                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid() + ", UidUtilisateur : " + uidUtilisateur))
                     .subscribe();
         } catch (Exception exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
@@ -158,9 +158,9 @@ public class FirebaseAnnonceRepository {
         }));
     }
 
-    public Single<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
+    public Maybe<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting findByUidAnnonce uidAnnonce : " + uidAnnonce);
-        return Single.create(e ->
+        return Maybe.create(e ->
                 ANNONCE_REF.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -169,7 +169,7 @@ public class FirebaseAnnonceRepository {
                                 if (annonceDto != null) {
                                     e.onSuccess(annonceDto);
                                 } else {
-                                    e.onSuccess(null);
+                                    e.onComplete();
                                 }
                             }
 
@@ -209,6 +209,7 @@ public class FirebaseAnnonceRepository {
                                             findByUidAnnonce(annonceDto.getUuid())
                                                     .doOnError(emitter::onError)
                                                     .doOnSuccess(emitter::onSuccess)
+                                                    .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
                                                     .subscribe()
                                     );
                         })

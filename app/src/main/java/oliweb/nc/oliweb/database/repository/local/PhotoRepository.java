@@ -127,16 +127,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 .flattenAsObservable(list -> list);
     }
 
-    public Observable<PhotoEntity> observeAllPhotosByStatus(String status) {
+    public Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
-        return this.photoDao.getAllPhotosByStatus(status)
-                .flattenAsObservable(list -> list);
-    }
-
-    public Observable<PhotoEntity> observeAllPhotosByStatus(List<String> status) {
-        Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
-        return this.photoDao.getAllPhotosByStatus(status)
-                .flattenAsObservable(list -> list);
+        return this.photoDao.getAllPhotosByStatus(status);
     }
 
     public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {

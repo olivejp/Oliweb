@@ -620,7 +620,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Nullable
     private Uri generateNewUri() {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaUtility.MediaType.IMAGE, uidUser);
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair.first;
         } else {

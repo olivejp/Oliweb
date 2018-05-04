@@ -181,15 +181,15 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
                 } else {
-                    callToSync();
+                    callForFirebaseSync();
                 }
             } else {
-                callToSync();
+                callForFirebaseSync();
             }
         }
     }
 
-    private void callToSync() {
+    private void callForFirebaseSync() {
         SyncService.launchSynchroFromFirebase(this, uidUser);
     }
 
@@ -211,7 +211,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             onBackPressed();
             return true;
         }
-        if (idItem == R.id.menu_fb_sync) {
+        if (idItem == R.id.menu_synchronyze) {
+            callForFirebaseSync();
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observe(this, atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
                     viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
@@ -228,7 +229,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_STORAGE_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            callToSync();
+            callForFirebaseSync();
         }
     }
 
