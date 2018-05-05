@@ -3,7 +3,10 @@ package oliweb.nc.oliweb.database.entity;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
+
+import com.google.firebase.database.Exclude;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -11,6 +14,7 @@ import android.support.annotation.NonNull;
 
 @Entity(tableName = "utilisateur", indices = {@Index(value = "uid", unique = true)})
 public class UtilisateurEntity extends AbstractEntity<Long> {
+    @Exclude
     @NonNull
     @PrimaryKey
     private Long idUser;
@@ -22,7 +26,10 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
     private Long dateLastConnexion;
     private String photoUrl;
     private String tokenDevice;
+    @TypeConverters(StatusConverter.class)
+    private StatusRemote statut;
 
+    @Exclude
     @NonNull
     public Long getId() {
         return idUser;
@@ -101,6 +108,15 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
         this.tokenDevice = tokenDevice;
     }
 
+    @Exclude
+    public StatusRemote getStatut() {
+        return statut;
+    }
+
+    public void setStatut(StatusRemote statut) {
+        this.statut = statut;
+    }
+
     @Override
     public String toString() {
         return "UtilisateurEntity{" +
@@ -113,6 +129,7 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
                 ", dateLastConnexion=" + dateLastConnexion +
                 ", photoUrl='" + photoUrl + '\'' +
                 ", tokenDevice='" + tokenDevice + '\'' +
+                ", statut=" + statut +
                 '}';
     }
 }

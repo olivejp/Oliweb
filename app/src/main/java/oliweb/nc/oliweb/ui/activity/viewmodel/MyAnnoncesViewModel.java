@@ -11,11 +11,8 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
@@ -68,45 +65,8 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      *
      * @param idAnnonce
      */
-    public Maybe<AtomicBoolean> deleteAnnonceById(long idAnnonce) {
-        Log.d(TAG, "Starting deleteAnnonceById idAnnonce : " + idAnnonce);
-        return Maybe.create(emitter ->
-                this.annonceRepository.findById(idAnnonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(annonceEntity -> {
-                            Log.d(TAG, "findSingleByUid.doOnSuccess annonceEntity : " + annonceEntity);
-                            annonceEntity.setStatut(StatusRemote.TO_DELETE);
-                            annonceRepository.saveWithSingle(annonceEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceUpdated -> {
-                                                Log.d(TAG, "saveWithSingle.doOnSuccess annonceUpdated : " + annonceUpdated);
-                                                photoRepository.findAllPhotosByIdAnnonce(annonceUpdated.getId())
-                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                        .doOnSuccess(this::updateAllPhotosToDelete)
-                                                        .subscribe();
-                                            }
-                                    )
-                                    .subscribe();
-                        })
-                        .subscribe()
-        );
-    }
-
-    private void updateAllPhotosToDelete(List<PhotoEntity> photoEntities) {
-        Log.d(TAG, "Starting updateAllPhotosToDelete photoEntities : " + photoEntities);
-
-        // Condition de garde
-        if (photoEntities == null || photoEntities.isEmpty()) {
-            return;
-        }
-        for (PhotoEntity photoEntity : photoEntities) {
-            photoEntity.setStatut(StatusRemote.TO_DELETE);
-        }
-        photoRepository.saveWithSingle(photoEntities)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
+    public Single<AtomicBoolean> markToDelete(long idAnnonce) {
+        Log.d(TAG, "Starting markToDelete idAnnonce : " + idAnnonce);
+        return this.annonceRepository.markToDelete(idAnnonce);
     }
 }

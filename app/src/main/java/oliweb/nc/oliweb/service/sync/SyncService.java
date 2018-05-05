@@ -20,6 +20,8 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_ALL = "ARG_ACTION_SYNC_ALL";
     public static final String ARG_ACTION_SYNC_ALL_FROM_SCHEDULER = "ARG_ACTION_SYNC_ALL_FROM_SCHEDULER";
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
+    public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
+    public static final String ARG_ACTION_SYNC_ANNONCE = "ARG_ACTION_SYNC_ANNONCE";
 
     public SyncService() {
         super("SyncService");
@@ -33,6 +35,17 @@ public class SyncService extends IntentService {
     public static void launchSynchroForAll(@NonNull Context context) {
         Intent syncService = new Intent(context, SyncService.class);
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_ALL);
+        context.startService(syncService);
+    }
+
+    /**
+     * Launch the sync service for all the user
+     *
+     * @param context
+     */
+    public static void launchSynchroForUser(@NonNull Context context) {
+        Intent syncService = new Intent(context, SyncService.class);
+        syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_USER);
         context.startService(syncService);
     }
 
@@ -59,6 +72,18 @@ public class SyncService extends IntentService {
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_ALL_FROM_SCHEDULER);
         context.startService(syncService);
     }
+
+    /**
+     * Lancement du service de synchro pour tous les annonces
+     *
+     * @param context
+     */
+    public static void launchSynchroForAnnonce(@NonNull Context context) {
+        Intent syncService = new Intent(context, SyncService.class);
+        syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_ANNONCE);
+        context.startService(syncService);
+    }
+
 
     private void handleActionSyncAll() {
         CoreSync.getInstance(this.getApplicationContext()).synchronize();
@@ -89,6 +114,14 @@ public class SyncService extends IntentService {
                             String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
                             handleActionSyncFromFirebase(uidUtilisateur);
                             handleActionSyncAll();
+                            break;
+                        case ARG_ACTION_SYNC_USER:
+                            Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
+                            CoreSync.getInstance(this).synchronizeUser();
+                            break;
+                        case ARG_ACTION_SYNC_ANNONCE:
+                            Log.d(TAG, "Lancement du batch pour envoyer les informations des annonces sur Firebase");
+                            CoreSync.getInstance(this).synchronizeAnnonce();
                             break;
                         default:
                             break;

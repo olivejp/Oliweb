@@ -101,8 +101,8 @@ public class FirebasePhotoStorage {
                                 emitter.onSuccess(new AtomicBoolean(true));
                             })
                             .addOnFailureListener(e -> {
-                                Log.e(TAG, "Failed to delete image on Firebase Storage : " + fileName + "exception : " + e.getMessage());
-                                emitter.onError(e);
+                                Log.e(TAG, "Failed to delete image on Firebase Storage : " + fileName + "exception : " + e.getMessage(), e);
+                                emitter.onSuccess(new AtomicBoolean(false));
                             });
                 } catch (Exception e) {
                     emitter.onError(e);

@@ -4,8 +4,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.firebase.database.FirebaseDatabase;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
@@ -18,7 +16,9 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -29,17 +29,19 @@ import oliweb.nc.oliweb.utility.Utility;
  * <p>
  * This class contains the series of network calls to make to sync local db with firebase
  */
-class CoreSync {
+public class CoreSync {
     private static final String TAG = CoreSync.class.getName();
 
     private static CoreSync instance;
-    private static FirebaseDatabase fireDb;
 
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
     private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage photoStorage;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseUserRepository firebaseUserRepository;
+    private UtilisateurRepository utilisateurRepository;
+
 
     private ContentResolver contentResolver;
 
@@ -49,59 +51,89 @@ class CoreSync {
     public static CoreSync getInstance(Context context) {
         if (instance == null) {
             instance = new CoreSync();
-            fireDb = FirebaseDatabase.getInstance();
             instance.photoRepository = PhotoRepository.getInstance(context);
             instance.annonceRepository = AnnonceRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
+            instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
+            instance.utilisateurRepository = UtilisateurRepository.getInstance(context);
             instance.photoStorage = FirebasePhotoStorage.getInstance(context);
             instance.contentResolver = context.getContentResolver();
         }
         return instance;
     }
 
-    void synchronize() {
+    public void synchronize() {
         Log.d(TAG, "Launch synchronyse");
         syncToSend();
         syncToDelete();
+    }
+
+    public void synchronizeUser() {
+        startSendingUser();
+    }
+
+    public void synchronizeAnnonce() {
+        startSendingAnnonces();
+    }
+
+    public void synchronizePhoto() {
+        startSendingPhotos();
     }
 
     /**
      * Liste toutes les annonces et photos à envoyer
      */
     private void syncToSend() {
-        sendAnnonces();
-        sendPhotos();
+        startSendingAnnonces();
     }
 
     /**
-     * Read all annonces with TO_DELETE status
+     * Once is complete, we start sending photos
      */
-    private void syncToDelete() {
-        Log.d(TAG, "Starting syncToDelete");
-        deleteAnnonces()
-                .doOnSuccess(atomic -> deletePhotos())
-                .subscribe();
-    }
-
-    private void sendAnnonces() {
+    private void startSendingAnnonces() {
         Log.d(TAG, "Starting syncToSend");
         annonceFullRepository
                 .observeAllAnnoncesByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .doOnNext(this::sendAnnonceToRemoteDatabase)
+                .doOnComplete(this::startSendingPhotos)
                 .subscribe();
     }
 
-    private void sendPhotos() {
-        Log.d(TAG, "Starting sendPhotos");
+    private void startSendingPhotos() {
+        Log.d(TAG, "Starting startSendingPhotos");
         photoRepository
-                .getAllPhotosByStatus(Utility.allStatusToSend())
+                .observeAllPhotosByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(list -> list)
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .doOnNext(this::sendPhotoToRemote)
+                .doOnComplete(this::startSendingUser)
+                .subscribe();
+    }
+
+    private void startSendingUser() {
+        Log.d(TAG, "Starting startSendingUser");
+        utilisateurRepository
+                .observeAllUtilisateursByStatus(Utility.allStatusToSend())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .doOnComplete(() -> Log.d(TAG, "All users to send has been send"))
+                .doOnNext(utilisateur ->
+                        firebaseUserRepository.insertUserIntoFirebase(utilisateur)
+                                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                                .doOnSuccess(success -> {
+                                    if (success.get()) {
+                                        Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
+                                        utilisateur.setStatut(StatusRemote.SEND);
+                                        utilisateurRepository.saveWithSingle(utilisateur)
+                                                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                                                .subscribe();
+                                    }
+                                })
+                                .subscribe()
+                )
                 .subscribe();
     }
 
@@ -180,6 +212,16 @@ class CoreSync {
                                 )
                                 .subscribe()
                 )
+                .subscribe();
+    }
+
+    /**
+     * Read all annonces with TO_DELETE status
+     */
+    private void syncToDelete() {
+        Log.d(TAG, "Starting syncToDelete");
+        deleteAnnonces()
+                .doOnSuccess(atomic -> deletePhotos())
                 .subscribe();
     }
 

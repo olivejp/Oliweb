@@ -47,4 +47,8 @@ public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, L
     @Transaction
     @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :UuidUtilisateur")
     public abstract Single<Integer> countByUid(String UuidUtilisateur);
+
+    @Transaction
+    @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
+    public abstract Maybe<List<UtilisateurEntity>> getAllUtilisateursByStatus(List<String> statutList);
 }

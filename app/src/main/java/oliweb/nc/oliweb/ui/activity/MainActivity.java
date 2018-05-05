@@ -17,7 +17,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,8 +31,6 @@ import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -339,6 +336,10 @@ public class MainActivity extends AppCompatActivity
 
     private void defineAuthListener() {
         mAuthStateListener = firebaseAuth -> {
+            if ((mFirebaseUser != null && mFirebaseUser == firebaseAuth.getCurrentUser())) {
+                return;
+            }
+
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
@@ -347,16 +348,7 @@ public class MainActivity extends AppCompatActivity
                 // Sauvegarde dans les préférences, dans le cas d'une déconnexion
                 SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(mFirebaseUser.getUid());
 
-                viewModel.registerUser(mFirebaseUser)
-                        .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                        .doOnSuccess(userExist -> {
-                            if (userExist.get()) {
-                                Snackbar.make(toolbar, "Utilisateur " + mFirebaseUser.getDisplayName() + " enregistré", Snackbar.LENGTH_LONG).show();
-                            }
-                        })
-                        .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
-                        .subscribe();
-
+                viewModel.saveUser(mFirebaseUser);
                 initViewsFromUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {

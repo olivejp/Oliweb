@@ -160,11 +160,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
             long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
             if (idAnnonce != 0) {
-                viewModel.deleteAnnonceById(idAnnonce)
+                viewModel.markToDelete(idAnnonce)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(exception -> Log.e(TAG, "deleteAnnonceById.doOnError exception : " + exception.getLocalizedMessage(), exception))
+                        .doOnError(exception -> Log.e(TAG, "markToDelete.doOnError exception : " + exception.getLocalizedMessage(), exception))
                         .doOnSuccess(result -> {
-                            Log.d(TAG, "deleteAnnonceById.doOnSuccess result : " + result);
+                            Log.d(TAG, "markToDelete.doOnSuccess result : " + result);
                             if (result.get()) {
                                 Snackbar.make(recyclerView, "Annonce supprimée", Snackbar.LENGTH_LONG).show();
                                 if (NetworkReceiver.checkConnection(this)) {

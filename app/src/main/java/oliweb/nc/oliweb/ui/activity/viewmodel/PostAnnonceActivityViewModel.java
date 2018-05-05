@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -122,17 +122,25 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         });
     }
 
-    public Maybe<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
+    public Single<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
         Log.d(TAG, "Starting savePhotos currentAnnonce : " + annonce);
         for (PhotoEntity photo : currentListPhoto) {
             photo.setIdAnnonce(annonce.getId());
         }
-        return Maybe.create(emitter ->
-                this.photoRepository.saveWithSingle(currentListPhoto)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(emitter::onSuccess)
-                        .subscribe()
+        return Single.create(emitter -> {
+                    ArrayList<PhotoEntity> list = new ArrayList<>();
+                    Observable.fromIterable(currentListPhoto)
+                            .doOnError(emitter::onError)
+                            .doOnNext(photoEntity ->
+                                    this.photoRepository.saveWithSingle(photoEntity)
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .doOnError(emitter::onError)
+                                            .doOnSuccess(list::add)
+                                            .subscribe()
+                            )
+                            .doOnComplete(() -> emitter.onSuccess(list))
+                            .subscribe();
+                }
         );
     }
 
