@@ -23,6 +23,7 @@ import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
@@ -193,22 +194,24 @@ public class CoreSync {
         firebaseChatRepository.createChat(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatFirebase -> {
-                    markChatHasBeenSend(chatFirebase.getUid(), chatEntity);
+                    markChatHasBeenSend(chatFirebase, chatEntity);
                     sendGetAllNewMessages(chatEntity.getIdChat(), chatFirebase);
                 })
                 .subscribe();
     }
 
-    private void markChatHasBeenSend(String uidChat, ChatEntity chatEntity) {
+    private void markChatHasBeenSend(ChatFirebase chatFirebase, ChatEntity chatEntity) {
         chatEntity.setStatusRemote(StatusRemote.SEND);
-        chatEntity.setUidChat(uidChat);
+        chatEntity.setUidChat(chatFirebase.getUid());
+        chatEntity.setCreationTimestamp(chatFirebase.getCreationTimestamp());
         chatRepository.saveWithSingle(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
-    private void markMessageHasBeenSend(String uidMessage, MessageEntity messageEntity) {
-        messageEntity.setUidMessage(uidMessage);
+    private void markMessageHasBeenSend(MessageFirebase messageFirebase, MessageEntity messageEntity) {
+        messageEntity.setUidMessage(messageFirebase.getUidMessage());
+        messageEntity.setTimestamp(messageFirebase.getTimestamp());
         messageEntity.setStatusRemote(StatusRemote.SEND);
         messageRepository.saveWithSingle(messageEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
@@ -226,7 +229,7 @@ public class CoreSync {
     private void sendMessage(String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
         firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(messageEntity))
-                .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase.getUidMessage(), messageEntity))
+                .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageEntity))
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
