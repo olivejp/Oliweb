@@ -18,6 +18,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -34,6 +35,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private AnnonceRepository annonceRepository;
+    private ChatRepository chatRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
 
@@ -42,6 +44,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        chatRepository = ChatRepository.getInstance(application.getApplicationContext());
         firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
     }
 
@@ -97,4 +100,9 @@ public class MainActivityViewModel extends AndroidViewModel {
     public LiveData<Integer> countAllFavoritesByUser(String uid) {
         return this.annonceRepository.countAllFavoritesByUser(uid);
     }
+
+    public LiveData<Integer> countAllChatsByUser(String uidUser) {
+        return this.chatRepository.countAllChatsByUser(uidUser);
+    }
+
 }

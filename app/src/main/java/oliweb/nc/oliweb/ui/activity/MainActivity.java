@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity
 
     private LiveData<Integer> liveCountAllActiveAnnonce;
     private LiveData<Integer> liveCountAllFavorite;
+    private LiveData<Integer> liveCountAllChat;
 
 
     @BindView(R.id.toolbar)
@@ -98,6 +99,12 @@ public class MainActivity extends AppCompatActivity
         TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();
         numberFavoriteBadge.setGravity(Gravity.CENTER_VERTICAL);
         numberFavoriteBadge.setText(String.valueOf(integer));
+    };
+
+    private Observer<Integer> observeNumberChatBadge = integer -> {
+        TextView numberChatBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_chats).getActionView();
+        numberChatBadge.setGravity(Gravity.CENTER_VERTICAL);
+        numberChatBadge.setText(String.valueOf(integer));
     };
 
     @Override
@@ -312,12 +319,15 @@ public class MainActivity extends AppCompatActivity
             // On lance les observers pour récupérer les badges
             liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uid, Utility.allStatusToAvoid());
             liveCountAllFavorite = viewModel.countAllFavoritesByUser(uid);
+            liveCountAllChat = viewModel.countAllChatsByUser(uid);
 
             liveCountAllActiveAnnonce.removeObservers(this);
             liveCountAllFavorite.removeObservers(this);
+            liveCountAllChat.removeObservers(this);
 
             liveCountAllActiveAnnonce.observe(this, observeNumberAnnonceBadge);
             liveCountAllFavorite.observe(this, observeNumberFavoriteBadge);
+            liveCountAllChat.observe(this, observeNumberChatBadge);
         } else {
             // On stoppe les observers
             if (liveCountAllActiveAnnonce != null) {
@@ -326,11 +336,16 @@ public class MainActivity extends AppCompatActivity
             if (liveCountAllFavorite != null) {
                 liveCountAllFavorite.removeObserver(observeNumberFavoriteBadge);
             }
+            if (liveCountAllChat != null) {
+                liveCountAllChat.removeObserver(observeNumberChatBadge);
+            }
 
             TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
             TextView numberFavoriteBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_favorites).getActionView();
+            TextView numberChatBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_chats).getActionView();
             numberAnnoncesBadge.setText(null);
             numberFavoriteBadge.setText(null);
+            numberChatBadge.setText(null);
         }
     }
 

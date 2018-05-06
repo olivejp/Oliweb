@@ -64,4 +64,9 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                         .subscribe()
         );
     }
+
+    public LiveData<Integer> countAllChatsByUser(String uidUser) {
+        Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser);
+        return this.chatDao.countAllFavoritesByUser(uidUser);
+    }
 }

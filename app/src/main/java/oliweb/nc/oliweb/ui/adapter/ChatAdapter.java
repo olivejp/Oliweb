@@ -67,7 +67,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.lastMessage.setText(model.getLastMessage());
         holder.titreAnnonce.setText(model.getTitreAnnonce());
 
-        holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
+        if (model.getUpdateTimestamp() != null) {
+            holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
+        }
 
         holder.constraintLayout.setOnClickListener(clickListener);
         holder.imagePopupMenu.setOnClickListener(popupClickListener);
