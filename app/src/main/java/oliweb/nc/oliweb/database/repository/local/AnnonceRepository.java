@@ -96,12 +96,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                         .doOnSuccess(annonceEntity -> {
                             annonceEntity.setStatut(StatusRemote.TO_DELETE);
                             saveWithSingle(annonceEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(annonceUpdated -> {
                                                 Log.d(TAG, "saveWithSingle.doOnSuccess annonceUpdated : " + annonceUpdated);
                                                 photoRepository.markToDelete(annonceUpdated.getId())
-                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                                         .doOnSuccess(emitter::onSuccess)
                                                         .subscribe();
                                             }

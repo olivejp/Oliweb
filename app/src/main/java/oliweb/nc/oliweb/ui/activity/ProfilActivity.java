@@ -8,6 +8,7 @@ import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
@@ -16,28 +17,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
 import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NEVER;
 
 public class ProfilActivity extends AppCompatActivity {
+
+    private static final String TAG = ProfilActivity.class.getName();
+
     public static final String UID_USER = "uidUser";
     public static final String UPDATE = "availableUpdate";
-
-    private DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF);
 
     private String uidUser;
     private boolean availableUpdate;
@@ -155,12 +151,13 @@ public class ProfilActivity extends AppCompatActivity {
             utilisateurEntity.setTelephone(textTelephone.getText().toString());
 
             viewModel.saveUtilisateur(utilisateurEntity)
-                    .doOnSuccess(utilisateurEntitySaved -> {
-                            UtilisateurFirebase userFb = UtilisateurConverter.convertEntityToFb(utilisateurEntitySaved);
-                            USER_REF.child(uidUser).setValue(userFb).addOnSuccessListener(aVoid ->
-                                    Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show()
-                            );
-                    }).subscribe();
+                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                    .doOnSuccess(atomicBoolean -> {
+                        if (atomicBoolean.get()) {
+                            Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .subscribe();
 
             return true;
         }

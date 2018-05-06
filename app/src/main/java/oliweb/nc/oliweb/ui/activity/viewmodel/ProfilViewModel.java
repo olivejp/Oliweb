@@ -12,12 +12,18 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
@@ -29,10 +35,13 @@ public class ProfilViewModel extends AndroidViewModel {
     private MutableLiveData<Long> nbChatsByUser;
     private MutableLiveData<Long> nbMessagesByUser;
     private UtilisateurRepository utilisateurRepository;
+    private FirebaseUserRepository firebaseUserRepository;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
         utilisateurRepository = UtilisateurRepository.getInstance(application);
+        firebaseUserRepository = FirebaseUserRepository.getInstance();
+
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
@@ -119,8 +128,19 @@ public class ProfilViewModel extends AndroidViewModel {
         return this.utilisateurRepository.findByUid(uidUser);
     }
 
-    public Single<UtilisateurEntity> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
-        return this.utilisateurRepository.saveWithSingle(utilisateurEntity)
-                .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io());
+    public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
+        return Single.create(emitter -> {
+            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
+            this.utilisateurRepository.saveWithSingle(utilisateurEntity)
+                    .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
+                    .doOnError(emitter::onError)
+                    .doOnSuccess(utilisateurEntity1 -> {
+                        if (NetworkReceiver.checkConnection(getApplication())) {
+                            SyncService.launchSynchroForUser(getApplication());
+                        }
+                        emitter.onSuccess(new AtomicBoolean(true));
+                    })
+                    .subscribe();
+        });
     }
 }

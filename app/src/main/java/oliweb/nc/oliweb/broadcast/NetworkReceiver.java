@@ -53,6 +53,7 @@ public class NetworkReceiver extends BroadcastReceiver {
         NetworkInfo networkInfo = conn != null ? conn.getActiveNetworkInfo() : null;
 
         if (networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected()) {
+
             for (NetworkChangeListener networkChangeListener :
                     mNetworkChangeListener) {
                 networkChangeListener.onNetworkEnable();

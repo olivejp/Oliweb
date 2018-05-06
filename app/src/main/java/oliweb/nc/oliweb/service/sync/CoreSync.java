@@ -86,6 +86,7 @@ public class CoreSync {
      */
     private void syncToSend() {
         startSendingAnnonces();
+        startSendingUser();
     }
 
     /**
@@ -249,7 +250,10 @@ public class CoreSync {
         photoRepository
                 .observeAllPhotosByIdAnnonce(annonceEntity.getId())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(photo -> deletePhotoFromRemoteStorage(photo, annonceEntity))
+                .doOnNext(photo -> {
+                    deletePhotoFromRemoteStorage(photo, annonceEntity);
+                    deleteFromLocalDb(photo, annonceEntity);
+                })
                 .subscribe();
     }
 
@@ -257,11 +261,6 @@ public class CoreSync {
     private void deletePhotoFromRemoteStorage(PhotoEntity photo, AnnonceEntity annonceEntity) {
         photoStorage.delete(photo)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(atomicBoolean -> {
-                    if (atomicBoolean.get()) {
-                        deleteFromLocalDb(photo, annonceEntity);
-                    }
-                })
                 .subscribe();
     }
 

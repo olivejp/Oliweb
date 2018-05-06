@@ -15,7 +15,6 @@ import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 
 /**
@@ -28,7 +27,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
@@ -36,7 +34,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         super(application);
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
         firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
     }
 
@@ -44,7 +41,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
-    // TODO : Peut faire mieux
     public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
         Log.d(TAG, "Starting shouldIAskQuestionToRetreiveData uidUtilisateur : " + uidUtilisateur);
         if (shouldAskQuestion == null) {

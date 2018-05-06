@@ -126,13 +126,16 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 findAllPhotosByIdAnnonce(idAnnonce)
                         .doOnError(emitter::onError)
                         .flattenAsObservable(list -> list)
-                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
                         .doOnNext(photoEntity -> {
+                            Log.d(TAG, "doOnNext photoEntity : " + photoEntity);
                             photoEntity.setStatut(StatusRemote.TO_DELETE);
                             saveWithSingle(photoEntity)
+                                    .doOnSuccess(photoEntity1 -> Log.d(TAG, "saveWithSingle successfull photoEntity : " + photoEntity1))
                                     .doOnError(emitter::onError)
                                     .subscribe();
                         })
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .subscribe()
         );
     }
 
