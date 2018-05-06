@@ -13,6 +13,7 @@ public class ChatFirebase {
     private String uidSeller;
     private String uidAnnonce;
     private String lastMessage;
+    private String titreAnnonce;
     private long creationTimestamp;
     private long updateTimestamp;
     private Map<String, Boolean> members;
@@ -20,7 +21,7 @@ public class ChatFirebase {
     public ChatFirebase() {
     }
 
-    public ChatFirebase(String uid, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, Map<String, Boolean> members) {
+    public ChatFirebase(String uid, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, long creationTimestamp, long updateTimestamp, Map<String, Boolean> members, String titreAnnonce) {
         this.uid = uid;
         this.uidBuyer = uidBuyer;
         this.uidSeller = uidSeller;
@@ -28,6 +29,7 @@ public class ChatFirebase {
         this.lastMessage = lastMessage;
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
+        this.titreAnnonce = titreAnnonce;
         this.members = members;
     }
 
@@ -93,5 +95,13 @@ public class ChatFirebase {
 
     public void setMembers(Map<String, Boolean> members) {
         this.members = members;
+    }
+
+    public String getTitreAnnonce() {
+        return titreAnnonce;
+    }
+
+    public void setTitreAnnonce(String titreAnnonce) {
+        this.titreAnnonce = titreAnnonce;
     }
 }

@@ -20,7 +20,6 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,10 +27,8 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
@@ -64,28 +61,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         ChatViewHolder holder = (ChatViewHolder) viewHolder;
         ChatEntity model = listChats.get(position);
-        holder.constraintLayout.setTag(model.getUidChat());
+
+        holder.imagePopupMenu.setTag(model);
+        holder.constraintLayout.setTag(model.getIdChat());
         holder.lastMessage.setText(model.getLastMessage());
+        holder.titreAnnonce.setText(model.getTitreAnnonce());
+
         holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
+
         holder.constraintLayout.setOnClickListener(clickListener);
         holder.imagePopupMenu.setOnClickListener(popupClickListener);
-        holder.imagePopupMenu.setTag(model);
-
-        FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF).child(model.getUidAnnonce()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                if (annonceDto != null) {
-                    holder.titreAnnonce.setText(annonceDto.getTitre());
-                    holder.prixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonceDto.getPrix()) + " XPF"));
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
         retreivePhoto(holder, model);
     }
 
@@ -116,7 +101,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     ChatEntity oldChat = listChats.get(oldItemPosition);
                     return newChat.getUidChat().equals(oldChat.getUidChat())
                             && newChat.getLastMessage().equals(oldChat.getLastMessage())
-                            && newChat.getUpdateTimestamp() == (oldChat.getUpdateTimestamp());
+                            && newChat.getUpdateTimestamp().equals(oldChat.getUpdateTimestamp());
                 }
             });
             this.listChats = newListChats;
@@ -167,9 +152,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         @BindView(R.id.chat_last_message_timestamp)
         TextView lastMessageTimestamp;
-
-        @BindView(R.id.chat_prix_annonce)
-        TextView prixAnnonce;
 
         @BindView(R.id.chat_titre_annonce)
         TextView titreAnnonce;

@@ -21,6 +21,7 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
     private String uidBuyer;
     private String uidSeller;
     private String uidAnnonce;
+    private String titreAnnonce;
     private String lastMessage;
     private Long creationTimestamp;
     private Long updateTimestamp;
@@ -31,12 +32,13 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
     }
 
     @Ignore
-    public ChatEntity(@NonNull Long idChat, String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote) {
+    public ChatEntity(@NonNull Long idChat, String uidChat, String uidBuyer, String uidSeller, String uidAnnonce, String lastMessage, Long creationTimestamp, Long updateTimestamp, StatusRemote statusRemote, String titreAnnonce) {
         this.idChat = idChat;
         this.uidChat = uidChat;
         this.uidBuyer = uidBuyer;
         this.uidSeller = uidSeller;
         this.uidAnnonce = uidAnnonce;
+        this.titreAnnonce = titreAnnonce;
         this.lastMessage = lastMessage;
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
@@ -122,6 +124,30 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
         this.statusRemote = statusRemote;
     }
 
+    public String getTitreAnnonce() {
+        return titreAnnonce;
+    }
+
+    public void setTitreAnnonce(String titreAnnonce) {
+        this.titreAnnonce = titreAnnonce;
+    }
+
+
+    @Override
+    public String toString() {
+        return "ChatEntity{" +
+                "idChat=" + idChat +
+                ", uidChat='" + uidChat + '\'' +
+                ", uidBuyer='" + uidBuyer + '\'' +
+                ", uidSeller='" + uidSeller + '\'' +
+                ", uidAnnonce='" + uidAnnonce + '\'' +
+                ", titreAnnonce='" + titreAnnonce + '\'' +
+                ", lastMessage='" + lastMessage + '\'' +
+                ", creationTimestamp=" + creationTimestamp +
+                ", updateTimestamp=" + updateTimestamp +
+                ", statusRemote=" + statusRemote +
+                '}';
+    }
 
     @Override
     public int describeContents() {
@@ -135,6 +161,7 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
         dest.writeString(this.uidBuyer);
         dest.writeString(this.uidSeller);
         dest.writeString(this.uidAnnonce);
+        dest.writeString(this.titreAnnonce);
         dest.writeString(this.lastMessage);
         dest.writeValue(this.creationTimestamp);
         dest.writeValue(this.updateTimestamp);
@@ -147,6 +174,7 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
         this.uidBuyer = in.readString();
         this.uidSeller = in.readString();
         this.uidAnnonce = in.readString();
+        this.titreAnnonce = in.readString();
         this.lastMessage = in.readString();
         this.creationTimestamp = (Long) in.readValue(Long.class.getClassLoader());
         this.updateTimestamp = (Long) in.readValue(Long.class.getClassLoader());

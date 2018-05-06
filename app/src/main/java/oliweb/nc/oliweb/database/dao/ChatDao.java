@@ -43,4 +43,8 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
     @Transaction
     @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND uidAnnonce = :uidAnnonce LIMIT 1")
     public abstract Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM chat WHERE statusRemote IN (:status)")
+    public abstract Maybe<List<ChatEntity>> getAllChatByStatus(List<String> status);
 }

@@ -155,4 +155,18 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
             return new MessageEntity[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "MessageEntity{" +
+                "idMessage=" + idMessage +
+                ", uidMessage='" + uidMessage + '\'' +
+                ", message='" + message + '\'' +
+                ", read='" + read + '\'' +
+                ", uidAuthor='" + uidAuthor + '\'' +
+                ", timestamp=" + timestamp +
+                ", idChat=" + idChat +
+                ", statusRemote=" + statusRemote +
+                '}';
+    }
 }

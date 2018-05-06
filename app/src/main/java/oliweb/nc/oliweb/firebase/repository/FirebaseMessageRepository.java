@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb.firebase.repository;
 
-import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -29,7 +29,7 @@ public class FirebaseMessageRepository {
     private FirebaseMessageRepository() {
     }
 
-    public static FirebaseMessageRepository getInstance(Context context) {
+    public static FirebaseMessageRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseMessageRepository();
         }
@@ -66,17 +66,18 @@ public class FirebaseMessageRepository {
                 }));
     }
 
-    public Single<AtomicBoolean> saveMessage(String uidChat, MessageFirebase messageFirebase) {
+    public Single<MessageFirebase> saveMessage(@NonNull String uidChat, MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessage uidChat : " + uidChat + " messageFirebase : " + messageFirebase);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {
-                            messageFirebase.setTimestamp(timestamp);
                             DatabaseReference newMessageRef = MSG_REF.child(uidChat).push();
+                            messageFirebase.setTimestamp(timestamp);
+                            messageFirebase.setUidMessage(newMessageRef.getKey());
                             newMessageRef.setValue(messageFirebase)
-                                    .addOnSuccessListener(aVoid -> emitter.onSuccess(new AtomicBoolean(true)))
+                                    .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
                                     .addOnFailureListener(emitter::onError);
                         })
                         .subscribe()

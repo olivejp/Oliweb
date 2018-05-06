@@ -2,10 +2,7 @@ package oliweb.nc.oliweb.ui.fragment;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -19,12 +16,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ServerValue;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,12 +24,8 @@ import butterknife.OnClick;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.MessageFirebaseAdapter;
-import oliweb.nc.oliweb.utility.Constants;
-
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
+import oliweb.nc.oliweb.ui.adapter.MessageAdapter;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -46,17 +34,13 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 public class ListMessageFragment extends Fragment {
     private static final String TAG = ListMessageFragment.class.getName();
 
-    private DatabaseReference messageRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
-    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF);
     private String uidUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private AppCompatActivity appCompatActivity;
-    private MessageFirebaseAdapter adapter;
+    private MessageAdapter adapter;
     private MyChatsActivityViewModel viewModel;
-    private Vibrator vibrator;
     private boolean initializeAdapterLater = false;
 
-    private String uidChat;
     private AnnonceEntity annonce;
 
     @BindView(R.id.recycler_list_message)
@@ -75,22 +59,6 @@ public class ListMessageFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        if (adapter != null) {
-            adapter.startListening();
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (adapter != null) {
-            adapter.stopListening();
-        }
-    }
-
-    @Override
     public void onDestroyView() {
         recyclerView.setAdapter(null);
         super.onDestroyView();
@@ -100,7 +68,6 @@ public class ListMessageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-        vibrator = (Vibrator) appCompatActivity.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -110,40 +77,30 @@ public class ListMessageFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
-        linearLayout.setStackFromEnd(true);
-        recyclerView.setLayoutManager(linearLayout);
-
-        // TODO finir la méthode
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
-                viewModel.findOrCreateChat(FirebaseAuth.getInstance().getCurrentUser().getUid(), annonce)
-                        .observe(appCompatActivity, chatEntity -> {
-                            if (chatEntity == null) {
-
-                            } else {
-
-                            }
-                        });
+                viewModel.findChatByUidUserAndUidAnnonce(uidUser, annonce)
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .doOnSuccess(chatEntity -> initializeAdapter(chatEntity.getIdChat()))
+                        .doOnComplete(() -> initializeAdapterLater = true);
                 break;
             case PAR_CHAT:
-                uidChat = viewModel.getSelectedUidChat();
-                Query query = messageRef.child(uidChat).orderByChild("timestamp");
-                attachFirebaseRefToAdapter(query);
+                initializeAdapter(viewModel.getSearchedIdChat());
                 break;
         }
 
         return view;
     }
 
-    private void attachFirebaseRefToAdapter(Query query) {
-        FirebaseRecyclerOptions<MessageFirebase> options = new FirebaseRecyclerOptions.Builder<MessageFirebase>()
-                .setQuery(query, MessageFirebase.class)
-                .build();
-        adapter = new MessageFirebaseAdapter(options);
+    private void initializeAdapter(Long idChat) {
+        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
+        linearLayout.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayout);
+        adapter = new MessageAdapter();
         recyclerView.setAdapter(adapter);
-        adapter.startListening();
+        viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> adapter.setMessageEntities(listMessages));
+        initializeAdapterLater = false;
     }
 
     @OnClick(R.id.button_send_message)
@@ -155,65 +112,34 @@ public class ListMessageFragment extends Fragment {
 
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_CHAT:
-                sendMessage(uidChat, messageToSend);
+                viewModel.saveMessage(messageToSend)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .doOnSuccess(atomicBoolean -> Log.d(TAG, "Message correctement sauvegardé"))
+                        .subscribe();
                 break;
             case PAR_ANNONCE:
-                if (adapter == null && annonce.getUidUser().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                if (adapter == null && annonce.getUidUser().equals(uidUser)) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
-                    viewModel.findOrCreateChat(uidUser, annonce).observe(appCompatActivity, chatEntity -> {
-                        // sendMessage(chatEntity, messageToSend);
-                        if (initializeAdapterLater) {
-                            Query query = messageRef.child(chatEntity.getUidChat()).orderByChild("timestamp");
-                            attachFirebaseRefToAdapter(query);
-                        }
-                    });
+                    viewModel.findOrCreateNewChat(uidUser, annonce)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(chatEntity ->
+                                    viewModel.saveMessage(messageToSend)
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                            .doOnSuccess(atomicBoolean -> {
+                                                Log.d(TAG, "Message correctement sauvegardé");
+                                                if (initializeAdapterLater) {
+                                                    initializeAdapter(chatEntity.getIdChat());
+                                                }
+                                            })
+                                            .subscribe()
+                            )
+                            .subscribe();
                 }
                 break;
         }
-    }
-
-    /**
-     * Envoie un nouveau message sur Firebase Database
-     *
-     * @param uidChat       identifiant du chat sur lequel on veut poster le message.
-     * @param messageToSend le message à envoyer
-     */
-    private void sendMessage(String uidChat, String messageToSend) {
-        viewModel.sendMessage(messageToSend)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe();
-
-
-        DatabaseReference newMessageRef = messageRef.child(uidChat).push();
-
-        // Génération du message à envoyer
-        MessageFirebase messageFirebase = new MessageFirebase();
-        messageFirebase.setMessage(messageToSend);
-        messageFirebase.setUidAuthor(uidUser);
-
-        // On désactive le bouton envoyer
-        imageSend.setEnabled(false);
-
-        newMessageRef.setValue(messageFirebase)
-                .addOnSuccessListener(aVoid -> {
-                    // Mise à jour du timestamp
-                    newMessageRef.child("timestamp").setValue(ServerValue.TIMESTAMP);
-
-                    viewModel.updateChat(uidChat, messageFirebase);
-
-                    Log.d(TAG, "Un message a été envoyé");
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator.vibrate(VibrationEffect.createOneShot(500, 50));
-                    } else {
-                        vibrator.vibrate(500);
-                    }
-                    textToSend.setText("");
-                    imageSend.setEnabled(true);
-                })
-                .addOnFailureListener(e -> {
-                    Log.d(TAG, "Un message n'a pas réussi à être envoyé." + e.getLocalizedMessage());
-                    imageSend.setEnabled(true);
-                });
     }
 }

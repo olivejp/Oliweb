@@ -71,7 +71,7 @@ public class ListChatFragment extends Fragment {
         popup.show();
     };
 
-    private View.OnClickListener onClickListener = v -> callListMessage((String) v.getTag());
+    private View.OnClickListener onClickListener = v -> callListMessage((Long) v.getTag());
 
     @Override
     public void onDestroyView() {
@@ -144,8 +144,8 @@ public class ListChatFragment extends Fragment {
                 .subscribe();
     }
 
-    private void callListMessage(String uidChat) {
-        viewModel.rechercheMessageByUidChat(uidChat);
+    private void callListMessage(Long idChat) {
+        viewModel.rechercheMessageByUidChat(idChat);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {

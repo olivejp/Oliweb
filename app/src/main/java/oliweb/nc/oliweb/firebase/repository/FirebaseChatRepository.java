@@ -44,7 +44,7 @@ public class FirebaseChatRepository {
     public static FirebaseChatRepository getInstance(Context context) {
         if (instance == null) {
             instance = new FirebaseChatRepository();
-            instance.fbMessageRepository = FirebaseMessageRepository.getInstance(context);
+            instance.fbMessageRepository = FirebaseMessageRepository.getInstance();
             instance.chatRepository = ChatRepository.getInstance(context);
             instance.messageRepository = MessageRepository.getInstance(context);
         }
@@ -195,6 +195,37 @@ public class FirebaseChatRepository {
                                 chatFirebase.setMembers(hash);
                                 chatFirebase.setUidBuyer(uidUserBuyer);
                                 chatFirebase.setUidSeller(annonce.getUidUser());
+                                chatFirebase.setCreationTimestamp(timestamp);
+                                chatFirebase.setUpdateTimestamp(timestamp);
+                                ref.setValue(chatFirebase)
+                                        .addOnSuccessListener(aVoid -> emitter.onSuccess(chatFirebase))
+                                        .addOnFailureListener(emitter::onError);
+                            } catch (Exception e) {
+                                emitter.onError(e);
+                            }
+                        })
+                        .subscribe()
+        );
+    }
+
+    public Single<ChatFirebase> createChat(ChatEntity chatEntity) {
+        Log.d(TAG, "Starting createChat chatEntity : " + chatEntity);
+        return Single.create(emitter ->
+                FirebaseUtility.getServerTimestamp()
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(timestamp -> {
+                            try {
+                                DatabaseReference ref = chatRef.push();
+                                HashMap<String, Boolean> hash = new HashMap<>();
+                                hash.put(chatEntity.getUidBuyer(), true);
+                                hash.put(chatEntity.getUidSeller(), true);
+
+                                ChatFirebase chatFirebase = new ChatFirebase();
+                                chatFirebase.setUid(ref.getKey());
+                                chatFirebase.setUidAnnonce(chatEntity.getUidAnnonce());
+                                chatFirebase.setMembers(hash);
+                                chatFirebase.setUidBuyer(chatEntity.getUidBuyer());
+                                chatFirebase.setUidSeller(chatEntity.getUidSeller());
                                 chatFirebase.setCreationTimestamp(timestamp);
                                 chatFirebase.setUpdateTimestamp(timestamp);
                                 ref.setValue(chatFirebase)

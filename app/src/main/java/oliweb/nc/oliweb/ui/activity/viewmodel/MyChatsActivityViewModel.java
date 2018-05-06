@@ -10,10 +10,12 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -24,6 +26,7 @@ import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.service.sync.SyncService;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 
@@ -40,7 +43,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     private boolean twoPane;
-    private String selectedUidChat;
+    private Long selectedIdChat;
     private String selectedUidUtilisateur;
     private AnnonceEntity selectedAnnonce;
     private TypeRechercheChat typeRechercheChat;
@@ -81,8 +84,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.twoPane = twoPane;
     }
 
-    public String getSelectedUidChat() {
-        return selectedUidChat;
+    public Long getSearchedIdChat() {
+        return selectedIdChat;
     }
 
     public AnnonceEntity getSelectedAnnonce() {
@@ -102,9 +105,9 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedUidUtilisateur = uidUtilisateur;
     }
 
-    public void rechercheMessageByUidChat(String uidChat) {
+    public void rechercheMessageByUidChat(Long idChat) {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
-        selectedUidChat = uidChat;
+        selectedIdChat = idChat;
     }
 
     public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {
@@ -126,32 +129,45 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         chatEntity.setUidBuyer(uidBuyer);
         chatEntity.setUidAnnonce(annonce.getUid());
         chatEntity.setUidSeller(annonce.getUidUser());
+        chatEntity.setTitreAnnonce(annonce.getTitre());
         return chatEntity;
     }
 
-    // Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
-    public LiveData<ChatEntity> findOrCreateChat(String uidUser, AnnonceEntity annonce) {
-        if (liveChat == null) {
-            liveChat = new MutableLiveData<>();
-        }
-        chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(chatEntity -> {
-                    currentChat = chatEntity;
-                    liveChat.postValue(currentChat);
-                })
-                .doOnComplete(() ->
-                        chatRepository.saveWithSingle(createChatEntity(uidUser, annonce))
-                                .doOnSuccess(chatSaved -> {
-                                    currentChat = chatSaved;
-                                    liveChat.postValue(currentChat);
-                                })
-                                .subscribe()
-                )
-                .subscribe();
+    public Maybe<ChatEntity> findChatByUidUserAndUidAnnonce(String uidUser, AnnonceEntity annonce) {
+        Log.d(TAG, "Starting findChatByUidUserAndUidAnnonce uidUser : " + uidUser + " annonce : " + annonce);
+        return chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid());
+    }
 
-        return liveChat;
+    // Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
+    public Single<ChatEntity> findOrCreateNewChat(String uidUser, AnnonceEntity annonce) {
+        Log.d(TAG, "Starting findOrCreateNewChat uidUser : " + uidUser + " annonce : " + annonce);
+        return Single.create(emitter ->
+                chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .doOnSuccess(chatFound -> {
+                            Log.d(TAG, "findOrCreateNewChat.doOnSuccess chatFound :" + chatFound);
+                            currentChat = chatFound;
+                            emitter.onSuccess(currentChat);
+                        })
+                        .doOnComplete(() -> {
+                                    Log.d(TAG, "findOrCreateNewChat.doOnComplete");
+                                    chatRepository.saveWithSingle(createChatEntity(uidUser, annonce))
+                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                            .doOnSuccess(chatCreated -> {
+                                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.saveWithSingle.doOnSuccess chatCreated : " + chatCreated);
+                                                currentChat = chatCreated;
+                                                emitter.onSuccess(currentChat);
+                                            })
+                                            .subscribe();
+                                }
+                        )
+                        .subscribe()
+        );
+    }
+
+    public LiveData<List<MessageEntity>> findAllMessageByIdChat(Long idChat) {
+        return messageRepository.findAllByIdChat(idChat);
     }
 
     /**
@@ -160,12 +176,25 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      * @param message
      * @return
      */
-    public Single<MessageEntity> sendMessage(String message) {
+    public Single<AtomicBoolean> saveMessage(String message) {
+        Log.d(TAG, "saveMessage message : " + message);
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setMessage(message);
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
         messageEntity.setIdChat(currentChat.getId());
         messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
-        return messageRepository.saveWithSingle(messageEntity);
+
+        return Single.create(emitter ->
+                messageRepository.saveWithSingle(messageEntity)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(entity -> {
+                            if (NetworkReceiver.checkConnection(getApplication())) {
+                                SyncService.launchSynchroForMessage(getApplication());
+                            }
+                            emitter.onSuccess(new AtomicBoolean(true));
+                        })
+                        .subscribe()
+        );
     }
 }

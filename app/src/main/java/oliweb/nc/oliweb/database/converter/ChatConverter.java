@@ -21,6 +21,7 @@ public class ChatConverter {
         chatEntity.setUidBuyer(chatFirebase.getUidBuyer());
         chatEntity.setLastMessage(chatFirebase.getLastMessage());
         chatEntity.setUidAnnonce(chatFirebase.getUidAnnonce());
+        chatEntity.setTitreAnnonce(chatFirebase.getTitreAnnonce());
         chatEntity.setStatusRemote(StatusRemote.SEND);
         return chatEntity;
     }

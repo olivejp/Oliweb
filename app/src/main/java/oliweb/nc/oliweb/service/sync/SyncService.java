@@ -22,6 +22,7 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
     public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
     public static final String ARG_ACTION_SYNC_ANNONCE = "ARG_ACTION_SYNC_ANNONCE";
+    public static final String ARG_ACTION_SYNC_MESSAGE = "ARG_ACTION_SYNC_MESSAGE";
 
     public SyncService() {
         super("SyncService");
@@ -46,6 +47,17 @@ public class SyncService extends IntentService {
     public static void launchSynchroForUser(@NonNull Context context) {
         Intent syncService = new Intent(context, SyncService.class);
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_USER);
+        context.startService(syncService);
+    }
+
+    /**
+     * Launch the sync service for all the message
+     *
+     * @param context
+     */
+    public static void launchSynchroForMessage(@NonNull Context context) {
+        Intent syncService = new Intent(context, SyncService.class);
+        syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_MESSAGE);
         context.startService(syncService);
     }
 
@@ -122,6 +134,10 @@ public class SyncService extends IntentService {
                         case ARG_ACTION_SYNC_ANNONCE:
                             Log.d(TAG, "Lancement du batch pour envoyer les informations des annonces sur Firebase");
                             CoreSync.getInstance(this).synchronizeAnnonce();
+                            break;
+                        case ARG_ACTION_SYNC_MESSAGE:
+                            Log.d(TAG, "Lancement du batch pour envoyer les informations des messages sur Firebase");
+                            CoreSync.getInstance(this).synchronizeMessage();
                             break;
                         default:
                             break;

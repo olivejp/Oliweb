@@ -29,4 +29,13 @@ public class MessageConverter {
         }
         return listResult;
     }
+
+    public static MessageFirebase convertEntityToDto(MessageEntity messageEntity) {
+        MessageFirebase messageFirebase = new MessageFirebase();
+        messageFirebase.setMessage(messageEntity.getMessage());
+        messageFirebase.setUidAuthor(messageEntity.getUidAuthor());
+        messageFirebase.setRead(false);
+        return messageFirebase;
+    }
+
 }

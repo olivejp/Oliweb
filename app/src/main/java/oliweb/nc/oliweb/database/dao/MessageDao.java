@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.database.dao;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
@@ -39,7 +40,16 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     @Query("SELECT COUNT(*) FROM message WHERE uidMessage = :uidMessage")
     public abstract Single<Integer> countById(String uidMessage);
 
+    @Transaction
+    @Query("SELECT * FROM message WHERE idChat = :idChat AND statusRemote IN (:status)")
+    public abstract Maybe<List<MessageEntity>> getAllMessageByStatusByIdChat(Long idChat, List<String> status);
 
+    @Transaction
+    @Query("SELECT * FROM message WHERE statusRemote IN (:status)")
+    public abstract Maybe<List<MessageEntity>> getAllMessageByStatus(List<String> status);
 
+    @Transaction
+    @Query("SELECT * FROM message WHERE idChat = :idChat")
+    public abstract LiveData<List<MessageEntity>> findAllByIdChat(Long idChat);
 
 }

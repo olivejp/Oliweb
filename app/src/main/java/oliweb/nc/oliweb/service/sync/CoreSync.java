@@ -9,15 +9,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
+import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.ChatRepository;
+import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -37,10 +45,14 @@ public class CoreSync {
     private PhotoRepository photoRepository;
     private AnnonceRepository annonceRepository;
     private AnnonceFullRepository annonceFullRepository;
-    private FirebasePhotoStorage photoStorage;
+    private FirebasePhotoStorage firebasePhotoStorage;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseMessageRepository firebaseMessageRepository;
+    private FirebaseChatRepository firebaseChatRepository;
     private FirebaseUserRepository firebaseUserRepository;
     private UtilisateurRepository utilisateurRepository;
+    private MessageRepository messageRepository;
+    private ChatRepository chatRepository;
 
 
     private ContentResolver contentResolver;
@@ -53,11 +65,15 @@ public class CoreSync {
             instance = new CoreSync();
             instance.photoRepository = PhotoRepository.getInstance(context);
             instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-            instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.utilisateurRepository = UtilisateurRepository.getInstance(context);
-            instance.photoStorage = FirebasePhotoStorage.getInstance(context);
+            instance.messageRepository = MessageRepository.getInstance(context);
+            instance.chatRepository = ChatRepository.getInstance(context);
+            instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
+            instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
+            instance.firebaseMessageRepository = FirebaseMessageRepository.getInstance();
+            instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
+            instance.firebaseChatRepository = FirebaseChatRepository.getInstance(context);
             instance.contentResolver = context.getContentResolver();
         }
         return instance;
@@ -81,12 +97,18 @@ public class CoreSync {
         startSendingPhotos();
     }
 
+    public void synchronizeMessage() {
+        startSendingChats();
+    }
+
     /**
      * Liste toutes les annonces et photos à envoyer
      */
     private void syncToSend() {
         startSendingAnnonces();
         startSendingUser();
+        startSendingChats();
+        startSendingMessages();
     }
 
     /**
@@ -135,6 +157,76 @@ public class CoreSync {
                                 })
                                 .subscribe()
                 )
+                .subscribe();
+    }
+
+    private void startSendingChats() {
+        Log.d(TAG, "Starting startSendingChats");
+        chatRepository.getAllChatByStatus(Utility.allStatusToSend())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnNext(this::sendNewChat)
+                .doOnComplete(this::startSendingMessages)
+                .subscribe();
+    }
+
+    private void startSendingMessages() {
+        Log.d(TAG, "Starting startSendingMessages");
+        messageRepository.getAllMessageByStatus(Utility.allStatusToSend())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnNext(messageEntity ->
+                        chatRepository.findById(messageEntity.getIdChat())
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .doOnSuccess(chatEntity -> {
+                                            Log.d(TAG, "findById chatEntity : " + chatEntity);
+                                            sendMessage(chatEntity.getUidChat(), messageEntity);
+                                        }
+                                )
+                                .subscribe()
+                )
+                .subscribe();
+    }
+
+    private void sendNewChat(ChatEntity chatEntity) {
+        Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
+        firebaseChatRepository.createChat(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatFirebase -> {
+                    markChatHasBeenSend(chatEntity);
+                    sendGetAllNewMessages(chatEntity.getIdChat(), chatFirebase);
+                })
+                .subscribe();
+    }
+
+    private void markChatHasBeenSend(ChatEntity chatEntity) {
+        chatEntity.setStatusRemote(StatusRemote.SEND);
+        chatRepository.saveWithSingle(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+    private void markMessageHasBeenSend(MessageEntity messageEntity) {
+        messageEntity.setStatusRemote(StatusRemote.SEND);
+        messageRepository.saveWithSingle(messageEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+    private void sendGetAllNewMessages(Long idChat, ChatFirebase chatFirebase) {
+        Log.d(TAG, "sendGetAllNewMessages idChat : " + idChat + " chatFirebase : " + chatFirebase);
+        messageRepository.getAllMessageByStatusByIdChat(idChat, Utility.allStatusToSend())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnNext(messageEntity -> sendMessage(chatFirebase.getUid(), messageEntity))
+                .subscribe();
+    }
+
+    private void sendMessage(String uidChat, MessageEntity messageEntity) {
+        Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
+        firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(messageEntity))
+                .doOnSuccess(messageFirebase -> {
+                    messageEntity.setStatusRemote(StatusRemote.SEND);
+                    markMessageHasBeenSend(messageEntity);
+                })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
@@ -192,7 +284,7 @@ public class CoreSync {
      */
     private void sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "Sending " + photoEntity.getUriLocal() + " to Firebase storage");
-        this.photoStorage.savePhotoToRemote(photoEntity)
+        this.firebasePhotoStorage.savePhotoToRemote(photoEntity)
                 .doOnError(exception -> {
                     Log.e(TAG, exception.getLocalizedMessage(), exception);
                     photoEntity.setStatut(StatusRemote.FAILED_TO_SEND);
@@ -259,7 +351,7 @@ public class CoreSync {
 
     // 1 - Suppression des photos du firebase Storage
     private void deletePhotoFromRemoteStorage(PhotoEntity photo, AnnonceEntity annonceEntity) {
-        photoStorage.delete(photo)
+        firebasePhotoStorage.delete(photo)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
@@ -324,7 +416,7 @@ public class CoreSync {
     // TODO finir cette méthode
     // 1 - Supprimer de Firebase storage
     private void deleteFromStorage(PhotoEntity photoEntity) {
-        photoStorage.delete(photoEntity)
+        firebasePhotoStorage.delete(photoEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(list -> {
                     // 2 - Supprimer de Firebase database (mise à jour de l'annonce)

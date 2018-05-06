@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,7 +20,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.Date;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -73,7 +71,6 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
                 AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
                 if (annonceDto != null) {
                     holder.titreAnnonce.setText(annonceDto.getTitre());
-                    holder.prixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonceDto.getPrix()) + " XPF"));
                 }
             }
 
@@ -87,7 +84,7 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
     }
 
     @Override
-    public ChatFirebaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ChatFirebaseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View rootView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.adapter_chat_element, parent, false);
         return new ChatFirebaseViewHolder(rootView);
@@ -136,9 +133,6 @@ public class ChatFirebaseAdapter extends FirebaseRecyclerAdapter<ChatFirebase, C
 
         @BindView(R.id.chat_last_message_timestamp)
         TextView lastMessageTimestamp;
-
-        @BindView(R.id.chat_prix_annonce)
-        TextView prixAnnonce;
 
         @BindView(R.id.chat_titre_annonce)
         TextView titreAnnonce;

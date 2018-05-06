@@ -7,6 +7,8 @@ import android.util.Log;
 import java.util.List;
 
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.ChatDao;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 
@@ -45,5 +47,21 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
         Log.d(TAG, "Starting findByUidUserAndUidAnnonce uidUser : " + uidUser + " uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
+    }
+
+    public Observable<ChatEntity> getAllChatByStatus(List<String> status) {
+        Log.d(TAG, "Starting getAllChatByStatus " + status);
+        return Observable.create(emitter ->
+                this.chatDao.getAllChatByStatus(status)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(chatEntities -> {
+                            for (ChatEntity chat : chatEntities) {
+                                emitter.onNext(chat);
+                            }
+                            emitter.onComplete();
+                        })
+                        .subscribe()
+        );
     }
 }
