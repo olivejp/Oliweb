@@ -35,6 +35,7 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
         return idUser;
     }
 
+    @Exclude
     @NonNull
     public Long getIdUser() {
         return idUser;

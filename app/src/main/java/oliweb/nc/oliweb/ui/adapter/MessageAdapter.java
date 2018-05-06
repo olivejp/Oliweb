@@ -27,7 +27,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
-import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
@@ -125,10 +125,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ref.child(model.getUidAuthor()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
+                UtilisateurEntity utilisateurFirebase = dataSnapshot.getValue(UtilisateurEntity.class);
                 if (utilisateurFirebase != null) {
                     GlideApp.with(holder.imageAuthor)
-                            .load(utilisateurFirebase.getPhotoPath())
+                            .load(utilisateurFirebase.getPhotoUrl())
                             .apply(RequestOptions.circleCropTransform())
                             .placeholder(R.drawable.ic_person_grey_900_48dp)
                             .error(R.drawable.ic_error_grey_900_48dp)

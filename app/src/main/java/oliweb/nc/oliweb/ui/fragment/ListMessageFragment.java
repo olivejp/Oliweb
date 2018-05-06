@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -77,13 +78,21 @@ public class ListMessageFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
+        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
+        linearLayout.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayout);
+        adapter = new MessageAdapter();
+        recyclerView.setAdapter(adapter);
+
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
                 annonce = viewModel.getSelectedAnnonce();
                 viewModel.findChatByUidUserAndUidAnnonce(uidUser, annonce)
+                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(chatEntity -> initializeAdapter(chatEntity.getIdChat()))
-                        .doOnComplete(() -> initializeAdapterLater = true);
+                        .doOnComplete(() -> initializeAdapterLater = true)
+                        .subscribe();
                 break;
             case PAR_CHAT:
                 initializeAdapter(viewModel.getSearchedIdChat());
@@ -94,11 +103,6 @@ public class ListMessageFragment extends Fragment {
     }
 
     private void initializeAdapter(Long idChat) {
-        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
-        linearLayout.setStackFromEnd(true);
-        recyclerView.setLayoutManager(linearLayout);
-        adapter = new MessageAdapter();
-        recyclerView.setAdapter(adapter);
         viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> adapter.setMessageEntities(listMessages));
         initializeAdapterLater = false;
     }
@@ -106,6 +110,7 @@ public class ListMessageFragment extends Fragment {
     @OnClick(R.id.button_send_message)
     public void clickOnSendButton(View v) {
         final String messageToSend = textToSend.getText().toString();
+        textToSend.setText("");
         if (messageToSend.isEmpty()) {
             return;
         }
@@ -123,11 +128,10 @@ public class ListMessageFragment extends Fragment {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
                     viewModel.findOrCreateNewChat(uidUser, annonce)
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .subscribeOn(Schedulers.io())
                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .doOnSuccess(chatEntity ->
                                     viewModel.saveMessage(messageToSend)
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                             .doOnSuccess(atomicBoolean -> {
                                                 Log.d(TAG, "Message correctement sauvegardé");

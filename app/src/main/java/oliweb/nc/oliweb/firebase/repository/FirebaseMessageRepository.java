@@ -79,6 +79,7 @@ public class FirebaseMessageRepository {
                             newMessageRef.setValue(messageFirebase)
                                     .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
                                     .addOnFailureListener(emitter::onError);
+
                         })
                         .subscribe()
         );

@@ -173,16 +173,18 @@ public class CoreSync {
         Log.d(TAG, "Starting startSendingMessages");
         messageRepository.getAllMessageByStatus(Utility.allStatusToSend())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(messageEntity ->
-                        chatRepository.findById(messageEntity.getIdChat())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .doOnSuccess(chatEntity -> {
-                                            Log.d(TAG, "findById chatEntity : " + chatEntity);
-                                            sendMessage(chatEntity.getUidChat(), messageEntity);
-                                        }
-                                )
-                                .subscribe()
-                )
+                .doOnNext(messageEntity -> {
+                    Log.d(TAG, "Found a message to send messageEntity : " + messageEntity);
+                    chatRepository.findById(messageEntity.getIdChat())
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(chatEntity -> {
+                                if (chatEntity.getUidChat() != null) {
+                                    Log.d(TAG, "findById chatEntity : " + chatEntity);
+                                    sendMessage(chatEntity.getUidChat(), messageEntity);
+                                }
+                            })
+                            .subscribe();
+                })
                 .subscribe();
     }
 
@@ -191,20 +193,22 @@ public class CoreSync {
         firebaseChatRepository.createChat(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatFirebase -> {
-                    markChatHasBeenSend(chatEntity);
+                    markChatHasBeenSend(chatFirebase.getUid(), chatEntity);
                     sendGetAllNewMessages(chatEntity.getIdChat(), chatFirebase);
                 })
                 .subscribe();
     }
 
-    private void markChatHasBeenSend(ChatEntity chatEntity) {
+    private void markChatHasBeenSend(String uidChat, ChatEntity chatEntity) {
         chatEntity.setStatusRemote(StatusRemote.SEND);
+        chatEntity.setUidChat(uidChat);
         chatRepository.saveWithSingle(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
-    private void markMessageHasBeenSend(MessageEntity messageEntity) {
+    private void markMessageHasBeenSend(String uidMessage, MessageEntity messageEntity) {
+        messageEntity.setUidMessage(uidMessage);
         messageEntity.setStatusRemote(StatusRemote.SEND);
         messageRepository.saveWithSingle(messageEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
@@ -222,10 +226,7 @@ public class CoreSync {
     private void sendMessage(String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
         firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(messageEntity))
-                .doOnSuccess(messageFirebase -> {
-                    messageEntity.setStatusRemote(StatusRemote.SEND);
-                    markMessageHasBeenSend(messageEntity);
-                })
+                .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase.getUidMessage(), messageEntity))
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }

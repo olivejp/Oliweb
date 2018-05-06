@@ -34,7 +34,7 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
@@ -88,7 +88,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
-    private UtilisateurFirebase seller;
+    private UtilisateurEntity seller;
     private FirebaseAuth auth;
 
     public AnnonceDetailActivity() {
@@ -132,8 +132,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             // Récupération du vendeur
             viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
                 if (dataSnapshot != null) {
-                    seller = dataSnapshot.getValue(UtilisateurFirebase.class);
-                    if (seller != null && seller.getPhotoPath() != null) {
+                    seller = dataSnapshot.getValue(UtilisateurEntity.class);
+                    if (seller != null && seller.getPhotoUrl() != null) {
                         imageProfilSeller.setOnClickListener(v -> {
                             ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUidUser(), false);
                             getSupportFragmentManager()
@@ -143,7 +143,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                                     .commit();
                         });
                         GlideApp.with(imageProfilSeller)
-                                .load(seller.getPhotoPath())
+                                .load(seller.getPhotoUrl())
                                 .circleCrop()
                                 .placeholder(R.drawable.ic_person_white_48dp)
                                 .error(R.drawable.ic_person_white_48dp)
