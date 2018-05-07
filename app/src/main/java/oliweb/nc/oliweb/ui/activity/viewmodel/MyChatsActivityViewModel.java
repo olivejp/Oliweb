@@ -3,7 +3,6 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -22,11 +21,10 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.utility.Utility;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
 
@@ -49,27 +47,23 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
-    private FirebaseChatRepository firebaseChatRepository;
     private MessageRepository messageRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private MutableLiveData<ChatEntity> liveChat;
     private ChatEntity currentChat;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         this.chatRepository = ChatRepository.getInstance(application);
-        this.firebaseChatRepository = FirebaseChatRepository.getInstance(application);
         this.messageRepository = MessageRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
     }
 
-    public LiveData<List<ChatEntity>> getFirebaseChatsByUidUser() {
-        firebaseChatRepository.sync(selectedUidUtilisateur);
-        return chatRepository.findByUidUser(selectedUidUtilisateur);
+    public LiveData<List<ChatEntity>> getChatsByUidUser() {
+        return chatRepository.findByUidUserAndStatusNotIn(selectedUidUtilisateur, Utility.allStatusToAvoid());
     }
 
-    public LiveData<List<ChatEntity>> getFirebaseChatsByUidAnnonce() {
-        return chatRepository.findByUidAnnonce(selectedAnnonce.getUid());
+    public LiveData<List<ChatEntity>> getChatsByUidAnnonce() {
+        return chatRepository.findByUidAnnonceAndStatusNotIn(selectedAnnonce.getUid(), Utility.allStatusToAvoid());
     }
 
     public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
@@ -115,14 +109,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedAnnonce = annonceEntity;
     }
 
-    public void updateChat(String uidChat, MessageFirebase messageFirebase) {
-        firebaseChatRepository.updateChat(uidChat, messageFirebase)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(atomicBoolean -> Log.d(TAG, "updateChat successful"))
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
-    }
-
     private ChatEntity createChatEntity(String uidBuyer, AnnonceEntity annonce) {
         ChatEntity chatEntity = new ChatEntity();
         chatEntity.setStatusRemote(StatusRemote.TO_SEND);
@@ -148,6 +134,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                         .doOnSuccess(chatFound -> {
                             Log.d(TAG, "findOrCreateNewChat.doOnSuccess chatFound :" + chatFound);
                             currentChat = chatFound;
+                            selectedIdChat = chatFound.getIdChat();
                             emitter.onSuccess(currentChat);
                         })
                         .doOnComplete(() -> {
@@ -157,6 +144,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                                             .doOnSuccess(chatCreated -> {
                                                 Log.d(TAG, "findOrCreateNewChat.doOnComplete.saveWithSingle.doOnSuccess chatCreated : " + chatCreated);
                                                 currentChat = chatCreated;
+                                                selectedIdChat = chatCreated.getIdChat();
                                                 emitter.onSuccess(currentChat);
                                             })
                                             .subscribe();
@@ -181,7 +169,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setMessage(message);
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
-        messageEntity.setIdChat(currentChat.getId());
+        messageEntity.setIdChat(selectedIdChat);
         messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
 
         return Single.create(emitter ->

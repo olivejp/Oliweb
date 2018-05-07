@@ -159,7 +159,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public Maybe<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
-        Log.d(TAG, "Starting findByUidAnnonce uidAnnonce : " + uidAnnonce);
+        Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
         return Maybe.create(e ->
                 ANNONCE_REF.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {

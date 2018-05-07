@@ -204,6 +204,7 @@ public class CoreSync {
         chatEntity.setStatusRemote(StatusRemote.SEND);
         chatEntity.setUidChat(chatFirebase.getUid());
         chatEntity.setCreationTimestamp(chatFirebase.getCreationTimestamp());
+        chatEntity.setUpdateTimestamp(chatFirebase.getCreationTimestamp());
         chatRepository.saveWithSingle(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();

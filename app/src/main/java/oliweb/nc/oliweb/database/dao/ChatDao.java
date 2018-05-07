@@ -33,12 +33,12 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
     public abstract Single<Integer> count();
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce")
-    public abstract LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce);
+    @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce AND statusRemote NOT IN (:status)")
+    public abstract LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce, List<String> status);
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser")
-    public abstract LiveData<List<ChatEntity>> findByUidUser(String uidUser);
+    @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser AND statusRemote NOT IN (:status)")
+    public abstract LiveData<List<ChatEntity>> findByUidUser(String uidUser, List<String> status);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND uidAnnonce = :uidAnnonce LIMIT 1")
@@ -49,6 +49,6 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
     public abstract Maybe<List<ChatEntity>> getAllChatByStatus(List<String> status);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM chat WHERE uidBuyer = :uidUser OR uidSeller = :uidUser")
-    public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser);
+    @Query("SELECT COUNT(*) FROM chat WHERE (uidBuyer = :uidUser OR uidSeller = :uidUser) AND statusRemote NOT IN (:status)")
+    public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser, List<String> status);
 }

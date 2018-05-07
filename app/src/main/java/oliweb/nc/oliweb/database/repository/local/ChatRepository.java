@@ -34,14 +34,14 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return instance;
     }
 
-    public LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce) {
-        Log.d(TAG, "Starting findByUidAnnonce uidAnnonce : " + uidAnnonce);
-        return this.chatDao.findByUidAnnonce(uidAnnonce);
+    public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotIn(String uidAnnonce, List<String> status) {
+        Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
+        return this.chatDao.findByUidAnnonce(uidAnnonce, status);
     }
 
-    public LiveData<List<ChatEntity>> findByUidUser(String uidSeller) {
-        Log.d(TAG, "Starting findByUidUser uidSeller : " + uidSeller);
-        return this.chatDao.findByUidUser(uidSeller);
+    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidSeller, List<String> status) {
+        Log.d(TAG, "Starting findByUidUserAndStatusNotIn uidSeller : " + uidSeller);
+        return this.chatDao.findByUidUser(uidSeller, status);
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
@@ -65,8 +65,8 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         );
     }
 
-    public LiveData<Integer> countAllChatsByUser(String uidUser) {
-        Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser);
-        return this.chatDao.countAllFavoritesByUser(uidUser);
+    public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
+        Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser + " status : " + status);
+        return this.chatDao.countAllFavoritesByUser(uidUser, status);
     }
 }

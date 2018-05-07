@@ -26,7 +26,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
@@ -102,8 +102,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     ChatEntity newChat = newListChats.get(newItemPosition);
                     ChatEntity oldChat = listChats.get(oldItemPosition);
                     return newChat.getUidChat().equals(oldChat.getUidChat())
-                            && newChat.getLastMessage().equals(oldChat.getLastMessage())
-                            && newChat.getUpdateTimestamp().equals(oldChat.getUpdateTimestamp());
+                            && ((newChat.getLastMessage() != null && oldChat.getLastMessage() != null && (newChat.getLastMessage().equals(oldChat.getLastMessage()))))
+                            && ((newChat.getUpdateTimestamp() != null && oldChat.getUpdateTimestamp() != null) && (newChat.getUpdateTimestamp().equals(oldChat.getUpdateTimestamp())));
                 }
             });
             this.listChats = newListChats;
@@ -128,11 +128,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ref.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
-                    if (utilisateurFirebase != null && utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
-                        if (utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
+                    UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
+                    if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                        if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
                             GlideApp.with(holder.imagePhotoAuthor)
-                                    .load(utilisateurFirebase.getPhotoPath())
+                                    .load(user.getPhotoUrl())
                                     .circleCrop()
                                     .placeholder(R.drawable.ic_person_grey_900_48dp)
                                     .error(R.drawable.ic_error_grey_900_48dp)

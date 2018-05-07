@@ -101,8 +101,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         return this.annonceRepository.countAllFavoritesByUser(uid);
     }
 
-    public LiveData<Integer> countAllChatsByUser(String uidUser) {
-        return this.chatRepository.countAllChatsByUser(uidUser);
+    public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
+        return this.chatRepository.countAllChatsByUser(uidUser, status);
     }
 
 }

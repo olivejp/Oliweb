@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity
             // On lance les observers pour récupérer les badges
             liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uid, Utility.allStatusToAvoid());
             liveCountAllFavorite = viewModel.countAllFavoritesByUser(uid);
-            liveCountAllChat = viewModel.countAllChatsByUser(uid);
+            liveCountAllChat = viewModel.countAllChatsByUser(uid, Utility.allStatusToAvoid());
 
             liveCountAllActiveAnnonce.removeObservers(this);
             liveCountAllFavorite.removeObservers(this);

@@ -28,7 +28,7 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
@@ -49,6 +49,8 @@ public class ListChatFragment extends Fragment {
 
     private MyChatsActivityViewModel viewModel;
 
+    private ChatAdapter chatAdapter;
+
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
 
@@ -60,7 +62,7 @@ public class ListChatFragment extends Fragment {
         popup.setOnMenuItemClickListener(item -> {
             int i = item.getItemId();
             if (i == R.id.chat_open_annonce) {
-                openAnnonceDetail((ChatFirebase) v.getTag());
+                openAnnonceDetail((ChatEntity) v.getTag());
                 return true;
             } else {
                 return false;
@@ -110,22 +112,28 @@ public class ListChatFragment extends Fragment {
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        ChatAdapter chatAdapter = new ChatAdapter(onClickListener, onPopupClickListener);
+        chatAdapter = new ChatAdapter(onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Selon les types de recherche
         if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
-            viewModel.getFirebaseChatsByUidAnnonce().observe(appCompatActivity, chatAdapter::setListChats);
+            viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {
+                Log.d(TAG, "get new list chats listChats : " + listChats);
+                chatAdapter.setListChats(listChats);
+            });
         } else {
-            viewModel.getFirebaseChatsByUidUser().observe(appCompatActivity, chatAdapter::setListChats);
+            viewModel.getChatsByUidUser().observe(appCompatActivity, listChats -> {
+                Log.d(TAG, "get new list chats listChats : " + listChats);
+                chatAdapter.setListChats(listChats);
+            });
         }
         return view;
     }
 
-    private void openAnnonceDetail(ChatFirebase chatFirebase) {
-        viewModel.findFirebaseByUidAnnonce(chatFirebase.getUidAnnonce())
+    private void openAnnonceDetail(ChatEntity chatchatEntity) {
+        viewModel.findFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .doOnSuccess(annonceDto -> {
