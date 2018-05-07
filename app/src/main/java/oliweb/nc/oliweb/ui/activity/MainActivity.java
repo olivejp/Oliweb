@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent();
             intent.setClass(this, ProfilActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putString(UID_USER, FirebaseAuth.getInstance().getCurrentUser().getUid());
+            bundle.putString(UID_USER, mFirebaseUser.getUid());
             bundle.putBoolean(UPDATE, true);
             intent.putExtras(bundle);
             startActivity(intent);
@@ -296,12 +296,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void initViewsFromUser(FirebaseUser user) {
+    private void initViewsForThisUser(FirebaseUser user) {
+        if (user == null) {
+            return;
+        }
+
         profileName.setText(user.getDisplayName());
         if (user.getEmail() != null) {
             profileEmail.setText(user.getEmail());
         }
-        // Call the task to retrieve the photo
         if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
             GlideApp.with(profileImage)
                     .load(user.getPhotoUrl())
@@ -359,12 +362,11 @@ public class MainActivity extends AppCompatActivity
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                // Save user in SharedPreferences && in the local DB && FirebaseDatabase
                 // Sauvegarde dans les préférences, dans le cas d'une déconnexion
                 SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(mFirebaseUser.getUid());
 
                 viewModel.saveUser(mFirebaseUser);
-                initViewsFromUser(mFirebaseUser);
+                initViewsForThisUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
                     viewModel.shouldIAskQuestionToRetreiveData(mFirebaseUser.getUid()).observe(this, atomicBoolean -> {
@@ -398,7 +400,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void callFavoriteFragment() {
-        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(FirebaseAuth.getInstance().getCurrentUser().getUid(), ACTION_FAVORITE);
+        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(mFirebaseUser.getUid(), ACTION_FAVORITE);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_frame, listAnnonceFragment)

@@ -117,35 +117,38 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-        if (model.getUidBuyer().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-            ref = ref.child(model.getUidSeller());
-        } else {
-            ref = ref.child(model.getUidBuyer());
-        }
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
-                if (utilisateurFirebase != null && utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
-                    if (utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
-                        GlideApp.with(holder.imagePhotoAuthor)
-                                .load(utilisateurFirebase.getPhotoPath())
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_person_grey_900_48dp)
-                                .error(R.drawable.ic_error_grey_900_48dp)
-                                .into(holder.imagePhotoAuthor);
-                    } else {
-                        GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String uidUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
+            if (model.getUidBuyer().equals(uidUser)) {
+                ref = ref.child(model.getUidSeller());
+            } else {
+                ref = ref.child(model.getUidBuyer());
+            }
+            ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    UtilisateurFirebase utilisateurFirebase = dataSnapshot.getValue(UtilisateurFirebase.class);
+                    if (utilisateurFirebase != null && utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
+                        if (utilisateurFirebase.getPhotoPath() != null && !utilisateurFirebase.getPhotoPath().isEmpty()) {
+                            GlideApp.with(holder.imagePhotoAuthor)
+                                    .load(utilisateurFirebase.getPhotoPath())
+                                    .circleCrop()
+                                    .placeholder(R.drawable.ic_person_grey_900_48dp)
+                                    .error(R.drawable.ic_error_grey_900_48dp)
+                                    .into(holder.imagePhotoAuthor);
+                        } else {
+                            GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    // Do nothing
+                }
+            });
+        }
     }
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder {
