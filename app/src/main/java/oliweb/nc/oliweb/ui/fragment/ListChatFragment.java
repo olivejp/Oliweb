@@ -34,6 +34,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_COME_FROM_CHAT_FRAGMENT;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.TypeRechercheChat.PAR_UTILISATEUR;
@@ -143,6 +144,7 @@ public class ListChatFragment extends Fragment {
                         intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
                         Bundle bundle = new Bundle();
                         bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                        bundle.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, true);
                         intent.putExtras(bundle);
                         startActivity(intent);
                     } else {

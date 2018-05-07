@@ -30,12 +30,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.relex.circleindicator.CircleIndicator;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.fragment.ProfilFragment;
@@ -48,6 +46,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_UID_ANNONCE = "ARG_UID_ANNONCE";
+    public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
+
     private static final int REQUEST_CODE_LOGIN = 100;
     private static final int CALL_POST_ANNONCE = 200;
 
@@ -90,6 +90,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private AnnoncePhotos annoncePhotos;
     private UtilisateurEntity seller;
     private FirebaseAuth auth;
+    private boolean comeFromChatFragment;
 
     public AnnonceDetailActivity() {
         // Required empty public constructor
@@ -113,41 +114,41 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        if (arguments != null && arguments.containsKey(ARG_ANNONCE)) {
-            annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
+        if (arguments != null) {
+            if (arguments.containsKey(ARG_ANNONCE)) {
+                annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
+            }
+            if (arguments.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
+                comeFromChatFragment = arguments.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
+            }
         }
 
         if (annoncePhotos != null) {
             // Récupération de l'annonce
-            viewModel.getFirebaseAnnonceDetailByUid(annoncePhotos.getAnnonceEntity().getUid()).observe(this, dataSnapshot -> {
-                if (dataSnapshot != null) {
-                    AnnonceDto dto = dataSnapshot.getValue(AnnonceDto.class);
-                    if (dto != null) {
-                        AnnoncePhotos annonce = AnnonceConverter.convertDtoToAnnoncePhotos(dto);
-                        initDisplay(annonce);
-                    }
-                }
-            });
+            initDisplay(annoncePhotos);
 
             // Récupération du vendeur
             viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
                 if (dataSnapshot != null) {
                     seller = dataSnapshot.getValue(UtilisateurEntity.class);
-                    if (seller != null && seller.getPhotoUrl() != null) {
-                        imageProfilSeller.setOnClickListener(v -> {
-                            ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUidUser(), false);
-                            getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .add(R.id.frame_annonce_detail, fragment)
-                                    .addToBackStack(null)
-                                    .commit();
-                        });
-                        GlideApp.with(imageProfilSeller)
-                                .load(seller.getPhotoUrl())
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_person_white_48dp)
-                                .error(R.drawable.ic_person_white_48dp)
-                                .into(imageProfilSeller);
+                    if (seller != null) {
+                        initActions(annoncePhotos.getAnnonceEntity());
+                        if (seller.getPhotoUrl() != null) {
+                            imageProfilSeller.setOnClickListener(v -> {
+                                ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUidUser(), false);
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .add(R.id.frame_annonce_detail, fragment)
+                                        .addToBackStack(null)
+                                        .commit();
+                            });
+                            GlideApp.with(imageProfilSeller)
+                                    .load(seller.getPhotoUrl())
+                                    .circleCrop()
+                                    .placeholder(R.drawable.ic_person_white_48dp)
+                                    .error(R.drawable.ic_person_white_48dp)
+                                    .into(imageProfilSeller);
+                        }
                     }
                 }
             });
@@ -184,13 +185,19 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
-        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUidUser());
-
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
         description.setText(annonce.getDescription());
         collapsingToolbarLayout.setTitle(annonce.getTitre());
         textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
 
+        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+            viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
+            indicator.setViewPager(viewPager);
+        }
+    }
+
+    private void initActions(AnnonceEntity annonce) {
+        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUidUser());
         if (amITheOwner) {
             fabActionUpdate.setVisibility(View.VISIBLE);
             fabActionEmail.setVisibility(View.GONE);
@@ -198,16 +205,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             fabActionMessage.setVisibility(View.GONE);
         } else {
             fabActionUpdate.setVisibility(View.GONE);
-            fabActionEmail.setVisibility((annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O")) ? View.VISIBLE : View.GONE);
-            fabActionTelephone.setVisibility((annonce.getContactByTel() != null && annonce.getContactByTel().equals("O")) ? View.VISIBLE : View.GONE);
-            fabActionMessage.setVisibility((annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O")) ? View.VISIBLE : View.GONE);
-        }
-
-        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
-            indicator.setViewPager(viewPager);
+            fabActionEmail.setVisibility((annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O") && seller.getEmail() != null) ? View.VISIBLE : View.GONE);
+            fabActionTelephone.setVisibility((annonce.getContactByTel() != null && annonce.getContactByTel().equals("O") && seller.getTelephone() != null) ? View.VISIBLE : View.GONE);
+            fabActionMessage.setVisibility((annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O") && !comeFromChatFragment) ? View.VISIBLE : View.GONE);
         }
     }
+
 
     @OnClick(R.id.fab_action_message)
     public void actionMessage() {
