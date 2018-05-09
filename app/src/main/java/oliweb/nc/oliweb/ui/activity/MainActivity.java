@@ -44,7 +44,7 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static oliweb.nc.oliweb.service.sync.ChatSyncService.UID_USER;
+import static oliweb.nc.oliweb.service.sync.ChatSyncService.CHAT_SYNC_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity
                 // Lancement du service d'écoute pour toutes les données de cet utilisateur
                 // use this to start and trigger a service
                 Intent intent = new Intent(getApplicationContext(), ChatSyncService.class);
-                intent.putExtra(UID_USER, mFirebaseUser.getUid());
+                intent.putExtra(CHAT_SYNC_UID_USER, mFirebaseUser.getUid());
                 getApplicationContext().startService(intent);
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences

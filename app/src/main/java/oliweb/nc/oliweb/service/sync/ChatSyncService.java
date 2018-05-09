@@ -6,7 +6,7 @@ import android.os.IBinder;
 
 public class ChatSyncService extends Service {
 
-    public static final String UID_USER = "PROFIL_ACTIVITY_UID_USER";
+    public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
     public ChatSyncService() {
     }
