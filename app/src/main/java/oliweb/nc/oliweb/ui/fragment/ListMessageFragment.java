@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -84,6 +85,15 @@ public class ListMessageFragment extends Fragment {
         recyclerView.setLayoutManager(linearLayout);
         adapter = new MessageAdapter();
         recyclerView.setAdapter(adapter);
+
+        // Sur l'action finale du prix on va sauvegarder l'annonce.
+        textToSend.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                clickOnSendButton(textToSend);
+                return true;
+            }
+            return false;
+        });
 
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:

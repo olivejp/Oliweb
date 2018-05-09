@@ -33,6 +33,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.service.sync.ChatSyncService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
@@ -43,8 +44,9 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static oliweb.nc.oliweb.service.sync.ChatSyncService.UID_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
-import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UID_USER;
+import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent();
             intent.setClass(this, ProfilActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putString(UID_USER, mFirebaseUser.getUid());
+            bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
             bundle.putBoolean(UPDATE, true);
             intent.putExtras(bundle);
             startActivity(intent);
@@ -378,6 +380,12 @@ public class MainActivity extends AppCompatActivity
                     });
                     questionHasBeenAsked = false;
                 }
+
+                // Lancement du service d'écoute pour toutes les données de cet utilisateur
+                // use this to start and trigger a service
+                Intent intent = new Intent(getApplicationContext(), ChatSyncService.class);
+                intent.putExtra(UID_USER, mFirebaseUser.getUid());
+                getApplicationContext().startService(intent);
             } else {
                 // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
                 activeBadges(SharedPreferencesHelper.getInstance(getApplicationContext()).getUidFirebaseUser(), false);
@@ -387,6 +395,10 @@ public class MainActivity extends AppCompatActivity
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
                 viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
+
+                // Termine le service d'écoute
+                Intent intent = new Intent(getApplicationContext(), ChatSyncService.class);
+                stopService(intent);
             }
         };
     }

@@ -184,6 +184,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MainActivity" />
         </activity>
+
+        <service
+            android:name=".service.sync.ChatSyncService"
+            android:enabled="true"
+            android:exported="false"></service>
     </application>
 
 </manifest>

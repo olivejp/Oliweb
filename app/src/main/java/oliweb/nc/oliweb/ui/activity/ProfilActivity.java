@@ -32,7 +32,7 @@ public class ProfilActivity extends AppCompatActivity {
 
     private static final String TAG = ProfilActivity.class.getName();
 
-    public static final String UID_USER = "uidUser";
+    public static final String PROFIL_ACTIVITY_UID_USER = "uidUser";
     public static final String UPDATE = "availableUpdate";
 
     private String uidUser;
@@ -88,7 +88,7 @@ public class ProfilActivity extends AppCompatActivity {
 
         Bundle args = getIntent().getExtras();
         if (args != null) {
-            uidUser = args.getString(UID_USER);
+            uidUser = args.getString(PROFIL_ACTIVITY_UID_USER);
             availableUpdate = args.getBoolean(UPDATE);
             if (uidUser != null) {
                 viewModel.getUtilisateurByUid(uidUser).observe(this, userEntity -> {

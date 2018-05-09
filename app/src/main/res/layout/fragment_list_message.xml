@@ -16,7 +16,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Envoyer un message"
-        android:imeOptions="normal"
+        android:imeOptions="actionSend"
         android:inputType="textCapSentences|textImeMultiLine"
         android:maxLength="256"
         android:maxLines="3"

@@ -70,6 +70,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (model.getTimestamp() != null) {
             Timestamp timestamp = new Timestamp(model.getTimestamp());
             holder.timestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new java.sql.Date(timestamp.getTime())));
+        } else {
+            holder.timestamp.setText("Non envoyé");
         }
         retreivePhoto(holder, model);
     }
