@@ -121,13 +121,17 @@ public class ListChatFragment extends Fragment {
         // Selon les types de recherche
         if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
             viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {
-                Log.d(TAG, "get new list chats listChats : " + listChats);
-                chatAdapter.setListChats(listChats);
+                if (listChats != null) {
+                    Log.d(TAG, "get new list chats listChats : " + listChats);
+                    chatAdapter.setListChats(listChats);
+                }
             });
         } else {
             viewModel.getChatsByUidUser().observe(appCompatActivity, listChats -> {
-                Log.d(TAG, "get new list chats listChats : " + listChats);
-                chatAdapter.setListChats(listChats);
+                if (listChats != null) {
+                    Log.d(TAG, "get new list chats listChats : " + listChats);
+                    chatAdapter.setListChats(listChats);
+                }
             });
         }
         return view;

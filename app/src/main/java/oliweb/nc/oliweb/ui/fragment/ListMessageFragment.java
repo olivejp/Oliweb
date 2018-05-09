@@ -78,6 +78,7 @@ public class ListMessageFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
+        // Init recyclerView
         LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
         linearLayout.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayout);
@@ -90,19 +91,19 @@ public class ListMessageFragment extends Fragment {
                 viewModel.findChatByUidUserAndUidAnnonce(uidUser, annonce)
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(chatEntity -> initializeAdapter(chatEntity.getIdChat()))
+                        .doOnSuccess(chatEntity -> initializeAdapterByIdChat(chatEntity.getIdChat()))
                         .doOnComplete(() -> initializeAdapterLater = true)
                         .subscribe();
                 break;
             case PAR_CHAT:
-                initializeAdapter(viewModel.getSearchedIdChat());
+                initializeAdapterByIdChat(viewModel.getSearchedIdChat());
                 break;
         }
 
         return view;
     }
 
-    private void initializeAdapter(Long idChat) {
+    private void initializeAdapterByIdChat(Long idChat) {
         viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> adapter.setMessageEntities(listMessages));
         initializeAdapterLater = false;
     }
@@ -136,7 +137,7 @@ public class ListMessageFragment extends Fragment {
                                             .doOnSuccess(atomicBoolean -> {
                                                 Log.d(TAG, "Message correctement sauvegardé");
                                                 if (initializeAdapterLater) {
-                                                    initializeAdapter(chatEntity.getIdChat());
+                                                    initializeAdapterByIdChat(chatEntity.getIdChat());
                                                 }
                                             })
                                             .subscribe()

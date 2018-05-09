@@ -73,7 +73,7 @@ public class FirebaseAnnonceRepository {
         Log.d(TAG, "Starting checkFirebaseRepository called with uidUtilisateur = " + uidUtilisateur);
         getAllAnnonceByUidUser(uidUtilisateur)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnNext(annonceDto -> checkAnnonceLocalRepository(uidUtilisateur, annonceDto, shouldAskQuestion))
+                .doOnNext(annonceDto -> checkAnnonceLocalRepository(uidUtilisateur, annonceDto.getUuid(), shouldAskQuestion))
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
@@ -91,9 +91,9 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-    private void checkAnnonceLocalRepository(String uidUser, AnnonceDto annonceDto, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
-        Log.d(TAG, "Starting checkAnnonceLocalRepository called with uidUser : " + uidUser + " annonceDto : " + annonceDto);
-        annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid())
+    private void checkAnnonceLocalRepository(String uidUser, String uidAnnonce, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
+        Log.d(TAG, "Starting checkAnnonceLocalRepository called with uidUser : " + uidUser + " uidAnnonce : " + uidAnnonce);
+        annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, uidAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(integer -> {
                     Log.d(TAG, "countByUidUtilisateurAndUidAnnonce.doOnSuccess integer : " + integer);

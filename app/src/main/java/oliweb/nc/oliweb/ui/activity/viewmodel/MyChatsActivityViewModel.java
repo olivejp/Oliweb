@@ -119,12 +119,23 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatEntity;
     }
 
+    /**
+     * @param uidUser
+     * @param annonce
+     * @return
+     */
     public Maybe<ChatEntity> findChatByUidUserAndUidAnnonce(String uidUser, AnnonceEntity annonce) {
         Log.d(TAG, "Starting findChatByUidUserAndUidAnnonce uidUser : " + uidUser + " annonce : " + annonce);
         return chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid());
     }
 
-    // Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
+    /**
+     * Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
+     *
+     * @param uidUser
+     * @param annonce
+     * @return
+     */
     public Single<ChatEntity> findOrCreateNewChat(String uidUser, AnnonceEntity annonce) {
         Log.d(TAG, "Starting findOrCreateNewChat uidUser : " + uidUser + " annonce : " + annonce);
         return Single.create(emitter ->
@@ -160,6 +171,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     /**
      * Insert new message into local DB
+     * if network is available, we call SyncService
      *
      * @param message
      * @return

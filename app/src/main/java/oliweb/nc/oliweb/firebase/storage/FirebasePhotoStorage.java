@@ -78,7 +78,7 @@ public class FirebasePhotoStorage {
                     PhotoEntity photoEntity = new PhotoEntity();
                     photoEntity.setStatut(StatusRemote.SEND);
                     photoEntity.setFirebasePath(urlPhoto);
-                    photoEntity.setUriLocal(pairUriFile.second.toString());
+                    photoEntity.setUriLocal(pairUriFile.first.toString());
                     photoEntity.setIdAnnonce(idAnnonce);
                     photoRepository.saveWithSingle(photoEntity).subscribe();
                 }
