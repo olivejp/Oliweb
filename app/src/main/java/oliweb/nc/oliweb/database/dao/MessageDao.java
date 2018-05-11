@@ -34,7 +34,7 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM message WHERE uidMessage = :uidMessage")
-    public abstract Maybe<MessageEntity> findSingleById(String uidMessage);
+    public abstract Maybe<MessageEntity> findSingleByUid(String uidMessage);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM message WHERE uidMessage = :uidMessage")

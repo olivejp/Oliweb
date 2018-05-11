@@ -7,6 +7,7 @@ package oliweb.nc.oliweb.firebase.dto;
 public class MessageFirebase {
     private String uidMessage;
     private String uidAuthor;
+    private String uidChat;
     private String message;
     private long timestamp;
     private boolean read;
@@ -14,9 +15,10 @@ public class MessageFirebase {
     public MessageFirebase() {
     }
 
-    public MessageFirebase(String uidMessage, String uidAuthor, String message, long timestamp, boolean read) {
+    public MessageFirebase(String uidMessage, String uidAuthor, String uidChat, String message, long timestamp, boolean read) {
         this.uidMessage = uidMessage;
         this.uidAuthor = uidAuthor;
+        this.uidChat = uidChat;
         this.message = message;
         this.timestamp = timestamp;
         this.read = read;
@@ -62,11 +64,20 @@ public class MessageFirebase {
         this.read = read;
     }
 
+    public String getUidChat() {
+        return uidChat;
+    }
+
+    public void setUidChat(String uidChat) {
+        this.uidChat = uidChat;
+    }
+
     @Override
     public String toString() {
         return "MessageFirebase{" +
                 "uidMessage='" + uidMessage + '\'' +
                 ", uidAuthor='" + uidAuthor + '\'' +
+                ", uidChat='" + uidChat + '\'' +
                 ", message='" + message + '\'' +
                 ", timestamp=" + timestamp +
                 ", read=" + read +

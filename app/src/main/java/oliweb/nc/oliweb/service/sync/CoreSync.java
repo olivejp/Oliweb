@@ -229,7 +229,7 @@ public class CoreSync {
 
     private void sendMessage(String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
-        firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(messageEntity))
+        firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(uidChat, messageEntity))
                 .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageEntity))
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();

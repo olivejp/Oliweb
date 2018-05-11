@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
@@ -322,19 +323,34 @@ public class FirebaseChatRepository {
 
     private void saveChat(ChatEntity chatEntity) {
         Log.d(TAG, "Starting saveChat chatEntity : " + chatEntity);
-        chatRepository.saveWithSingle(chatEntity)
-                .doOnSuccess(this::saveMessagesFromChat)
+        chatRepository.findByUid(chatEntity.getUidChat())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnComplete(() ->
+                        chatRepository.saveWithSingle(chatEntity)
+                                .doOnSuccess(this::saveMessagesFromChat)
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .subscribe())
                 .subscribe();
     }
 
     private void saveMessagesFromChat(ChatEntity chatEntity) {
         fbMessageRepository.getAllMessagesByUidChat(chatEntity.getUidChat())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(messageFirebases -> messageFirebases)
                 .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getId(), messageFirebase))
-                .doOnNext(messageEntity ->
+                .doOnNext(this::saveMessageIfNotExist)
+                .subscribe();
+    }
+
+    public void saveMessageIfNotExist(MessageEntity messageEntity) {
+        messageRepository.findSingleByUid(messageEntity.getUidMessage())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnComplete(() ->
                         messageRepository.saveWithSingle(messageEntity)
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .subscribe()
                 )

@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -34,14 +35,23 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return instance;
     }
 
+    public Maybe<ChatEntity> findByUid(String uidChat) {
+        return chatDao.findByUid(uidChat);
+    }
+
     public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotIn(String uidAnnonce, List<String> status) {
         Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidAnnonce(uidAnnonce, status);
     }
 
-    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidSeller, List<String> status) {
-        Log.d(TAG, "Starting findByUidUserAndStatusNotIn uidSeller : " + uidSeller);
-        return this.chatDao.findByUidUser(uidSeller, status);
+    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
+        Log.d(TAG, "Starting findByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
+        return this.chatDao.findByUidUser(uidBuyerOrSeller, status);
+    }
+
+    public Flowable<ChatEntity> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
+        Log.d(TAG, "Starting findFlowableByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
+        return this.chatDao.findFlowableByUidUser(uidBuyerOrSeller, status);
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {

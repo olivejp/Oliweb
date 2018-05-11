@@ -34,8 +34,8 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return instance;
     }
 
-    public Maybe<MessageEntity> findSingleById(String uidMessage) {
-        return this.messageDao.findSingleById(uidMessage);
+    public Maybe<MessageEntity> findSingleByUid(String uidMessage) {
+        return this.messageDao.findSingleByUid(uidMessage);
     }
 
     public LiveData<List<MessageEntity>> findAllByIdChat(Long idChat) {

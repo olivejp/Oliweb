@@ -30,10 +30,11 @@ public class MessageConverter {
         return listResult;
     }
 
-    public static MessageFirebase convertEntityToDto(MessageEntity messageEntity) {
+    public static MessageFirebase convertEntityToDto(String uidChat, MessageEntity messageEntity) {
         MessageFirebase messageFirebase = new MessageFirebase();
         messageFirebase.setMessage(messageEntity.getMessage());
         messageFirebase.setUidAuthor(messageEntity.getUidAuthor());
+        messageFirebase.setUidChat(uidChat);
         messageFirebase.setRead(false);
         return messageFirebase;
     }
