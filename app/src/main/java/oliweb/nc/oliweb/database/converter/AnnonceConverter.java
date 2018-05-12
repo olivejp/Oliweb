@@ -28,21 +28,9 @@ public class AnnonceConverter {
      */
     public static AnnoncePhotos convertDtoToAnnoncePhotos(AnnonceDto annonceDto) {
         AnnoncePhotos annoncePhotos = new AnnoncePhotos();
-        AnnonceEntity annonceEntity = new AnnonceEntity();
         annoncePhotos.setPhotos(new ArrayList<>());
-
-        annonceEntity.setUid(annonceDto.getUuid());
-        annonceEntity.setTitre(annonceDto.getTitre());
-        annonceEntity.setDescription(annonceDto.getDescription());
-        annonceEntity.setDatePublication(annonceDto.getDatePublication());
-        annonceEntity.setPrix(annonceDto.getPrix());
-        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
-        annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
+        AnnonceEntity annonceEntity = convertDtoToEntity(annonceDto);
         annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
-
-        annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
-        annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
-        annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
 
         if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
             for (String photoUrl : annonceDto.getPhotos()) {
@@ -94,14 +82,20 @@ public class AnnonceConverter {
     public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annonceEntity.setUid(annonceDto.getUuid());
-        annonceEntity.setStatut(StatusRemote.SEND);
         annonceEntity.setTitre(annonceDto.getTitre());
         annonceEntity.setDescription(annonceDto.getDescription());
         annonceEntity.setDatePublication(annonceDto.getDatePublication());
         annonceEntity.setPrix(annonceDto.getPrix());
-        annonceEntity.setFavorite(0);
         annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
         annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
+        annonceEntity.setStatut(StatusRemote.SEND);
+
+        annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
+        annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
+        annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+
+        annonceEntity.setFavorite(0);
+
         return annonceEntity;
     }
 }

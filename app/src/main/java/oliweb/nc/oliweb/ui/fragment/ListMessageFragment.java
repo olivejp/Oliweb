@@ -139,7 +139,7 @@ public class ListMessageFragment extends Fragment {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
                     viewModel.findOrCreateNewChat(uidUser, annonce)
-                            .subscribeOn(Schedulers.io())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .doOnSuccess(chatEntity ->
                                     viewModel.saveMessage(messageToSend)

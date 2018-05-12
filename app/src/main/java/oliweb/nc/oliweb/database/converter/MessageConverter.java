@@ -16,6 +16,7 @@ public class MessageConverter {
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setIdChat(idChat);
         messageEntity.setMessage(messageFirebase.getMessage());
+        messageEntity.setUidMessage(messageFirebase.getUidMessage());
         messageEntity.setTimestamp(messageFirebase.getTimestamp());
         messageEntity.setUidAuthor(messageFirebase.getUidAuthor());
         messageEntity.setStatusRemote(StatusRemote.SEND);

@@ -66,6 +66,13 @@ public class FirebaseMessageRepository {
                 }));
     }
 
+    /**
+     * Envoi d'un message sur la Firebase Database
+     *
+     * @param uidChat
+     * @param messageFirebase
+     * @return
+     */
     public Single<MessageFirebase> saveMessage(@NonNull String uidChat, MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessage uidChat : " + uidChat + " messageFirebase : " + messageFirebase);
         return Single.create(emitter ->

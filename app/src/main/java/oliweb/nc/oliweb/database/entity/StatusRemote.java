@@ -7,6 +7,7 @@ package oliweb.nc.oliweb.database.entity;
 public enum StatusRemote {
     TO_SEND("TO_SEND"),
     SEND("SEND"),
+    SENDING("SENDING"),
     TO_DELETE("TO_DELETE"),
     TO_UPDATE("TO_UPDATE"),
     DELETED("DELETED"),

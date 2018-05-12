@@ -108,30 +108,23 @@ public class FirebaseChatRepository {
     /**
      * Essaye de trouver un chat existant pour cet utilisateur et pour cette annonce
      *
-     * @param userUid
-     * @param uidAnnonce
+     * @param userChat
+     * @return
      */
-    public Maybe<ChatFirebase> findChat(String userUid, String uidAnnonce) {
-        Log.d(TAG, "Starting findChat userUid : " + userUid + " uidAnnonce : " + uidAnnonce);
+    public Maybe<ChatFirebase> findChatByUidChat(String userChat) {
+        Log.d(TAG, "Starting findChatByUidChat userChat : " + userChat);
         return Maybe.create(emitter ->
-                chatRef.orderByChild("members/" + userUid)
+                chatRef.child(userChat)
                         .equalTo(true)
                         .addListenerForSingleValueEvent(
                                 new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
-                                        boolean found = false;
-                                        for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                            ChatFirebase chat = data.getValue(ChatFirebase.class);
-                                            if (chat != null && chat.getUidAnnonce().equals(uidAnnonce)) {
-                                                emitter.onSuccess(chat);
-                                                emitter.onComplete();
-                                                found = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!found) {
-                                            emitter.onError(new RuntimeException("Nothing to return"));
+                                        ChatFirebase chat = dataSnapshot.getValue(ChatFirebase.class);
+                                        if (chat != null) {
+                                            emitter.onSuccess(chat);
+                                        } else {
+                                            emitter.onError(new RuntimeException("No chat found with this UID Chat"));
                                         }
                                     }
 

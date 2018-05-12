@@ -109,7 +109,6 @@ public class CoreSync {
         startSendingAnnonces();
         startSendingUser();
         startSendingChats();
-        startSendingMessages();
     }
 
     /**
@@ -163,51 +162,36 @@ public class CoreSync {
 
     private void startSendingChats() {
         Log.d(TAG, "Starting startSendingChats");
-        chatRepository.getAllChatByStatus(Utility.allStatusToSend())
+        chatRepository.getAll()
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(list -> list)
                 .doOnNext(this::sendNewChat)
-                .doOnComplete(this::startSendingMessages)
-                .subscribe();
-    }
-
-    private void startSendingMessages() {
-        Log.d(TAG, "Starting startSendingMessages");
-        messageRepository.getAllMessageByStatus(Utility.allStatusToSend())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(messageEntity -> {
-                    Log.d(TAG, "Found a message to send messageEntity : " + messageEntity);
-                    chatRepository.findById(messageEntity.getIdChat())
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnSuccess(chatEntity -> {
-                                if (chatEntity.getUidChat() != null) {
-                                    Log.d(TAG, "findById chatEntity : " + chatEntity);
-                                    sendMessage(chatEntity.getUidChat(), messageEntity);
-                                }
-                            })
-                            .subscribe();
-                })
                 .subscribe();
     }
 
     private void sendNewChat(ChatEntity chatEntity) {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
-        firebaseChatRepository.createChat(chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(chatFirebase -> {
-                    markChatHasBeenSend(chatFirebase, chatEntity);
-                    sendGetAllNewMessages(chatEntity.getIdChat(), chatFirebase);
-                })
-                .subscribe();
+        if (chatEntity.getUidChat() == null) {
+            firebaseChatRepository.createChat(chatEntity)
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .doOnSuccess(chatFirebase ->
+                            markChatHasBeenSend(chatFirebase, chatEntity)
+                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                    .doOnSuccess(chatSaved -> sendGetAllNewMessages(chatSaved.getIdChat(), chatFirebase.getUid()))
+                                    .subscribe()
+                    )
+                    .subscribe();
+        } else {
+            sendGetAllNewMessages(chatEntity.getIdChat(), chatEntity.getUidChat());
+        }
     }
 
-    private void markChatHasBeenSend(ChatFirebase chatFirebase, ChatEntity chatEntity) {
+    private Single<ChatEntity> markChatHasBeenSend(ChatFirebase chatFirebase, ChatEntity chatEntity) {
         chatEntity.setStatusRemote(StatusRemote.SEND);
         chatEntity.setUidChat(chatFirebase.getUid());
         chatEntity.setCreationTimestamp(chatFirebase.getCreationTimestamp());
         chatEntity.setUpdateTimestamp(chatFirebase.getCreationTimestamp());
-        chatRepository.saveWithSingle(chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
+        return chatRepository.saveWithSingle(chatEntity);
     }
 
     private void markMessageHasBeenSend(MessageFirebase messageFirebase, MessageEntity messageEntity) {
@@ -219,11 +203,11 @@ public class CoreSync {
                 .subscribe();
     }
 
-    private void sendGetAllNewMessages(Long idChat, ChatFirebase chatFirebase) {
-        Log.d(TAG, "sendGetAllNewMessages idChat : " + idChat + " chatFirebase : " + chatFirebase);
+    private void sendGetAllNewMessages(Long idChat, String uidChat) {
+        Log.d(TAG, "sendGetAllNewMessages idChat : " + idChat + " uidChat : " + uidChat);
         messageRepository.getAllMessageByStatusByIdChat(idChat, Utility.allStatusToSend())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(messageEntity -> sendMessage(chatFirebase.getUid(), messageEntity))
+                .doOnNext(messageEntity -> sendMessage(uidChat, messageEntity))
                 .subscribe();
     }
 

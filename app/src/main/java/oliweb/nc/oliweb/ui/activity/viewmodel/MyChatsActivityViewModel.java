@@ -151,6 +151,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                         .doOnComplete(() -> {
                                     Log.d(TAG, "findOrCreateNewChat.doOnComplete");
                                     chatRepository.saveWithSingle(createChatEntity(uidUser, annonce))
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                             .doOnSuccess(chatCreated -> {
                                                 Log.d(TAG, "findOrCreateNewChat.doOnComplete.saveWithSingle.doOnSuccess chatCreated : " + chatCreated);
