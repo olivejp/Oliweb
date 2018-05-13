@@ -3,12 +3,10 @@ package oliweb.nc.oliweb;
 import android.app.Application;
 import android.content.Intent;
 
-import com.evernote.android.job.JobManager;
 import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.service.job.SyncJob;
-import oliweb.nc.oliweb.service.job.SyncJobCreator;
 import oliweb.nc.oliweb.service.sync.ChatSyncListenerService;
 
 
@@ -31,10 +29,10 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         // On attache le receiver à notre application
         registerReceiver(NetworkReceiver.getInstance(), NetworkReceiver.CONNECTIVITY_CHANGE_INTENT_FILTER);
 
-        JobManager.create(this).addJobCreator(new SyncJobCreator());
-
+        // TODO Réactiver la plannif du job
         // Plannification d'un job
-        SyncJob.scheduleJob();
+        // JobManager.create(this).addJobCreator(new SyncJobCreator());
+        // SyncJob.scheduleJob();
 
 
         // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le

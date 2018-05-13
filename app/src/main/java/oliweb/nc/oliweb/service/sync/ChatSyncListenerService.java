@@ -36,34 +36,7 @@ public class ChatSyncListenerService extends Service {
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
 
-    private ValueEventListener listenerChat = new ValueEventListener() {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            try {
-                if (dataSnapshot != null) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
-                        if (chatFirebase != null) {
-                            ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
-                            chatRepository.saveIfNotExist(chatEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                    .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
-                                    .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
-                                    .subscribe();
-                        }
-                    }
-                }
-            } catch (Exception e1) {
-                Log.e(TAG, e1.getLocalizedMessage(), e1);
-            }
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            Log.e(TAG, databaseError.getMessage());
-        }
-    };
+    private ValueEventListener listenerChat;
     private Query queryChat;
     private List<Pair<Query, ChildEventListener>> listQueryListener;
 
@@ -115,6 +88,36 @@ public class ChatSyncListenerService extends Service {
     private void listenForChat(String uidUser) {
         Log.d(TAG, "Starting listenForChat uidUser : " + uidUser);
 
+        // Création d'un listener
+        listenerChat = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+                    if (dataSnapshot != null) {
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+                            ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
+                            if (chatFirebase != null) {
+                                ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
+                                chatRepository.saveIfNotExist(chatEntity)
+                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                        .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
+                                        .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
+                                        .subscribe();
+                            }
+                        }
+                    }
+                } catch (Exception e1) {
+                    Log.e(TAG, e1.getLocalizedMessage(), e1);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.getMessage());
+            }
+        };
+
         queryChat = FirebaseDatabase.getInstance()
                 .getReference(Constants.FIREBASE_DB_CHATS_REF)
                 .orderByChild("members/" + uidUser)
@@ -157,7 +160,35 @@ public class ChatSyncListenerService extends Service {
                                     messageRepository.findSingleByUid(message.getUidMessage())
                                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnSuccess(messageRepository::delete)
+                                            .doOnSuccess(messageEntity -> messageRepository.delete(dataReturn -> {
+                                                if (dataReturn.isSuccessful()) {
+                                                    Log.d(TAG, "Suppression du message réussie");
+                                                } else {
+                                                    Log.d(TAG, "Suppression du message échouée");
+                                                }
+                                            }, messageEntity))
+                                            .subscribe();
+                                }
+                            }
+
+                            @Override
+                            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                                // Modification d'un message de la db locale
+                                MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                Log.d(TAG, "Mise à jour du message messageFirebase : " + message);
+                                if (message != null) {
+                                    messageRepository.findSingleByUid(message.getUidMessage())
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                            .doOnSuccess(messageEntity -> {
+                                                messageEntity.setMessage(message.getMessage());
+                                                messageEntity.setTimestamp(message.getTimestamp());
+                                                messageEntity.setUidAuthor(message.getUidAuthor());
+                                                messageRepository.saveWithSingle(messageEntity)
+                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                        .subscribe();
+                                            })
                                             .subscribe();
                                 }
                             }
@@ -169,11 +200,6 @@ public class ChatSyncListenerService extends Service {
 
                             @Override
                             public void onCancelled(DatabaseError databaseError) {
-
-                            }
-
-                            @Override
-                            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
                             }
                         };
