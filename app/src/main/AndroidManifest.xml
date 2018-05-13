@@ -186,9 +186,9 @@
         </activity>
 
         <service
-            android:name=".service.sync.ChatSyncService"
+            android:name=".service.sync.ChatSyncListenerService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false"/>
     </application>
 
 </manifest>

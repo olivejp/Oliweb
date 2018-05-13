@@ -79,4 +79,20 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser + " status : " + status);
         return this.chatDao.countAllFavoritesByUser(uidUser, status);
     }
+
+    public Maybe<ChatEntity> saveIfNotExist(ChatEntity chatEntity) {
+        Log.d(TAG, "Starting saveIfNotExist chatEntity : " + chatEntity);
+        return Maybe.create(emitter ->
+                findByUid(chatEntity.getUidChat())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(chatRead -> emitter.onComplete())
+                        .doOnComplete(() ->
+                                saveWithSingle(chatEntity)
+                                        .doOnSuccess(emitter::onSuccess)
+                                        .doOnError(emitter::onError)
+                                        .subscribe())
+                        .subscribe()
+        );
+    }
 }

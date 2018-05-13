@@ -131,7 +131,10 @@ public class ListMessageFragment extends Fragment {
                 viewModel.saveMessage(messageToSend)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(atomicBoolean -> Log.d(TAG, "Message correctement sauvegardé"))
+                        .doOnSuccess(atomicBoolean -> {
+                            Log.d(TAG, "Message correctement sauvegardé");
+                            recyclerView.smoothScrollToPosition(adapter.getItemCount());
+                        })
                         .subscribe();
                 break;
             case PAR_ANNONCE:

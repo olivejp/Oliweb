@@ -73,4 +73,18 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
                         .subscribe()
         );
     }
+
+    public void saveMessageIfNotExist(MessageEntity messageEntity) {
+        Log.d(TAG, "Starting saveMessageIfNotExist messageEntity : " + messageEntity);
+        messageDao.findSingleByUid(messageEntity.getUidMessage())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnComplete(() ->
+                        saveWithSingle(messageEntity)
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .subscribe()
+                )
+                .subscribe();
+    }
 }

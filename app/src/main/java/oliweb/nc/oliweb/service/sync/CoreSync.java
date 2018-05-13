@@ -94,10 +94,6 @@ public class CoreSync {
         startSendingAnnonces();
     }
 
-    public void synchronizePhoto() {
-        startSendingPhotos();
-    }
-
     public void synchronizeMessage() {
         startSendingChats();
     }
@@ -177,7 +173,10 @@ public class CoreSync {
                     .doOnSuccess(chatFirebase ->
                             markChatHasBeenSend(chatFirebase, chatEntity)
                                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                    .doOnSuccess(chatSaved -> sendGetAllNewMessages(chatSaved.getIdChat(), chatFirebase.getUid()))
+                                    .doOnSuccess(chatSaved -> {
+                                        Log.d(TAG, "Chat has been marked as SEND chatEntity : " + chatSaved);
+                                        sendGetAllNewMessages(chatSaved.getIdChat(), chatFirebase.getUid());
+                                    })
                                     .subscribe()
                     )
                     .subscribe();
@@ -187,6 +186,7 @@ public class CoreSync {
     }
 
     private Single<ChatEntity> markChatHasBeenSend(ChatFirebase chatFirebase, ChatEntity chatEntity) {
+        Log.d(TAG, "markChatHasBeenSend chatFirebase : " + chatFirebase + " chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SEND);
         chatEntity.setUidChat(chatFirebase.getUid());
         chatEntity.setCreationTimestamp(chatFirebase.getCreationTimestamp());
@@ -195,11 +195,11 @@ public class CoreSync {
     }
 
     private void markMessageHasBeenSend(MessageFirebase messageFirebase, MessageEntity messageEntity) {
-        messageEntity.setUidMessage(messageFirebase.getUidMessage());
-        messageEntity.setTimestamp(messageFirebase.getTimestamp());
+        Log.d(TAG, "markMessageHasBeenSend messageFirebase : " + messageFirebase + " messageEntity : " + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
         messageRepository.saveWithSingle(messageEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(messageEntity1 -> Log.d(TAG, "Message has been marked as SEND messageEntity : " + messageEntity1))
                 .subscribe();
     }
 
@@ -211,11 +211,33 @@ public class CoreSync {
                 .subscribe();
     }
 
+    /**
+     * 1 - Catch a new timestamp from FB Server, and a new UidMessage for the message
+     * 2 - Update the message with those new datas (uidMessage and timestamp and uidChat
+     * 3 - Send this updated message to FB database
+     * 4 - Mark the message to SEND
+     *
+     * @param uidChat
+     * @param messageEntity
+     */
     private void sendMessage(String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
-        firebaseMessageRepository.saveMessage(uidChat, MessageConverter.convertEntityToDto(uidChat, messageEntity))
-                .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageEntity))
+        firebaseMessageRepository.getUidAndTimestampFromFirebase(uidChat, messageEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(messageSaved -> {
+                    Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.doOnSuccess");
+                    messageRepository.saveWithSingle(messageSaved)
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(messageRead -> {
+                                Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.saveWithSingle.doOnSuccess");
+                                firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
+                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                        .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageRead))
+                                        .subscribe();
+                            })
+                            .subscribe();
+                })
                 .subscribe();
     }
 

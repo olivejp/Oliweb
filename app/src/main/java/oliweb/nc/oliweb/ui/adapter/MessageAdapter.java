@@ -66,7 +66,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         MessageViewHolder holder = (MessageViewHolder) viewHolder;
         MessageEntity model = messageEntities.get(position);
-        holder.message.setText(model.getMessage());
+        String text = "id => " + model.getIdMessage() + " uid => " + model.getUidMessage() + " message => " + model.getMessage();
+        holder.message.setText(text);
         if (model.getTimestamp() != null) {
             Timestamp timestamp = new Timestamp(model.getTimestamp());
             holder.timestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new java.sql.Date(timestamp.getTime())));

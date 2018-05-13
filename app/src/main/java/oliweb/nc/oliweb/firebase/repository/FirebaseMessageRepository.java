@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
@@ -67,28 +68,41 @@ public class FirebaseMessageRepository {
     }
 
     /**
-     * Envoi d'un message sur la Firebase Database
+     * Va récupérer un uid d'un message et le timestamp du serveur
      *
-     * @param uidChat
-     * @param messageFirebase
+     * @param messageEntity
      * @return
      */
-    public Single<MessageFirebase> saveMessage(@NonNull String uidChat, MessageFirebase messageFirebase) {
-        Log.d(TAG, "Starting saveMessage uidChat : " + uidChat + " messageFirebase : " + messageFirebase);
+    public Single<MessageEntity> getUidAndTimestampFromFirebase(@NonNull String uidChat, MessageEntity messageEntity) {
+        Log.d(TAG, "Starting getUidAndTimestampFromFirebase uidChat : " + uidChat + " messageEntity : " + messageEntity);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {
                             DatabaseReference newMessageRef = MSG_REF.child(uidChat).push();
-                            messageFirebase.setTimestamp(timestamp);
-                            messageFirebase.setUidMessage(newMessageRef.getKey());
-                            newMessageRef.setValue(messageFirebase)
-                                    .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
-                                    .addOnFailureListener(emitter::onError);
-
+                            messageEntity.setTimestamp(timestamp);
+                            messageEntity.setUidMessage(newMessageRef.getKey());
+                            messageEntity.setUidChat(uidChat);
+                            emitter.onSuccess(messageEntity);
                         })
                         .subscribe()
+        );
+    }
+
+
+    /**
+     * Envoi d'un message sur la Firebase Database
+     *
+     * @param messageFirebase
+     * @return
+     */
+    public Single<MessageFirebase> saveMessage(MessageFirebase messageFirebase) {
+        Log.d(TAG, "Starting saveMessage messageFirebase : " + messageFirebase);
+        return Single.create(emitter ->
+                MSG_REF.child(messageFirebase.getUidChat()).child(messageFirebase.getUidMessage()).setValue(messageFirebase)
+                        .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
+                        .addOnFailureListener(emitter::onError)
         );
     }
 

@@ -17,7 +17,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
  */
 
 @Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = @Index("idChat"))
-public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
+public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idMessage;
@@ -25,6 +25,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
     private String message;
     private String read;
     private String uidAuthor;
+    private String uidChat;
     private Long timestamp;
     private Long idChat;
     @TypeConverters(StatusConverter.class)
@@ -34,12 +35,13 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
     }
 
     @Ignore
-    public MessageEntity(@NonNull Long idMessage, String uidMessage, String message, String read, String uidAuthor, Long timestamp, Long idChat, StatusRemote statusRemote) {
+    public MessageEntity(@NonNull Long idMessage, String uidMessage, String message, String read, String uidAuthor, String uidChat, Long timestamp, Long idChat, StatusRemote statusRemote) {
         this.idMessage = idMessage;
         this.uidMessage = uidMessage;
         this.message = message;
         this.read = read;
         this.uidAuthor = uidAuthor;
+        this.uidChat = uidChat;
         this.timestamp = timestamp;
         this.idChat = idChat;
         this.statusRemote = statusRemote;
@@ -115,6 +117,15 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
         this.statusRemote = statusRemote;
     }
 
+    public String getUidChat() {
+        return uidChat;
+    }
+
+    public void setUidChat(String uidChat) {
+        this.uidChat = uidChat;
+    }
+
+
     @Override
     public int describeContents() {
         return 0;
@@ -127,6 +138,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
         dest.writeString(this.message);
         dest.writeString(this.read);
         dest.writeString(this.uidAuthor);
+        dest.writeString(this.uidChat);
         dest.writeValue(this.timestamp);
         dest.writeValue(this.idChat);
         dest.writeInt(this.statusRemote == null ? -1 : this.statusRemote.ordinal());
@@ -138,6 +150,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
         this.message = in.readString();
         this.read = in.readString();
         this.uidAuthor = in.readString();
+        this.uidChat = in.readString();
         this.timestamp = (Long) in.readValue(Long.class.getClassLoader());
         this.idChat = (Long) in.readValue(Long.class.getClassLoader());
         int tmpStatusRemote = in.readInt();
@@ -164,6 +177,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable  {
                 ", message='" + message + '\'' +
                 ", read='" + read + '\'' +
                 ", uidAuthor='" + uidAuthor + '\'' +
+                ", uidChat='" + uidChat + '\'' +
                 ", timestamp=" + timestamp +
                 ", idChat=" + idChat +
                 ", statusRemote=" + statusRemote +

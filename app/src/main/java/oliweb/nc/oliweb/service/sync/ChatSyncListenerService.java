@@ -10,31 +10,31 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
-import oliweb.nc.oliweb.database.entity.MessageEntity;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
-import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
-public class ChatSyncService extends Service {
+public class ChatSyncListenerService extends Service {
 
-    private static final String TAG = ChatSyncService.class.getName();
+    private static final String TAG = ChatSyncListenerService.class.getName();
 
     public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private FirebaseChatRepository firebaseChatRepository;
 
-    public ChatSyncService() {
+    public ChatSyncListenerService() {
         chatRepository = ChatRepository.getInstance(this);
         messageRepository = MessageRepository.getInstance(this);
-        firebaseChatRepository = FirebaseChatRepository.getInstance(this);
     }
 
     @Override
@@ -44,12 +44,63 @@ public class ChatSyncService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        // Récupération de tous les chats dans lesquels je suis identifié
-        firebaseChatRepository.sync(uidUser);
+        // Récupération des chats de l'utilisateur connecté
+        listenForChat(uidUser);
 
+        // Création d'observers pour écouter les nouveaux chats
+        listenForMessage(uidUser);
+
+        return START_NOT_STICKY;
+    }
+
+    /**
+     * Ecoute tous les chats avec l'uid user comme membre et pour tout cela, va lancer
+     *
+     * @param uidUser
+     */
+    private void listenForChat(String uidUser) {
+        Log.d(TAG, "Starting listenForChat uidUser : " + uidUser);
+        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        try {
+                            if (dataSnapshot != null) {
+                                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                    ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
+                                    if (chatFirebase != null) {
+                                        ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
+                                        chatRepository.saveIfNotExist(chatEntity)
+                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
+                                                .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
+                                                .subscribe();
+                                    }
+                                }
+                            }
+                        } catch (Exception e1) {
+                            Log.e(TAG, e1.getLocalizedMessage(), e1);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(TAG, databaseError.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Va créer un observer pour tout les chats présents en base
+     * Si on rajoute un chat dans la base, cette méthode créera automatiquement un nouvel observer pour ce chat.
+     *
+     * @param uidUser
+     */
+    private void listenForMessage(String uidUser) {
+        Log.d(TAG, "Starting listenForMessage uidUser : " + uidUser);
         // Récupération de la liste des chats pour l'utilisateur connecté et dont le statut n'est pas cloturé
         chatRepository.findFlowableByUidUserAndStatusNotIn(uidUser, Utility.allStatusToAvoid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -61,21 +112,9 @@ public class ChatSyncService extends Service {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                                 MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                Log.d(TAG, "Nouveau message reçu messageFirebase : " + message);
                                 if (message != null) {
-
-                                    // Recherche si le message existe déjà en base
-                                    messageRepository.findSingleByUid(message.getUidMessage())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnComplete(() -> {
-
-                                                // Conversion d'un nouveau message
-                                                MessageEntity messageEntity = MessageConverter.convertDtoToEntity(chat.getIdChat(), message);
-
-                                                // Enregistrement du nouveau message
-                                                firebaseChatRepository.saveMessageIfNotExist(messageEntity);
-                                            })
-                                            .subscribe();
+                                    messageRepository.saveMessageIfNotExist(MessageConverter.convertDtoToEntity(chat.getIdChat(), message));
                                 }
                             }
 
@@ -88,6 +127,7 @@ public class ChatSyncService extends Service {
                             public void onChildRemoved(DataSnapshot dataSnapshot) {
                                 // Suppression du message de la db locale
                                 MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                Log.d(TAG, "Suppression du message messageFirebase : " + message);
                                 if (message != null) {
                                     messageRepository.findSingleByUid(message.getUidMessage())
                                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -110,8 +150,6 @@ public class ChatSyncService extends Service {
                     }
                 })
                 .subscribe();
-        return START_NOT_STICKY;
     }
-
 
 }

@@ -14,14 +14,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
@@ -56,12 +54,10 @@ public class FirebaseChatRepository {
      * @param uidUser
      * @return a Single<List<ChatEntity>> containing all the ChatEntity from Firebase where User is in the members.
      */
-    private Single<List<ChatFirebase>> getAllChatByUidUser(String uidUser) {
+    private Observable<ChatFirebase> getAllChatByUidUser(String uidUser) {
         Log.d(TAG, "Starting getAllChatByUidUser uidUser : " + uidUser);
-        return Single.create(e -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
+        return Observable.create(e -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-                    ArrayList<ChatFirebase> listChat = new ArrayList<>();
-
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         try {
@@ -69,11 +65,11 @@ public class FirebaseChatRepository {
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
                                     if (chatFirebase != null) {
-                                        listChat.add(chatFirebase);
+                                        e.onNext(chatFirebase);
                                     }
                                 }
+                                e.onComplete();
                             }
-                            e.onSuccess(listChat);
                         } catch (Exception e1) {
                             e.onError(e1);
                         }
@@ -105,37 +101,6 @@ public class FirebaseChatRepository {
         );
     }
 
-    /**
-     * Essaye de trouver un chat existant pour cet utilisateur et pour cette annonce
-     *
-     * @param userChat
-     * @return
-     */
-    public Maybe<ChatFirebase> findChatByUidChat(String userChat) {
-        Log.d(TAG, "Starting findChatByUidChat userChat : " + userChat);
-        return Maybe.create(emitter ->
-                chatRef.child(userChat)
-                        .equalTo(true)
-                        .addListenerForSingleValueEvent(
-                                new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        ChatFirebase chat = dataSnapshot.getValue(ChatFirebase.class);
-                                        if (chat != null) {
-                                            emitter.onSuccess(chat);
-                                        } else {
-                                            emitter.onError(new RuntimeException("No chat found with this UID Chat"));
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-                                        emitter.onError(new RuntimeException(databaseError.getMessage()));
-                                    }
-                                }
-                        )
-        );
-    }
 
     private Single<AtomicBoolean> removeChatByUid(String uidChat) {
         Log.d(TAG, "Starting removeChatByUid uidChat : " + uidChat);
@@ -171,37 +136,6 @@ public class FirebaseChatRepository {
         );
     }
 
-    public Single<ChatFirebase> createChat(String uidUserBuyer, AnnonceEntity annonce) {
-        Log.d(TAG, "Starting createChat uidUserBuyer : " + uidUserBuyer + " annonce : " + annonce);
-        return Single.create(emitter ->
-                FirebaseUtility.getServerTimestamp()
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(timestamp -> {
-                            try {
-                                DatabaseReference ref = chatRef.push();
-                                HashMap<String, Boolean> hash = new HashMap<>();
-                                hash.put(uidUserBuyer, true);
-                                hash.put(annonce.getUidUser(), true);
-
-                                ChatFirebase chatFirebase = new ChatFirebase();
-                                chatFirebase.setUid(ref.getKey());
-                                chatFirebase.setUidAnnonce(annonce.getUid());
-                                chatFirebase.setMembers(hash);
-                                chatFirebase.setUidBuyer(uidUserBuyer);
-                                chatFirebase.setUidSeller(annonce.getUidUser());
-                                chatFirebase.setCreationTimestamp(timestamp);
-                                chatFirebase.setUpdateTimestamp(timestamp);
-                                ref.setValue(chatFirebase)
-                                        .addOnSuccessListener(aVoid -> emitter.onSuccess(chatFirebase))
-                                        .addOnFailureListener(emitter::onError);
-                            } catch (Exception e) {
-                                emitter.onError(e);
-                            }
-                        })
-                        .subscribe()
-        );
-    }
-
     public Single<ChatFirebase> createChat(ChatEntity chatEntity) {
         Log.d(TAG, "Starting createChat chatEntity : " + chatEntity);
         return Single.create(emitter ->
@@ -220,6 +154,8 @@ public class FirebaseChatRepository {
                                 chatFirebase.setMembers(hash);
                                 chatFirebase.setUidBuyer(chatEntity.getUidBuyer());
                                 chatFirebase.setUidSeller(chatEntity.getUidSeller());
+                                chatFirebase.setTitreAnnonce(chatEntity.getTitreAnnonce());
+                                chatFirebase.setLastMessage(chatEntity.getLastMessage());
                                 chatFirebase.setCreationTimestamp(timestamp);
                                 chatFirebase.setUpdateTimestamp(timestamp);
                                 ref.setValue(chatFirebase)
@@ -307,7 +243,6 @@ public class FirebaseChatRepository {
         Log.d(TAG, "Starting sync uidUser : " + uidUser);
         getAllChatByUidUser(uidUser)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(ChatConverter::convertDtoToEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnNext(this::saveChat)
@@ -316,14 +251,10 @@ public class FirebaseChatRepository {
 
     private void saveChat(ChatEntity chatEntity) {
         Log.d(TAG, "Starting saveChat chatEntity : " + chatEntity);
-        chatRepository.findByUid(chatEntity.getUidChat())
+        chatRepository.saveIfNotExist(chatEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnComplete(() ->
-                        chatRepository.saveWithSingle(chatEntity)
-                                .doOnSuccess(this::saveMessagesFromChat)
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .subscribe())
+                .doOnSuccess(this::saveMessagesFromChat)
                 .subscribe();
     }
 
@@ -333,20 +264,9 @@ public class FirebaseChatRepository {
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(messageFirebases -> messageFirebases)
                 .map(messageFirebase -> MessageConverter.convertDtoToEntity(chatEntity.getId(), messageFirebase))
-                .doOnNext(this::saveMessageIfNotExist)
+                .doOnNext(messageRepository::saveMessageIfNotExist)
                 .subscribe();
     }
 
-    public void saveMessageIfNotExist(MessageEntity messageEntity) {
-        messageRepository.findSingleByUid(messageEntity.getUidMessage())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnComplete(() ->
-                        messageRepository.saveWithSingle(messageEntity)
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .subscribe()
-                )
-                .subscribe();
-    }
+
 }
