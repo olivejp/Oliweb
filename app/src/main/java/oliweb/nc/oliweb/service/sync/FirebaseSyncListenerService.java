@@ -27,9 +27,9 @@ import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
-public class ChatSyncListenerService extends Service {
+public class FirebaseSyncListenerService extends Service {
 
-    private static final String TAG = ChatSyncListenerService.class.getName();
+    private static final String TAG = FirebaseSyncListenerService.class.getName();
 
     public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
@@ -40,9 +40,6 @@ public class ChatSyncListenerService extends Service {
     private Query queryChat;
     private List<Pair<Query, ChildEventListener>> listQueryListener;
 
-    public ChatSyncListenerService() {
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         throw new UnsupportedOperationException("Not yet implemented");
@@ -50,12 +47,13 @@ public class ChatSyncListenerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        chatRepository = ChatRepository.getInstance(this);
-        messageRepository = MessageRepository.getInstance(this);
-        listQueryListener = new ArrayList<>();
-
         // Récupération de l'UID de l'utilisateur
         if (intent.getStringExtra(CHAT_SYNC_UID_USER) != null && !intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
+
+            chatRepository = ChatRepository.getInstance(this);
+            messageRepository = MessageRepository.getInstance(this);
+            listQueryListener = new ArrayList<>();
+
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
             // Récupération des chats de l'utilisateur connecté
@@ -63,6 +61,9 @@ public class ChatSyncListenerService extends Service {
 
             // Création d'observers pour écouter les nouveaux chats
             listenForMessage(uidUser);
+        } else {
+            // Si pas d UID user on sort tout de suite du service
+            stopSelf();
         }
 
         return START_NOT_STICKY;

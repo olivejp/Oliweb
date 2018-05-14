@@ -165,7 +165,7 @@ public class CoreSync {
                 .subscribe();
     }
 
-    private void sendNewChat(ChatEntity chatEntity) {
+    public void sendNewChat(ChatEntity chatEntity) {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
         if (chatEntity.getUidChat() == null) {
             firebaseChatRepository.createChat(chatEntity)
@@ -223,6 +223,27 @@ public class CoreSync {
     private void sendMessage(String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
         firebaseMessageRepository.getUidAndTimestampFromFirebase(uidChat, messageEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(messageSaved -> {
+                    Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.doOnSuccess");
+                    messageRepository.saveWithSingle(messageSaved)
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(messageRead -> {
+                                Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.saveWithSingle.doOnSuccess");
+                                firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
+                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                        .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageRead))
+                                        .subscribe();
+                            })
+                            .subscribe();
+                })
+                .subscribe();
+    }
+
+    public void sendMessage(MessageEntity messageEntity) {
+        Log.d(TAG, "sendMessage messageEntity : " + messageEntity);
+        firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(messageSaved -> {

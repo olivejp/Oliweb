@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -58,20 +59,9 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         );
     }
 
-    public Observable<MessageEntity> getAllMessageByStatus(List<String> status) {
-        Log.d(TAG, "Starting getAllMessageByStatus " + status);
-        return Observable.create(emitter ->
-                this.messageDao.getAllMessageByStatus(status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(messageEntities -> {
-                            for (MessageEntity message : messageEntities) {
-                                emitter.onNext(message);
-                            }
-                            emitter.onComplete();
-                        })
-                        .subscribe()
-        );
+    public Flowable<MessageEntity> findFlowableByStatus(List<String> status) {
+        Log.d(TAG, "Starting findFlowableByStatus " + status);
+        return this.messageDao.findFlowableByStatus(status);
     }
 
     public void saveMessageIfNotExist(MessageEntity messageEntity) {

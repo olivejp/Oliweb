@@ -7,7 +7,8 @@ import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.service.job.SyncJob;
-import oliweb.nc.oliweb.service.sync.ChatSyncListenerService;
+import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.FirebaseSyncListenerService;
 
 
 /**
@@ -48,9 +49,14 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
 
     @Override
     public void onNetworkEnable() {
-        // Lancement du service
-        Intent intent = new Intent(getApplicationContext(), ChatSyncListenerService.class);
-        startService(intent);
+
+        // Lancement du service pour écouter Firebase
+        Intent intentFb = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
+        startService(intentFb);
+
+        // Lancement du service pour écouter la DB en local
+        Intent intentDb = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
+        startService(intentDb);
 
         // Lancement d'une synchro uniquement s'il y a du réseau
         SyncJob.launchImmediateJob();
@@ -58,8 +64,12 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
 
     @Override
     public void onNetworkDisable() {
-        // Stop the chat sync service
-        Intent intent = new Intent(getApplicationContext(), ChatSyncListenerService.class);
-        stopService(intent);
+        // Stop the Firebase sync service
+        Intent intentFb = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
+        stopService(intentFb);
+
+        // Stop the Local DB sync service
+        Intent intentDb = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
+        stopService(intentDb);
     }
 }

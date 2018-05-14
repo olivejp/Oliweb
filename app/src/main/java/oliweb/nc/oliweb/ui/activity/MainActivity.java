@@ -33,7 +33,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.service.sync.ChatSyncListenerService;
+import oliweb.nc.oliweb.service.sync.FirebaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
@@ -44,7 +44,7 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static oliweb.nc.oliweb.service.sync.ChatSyncListenerService.CHAT_SYNC_UID_USER;
+import static oliweb.nc.oliweb.service.sync.FirebaseSyncListenerService.CHAT_SYNC_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
@@ -383,7 +383,7 @@ public class MainActivity extends AppCompatActivity
 
                 // Lancement du service d'écoute pour toutes les données de cet utilisateur
                 // use this to start and trigger a service
-                Intent intent = new Intent(getApplicationContext(), ChatSyncListenerService.class);
+                Intent intent = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
                 intent.putExtra(CHAT_SYNC_UID_USER, mFirebaseUser.getUid());
                 getApplicationContext().startService(intent);
             } else {
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity
                 viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
 
                 // Termine le service d'écoute
-                Intent intent = new Intent(getApplicationContext(), ChatSyncListenerService.class);
+                Intent intent = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
                 stopService(intent);
             }
         };

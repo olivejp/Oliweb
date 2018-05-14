@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service.messaging;
+package oliweb.nc.oliweb.service.notification;
 
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;

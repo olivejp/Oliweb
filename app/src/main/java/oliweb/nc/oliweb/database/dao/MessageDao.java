@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -51,5 +52,9 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     @Transaction
     @Query("SELECT * FROM message WHERE idChat = :idChat")
     public abstract LiveData<List<MessageEntity>> findAllByIdChat(Long idChat);
+
+    @Transaction
+    @Query("SELECT * FROM message WHERE statusRemote IN (:status)")
+    public abstract Flowable<MessageEntity> findFlowableByStatus(List<String> status);
 
 }
