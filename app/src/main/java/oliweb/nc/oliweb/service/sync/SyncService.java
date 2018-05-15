@@ -102,7 +102,7 @@ public class SyncService extends IntentService {
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
-        FirebaseSyncService.getInstance(this).synchronize(this, uidUtilisateur);
+        FirebaseRetreiverService.getInstance(this).synchronize(this, uidUtilisateur);
     }
 
     @Override

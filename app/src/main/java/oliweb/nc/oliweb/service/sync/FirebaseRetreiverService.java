@@ -16,25 +16,25 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 /**
  * Created by orlanth23 on 03/03/2018.
+ * This class allows to retreive {@link AnnonceDto} from Firebase corresponding to the given UID User.
  */
+public class FirebaseRetreiverService {
 
-public class FirebaseSyncService {
+    private static final String TAG = FirebaseRetreiverService.class.getName();
 
-    private static final String TAG = FirebaseSyncService.class.getName();
-
-    private static FirebaseSyncService instance;
+    private static FirebaseRetreiverService instance;
 
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
-    private FirebaseSyncService() {
+    private FirebaseRetreiverService() {
     }
 
-    public static FirebaseSyncService getInstance(Context context) {
+    public static FirebaseRetreiverService getInstance(Context context) {
         if (instance == null) {
-            instance = new FirebaseSyncService();
+            instance = new FirebaseRetreiverService();
         }
         instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
         return instance;

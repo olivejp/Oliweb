@@ -64,8 +64,12 @@ public class DatabaseSyncListenerService extends Service {
 
     @Override
     public void onDestroy() {
-        disposableChatByStatus.dispose();
-        disposableMessageByStatus.dispose();
+        if (disposableChatByStatus != null) {
+            disposableChatByStatus.dispose();
+        }
+        if (disposableMessageByStatus != null) {
+            disposableMessageByStatus.dispose();
+        }
         super.onDestroy();
     }
 }
