@@ -6,6 +6,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -23,5 +24,9 @@ public abstract class AnnonceFullDao {
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:statutList)")
     public abstract Maybe<List<AnnonceFull>> getAllAnnonceByStatus(List<String> statutList);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
+    public abstract Flowable<AnnonceFull> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
 
 }

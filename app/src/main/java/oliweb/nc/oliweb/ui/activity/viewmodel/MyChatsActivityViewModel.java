@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -23,7 +22,6 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.utility.Utility;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
@@ -172,7 +170,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     /**
      * Insert new message into local DB
-     * if network is available, we call SyncService
      *
      * @param message
      * @return
@@ -183,18 +180,14 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setMessage(message);
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
         messageEntity.setIdChat(selectedIdChat);
+        messageEntity.setUidChat(currentChat.getUidChat());
         messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
 
         return Single.create(emitter ->
                 messageRepository.saveWithSingle(messageEntity)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(entity -> {
-                            if (NetworkReceiver.checkConnection(getApplication())) {
-                                SyncService.launchSynchroForMessage(getApplication());
-                            }
-                            emitter.onSuccess(new AtomicBoolean(true));
-                        })
+                        .doOnSuccess(entity -> emitter.onSuccess(new AtomicBoolean(true)))
                         .subscribe()
         );
     }

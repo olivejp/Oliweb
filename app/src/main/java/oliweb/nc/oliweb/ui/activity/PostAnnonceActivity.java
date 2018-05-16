@@ -46,13 +46,11 @@ import butterknife.OnLongClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
@@ -256,9 +254,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     viewModel.savePhotos(annonce)
                             .doOnSuccess(listPhotos -> {
                                 Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
-                                if (NetworkReceiver.checkConnection(PostAnnonceActivity.this)) {
-                                    SyncService.launchSynchroForAll(getApplicationContext());
-                                }
                                 setResult(RESULT_OK);
                                 finish();
                             })

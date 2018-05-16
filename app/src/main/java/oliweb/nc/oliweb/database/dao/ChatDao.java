@@ -39,11 +39,15 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser AND statusRemote NOT IN (:status)")
-    public abstract LiveData<List<ChatEntity>> findByUidUser(String uidUser, List<String> status);
+    public abstract LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidUser, List<String> status);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser AND statusRemote NOT IN (:status)")
-    public abstract Flowable<ChatEntity> findFlowableByUidUser(String uidUser, List<String> status);
+    public abstract Flowable<ChatEntity> findFlowableByUidUserAndStatusNotIn(String uidUser, List<String> status);
+
+    @Transaction
+    @Query("SELECT * FROM chat WHERE uidSeller = :uidUser OR uidBuyer = :uidUser AND statusRemote IN (:status)")
+    public abstract Flowable<ChatEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND uidAnnonce = :uidAnnonce LIMIT 1")

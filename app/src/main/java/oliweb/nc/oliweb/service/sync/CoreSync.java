@@ -74,7 +74,7 @@ public class CoreSync {
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
             instance.firebaseMessageRepository = FirebaseMessageRepository.getInstance();
             instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
-            instance.firebaseChatRepository = FirebaseChatRepository.getInstance(context);
+            instance.firebaseChatRepository = FirebaseChatRepository.getInstance();
             instance.contentResolver = context.getContentResolver();
         }
         return instance;
@@ -175,13 +175,21 @@ public class CoreSync {
                                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                     .doOnSuccess(chatSaved -> {
                                         Log.d(TAG, "Chat has been marked as SEND chatEntity : " + chatSaved);
-                                        sendGetAllNewMessages(chatSaved.getIdChat(), chatFirebase.getUid());
+                                        // Update all the message with this new UID Chat
+                                        messageRepository.getFlowableByIdChat(chatEntity.getIdChat())
+                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                .doOnNext(messageEntity -> {
+                                                    messageEntity.setUidChat(chatSaved.getUidChat());
+                                                    messageEntity.setStatusRemote(StatusRemote.TO_SEND);
+                                                    messageRepository.saveWithSingle(messageEntity)
+                                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                            .subscribe();
+                                                })
+                                                .subscribe();
                                     })
                                     .subscribe()
                     )
                     .subscribe();
-        } else {
-            sendGetAllNewMessages(chatEntity.getIdChat(), chatEntity.getUidChat());
         }
     }
 
@@ -203,58 +211,28 @@ public class CoreSync {
                 .subscribe();
     }
 
-    private void sendGetAllNewMessages(Long idChat, String uidChat) {
-        Log.d(TAG, "sendGetAllNewMessages idChat : " + idChat + " uidChat : " + uidChat);
-        messageRepository.getAllMessageByStatusByIdChat(idChat, Utility.allStatusToSend())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(messageEntity -> sendMessage(uidChat, messageEntity))
-                .subscribe();
-    }
-
-    /**
-     * 1 - Catch a new timestamp from FB Server, and a new UidMessage for the message
-     * 2 - Update the message with those new datas (uidMessage and timestamp and uidChat
-     * 3 - Send this updated message to FB database
-     * 4 - Mark the message to SEND
-     *
-     * @param uidChat
-     * @param messageEntity
-     */
-    private void sendMessage(String uidChat, MessageEntity messageEntity) {
-        Log.d(TAG, "sendMessage uidChat : " + uidChat + " messageEntity : " + messageEntity);
-        firebaseMessageRepository.getUidAndTimestampFromFirebase(uidChat, messageEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(messageSaved -> {
-                    Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.doOnSuccess");
-                    messageRepository.saveWithSingle(messageSaved)
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnSuccess(messageRead -> {
-                                Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.saveWithSingle.doOnSuccess");
-                                firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageRead))
-                                        .subscribe();
-                            })
-                            .subscribe();
-                })
-                .subscribe();
-    }
-
     public void sendMessage(MessageEntity messageEntity) {
+        // Récupération du timestamp server + une nouvelle UID pour le message
         Log.d(TAG, "sendMessage messageEntity : " + messageEntity);
         firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(messageSaved -> {
+                    // Enregistrement dans la DB locale de notre message avec son nouvelle UID et le timestamp du server
+                    // On en profite pour modifier le statut du message pour le faire passer à SENDING
                     Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.doOnSuccess");
+                    messageSaved.setStatusRemote(StatusRemote.SENDING);
                     messageRepository.saveWithSingle(messageSaved)
                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .doOnSuccess(messageRead -> {
+                                // Envoi du message avec son UID et son timestamp sur Firebase Database
                                 Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.saveWithSingle.doOnSuccess");
                                 firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
                                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageFirebase, messageRead))
+                                        .doOnSuccess(messageFirebase -> {
+                                            Log.d(TAG, "firebaseMessageRepository.saveMessage messageFirebase : " + messageFirebase + " messageRead : " + messageRead);
+                                            markMessageHasBeenSend(messageFirebase, messageRead);
+                                        })
                                         .subscribe();
                             })
                             .subscribe();
@@ -268,7 +246,7 @@ public class CoreSync {
      *
      * @param annonceFull to send to Firebase
      */
-    private void sendAnnonceToRemoteDatabase(AnnonceFull annonceFull) {
+    public void sendAnnonceToRemoteDatabase(AnnonceFull annonceFull) {
         Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceFull : " + annonceFull);
         AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
         firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
@@ -375,14 +353,14 @@ public class CoreSync {
                 .observeAllPhotosByIdAnnonce(annonceEntity.getId())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnNext(photo -> {
-                    deletePhotoFromRemoteStorage(photo, annonceEntity);
+                    deletePhotoFromRemoteStorage(photo);
                     deleteFromLocalDb(photo, annonceEntity);
                 })
                 .subscribe();
     }
 
     // 1 - Suppression des photos du firebase Storage
-    private void deletePhotoFromRemoteStorage(PhotoEntity photo, AnnonceEntity annonceEntity) {
+    private void deletePhotoFromRemoteStorage(PhotoEntity photo) {
         firebasePhotoStorage.delete(photo)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();

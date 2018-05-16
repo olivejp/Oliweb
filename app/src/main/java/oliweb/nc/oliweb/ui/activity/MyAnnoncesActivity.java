@@ -24,7 +24,6 @@ import java.util.List;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -162,12 +161,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 viewModel.markToDelete(idAnnonce)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(exception -> Log.e(TAG, "markToDelete.doOnError exception : " + exception.getLocalizedMessage(), exception))
-                        .doOnSuccess(result -> {
-                            Log.d(TAG, "markToDelete.doOnSuccess result : " + result);
-                            if (result.get() && NetworkReceiver.checkConnection(this)) {
-                                SyncService.launchSynchroForAll(getApplicationContext());
-                            }
-                        })
+                        .doOnSuccess(result -> Log.d(TAG, "markToDelete.doOnSuccess result : " + result))
                         .subscribe();
             }
         }

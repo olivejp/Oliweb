@@ -109,4 +109,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                         .subscribe()
         );
     }
+
+    public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
+    }
 }

@@ -8,7 +8,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.service.job.SyncJob;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.FirebaseSyncListenerService;
 
@@ -55,7 +54,7 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         if (FirebaseAuth.getInstance() != null) {
             FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> {
                 mFirebaseUser = firebaseAuth.getCurrentUser();
-                checkBeforeLaunchServices();
+                authUpdate();
             });
         }
 
@@ -70,7 +69,7 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
      * Vérification qu'il y a bien un utilisateur connecté et qu'l y a une connexion
      * avant de lancer les services de synchro.
      */
-    private void checkBeforeLaunchServices() {
+    private void authUpdate() {
         if (mFirebaseUser != null) {
             if (NetworkReceiver.checkConnection(this)) {
                 launchServices(mFirebaseUser.getUid());
@@ -86,29 +85,26 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
      * @param uidUser de l'utilisateur à connecter
      */
     private void launchServices(String uidUser) {
+        // Lancement du service pour écouter la DB en local
+        intentLocalDbService.putExtra(DatabaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
+        startService(intentLocalDbService);
+
         // Lancement du service pour écouter Firebase
         intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
         startService(intentFirebaseDbService);
-
-        // Lancement du service pour écouter la DB en local
-        intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
-        startService(intentLocalDbService);
-
-        // Lancement d'une synchro uniquement s'il y a du réseau
-        SyncJob.launchImmediateJob();
     }
 
     private void removeServices() {
-        // Stop the Firebase sync service
-        stopService(intentFirebaseDbService);
-
         // Stop the Local DB sync service
         stopService(intentLocalDbService);
+
+        // Stop the Firebase sync service
+        stopService(intentFirebaseDbService);
     }
 
     @Override
     public void onNetworkEnable() {
-        checkBeforeLaunchServices();
+        authUpdate();
     }
 
     @Override

@@ -46,12 +46,17 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
 
     public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
         Log.d(TAG, "Starting findByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
-        return this.chatDao.findByUidUser(uidBuyerOrSeller, status);
+        return this.chatDao.findByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
     }
 
     public Flowable<ChatEntity> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
         Log.d(TAG, "Starting findFlowableByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
-        return this.chatDao.findFlowableByUidUser(uidBuyerOrSeller, status);
+        return this.chatDao.findFlowableByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
+    }
+
+    public Flowable<ChatEntity> findFlowableByUidUserAndStatusIn(String uidBuyerOrSeller, List<String> status) {
+        Log.d(TAG, "Starting findFlowableByUidUserAndStatusIn uidBuyerOrSeller : " + uidBuyerOrSeller);
+        return this.chatDao.findFlowableByUidUserAndStatusIn(uidBuyerOrSeller, status);
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {

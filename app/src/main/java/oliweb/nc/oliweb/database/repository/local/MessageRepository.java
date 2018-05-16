@@ -8,7 +8,6 @@ import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
-import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.MessageDao;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -43,25 +42,13 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return this.messageDao.findAllByIdChat(idChat);
     }
 
-    public Observable<MessageEntity> getAllMessageByStatusByIdChat(Long idChat, List<String> status) {
-        Log.d(TAG, "Starting getAllMessageByStatusByIdChat " + status);
-        return Observable.create(emitter ->
-                this.messageDao.getAllMessageByStatusByIdChat(idChat, status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(messageEntities -> {
-                            for (MessageEntity message : messageEntities) {
-                                emitter.onNext(message);
-                            }
-                            emitter.onComplete();
-                        })
-                        .subscribe()
-        );
+    public Flowable<MessageEntity> getFlowableByIdChat(Long idChat) {
+        return this.messageDao.getFlowableByIdChat(idChat);
     }
 
-    public Flowable<MessageEntity> findFlowableByStatus(List<String> status) {
-        Log.d(TAG, "Starting findFlowableByStatus " + status);
-        return this.messageDao.findFlowableByStatus(status);
+    public Flowable<MessageEntity> findFlowableByStatusAndUidChatNotNull(List<String> status) {
+        Log.d(TAG, "Starting findFlowableByStatusAndUidChatNotNull " + status);
+        return this.messageDao.findFlowableByStatusAndUidChatNotNull(status);
     }
 
     public void saveMessageIfNotExist(MessageEntity messageEntity) {

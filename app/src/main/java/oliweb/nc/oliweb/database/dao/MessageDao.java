@@ -38,23 +38,17 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     public abstract Maybe<MessageEntity> findSingleByUid(String uidMessage);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM message WHERE uidMessage = :uidMessage")
-    public abstract Single<Integer> countById(String uidMessage);
-
-    @Transaction
-    @Query("SELECT * FROM message WHERE idChat = :idChat AND statusRemote IN (:status)")
-    public abstract Maybe<List<MessageEntity>> getAllMessageByStatusByIdChat(Long idChat, List<String> status);
-
-    @Transaction
-    @Query("SELECT * FROM message WHERE statusRemote IN (:status)")
-    public abstract Maybe<List<MessageEntity>> getAllMessageByStatus(List<String> status);
-
-    @Transaction
     @Query("SELECT * FROM message WHERE idChat = :idChat")
     public abstract LiveData<List<MessageEntity>> findAllByIdChat(Long idChat);
 
     @Transaction
-    @Query("SELECT * FROM message WHERE statusRemote IN (:status)")
-    public abstract Flowable<MessageEntity> findFlowableByStatus(List<String> status);
+    @Query("SELECT * FROM message WHERE statusRemote IN (:status) AND uidChat <> ''")
+    public abstract Flowable<MessageEntity> findFlowableByStatusAndUidChatNotNull(List<String> status);
+
+
+    @Transaction
+    @Query("SELECT * FROM message WHERE idChat =:idChat")
+    public abstract Flowable<MessageEntity> getFlowableByIdChat(Long idChat);
+
 
 }

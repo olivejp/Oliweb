@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -38,6 +39,10 @@ public class AnnonceFullRepository {
 
     public Maybe<List<AnnonceFull>> getAllAnnoncesByStatus(List<String> status) {
         return this.annonceFullDao.getAllAnnonceByStatus(status);
+    }
+
+    public Flowable<AnnonceFull> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceFullDao.findFlowableByUidUserAndStatusIn(uidUser, status);
     }
 
     public Observable<AnnonceFull> observeAllAnnoncesByStatus(List<String> status) {

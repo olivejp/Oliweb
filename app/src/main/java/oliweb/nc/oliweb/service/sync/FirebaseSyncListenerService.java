@@ -27,6 +27,13 @@ import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
+/**
+ * This class will create Listeners to some points in Firebase database
+ * And sync those items into the local database.
+ * Items synced :
+ * - Chats
+ * - Messages
+ */
 public class FirebaseSyncListenerService extends Service {
 
     private static final String TAG = FirebaseSyncListenerService.class.getName();
@@ -45,11 +52,19 @@ public class FirebaseSyncListenerService extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    /**
+     * Si aucun UID user donné en paramètre, on arrête directement le service.
+     *
+     * @param intent
+     * @param flags
+     * @param startId
+     * @return
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Récupération de l'UID de l'utilisateur
-        if (intent.getStringExtra(CHAT_SYNC_UID_USER) != null && !intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
-
+        if (intent.getStringExtra(CHAT_SYNC_UID_USER) == null || intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
+            stopSelf();
+        } else {
             chatRepository = ChatRepository.getInstance(this);
             messageRepository = MessageRepository.getInstance(this);
             listQueryListener = new ArrayList<>();
@@ -57,15 +72,11 @@ public class FirebaseSyncListenerService extends Service {
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
             // Récupération des chats de l'utilisateur connecté
-            listenForChat(uidUser);
+            listenForChatByUidUser(uidUser);
 
             // Création d'observers pour écouter les nouveaux chats
-            listenForMessage(uidUser);
-        } else {
-            // Si pas d UID user on sort tout de suite du service
-            stopSelf();
+            listenForMessageByUidUser(uidUser);
         }
-
         return START_NOT_STICKY;
     }
 
@@ -86,8 +97,8 @@ public class FirebaseSyncListenerService extends Service {
      *
      * @param uidUser
      */
-    private void listenForChat(String uidUser) {
-        Log.d(TAG, "Starting listenForChat uidUser : " + uidUser);
+    private void listenForChatByUidUser(String uidUser) {
+        Log.d(TAG, "Starting listenForChatByUidUser uidUser : " + uidUser);
 
         // Création d'un listener
         listenerChat = new ValueEventListener() {
@@ -133,8 +144,8 @@ public class FirebaseSyncListenerService extends Service {
      *
      * @param uidUser
      */
-    private void listenForMessage(String uidUser) {
-        Log.d(TAG, "Starting listenForMessage uidUser : " + uidUser);
+    private void listenForMessageByUidUser(String uidUser) {
+        Log.d(TAG, "Starting listenForMessageByUidUser uidUser : " + uidUser);
 
         // Récupération de la liste des chats pour l'utilisateur connecté et dont le statut n'est pas cloturé
         chatRepository.findFlowableByUidUserAndStatusNotIn(uidUser, Utility.allStatusToAvoid())
