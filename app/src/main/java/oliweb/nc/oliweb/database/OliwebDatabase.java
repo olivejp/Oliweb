@@ -51,13 +51,30 @@ public abstract class OliwebDatabase extends RoomDatabase {
                         super.onCreate(db);
                         Executors.newSingleThreadScheduledExecutor().execute(() -> getInstance(context).getCategorieDao().insert(populateCategorie()));
                     }
+
+                    @Override
+                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
+                        super.onOpen(db);
+
+                        // Vérification qu'on a bien la liste des Catégories avant de démarrer l'application
+                        Executors.newSingleThreadExecutor().execute(() ->
+                                getInstance(context)
+                                        .getCategorieDao()
+                                        .getListCategorie()
+                                        .subscribe(list -> {
+                                            if (list.isEmpty()) {
+                                                db.execSQL("INSERT INTO categorie (name) VALUES('Automobile'), ('Mobilier'), ('Jouet'), ('Fleur'), ('Sport')");
+                                            }
+                                        })
+                        );
+                    }
                 })
                 .addMigrations(MIGRATION_1_11)
                 .build();
     }
 
     private static CategorieEntity[] populateCategorie() {
-        return new CategorieEntity[] {
+        return new CategorieEntity[]{
                 new CategorieEntity("Automobile", null),
                 new CategorieEntity("Mobilier", null),
                 new CategorieEntity("Jouet", null),

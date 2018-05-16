@@ -97,9 +97,14 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedUidUtilisateur = uidUtilisateur;
     }
 
-    public void rechercheMessageByUidChat(Long idChat) {
+    public void rechercheMessageByIdChat(Long idChat) {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
         selectedIdChat = idChat;
+        chatRepository.findById(idChat)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatEntity -> currentChat = chatEntity)
+                .subscribe();
     }
 
     public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {

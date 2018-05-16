@@ -8,6 +8,7 @@ import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.MessageDao;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -42,8 +43,8 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return this.messageDao.findAllByIdChat(idChat);
     }
 
-    public Flowable<MessageEntity> getFlowableByIdChat(Long idChat) {
-        return this.messageDao.getFlowableByIdChat(idChat);
+    public Single<List<MessageEntity>> getSingleByIdChat(Long idChat) {
+        return this.messageDao.getSingleByIdChat(idChat);
     }
 
     public Flowable<MessageEntity> findFlowableByStatusAndUidChatNotNull(List<String> status) {

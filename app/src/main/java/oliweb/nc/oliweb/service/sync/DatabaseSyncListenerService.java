@@ -60,10 +60,7 @@ public class DatabaseSyncListenerService extends Service {
             disposableMessageByStatus = messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(messageEntity -> {
-                        Log.d(TAG, "MessageToSend :" + messageEntity);
-                        coreSync.sendMessage(messageEntity);
-                    })
+                    .doOnNext(coreSync::sendMessage)
                     .subscribe();
 
 

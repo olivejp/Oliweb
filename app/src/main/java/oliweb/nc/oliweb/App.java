@@ -26,23 +26,17 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
     public void onCreate() {
         super.onCreate();
 
-        intentLocalDbService = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
-        intentFirebaseDbService = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
-
         if (LeakCanary.isInAnalyzerProcess(this)) {
-            // This process is dedicated to LeakCanary for heap analysis.
-            // You should not init your app in this process.
             return;
         }
         LeakCanary.install(this);
 
+        // Création des intents pour les services de synchronisation
+        intentLocalDbService = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
+        intentFirebaseDbService = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
+
         // On attache le receiver à notre application
         registerReceiver(NetworkReceiver.getInstance(), NetworkReceiver.CONNECTIVITY_CHANGE_INTENT_FILTER);
-
-        // TODO Réactiver la plannif du job
-        // Plannification d'un job
-        // JobManager.create(this).addJobCreator(new SyncJobCreator());
-        // SyncJob.scheduleJob();
 
         // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le
         // cas où il y a du réseau.
@@ -59,10 +53,15 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         }
 
         // Active la persistence des données pour Firebase database
-//        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-//        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).keepSynced(true);
-//        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
-//        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
+        //        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).keepSynced(true);
+        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
+        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
+
+        // TODO Réactiver la plannif du job
+        // Plannification d'un job
+        // JobManager.create(this).addJobCreator(new SyncJobCreator());
+        // SyncJob.scheduleJob();
     }
 
     /**
@@ -94,6 +93,9 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         startService(intentFirebaseDbService);
     }
 
+    /**
+     * Stoppe les services de synchronisation
+     */
     private void removeServices() {
         // Stop the Local DB sync service
         stopService(intentLocalDbService);

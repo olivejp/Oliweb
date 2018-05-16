@@ -9,11 +9,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 
@@ -72,36 +72,39 @@ public class FirebaseChatRepository {
         );
     }
 
-    public Single<ChatFirebase> createChat(ChatEntity chatEntity) {
-        Log.d(TAG, "Starting createChat chatEntity : " + chatEntity);
+    /**
+     * Va récupérer un uid d'un message et le timestamp du serveur
+     *
+     * @param chatEntity
+     * @return
+     */
+    public Single<ChatEntity> getUidAndTimestampFromFirebase(ChatEntity chatEntity) {
+        Log.d(TAG, "Starting getUidAndTimestampFromFirebase chatEntity : " + chatEntity);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {
-                            try {
-                                DatabaseReference ref = chatRef.push();
-                                HashMap<String, Boolean> hash = new HashMap<>();
-                                hash.put(chatEntity.getUidBuyer(), true);
-                                hash.put(chatEntity.getUidSeller(), true);
-
-                                ChatFirebase chatFirebase = new ChatFirebase();
-                                chatFirebase.setUid(ref.getKey());
-                                chatFirebase.setUidAnnonce(chatEntity.getUidAnnonce());
-                                chatFirebase.setMembers(hash);
-                                chatFirebase.setUidBuyer(chatEntity.getUidBuyer());
-                                chatFirebase.setUidSeller(chatEntity.getUidSeller());
-                                chatFirebase.setTitreAnnonce(chatEntity.getTitreAnnonce());
-                                chatFirebase.setLastMessage(chatEntity.getLastMessage());
-                                chatFirebase.setCreationTimestamp(timestamp);
-                                chatFirebase.setUpdateTimestamp(timestamp);
-                                ref.setValue(chatFirebase)
-                                        .addOnSuccessListener(aVoid -> emitter.onSuccess(chatFirebase))
-                                        .addOnFailureListener(emitter::onError);
-                            } catch (Exception e) {
-                                emitter.onError(e);
-                            }
+                            DatabaseReference newChetRef = chatRef.push();
+                            chatEntity.setCreationTimestamp(timestamp);
+                            chatEntity.setUidChat(newChetRef.getKey());
+                            emitter.onSuccess(chatEntity);
                         })
                         .subscribe()
+        );
+    }
+
+    /**
+     *
+     * @param chatFirebase
+     * @return
+     */
+    public Single<ChatFirebase> saveChat(ChatFirebase chatFirebase) {
+        Log.d(TAG, "Starting saveChat chatFirebase : " + chatFirebase);
+        return Single.create(emitter ->
+                chatRef.child(chatFirebase.getUid()).setValue(chatFirebase)
+                        .addOnSuccessListener(aVoid -> emitter.onSuccess(chatFirebase))
+                        .addOnFailureListener(emitter::onError)
         );
     }
 

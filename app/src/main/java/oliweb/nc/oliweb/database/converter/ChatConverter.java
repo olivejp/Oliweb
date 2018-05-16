@@ -49,8 +49,8 @@ public class ChatConverter {
         chatFirebase.setUidSeller(chatEntity.getUidSeller());
         chatFirebase.setTitreAnnonce(chatEntity.getTitreAnnonce());
         chatFirebase.setLastMessage(chatEntity.getLastMessage());
-        chatFirebase.setCreationTimestamp(chatEntity.getCreationTimestamp());
-        chatFirebase.setUpdateTimestamp(chatEntity.getUpdateTimestamp());
+        chatFirebase.setCreationTimestamp((chatEntity.getCreationTimestamp() != null) ? chatEntity.getCreationTimestamp() : 0L);
+        chatFirebase.setUpdateTimestamp((chatEntity.getUpdateTimestamp() != null) ? chatEntity.getUpdateTimestamp() : 0L);
         return chatFirebase;
     }
 }

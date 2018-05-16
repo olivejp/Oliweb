@@ -48,7 +48,7 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM message WHERE idChat =:idChat")
-    public abstract Flowable<MessageEntity> getFlowableByIdChat(Long idChat);
+    public abstract Single<List<MessageEntity>> getSingleByIdChat(Long idChat);
 
 
 }
