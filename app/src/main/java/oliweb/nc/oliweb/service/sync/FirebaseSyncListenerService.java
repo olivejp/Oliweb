@@ -150,78 +150,80 @@ public class FirebaseSyncListenerService extends Service {
         // Récupération de la liste des chats pour l'utilisateur connecté et dont le statut n'est pas cloturé
         chatRepository.findFlowableByUidUserAndStatusNotIn(uidUser, Utility.allStatusToAvoid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnNext(chat -> {
-                    if (chat.getUidChat() != null) {
-                        // Création d'un listener
-                        ChildEventListener listener = new ChildEventListener() {
-                            @Override
-                            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                                MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
-                                Log.d(TAG, "Nouveau message reçu messageFirebase : " + message);
-                                if (message != null) {
-                                    messageRepository.saveMessageIfNotExist(MessageConverter.convertDtoToEntity(chat.getIdChat(), message));
+                .doOnNext(listChat -> {
+                    for (ChatEntity chat: listChat) {
+                        if (chat.getUidChat() != null) {
+                            // Création d'un listener
+                            ChildEventListener listener = new ChildEventListener() {
+                                @Override
+                                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                                    MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                    Log.d(TAG, "Nouveau message reçu messageFirebase : " + message);
+                                    if (message != null) {
+                                        messageRepository.saveMessageIfNotExist(MessageConverter.convertDtoToEntity(chat.getIdChat(), message));
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                                // Suppression du message de la db locale
-                                MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
-                                Log.d(TAG, "Suppression du message messageFirebase : " + message);
-                                if (message != null) {
-                                    messageRepository.findSingleByUid(message.getUidMessage())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnSuccess(messageEntity -> messageRepository.delete(dataReturn -> {
-                                                if (dataReturn.isSuccessful()) {
-                                                    Log.d(TAG, "Suppression du message réussie");
-                                                } else {
-                                                    Log.d(TAG, "Suppression du message échouée");
-                                                }
-                                            }, messageEntity))
-                                            .subscribe();
+                                @Override
+                                public void onChildRemoved(DataSnapshot dataSnapshot) {
+                                    // Suppression du message de la db locale
+                                    MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                    Log.d(TAG, "Suppression du message messageFirebase : " + message);
+                                    if (message != null) {
+                                        messageRepository.findSingleByUid(message.getUidMessage())
+                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                .doOnSuccess(messageEntity -> messageRepository.delete(dataReturn -> {
+                                                    if (dataReturn.isSuccessful()) {
+                                                        Log.d(TAG, "Suppression du message réussie");
+                                                    } else {
+                                                        Log.d(TAG, "Suppression du message échouée");
+                                                    }
+                                                }, messageEntity))
+                                                .subscribe();
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                                // Modification d'un message de la db locale
-                                MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
-                                Log.d(TAG, "Mise à jour du message messageFirebase : " + message);
-                                if (message != null) {
-                                    messageRepository.findSingleByUid(message.getUidMessage())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnSuccess(messageEntity -> {
-                                                messageEntity.setMessage(message.getMessage());
-                                                messageEntity.setTimestamp(message.getTimestamp());
-                                                messageEntity.setUidAuthor(message.getUidAuthor());
-                                                messageRepository.saveWithSingle(messageEntity)
-                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                        .subscribe();
-                                            })
-                                            .subscribe();
+                                @Override
+                                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                                    // Modification d'un message de la db locale
+                                    MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
+                                    Log.d(TAG, "Mise à jour du message messageFirebase : " + message);
+                                    if (message != null) {
+                                        messageRepository.findSingleByUid(message.getUidMessage())
+                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                .doOnSuccess(messageEntity -> {
+                                                    messageEntity.setMessage(message.getMessage());
+                                                    messageEntity.setTimestamp(message.getTimestamp());
+                                                    messageEntity.setUidAuthor(message.getUidAuthor());
+                                                    messageRepository.saveWithSingle(messageEntity)
+                                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                            .subscribe();
+                                                })
+                                                .subscribe();
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                                @Override
+                                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
-                            }
+                                }
 
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
 
-                            }
-                        };
+                                }
+                            };
 
-                        // Création de listener pour chacun de ces chats
-                        Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("timestamp");
-                        query.addChildEventListener(listener);
+                            // Création de listener pour chacun de ces chats
+                            Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("timestamp");
+                            query.addChildEventListener(listener);
 
-                        // Ajout de la query et du listener à notre liste
-                        listQueryListener.add(new Pair<>(query, listener));
+                            // Ajout de la query et du listener à notre liste
+                            listQueryListener.add(new Pair<>(query, listener));
+                        }
                     }
                 })
                 .subscribe();

@@ -48,7 +48,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return this.chatDao.findByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
     }
 
-    public Flowable<ChatEntity> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
+    public Flowable<List<ChatEntity>> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
         Log.d(TAG, "Starting findFlowableByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
         return this.chatDao.findFlowableByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
     }

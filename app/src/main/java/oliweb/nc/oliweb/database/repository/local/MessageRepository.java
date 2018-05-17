@@ -57,11 +57,13 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         messageDao.findSingleByUid(messageEntity.getUidMessage())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnComplete(() ->
-                        saveWithSingle(messageEntity)
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .subscribe()
+                .doOnComplete(() -> {
+                            Log.d(TAG, "Message was not found with UID : " + messageEntity.getUidMessage());
+                            saveWithSingle(messageEntity)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                    .subscribe();
+                        }
                 )
                 .subscribe();
     }
