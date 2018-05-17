@@ -10,11 +10,9 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
-import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
@@ -25,7 +23,6 @@ import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -47,7 +44,6 @@ public class CoreSync {
     private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private FirebaseMessageRepository firebaseMessageRepository;
     private FirebaseChatRepository firebaseChatRepository;
     private FirebaseUserRepository firebaseUserRepository;
     private UtilisateurRepository utilisateurRepository;
@@ -71,7 +67,6 @@ public class CoreSync {
             instance.chatRepository = ChatRepository.getInstance(context);
             instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-            instance.firebaseMessageRepository = FirebaseMessageRepository.getInstance();
             instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
             instance.firebaseChatRepository = FirebaseChatRepository.getInstance();
             instance.contentResolver = context.getContentResolver();
@@ -188,43 +183,6 @@ public class CoreSync {
                     )
                     .subscribe();
         }
-    }
-
-    private void markMessageHasBeenSend(MessageEntity messageEntity) {
-        messageEntity.setStatusRemote(StatusRemote.SEND);
-        messageRepository.saveWithSingle(messageEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(messageEntity1 -> Log.d(TAG, "Message has been marked as SEND messageEntity : " + messageEntity1))
-                .subscribe();
-    }
-
-    public void sendMessage(MessageEntity messageEntity) {
-        // Récupération du timestamp server + une nouvelle UID pour le message
-        Log.d(TAG, "sendMessage messageEntity : " + messageEntity);
-        firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(messageSaved -> {
-                    // Enregistrement dans la DB locale de notre message avec son nouvelle UID et le timestamp du server
-                    // On en profite pour modifier le statut du message pour le faire passer à SENDING
-                    Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.doOnSuccess");
-                    messageSaved.setStatusRemote(StatusRemote.SENDING);
-                    messageRepository.saveWithSingle(messageSaved)
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnSuccess(messageRead -> {
-                                // Envoi du message avec son UID et son timestamp sur Firebase Database
-                                Log.d(TAG, "sendMessage.getUidAndTimestampFromFirebase.saveWithSingle.doOnSuccess messageRead : " + messageRead);
-                                firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(messageFirebase -> {
-                                            Log.d(TAG, "firebaseMessageRepository.saveMessage messageFirebase : " + messageFirebase + " messageRead : " + messageRead);
-                                            markMessageHasBeenSend(messageRead);
-                                        })
-                                        .subscribe();
-                            })
-                            .subscribe();
-                })
-                .subscribe();
     }
 
     /**
