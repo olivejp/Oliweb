@@ -3,6 +3,7 @@ package oliweb.nc.oliweb;
 import android.app.Application;
 import android.content.Intent;
 
+import com.facebook.stetho.Stetho;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.leakcanary.LeakCanary;
@@ -25,6 +26,8 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
     @Override
     public void onCreate() {
         super.onCreate();
+        // TODO Supprimer la lib en prod
+        Stetho.initializeWithDefaults(this);
 
         if (LeakCanary.isInAnalyzerProcess(this)) {
             return;

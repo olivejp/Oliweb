@@ -45,6 +45,7 @@ public class DatabaseSyncListenerService extends Service {
             AnnonceFullRepository annonceFullRepository = AnnonceFullRepository.getInstance(this);
             CoreSync coreSync = CoreSync.getInstance(this);
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
+            ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
 
             disposableAnnonceToSendByStatus = annonceFullRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -55,7 +56,7 @@ public class DatabaseSyncListenerService extends Service {
             disposableChatByStatus = chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(coreSync::sendNewChat)
+                    .doOnNext(chatFirebaseSender::sendNewChat)
                     .subscribe();
 
             // Cette souscription va écouter en permanence les messages pour l'UID user et dont le statut est A Envoyer
