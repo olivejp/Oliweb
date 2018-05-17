@@ -12,7 +12,10 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 
-// TODO tester cette méthode
+/**
+ * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
+ * sur Firebase.
+ */
 public class ChatFirebaseSender {
 
     private static final String TAG = ChatFirebaseSender.class.getName();
@@ -36,6 +39,11 @@ public class ChatFirebaseSender {
         return instance;
     }
 
+    /**
+     * Main method
+     *
+     * @param chatEntity
+     */
     public void sendNewChat(ChatEntity chatEntity) {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
         if (chatEntity.getUidChat() == null) {
@@ -50,12 +58,24 @@ public class ChatFirebaseSender {
         }
     }
 
+    /**
+     * 1 - Marque le chat comme étant en train d'être envoyé
+     *
+     * @param chatEntity
+     * @return
+     */
     private Observable<ChatEntity> markChatAsSending(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSending chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SENDING);
         return chatRepository.saveIfNotExist(chatEntity).toObservable();
     }
 
+    /**
+     * 2 - Tente d'envoyer le chat sur firebase
+     *
+     * @param chatEntity
+     * @return
+     */
     private Observable<ChatEntity> sendChatToFirebase(ChatEntity chatEntity) {
         Log.d(TAG, "sendChatToFirebase chatEntity : " + chatEntity);
         return firebaseChatRepository
@@ -68,12 +88,24 @@ public class ChatFirebaseSender {
                 .toObservable();
     }
 
+    /**
+     * 3 - Marque le chat comme étant envoyé
+     *
+     * @param chatEntity
+     * @return
+     */
     private Observable<ChatEntity> markChatAsSend(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSend chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SEND);
         return chatRepository.saveIfNotExist(chatEntity).toObservable();
     }
 
+    /**
+     * 4 - Met à jour tous les messages attachés à ce chat pour leur attribuer l'UID du chat
+     *
+     * @param chatEntity
+     * @return
+     */
     private Observable<MessageEntity> updateAllMessages(ChatEntity chatEntity) {
         Log.d(TAG, "Update all the messages to retreive the UID Chat : " + chatEntity);
         return messageRepository.getSingleByIdChat(chatEntity.getIdChat())

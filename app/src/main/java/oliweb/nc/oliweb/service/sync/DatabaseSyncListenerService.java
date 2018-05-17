@@ -43,14 +43,14 @@ public class DatabaseSyncListenerService extends Service {
             ChatRepository chatRepository = ChatRepository.getInstance(this);
             MessageRepository messageRepository = MessageRepository.getInstance(this);
             AnnonceFullRepository annonceFullRepository = AnnonceFullRepository.getInstance(this);
-            CoreSync coreSync = CoreSync.getInstance(this);
+            AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
             ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
 
             disposableAnnonceToSendByStatus = annonceFullRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(coreSync::sendAnnonceToRemoteDatabase)
+                    .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
                     .subscribe();
 
             disposableChatByStatus = chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())

@@ -7,7 +7,6 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -67,10 +66,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         });
     }
 
-    public Flowable<Integer> countFlowableAllAnnoncesByStatus(String status) {
-        return this.annonceDao.countFlowableAllAnnoncesByStatus(status);
-    }
-
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {
         return this.annonceDao.countAllAnnoncesByUser(uidUser, statusToAvoid);
     }
@@ -108,9 +103,5 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                         })
                         .subscribe()
         );
-    }
-
-    public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
-        return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
     }
 }

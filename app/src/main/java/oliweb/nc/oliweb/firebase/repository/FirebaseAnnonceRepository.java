@@ -182,6 +182,35 @@ public class FirebaseAnnonceRepository {
     }
 
     /**
+     * Va récupérer un uid et le timestamp du serveur pour une annonceDto
+     *
+     * @param annonceEntity
+     * @return
+     */
+    public Single<AnnonceEntity> getUidAndTimestampFromFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting getUidAndTimestampFromFirebase annonceEntity : " + annonceEntity);
+        return Single.create(emitter ->
+                FirebaseUtility.getServerTimestamp()
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(timestamp -> {
+                            DatabaseReference dbRef;
+                            if (annonceEntity.getUid() == null || annonceEntity.getUid().isEmpty()) {
+                                dbRef = ANNONCE_REF.push();
+                                annonceEntity.setUid(dbRef.getKey());
+                            } else {
+                                dbRef = ANNONCE_REF.child(annonceEntity.getUid());
+                            }
+
+                            annonceEntity.setDatePublication(timestamp);
+                            annonceEntity.setUid(dbRef.getKey());
+                            emitter.onSuccess(annonceEntity);
+                        })
+                        .subscribe()
+        );
+    }
+
+    /**
      * Insert or Update an annonce into the Firebase Database
      *
      * @param annonceDto

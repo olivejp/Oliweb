@@ -61,21 +61,21 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         chatRepository.findByUid(messageFirebase.getUidChat())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(chatEntity -> {
-                    MessageEntity messageEntity = MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase);
-                    messageDao.findSingleByUid(messageEntity.getUidMessage())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnComplete(() -> {
-                                        Log.d(TAG, "Message was not found with UID : " + messageEntity.getUidMessage());
-                                        saveWithSingle(messageEntity)
-                                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                .subscribe();
-                                    }
-                            )
-                            .subscribe();
-                })
+                .doOnSuccess(chatEntity ->
+                        messageDao.findSingleByUid(messageFirebase.getUidMessage())
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .doOnComplete(() -> {
+                                            Log.d(TAG, "Message was not found with UID : " + messageFirebase.getUidMessage());
+                                            MessageEntity messageEntity = MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase);
+                                            saveWithSingle(messageEntity)
+                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                                    .subscribe();
+                                        }
+                                )
+                                .subscribe()
+                )
                 .subscribe();
     }
 }

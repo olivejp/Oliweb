@@ -20,7 +20,6 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_ALL_FROM_SCHEDULER = "ARG_ACTION_SYNC_ALL_FROM_SCHEDULER";
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
     public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
-    public static final String ARG_ACTION_SYNC_ANNONCE = "ARG_ACTION_SYNC_ANNONCE";
 
     public SyncService() {
         super("SyncService");
@@ -90,10 +89,6 @@ public class SyncService extends IntentService {
                         case ARG_ACTION_SYNC_USER:
                             Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
                             CoreSync.getInstance(this).synchronizeUser();
-                            break;
-                        case ARG_ACTION_SYNC_ANNONCE:
-                            Log.d(TAG, "Lancement du batch pour envoyer les informations des annonces sur Firebase");
-                            CoreSync.getInstance(this).synchronizeAnnonce();
                             break;
                         default:
                             break;

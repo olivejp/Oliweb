@@ -8,26 +8,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
-import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
  * Created by orlanth23 on 18/12/2017.
@@ -44,12 +37,12 @@ public class CoreSync {
     private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private FirebaseChatRepository firebaseChatRepository;
     private FirebaseUserRepository firebaseUserRepository;
     private UtilisateurRepository utilisateurRepository;
-    private MessageRepository messageRepository;
-    private ChatRepository chatRepository;
-
+    private String uidUser;
+    private SharedPreferencesHelper preferencesHelper;
+    private AnnonceFirebaseSender annonceFirebaseSender;
+    private PhotoFirebaseSender photoFirebaseSender;
 
     private ContentResolver contentResolver;
 
@@ -63,13 +56,15 @@ public class CoreSync {
             instance.annonceRepository = AnnonceRepository.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.utilisateurRepository = UtilisateurRepository.getInstance(context);
-            instance.messageRepository = MessageRepository.getInstance(context);
-            instance.chatRepository = ChatRepository.getInstance(context);
             instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
             instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
-            instance.firebaseChatRepository = FirebaseChatRepository.getInstance();
             instance.contentResolver = context.getContentResolver();
+            instance.preferencesHelper = SharedPreferencesHelper.getInstance(context);
+            instance.uidUser = instance.preferencesHelper.getUidFirebaseUser();
+            instance.annonceFirebaseSender = AnnonceFirebaseSender.getInstance(context);
+            instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
+
         }
         return instance;
     }
@@ -82,10 +77,6 @@ public class CoreSync {
 
     public void synchronizeUser() {
         startSendingUser();
-    }
-
-    public void synchronizeAnnonce() {
-        startSendingAnnonces();
     }
 
     /**
@@ -102,10 +93,11 @@ public class CoreSync {
     private void startSendingAnnonces() {
         Log.d(TAG, "Starting syncToSend");
         annonceFullRepository
-                .observeAllAnnoncesByStatus(Utility.allStatusToSend())
+                .getAllAnnoncesByUidUserAndStatus(uidUser,Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .doOnNext(this::sendAnnonceToRemoteDatabase)
+                .flattenAsObservable(list -> list)
+                .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
                 .doOnComplete(this::startSendingPhotos)
                 .subscribe();
     }
@@ -113,11 +105,10 @@ public class CoreSync {
     private void startSendingPhotos() {
         Log.d(TAG, "Starting startSendingPhotos");
         photoRepository
-                .observeAllPhotosByStatus(Utility.allStatusToSend())
+                .getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .doOnNext(this::sendPhotoToRemote)
-                .doOnComplete(this::startSendingUser)
+                .doOnNext(photoFirebaseSender::sendPhotoToRemote)
                 .subscribe();
     }
 
@@ -145,125 +136,7 @@ public class CoreSync {
                 .subscribe();
     }
 
-    public void sendNewChat(ChatEntity chatEntity) {
-        Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
-        if (chatEntity.getUidChat() == null) {
-            firebaseChatRepository.getUidAndTimestampFromFirebase(chatEntity)
-                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnSuccess(chatEntity1 -> {
-                                chatEntity1.setStatusRemote(StatusRemote.SENDING);
-                                chatRepository.saveIfNotExist(chatEntity1)
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(chatSaved -> {
-                                            firebaseChatRepository.saveChat(ChatConverter.convertEntityToDto(chatSaved))
-                                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                    .doOnSuccess(chatFirebase -> {
-                                                        chatSaved.setStatusRemote(StatusRemote.SEND);
-                                                        chatRepository.saveWithSingle(chatSaved)
-                                                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                .doOnSuccess(chatSaved1 -> {
-                                                                    Log.d(TAG, "Chat has been marked as SEND chatEntity : " + chatSaved1);
-                                                                    messageRepository.getSingleByIdChat(chatSaved.getIdChat())
-                                                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                            .flattenAsObservable(list -> list)
-                                                                            .doOnNext(messageEntity -> {
-                                                                                messageEntity.setUidChat(chatSaved.getUidChat());
-                                                                                messageRepository.saveWithSingle(messageEntity)
-                                                                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                                        .subscribe();
-                                                                            })
-                                                                            .subscribe();
-                                                                })
-                                                                .subscribe();
-                                                    })
-                                                    .subscribe();
-                                        })
-                                        .subscribe();
-                            }
-                    )
-                    .subscribe();
-        }
-    }
-
-    /**
-     * Create/update an annonce to Firebase from an AnnonceFull from the Database
-     * If operation succeed we try to save the annonce in the local DB
-     *
-     * @param annonceFull to send to Firebase
-     */
-    public void sendAnnonceToRemoteDatabase(AnnonceFull annonceFull) {
-        Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceFull : " + annonceFull);
-        AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
-        firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
-                .map(annonceDto1 -> {
-                    annonceFull.getAnnonce().setUid(annonceDto1.getUuid());
-                    annonceFull.getAnnonce().setDatePublication(annonceDto1.getDatePublication());
-                    annonceFull.getAnnonce().setStatut(StatusRemote.SEND);
-                    return annonceFull.getAnnonce();
-                })
-                .doOnSuccess(this::saveAnnonceToLocalDb)
-                .doOnError(saveToFirebaseException -> {
-                    Log.d(TAG, "saveAnnonceToFirebase.doOnError saveToFirebaseException : " + saveToFirebaseException.getLocalizedMessage(), saveToFirebaseException);
-                    annonceFull.getAnnonce().setStatut(StatusRemote.FAILED_TO_SEND);
-                    annonceRepository.update(annonceFull.getAnnonce());
-                })
-                .subscribe();
-    }
-
-    /**
-     * Update the annonce in the local DB
-     * If operation succeed we try to send the photos to Firebase Storage
-     *
-     * @param annonceEntity
-     */
-    private void saveAnnonceToLocalDb(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "Starting saveAnnonceToLocalDb annonceEntity : " + annonceEntity);
-        annonceRepository.saveWithSingle(annonceEntity)
-                .doOnSuccess(annonceEntitySaved ->
-                        photoRepository
-                                .getAllPhotosByStatusAndIdAnnonce(annonceEntitySaved.getId(), Utility.allStatusToSend())
-                                .flattenAsObservable(list -> list)
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .doOnNext(this::sendPhotoToRemote)
-                                .subscribe()
-                )
-                .doOnError(saveSingleException -> Log.e(TAG, saveSingleException.getLocalizedMessage(), saveSingleException))
-                .subscribe();
-    }
-
-    /**
-     * Try to send the photoEntity to storage
-     * If succeed try to update
-     *
-     * @param photoEntity
-     */
-    private void sendPhotoToRemote(PhotoEntity photoEntity) {
-        Log.d(TAG, "Sending " + photoEntity.getUriLocal() + " to Firebase storage");
-        this.firebasePhotoStorage.savePhotoToRemote(photoEntity)
-                .doOnError(exception -> {
-                    Log.e(TAG, exception.getLocalizedMessage(), exception);
-                    photoEntity.setStatut(StatusRemote.FAILED_TO_SEND);
-                    photoRepository.save(photoEntity);
-                })
-                .map(downloadUri -> {
-                    photoEntity.setFirebasePath(downloadUri.toString());
-                    photoEntity.setStatut(StatusRemote.SEND);
-                    return photoEntity;
-                })
-                .doOnSuccess(photoEntityToSave ->
-                        photoRepository.saveWithSingle(photoEntityToSave)
-                                .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
-                                .doOnSuccess(photoEntitySaved ->
-                                        firebaseAnnonceRepository.saveAnnonceToFirebase(photoEntitySaved.getIdAnnonce())
-                                                .doOnError(exception1 -> Log.e(TAG, exception1.getLocalizedMessage(), exception1))
-                                                .subscribe()
-                                )
-                                .subscribe()
-                )
-                .subscribe();
-    }
-
-    /**
+       /**
      * Read all annonces with TO_DELETE status
      */
     private void syncToDelete() {
