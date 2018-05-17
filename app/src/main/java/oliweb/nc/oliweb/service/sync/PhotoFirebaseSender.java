@@ -3,7 +3,10 @@ package oliweb.nc.oliweb.service.sync;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.List;
+
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -36,12 +39,13 @@ public class PhotoFirebaseSender {
         return instance;
     }
 
-    public Observable<PhotoEntity> sendAllPhotosToRemote(AnnonceEntity annonceEntity) {
+    public Single<List<PhotoEntity>> sendAllPhotosToRemote(AnnonceEntity annonceEntity) {
         Log.d(TAG, "sendAllPhotosToRemote annonceEntity : " + annonceEntity);
         return photoRepository.getAllPhotosByStatusAndIdAnnonce(annonceEntity.getId(), Utility.allStatusToSend())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(list -> list)
-                .doOnNext(this::sendPhotoToRemote);
+                .switchMap(this::sendPhotoToRemote)
+                .toList();
     }
 
     public Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {

@@ -246,20 +246,15 @@ public class FirebaseAnnonceRepository {
         );
     }
 
-    public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
+    public Single<AnnonceEntity> saveAnnonceToFirebase(Long idAnnonce) {
         Log.d(TAG, "Starting saveAnnonceToFirebase idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
                 annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
                         .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(annonceFullEntity -> {
-                            AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFullEntity);
-                            saveAnnonceToFirebase(annonceDto)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(emitter::onSuccess)
-                                    .subscribe();
-                        })
-                        .subscribe()
+                        .map(AnnonceConverter::convertFullEntityToDto)
+                        .toObservable()
+                        .switchMap(annonceDto -> saveAnnonceToFirebase(annonceDto).toObservable())
+                        .switchMap(annonceDto -> annonceRepository.findById(idAnnonce).toObservable())
         );
     }
 

@@ -52,11 +52,18 @@ public class AnnonceFirebaseSender {
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceFull.getAnnonce())
                 .doOnError(e -> markAnnonceAsFailedToSend(annonceFull.getAnnonce()))
                 .toObservable()
+                // TODO il faut envoyer l'annonce une première fois avec l'uid et le timestamp avant d'envoyer les photos
                 .switchMap(this::markAsSending)
-                .switchMap(photoFirebaseSender::sendAllPhotosToRemote)
-                .switchMap(annonceEntity -> annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce()).toObservable())
-                .map(AnnonceConverter::convertFullEntityToDto)
-                .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto).toObservable())
+                .switchMap(annonceEntity -> photoFirebaseSender.sendAllPhotosToRemote(annonceEntity).toObservable())
+                .doOnComplete(() -> {
+                            Log.d(TAG, "Fin d'envoi des photos, j'envoie l'annonce");
+                            annonceFullRepository.findAnnoncesByIdAnnonce(annonceFull.getAnnonce().getIdAnnonce())
+                                    .toObservable()
+                                    .map(AnnonceConverter::convertFullEntityToDto)
+                                    .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto).toObservable())
+                                    .subscribe();
+                        }
+                )
                 .subscribe();
     }
 
@@ -67,7 +74,6 @@ public class AnnonceFirebaseSender {
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
-
 
 
     /**
@@ -82,8 +88,6 @@ public class AnnonceFirebaseSender {
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
-
-
 
 
 }
