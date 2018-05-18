@@ -63,7 +63,9 @@ public class DatabaseSyncListenerService extends Service {
             disposableMessageByStatus = messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(messageFirebaseSender::sendMessage)
+                    .toObservable()
+                    .flatMapIterable(list -> list)
+                    .switchMap(messageFirebaseSender::sendMessage)
                     .subscribe();
 
 

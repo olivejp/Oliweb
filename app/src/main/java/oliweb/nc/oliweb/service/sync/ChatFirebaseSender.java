@@ -67,7 +67,9 @@ public class ChatFirebaseSender {
     private Observable<ChatEntity> markChatAsSending(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSending chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SENDING);
-        return chatRepository.saveIfNotExist(chatEntity).toObservable();
+        return chatRepository.saveWithSingle(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 
     /**
@@ -97,7 +99,9 @@ public class ChatFirebaseSender {
     private Observable<ChatEntity> markChatAsSend(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSend chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SEND);
-        return chatRepository.saveIfNotExist(chatEntity).toObservable();
+        return chatRepository.saveWithSingle(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 
     /**

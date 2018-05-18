@@ -3,11 +3,13 @@ package oliweb.nc.oliweb.service.sync;
 import android.content.Context;
 import android.util.Log;
 
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
 
 /**
@@ -39,21 +41,21 @@ public class MessageFirebaseSender {
      *
      * @param messageEntity
      */
-    public void sendMessage(final MessageEntity messageEntity) {
+    public Observable<MessageFirebase> sendMessage(final MessageEntity messageEntity) {
         Log.d(TAG, "SendMessage messageEntity : " + messageEntity);
         if (messageEntity.getUidMessage() == null) {
             // Je n'ai pas encore de UID Message, je vais en chercher un
-            firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
+            return firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(e -> {
-                        markMessageAsFailedToSend(messageEntity);
-                        Log.e(TAG, e.getLocalizedMessage(), e);
-                    })
-                    .doOnSuccess(this::markMessageIsSending)
-                    .subscribe();
+                    .doOnError(e -> markMessageAsFailedToSend(messageEntity))
+                    .toObservable()
+                    .switchMap(this::markMessageIsSending)
+                    .switchMap(this::sendMessageToFirebase);
         } else {
             // J'ai déjà un UID Message, je vais directement à l'étape 2
-            markMessageIsSending(messageEntity);
+            return markMessageIsSending(messageEntity)
+                    .doOnError(e -> markMessageAsFailedToSend(messageEntity))
+                    .switchMap(this::sendMessageToFirebase);
         }
     }
 
@@ -63,16 +65,12 @@ public class MessageFirebaseSender {
      *
      * @param messageSaved
      */
-    private void markMessageIsSending(final MessageEntity messageSaved) {
+    private Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
         Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
         messageSaved.setStatusRemote(StatusRemote.SENDING);
-        messageRepository.saveWithSingle(messageSaved)
-                .doOnError(e -> {
-                    markMessageAsFailedToSend(messageSaved);
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                })
-                .doOnSuccess(this::sendMessageToFirebase)
-                .subscribe();
+        return messageRepository.saveWithSingle(messageSaved)
+                .doOnError(e -> markMessageAsFailedToSend(messageSaved))
+                .toObservable();
     }
 
     /**
@@ -80,15 +78,12 @@ public class MessageFirebaseSender {
      *
      * @param messageRead
      */
-    private void sendMessageToFirebase(final MessageEntity messageRead) {
+    private Observable<MessageFirebase> sendMessageToFirebase(final MessageEntity messageRead) {
         Log.d(TAG, "Send message to Firebase message to send : " + messageRead);
-        firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
-                .doOnError(e -> {
-                    markMessageAsFailedToSend(messageRead);
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                })
+        return firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
+                .doOnError(e -> markMessageAsFailedToSend(messageRead))
                 .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageRead))
-                .subscribe();
+                .toObservable();
     }
 
     /**
@@ -97,13 +92,12 @@ public class MessageFirebaseSender {
      *
      * @param messageEntity
      */
-    private void markMessageHasBeenSend(final MessageEntity messageEntity) {
+    private Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
         Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
-        messageRepository.saveWithSingle(messageEntity)
+        return messageRepository.saveWithSingle(messageEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(messageEntity1 -> Log.d(TAG, "Message has been marked as SEND messageEntity : " + messageEntity1))
-                .subscribe();
+                .toObservable();
     }
 
     /**

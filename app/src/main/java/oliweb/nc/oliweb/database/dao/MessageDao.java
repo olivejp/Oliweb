@@ -43,7 +43,7 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM message WHERE statusRemote IN (:status) AND uidChat <> ''")
-    public abstract Flowable<MessageEntity> findFlowableByStatusAndUidChatNotNull(List<String> status);
+    public abstract Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status);
 
 
     @Transaction

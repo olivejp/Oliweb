@@ -51,7 +51,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return this.messageDao.getSingleByIdChat(idChat);
     }
 
-    public Flowable<MessageEntity> findFlowableByStatusAndUidChatNotNull(List<String> status) {
+    public Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status) {
         Log.d(TAG, "Starting findFlowableByStatusAndUidChatNotNull " + status);
         return this.messageDao.findFlowableByStatusAndUidChatNotNull(status);
     }
