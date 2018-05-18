@@ -12,10 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 
@@ -95,7 +97,6 @@ public class FirebaseChatRepository {
     }
 
     /**
-     *
      * @param chatFirebase
      * @return
      */
@@ -105,6 +106,47 @@ public class FirebaseChatRepository {
                 chatRef.child(chatFirebase.getUid()).setValue(chatFirebase)
                         .addOnSuccessListener(aVoid -> emitter.onSuccess(chatFirebase))
                         .addOnFailureListener(emitter::onError)
+        );
+    }
+
+    /**
+     * Update the update date and the last message of a chat
+     *
+     * @param messageFirebase
+     * @return
+     */
+    public Observable<ChatFirebase> updateLastMessageChat(MessageFirebase messageFirebase) {
+        Log.d(TAG, "Starting updateLastMessageChat messageFirebase : " + messageFirebase);
+        return getByUidChat(messageFirebase.getUidChat())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .toObservable()
+                .zipWith(FirebaseUtility.getServerTimestamp().toObservable(), ChatFirebase::setUpdateTimestamp)
+                .map(chatFirebase -> chatFirebase.setLastMessage(messageFirebase.getMessage()))
+                .switchMap(chatFirebase -> this.saveChat(chatFirebase).toObservable());
+    }
+
+    /**
+     * Récupération d'un chat sur FB avec son UID
+     *
+     * @param uidChat
+     * @return
+     */
+    public Single<ChatFirebase> getByUidChat(String uidChat) {
+        return Single.create(emitter ->
+                chatRef.child(uidChat).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot != null) {
+                            ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
+                            emitter.onSuccess(chatFirebase);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        emitter.onError(new RuntimeException(databaseError.getMessage()));
+                    }
+                })
         );
     }
 

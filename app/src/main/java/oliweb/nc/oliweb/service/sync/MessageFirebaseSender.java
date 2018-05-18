@@ -9,7 +9,9 @@ import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
 
 /**
@@ -22,6 +24,7 @@ public class MessageFirebaseSender {
     private static MessageFirebaseSender instance;
 
     private FirebaseMessageRepository firebaseMessageRepository;
+    private FirebaseChatRepository firebaseChatRepository;
     private MessageRepository messageRepository;
 
     private MessageFirebaseSender() {
@@ -32,6 +35,7 @@ public class MessageFirebaseSender {
             instance = new MessageFirebaseSender();
             instance.messageRepository = MessageRepository.getInstance(context);
             instance.firebaseMessageRepository = FirebaseMessageRepository.getInstance();
+            instance.firebaseChatRepository = FirebaseChatRepository.getInstance();
         }
         return instance;
     }
@@ -41,7 +45,7 @@ public class MessageFirebaseSender {
      *
      * @param messageEntity
      */
-    public Observable<MessageFirebase> sendMessage(final MessageEntity messageEntity) {
+    public Observable<ChatFirebase> sendMessage(final MessageEntity messageEntity) {
         Log.d(TAG, "SendMessage messageEntity : " + messageEntity);
         if (messageEntity.getUidMessage() == null) {
             // Je n'ai pas encore de UID Message, je vais en chercher un
@@ -50,12 +54,14 @@ public class MessageFirebaseSender {
                     .doOnError(e -> markMessageAsFailedToSend(messageEntity))
                     .toObservable()
                     .switchMap(this::markMessageIsSending)
-                    .switchMap(this::sendMessageToFirebase);
+                    .switchMap(this::sendMessageToFirebase)
+                    .switchMap(firebaseChatRepository::updateLastMessageChat);
         } else {
             // J'ai déjà un UID Message, je vais directement à l'étape 2
             return markMessageIsSending(messageEntity)
                     .doOnError(e -> markMessageAsFailedToSend(messageEntity))
-                    .switchMap(this::sendMessageToFirebase);
+                    .switchMap(this::sendMessageToFirebase)
+                    .switchMap(firebaseChatRepository::updateLastMessageChat);
         }
     }
 
