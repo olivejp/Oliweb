@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service.sync;
+package oliweb.nc.oliweb.service.sync.listener;
 
 import android.app.Service;
 import android.content.Intent;
@@ -11,6 +11,9 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**

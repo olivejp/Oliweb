@@ -186,11 +186,11 @@
         </activity>
 
         <service
-            android:name=".service.sync.FirebaseSyncListenerService"
+            android:name=".service.sync.listener.FirebaseSyncListenerService"
             android:enabled="true"
             android:exported="false"/>
         <service
-            android:name=".service.sync.DatabaseSyncListenerService"
+            android:name=".service.sync.listener.DatabaseSyncListenerService"
             android:enabled="true"
             android:exported="false"/>
     </application>

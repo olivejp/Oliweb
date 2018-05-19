@@ -23,7 +23,6 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -38,7 +37,6 @@ public class FirebaseAnnonceRepository {
     private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
-    private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
@@ -51,7 +49,6 @@ public class FirebaseAnnonceRepository {
             instance = new FirebaseAnnonceRepository();
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
         instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
         return instance;
     }
@@ -220,45 +217,26 @@ public class FirebaseAnnonceRepository {
      */
     public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
         Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
-        DatabaseReference dbRef;
-        if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
-            dbRef = ANNONCE_REF.push();
-            annonceDto.setUuid(dbRef.getKey());
-        } else {
-            dbRef = ANNONCE_REF.child(annonceDto.getUuid());
-        }
-
-        return Single.create(emitter ->
-                FirebaseUtility.getServerTimestamp()
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(datePublication -> {
-                            annonceDto.setDatePublication(datePublication);
-                            dbRef.setValue(annonceDto)
-                                    .addOnFailureListener(emitter::onError)
-                                    .addOnSuccessListener(o ->
-                                            findByUidAnnonce(annonceDto.getUuid())
-                                                    .doOnError(emitter::onError)
-                                                    .doOnSuccess(emitter::onSuccess)
-                                                    .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
-                                                    .subscribe()
-                                    );
-                        })
-                        .subscribe()
-        );
+        return Single.create(emitter -> {
+            if (annonceDto == null) {
+                emitter.onError((new RuntimeException("Can't save null annonceDto object to Firebase")));
+            } else if (annonceDto.getUuid() == null) {
+                emitter.onError((new RuntimeException("UID is mandatory to save in Firebase")));
+            } else {
+                ANNONCE_REF.child(annonceDto.getUuid()).setValue(annonceDto)
+                        .addOnFailureListener(emitter::onError)
+                        .addOnSuccessListener(o ->
+                                findByUidAnnonce(annonceDto.getUuid())
+                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .doOnError(emitter::onError)
+                                        .doOnSuccess(emitter::onSuccess)
+                                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
+                                        .subscribe()
+                        );
+            }
+        });
     }
 
-    public Single<AnnonceEntity> saveAnnonceToFirebase(Long idAnnonce) {
-        Log.d(TAG, "Starting saveAnnonceToFirebase idAnnonce : " + idAnnonce);
-        return Single.create(emitter ->
-                annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
-                        .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                        .map(AnnonceConverter::convertFullEntityToDto)
-                        .toObservable()
-                        .switchMap(annonceDto -> saveAnnonceToFirebase(annonceDto).toObservable())
-                        .switchMap(annonceDto -> annonceRepository.findById(idAnnonce).toObservable())
-        );
-    }
 
     /**
      * Suppression d'une annonce sur Firebase Database

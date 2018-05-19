@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service.sync;
+package oliweb.nc.oliweb.service.sync.sender;
 
 import android.content.Context;
 import android.util.Log;

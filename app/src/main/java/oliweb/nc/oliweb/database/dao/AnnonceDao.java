@@ -38,8 +38,8 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<AnnonceEntity> findLiveById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    public abstract Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce")
+    public abstract Maybe<AnnonceEntity> findSingleByUid(String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")

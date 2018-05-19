@@ -18,6 +18,8 @@ import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
+import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.PhotoFirebaseSender;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;

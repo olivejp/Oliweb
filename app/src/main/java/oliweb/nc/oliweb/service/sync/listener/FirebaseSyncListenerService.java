@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service.sync;
+package oliweb.nc.oliweb.service.sync.listener;
 
 import android.app.Service;
 import android.content.Intent;

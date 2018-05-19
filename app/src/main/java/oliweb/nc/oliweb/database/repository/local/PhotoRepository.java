@@ -145,4 +145,8 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                         .subscribe()
         );
     }
+
+    public Single<Integer> countByIdAnnonce(Long idAnnonce) {
+        return photoDao.countAllPhotosByIdAnnonce(idAnnonce);
+    }
 }

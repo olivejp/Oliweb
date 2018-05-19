@@ -9,8 +9,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
-import oliweb.nc.oliweb.service.sync.FirebaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService;
 
 
 /**
