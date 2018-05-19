@@ -7,7 +7,6 @@ import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
@@ -50,32 +49,28 @@ public class AnnonceFirebaseSender {
      * Create/update an annonce to Firebase from an AnnonceFull from the Database
      * If operation succeed we try to save the annonce in the local DB
      *
-     * @param annonceFull to send to Firebase
+     * @param annonceEntity to send to Firebase
      */
-    public void sendAnnonceToRemoteDatabase(AnnonceFull annonceFull) {
-        Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceFull : " + annonceFull);
-        firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceFull.getAnnonce())
+    public void sendAnnonceToRemoteDatabase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceEntity : " + annonceEntity);
+        firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> markAnnonceAsFailedToSend(annonceFull.getAnnonce()))
+                .doOnError(e -> markAnnonceAsFailedToSend(annonceEntity))
                 .toObservable()
                 .switchMap(this::markAsSending)
-                .switchMap(annonceEntity -> findFullAndSendToFirebaseByIdAnnonce(annonceEntity.getIdAnnonce()))
-                .switchMap(annonceDto -> annonceRepository.findSingleByUid(annonceDto.getUuid()).toObservable())
+                .switchMap(this::sendToFirebase)
+                .switchMap(annonceDto -> annonceRepository.findObservableByUid(annonceDto.getUuid()))
                 .switchMap(this::markAsSend)
-                .switchMap(annonceEntity -> annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce()).toObservable())
-                .filter(annonceFull1 -> annonceFull1.getPhotos() != null && !annonceFull1.getPhotos().isEmpty())
-                .switchMap(annonceFull1 ->
-                        photoFirebaseSender.sendAllPhotosToRemote(annonceFull1.getAnnonce())
-                                .toObservable()
-                                .doOnComplete(() -> findFullAndSendToFirebaseByIdAnnonce(annonceFull.getAnnonce().getIdAnnonce()).subscribe())
-                )
-
+                .switchMap(annonceEntity1 -> annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity1.getIdAnnonce()).toObservable())
+                .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())
+                .switchMap(photoFirebaseSender::sendAllPhotosToRemote)
+                .doOnComplete(() -> sendToFirebase(annonceEntity).subscribe())
                 .subscribe();
     }
 
-    private Observable<AnnonceDto> findFullAndSendToFirebaseByIdAnnonce(Long idAnnonce) {
-        Log.d(TAG, "findFullAndSendToFirebaseByIdAnnonce idAnnonce : " + idAnnonce);
-        return annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
+    public Observable<AnnonceDto> sendToFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "sendToFirebase idAnnonce : " + annonceEntity);
+        return annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)

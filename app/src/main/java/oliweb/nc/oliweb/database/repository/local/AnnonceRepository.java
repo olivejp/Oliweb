@@ -7,7 +7,7 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -51,9 +51,14 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.findByUid(uidAnnonce);
     }
 
-    public Maybe<AnnonceEntity> findSingleByUid(String uidAnnonce) {
-        Log.d(TAG, "Starting findSingleByUid " + uidAnnonce);
-        return this.annonceDao.findSingleByUid(uidAnnonce);
+    public Observable<AnnonceEntity> findObservableByUid(String uidAnnonce) {
+        Log.d(TAG, "Starting findObservableByUid " + uidAnnonce);
+        return this.annonceDao.findSingleByUid(uidAnnonce).toObservable();
+    }
+
+
+    public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
     }
 
     public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {

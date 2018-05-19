@@ -46,7 +46,7 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:statut)")
-    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> statut);
+    public abstract Flowable<PhotoEntity> getAllPhotosByStatus(List<String> statut);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:listStatut) AND idAnnonce = :idAnnonce")

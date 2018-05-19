@@ -74,7 +74,7 @@ public class CoreSync {
     public void synchronize() {
         Log.d(TAG, "Launch synchronyse");
         syncToSend();
-        syncToDelete();
+        // syncToDelete();
     }
 
     public void synchronizeUser() {
@@ -85,33 +85,7 @@ public class CoreSync {
      * Liste toutes les annonces et photos à envoyer
      */
     private void syncToSend() {
-        startSendingAnnonces();
         startSendingUser();
-    }
-
-    /**
-     * Once is complete, we start sending photos
-     */
-    private void startSendingAnnonces() {
-        Log.d(TAG, "Starting syncToSend");
-        annonceFullRepository
-                .getAllAnnoncesByUidUserAndStatus(uidUser,Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .flattenAsObservable(list -> list)
-                .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
-                .doOnComplete(this::startSendingPhotos)
-                .subscribe();
-    }
-
-    private void startSendingPhotos() {
-        Log.d(TAG, "Starting startSendingPhotos");
-        photoRepository
-                .getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .doOnNext(photoFirebaseSender::sendPhotoToRemote)
-                .subscribe();
     }
 
     private void startSendingUser() {
@@ -141,12 +115,12 @@ public class CoreSync {
        /**
      * Read all annonces with TO_DELETE status
      */
-    private void syncToDelete() {
-        Log.d(TAG, "Starting syncToDelete");
-        deleteAnnonces()
-                .doOnSuccess(atomic -> deletePhotos())
-                .subscribe();
-    }
+//    private void syncToDelete() {
+//        Log.d(TAG, "Starting syncToDelete");
+//        deleteAnnonces()
+//                .doOnSuccess(atomic -> deletePhotos())
+//                .subscribe();
+//    }
 
     /**
      * Lecture de toutes les annonces avec des statuts à supprimer
@@ -232,16 +206,16 @@ public class CoreSync {
      * 3 - Supprimer sur le storage local
      * 4 - Supprimer sur la database locale
      */
-    private void deletePhotos() {
-        Log.d(TAG, "Starting deletePhotos");
-        photoRepository
-                .getAllPhotosByStatus(Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(list -> list)
-                .filter(photoEntity -> photoEntity.getFirebasePath() != null)
-                .doOnNext(this::deleteFromStorage)
-                .subscribe();
-    }
+//    private void deletePhotos() {
+//        Log.d(TAG, "Starting deletePhotos");
+//        photoRepository
+//                .getAllPhotosByStatus(Utility.allStatusToDelete())
+//                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+//                .flattenAsObservable(list -> list)
+//                .filter(photoEntity -> photoEntity.getFirebasePath() != null)
+//                .doOnNext(this::deleteFromStorage)
+//                .subscribe();
+//    }
 
     // TODO finir cette méthode
     // 1 - Supprimer de Firebase storage

@@ -169,6 +169,8 @@ public class FirebaseSyncListenerService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "Stop FirebaseSyncListenerService Bye bye");
+
         // Suppression des listeners
         queryChat.removeEventListener(listenerChat);
         clearMessageListener();

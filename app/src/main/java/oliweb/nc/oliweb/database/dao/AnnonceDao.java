@@ -74,6 +74,10 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> countById(Long idAnnonce);
 
     @Transaction
+    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:statutList)")
+    public abstract Maybe<List<AnnonceEntity>> getAllAnnoncesByUidUserAndStatus(String uidUser, List<String> statutList);
+
+    @Transaction
     @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
     public abstract Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
 }

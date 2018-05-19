@@ -8,6 +8,7 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -87,20 +88,15 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 .flattenAsObservable(list -> list);
     }
 
-    public Observable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
-        return Observable.create(e ->
-                this.annonceFullRepository.getAllAnnoncesByUidUser(uidUser)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .flattenAsObservable(list -> list)
-                        .map(AnnonceFull::getPhotos)
-                        .flatMapIterable(a -> a)
-                        .filter(photoEntity -> status.contains(photoEntity.getStatut().toString()))
-                        .subscribe()
-        );
+    public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
+        return this.annonceFullRepository.getAllAnnoncesByUidUser(uidUser)                                   // Récupération de toutes les annonces pour l'uid user passé
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())                                     // On souscrit et on observe sur des threads de backend
+                .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) // Filtre pour ne prendre que les annonces avec des photos
+                .flatMapIterable(AnnonceFull::getPhotos)
+                .filter(photoEntity -> status.contains(photoEntity.getStatut().toString()));                 // Filtre sur la liste pour ne prendre que les photos avec les statuts recherchés
     }
 
-    public Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> status) {
+    public Flowable<PhotoEntity> getAllPhotosByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
         return this.photoDao.getAllPhotosByStatus(status);
     }

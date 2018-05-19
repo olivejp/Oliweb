@@ -72,7 +72,9 @@ public class AnnonceConverter {
 
         List<String> listPhotoDto = new ArrayList<>();
         for (PhotoEntity photo : annonceFull.getPhotos()) {
-            listPhotoDto.add(photo.getFirebasePath());
+            if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
+                listPhotoDto.add(photo.getFirebasePath());
+            }
         }
         annonceDto.setPhotos(listPhotoDto);
 

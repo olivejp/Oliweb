@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,20 +115,24 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
         if (oldList != null && dataSnapshot != null) {
             listPhotosResult.addAll(oldList);
             for (DataSnapshot child : dataSnapshot.getChildren()) {
-                AnnonceDto annonceDto = child.getValue(AnnonceDto.class);
-                if (annonceDto != null) {
-                    boolean trouve = false;
-                    for (AnnoncePhotos anno : oldList) {
-                        if (anno.getAnnonceEntity().getUid().equals(annonceDto.getUuid())) {
-                            trouve = true;
-                            break;
+                try {
+                    AnnonceDto annonceDto = child.getValue(AnnonceDto.class);
+                    if (annonceDto != null) {
+                        boolean trouve = false;
+                        for (AnnoncePhotos anno : oldList) {
+                            if (anno.getAnnonceEntity().getUid().equals(annonceDto.getUuid())) {
+                                trouve = true;
+                                break;
+                            }
+                        }
+                        if (!trouve) {
+                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                            Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
+                            listPhotosResult.add(annoncePhotos);
                         }
                     }
-                    if (!trouve) {
-                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
-                        Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
-                        listPhotosResult.add(annoncePhotos);
-                    }
+                } catch (DatabaseException databaseException) {
+                    Log.e(TAG, databaseException.getLocalizedMessage(), databaseException);
                 }
             }
         }

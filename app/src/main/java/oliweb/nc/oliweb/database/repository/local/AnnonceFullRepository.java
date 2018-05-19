@@ -39,7 +39,7 @@ public class AnnonceFullRepository {
         return this.annonceFullDao.getAllAnnoncesByUidUserAndStatus(uidUser, status);
     }
 
-    public Maybe<List<AnnonceFull>> getAllAnnoncesByUidUser(String uidUser) {
+    public Flowable<AnnonceFull> getAllAnnoncesByUidUser(String uidUser) {
         return this.annonceFullDao.getAllAnnoncesByUidUser(uidUser);
     }
 

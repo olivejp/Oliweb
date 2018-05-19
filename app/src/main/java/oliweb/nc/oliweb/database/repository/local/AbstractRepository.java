@@ -72,8 +72,8 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
         repositoryTask.execute(entities);
     }
 
-    public Maybe<T> findById(U idChat) {
-        return this.dao.findById(idChat);
+    public Maybe<T> findById(U id) {
+        return this.dao.findById(id);
     }
 
     private Maybe<T> insertSingle(T entity) {

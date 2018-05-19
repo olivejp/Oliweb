@@ -8,12 +8,14 @@ import android.util.Log;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.PhotoFirebaseSender;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -29,7 +31,7 @@ public class DatabaseSyncListenerService extends Service {
     private Disposable disposableChatByStatus;
     private Disposable disposableMessageByStatus;
     private Disposable disposableAnnonceToSendByStatus;
-    private Disposable disposableAnnonceToDeleteByStatus;
+    private Disposable disposablePhotoToSendByStatus;
 
     @Nullable
     @Override
@@ -45,15 +47,23 @@ public class DatabaseSyncListenerService extends Service {
 
             ChatRepository chatRepository = ChatRepository.getInstance(this);
             MessageRepository messageRepository = MessageRepository.getInstance(this);
-            AnnonceFullRepository annonceFullRepository = AnnonceFullRepository.getInstance(this);
+            AnnonceRepository annonceRepository = AnnonceRepository.getInstance(this);
+            PhotoRepository photoRepository = PhotoRepository.getInstance(this);
             AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
+            PhotoFirebaseSender photoFirebaseSender = PhotoFirebaseSender.getInstance(this);
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
             ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
 
-            disposableAnnonceToSendByStatus = annonceFullRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+            disposableAnnonceToSendByStatus = annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
+                    .subscribe();
+
+            disposablePhotoToSendByStatus = photoRepository.getAllPhotosByStatus(Utility.allStatusToSend())
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .doOnNext(photoEntity -> photoFirebaseSender.sendPhotoToRemoteAndUpdateAnnonce(photoEntity).subscribe())
                     .subscribe();
 
             disposableChatByStatus = chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
@@ -90,6 +100,7 @@ public class DatabaseSyncListenerService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "Stop DatabaseSyncListenerService Bye bye");
         if (disposableAnnonceToSendByStatus != null) {
             disposableAnnonceToSendByStatus.dispose();
         }
@@ -98,6 +109,9 @@ public class DatabaseSyncListenerService extends Service {
         }
         if (disposableMessageByStatus != null) {
             disposableMessageByStatus.dispose();
+        }
+        if (disposablePhotoToSendByStatus != null) {
+            disposablePhotoToSendByStatus.dispose();
         }
         super.onDestroy();
     }

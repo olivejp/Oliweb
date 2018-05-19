@@ -6,12 +6,13 @@ import android.util.Log;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.Single;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
+import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -26,6 +27,8 @@ public class PhotoFirebaseSender {
 
     private FirebasePhotoStorage firebasePhotoStorage;
     private PhotoRepository photoRepository;
+    private AnnonceRepository annonceRepository;
+    private AnnonceFirebaseSender annonceFirebaseSender;
 
     private PhotoFirebaseSender() {
     }
@@ -35,24 +38,38 @@ public class PhotoFirebaseSender {
             instance = new PhotoFirebaseSender();
             instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
+            instance.annonceRepository = AnnonceRepository.getInstance(context);
+            instance.annonceFirebaseSender = AnnonceFirebaseSender.getInstance(context);
         }
         return instance;
     }
 
-    public Single<List<PhotoEntity>> sendAllPhotosToRemote(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "sendAllPhotosToRemote annonceEntity : " + annonceEntity);
-        return photoRepository.getAllPhotosByStatusAndIdAnnonce(annonceEntity.getId(), Utility.allStatusToSend())
+    public Observable<List<PhotoEntity>> sendAllPhotosToRemote(AnnonceFull annonceFull) {
+        Log.d(TAG, "sendAllPhotosToRemote annonceFull : " + annonceFull);
+        return photoRepository.getAllPhotosByStatusAndIdAnnonce(annonceFull.getAnnonce().getId(), Utility.allStatusToSend())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(list -> list)
-                .switchMap(this::sendPhotoToRemote)
-                .toList();
+                .concatMap(this::sendPhotoToRemote)
+                .toList()
+                .toObservable();
     }
 
-    public Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {
+    private Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemote photoEntity : " + photoEntity);
         return this.firebasePhotoStorage.savePhotoToRemote(photoEntity).toObservable()
-                .doOnError(exception -> markPhotoAsFailedToSend(photoEntity))
+                .doOnError(exception -> {
+                    Log.e(TAG, exception.getLocalizedMessage(), exception);
+                    markPhotoAsFailedToSend(photoEntity);
+                })
                 .switchMap(uri -> markPhotoAsSend(photoEntity, uri.toString()));
+    }
+
+    public Observable<AnnonceDto> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
+        Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
+        return sendPhotoToRemote(photoEntity)
+                .switchMap(this::sendPhotoToRemote)
+                .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
+                .switchMap(annonceFirebaseSender::sendToFirebase);
     }
 
     /**
