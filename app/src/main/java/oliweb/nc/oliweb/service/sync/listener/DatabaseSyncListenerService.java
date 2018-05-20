@@ -6,12 +6,13 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.service.sync.deleter.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
@@ -28,10 +29,7 @@ public class DatabaseSyncListenerService extends Service {
 
     public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
-    private Disposable disposableChatByStatus;
-    private Disposable disposableMessageByStatus;
-    private Disposable disposableAnnonceToSendByStatus;
-    private Disposable disposablePhotoToSendByStatus;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Nullable
     @Override
@@ -41,6 +39,8 @@ public class DatabaseSyncListenerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "Démarrage du service DatabaseSyncListenerService");
+
         // Récupération de l'UID de l'utilisateur
         if (intent.getStringExtra(CHAT_SYNC_UID_USER) != null && !intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
@@ -50,44 +50,42 @@ public class DatabaseSyncListenerService extends Service {
             AnnonceRepository annonceRepository = AnnonceRepository.getInstance(this);
             PhotoRepository photoRepository = PhotoRepository.getInstance(this);
             AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
+            AnnonceFirebaseDeleter annonceFirebaseDeleter = AnnonceFirebaseDeleter.getInstance(this);
             PhotoFirebaseSender photoFirebaseSender = PhotoFirebaseSender.getInstance(this);
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
             ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
 
-            disposableAnnonceToSendByStatus = annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+            disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
-                    .subscribe();
+                    .subscribe());
 
-            disposablePhotoToSendByStatus = photoRepository.getAllPhotosByStatus(Utility.allStatusToSend())
+            disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(photoEntity -> photoFirebaseSender.sendPhotoToRemoteAndUpdateAnnonce(photoEntity).subscribe())
-                    .subscribe();
+                    .subscribe());
 
-            disposableChatByStatus = chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+            disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(chatFirebaseSender::sendNewChat)
-                    .subscribe();
+                    .subscribe());
 
-            // Cette souscription va écouter en permanence les messages pour l'UID user et dont le statut est A Envoyer
-            disposableMessageByStatus = messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
+            disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .toObservable()
                     .flatMapIterable(list -> list)
                     .switchMap(messageFirebaseSender::sendMessage)
-                    .subscribe();
+                    .subscribe());
 
-
-            // TODO finir cette méthode
-            //            disposableAnnonceToDeleteByStatus = annonceFullRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
-            //                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-            //                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-            //                    .doOnNext(coreSync::sendAnnonceToRemoteDatabase)
-            //                    .subscribe();
+            disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .doOnNext(annonceFirebaseDeleter::deleteAnnonce)
+                    .subscribe());
 
         } else {
             // Si pas d UID user on sort tout de suite du service
@@ -101,18 +99,7 @@ public class DatabaseSyncListenerService extends Service {
     @Override
     public void onDestroy() {
         Log.d(TAG, "Stop DatabaseSyncListenerService Bye bye");
-        if (disposableAnnonceToSendByStatus != null) {
-            disposableAnnonceToSendByStatus.dispose();
-        }
-        if (disposableChatByStatus != null) {
-            disposableChatByStatus.dispose();
-        }
-        if (disposableMessageByStatus != null) {
-            disposableMessageByStatus.dispose();
-        }
-        if (disposablePhotoToSendByStatus != null) {
-            disposablePhotoToSendByStatus.dispose();
-        }
+        disposables.dispose();
         super.onDestroy();
     }
 }

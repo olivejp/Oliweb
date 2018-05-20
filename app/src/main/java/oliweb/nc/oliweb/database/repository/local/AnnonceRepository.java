@@ -25,6 +25,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private static AnnonceRepository instance;
     private PhotoRepository photoRepository;
+    private ChatRepository chatRepository;
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
@@ -37,6 +38,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         if (instance == null) {
             instance = new AnnonceRepository(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
+            instance.chatRepository = ChatRepository.getInstance(context);
         }
         return instance;
     }
@@ -95,24 +97,60 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
-        Log.d(TAG, "Starting markToDelete idAnnonce : " + idAnnonce);
+        Log.d(TAG, "Starting markToDeleteByAnnonce idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
-                findById(idAnnonce)
-                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
-                        .doOnSuccess(annonceEntity -> {
-                            annonceEntity.setStatut(StatusRemote.TO_DELETE);
-                            saveWithSingle(annonceEntity)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceUpdated -> {
-                                                Log.d(TAG, "saveWithSingle.doOnSuccess annonceUpdated : " + annonceUpdated);
-                                                photoRepository.markToDelete(annonceUpdated.getId())
-                                                        .doOnSuccess(emitter::onSuccess)
-                                                        .subscribe();
-                                            }
-                                    )
-                                    .subscribe();
-                        })
-                        .subscribe()
+                        findById(idAnnonce)
+                                .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
+                                .toObservable()
+                                .switchMap(this::markAsToDelete)
+                                .switchMap(photoRepository::markToDeleteByAnnonce)
+                                .subscribe()
+                // TODO passer les chats à To_delete également
         );
+    }
+
+    public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsSending annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.SENDING);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsSend annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.SEND);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsToDelete annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.TO_DELETE);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAnnonceAsFailedToSend(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAnnonceAsFailedToSend annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAnnonceAsFailedToDelete(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAnnonceAsFailedToDelete annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 }

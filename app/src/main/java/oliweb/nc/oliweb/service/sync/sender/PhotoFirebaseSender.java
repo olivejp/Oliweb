@@ -12,7 +12,6 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -64,7 +63,7 @@ public class PhotoFirebaseSender {
                 .switchMap(uri -> markPhotoAsSend(photoEntity, uri.toString()));
     }
 
-    public Observable<AnnonceDto> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
+    public Observable<String> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
         return sendPhotoToRemote(photoEntity)
                 .switchMap(this::sendPhotoToRemote)

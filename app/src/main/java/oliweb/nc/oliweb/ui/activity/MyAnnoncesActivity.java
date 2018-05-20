@@ -160,8 +160,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             if (idAnnonce != 0) {
                 viewModel.markToDelete(idAnnonce)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(exception -> Log.e(TAG, "markToDelete.doOnError exception : " + exception.getLocalizedMessage(), exception))
-                        .doOnSuccess(result -> Log.d(TAG, "markToDelete.doOnSuccess result : " + result))
+                        .doOnError(exception -> Log.e(TAG, "markToDeleteByAnnonce.doOnError exception : " + exception.getLocalizedMessage(), exception))
+                        .doOnSuccess(result -> Log.d(TAG, "markToDeleteByAnnonce.doOnSuccess result : " + result))
                         .subscribe();
             }
         }

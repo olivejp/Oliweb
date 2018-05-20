@@ -149,6 +149,7 @@ public class FirebaseSyncListenerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "Démarrage du service FirebaseSyncListenerService");
         if (intent.getStringExtra(CHAT_SYNC_UID_USER) == null || intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
             stopSelf();
         } else {

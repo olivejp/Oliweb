@@ -213,9 +213,9 @@ public class FirebaseAnnonceRepository {
      * Insert or Update an annonce into the Firebase Database
      *
      * @param annonceDto
-     * @return
+     * @return UID de l'annonce DTO enregistré
      */
-    public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
+    public Single<String> saveAnnonceToFirebase(AnnonceDto annonceDto) {
         Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
         return Single.create(emitter -> {
             if (annonceDto == null) {
@@ -229,7 +229,7 @@ public class FirebaseAnnonceRepository {
                                 findByUidAnnonce(annonceDto.getUuid())
                                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                         .doOnError(emitter::onError)
-                                        .doOnSuccess(emitter::onSuccess)
+                                        .doOnSuccess(annonceDto1 -> emitter.onSuccess(annonceDto1.getUuid()))
                                         .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
                                         .subscribe()
                         );

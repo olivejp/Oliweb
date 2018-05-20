@@ -6,9 +6,11 @@ import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 
 /**
@@ -45,6 +47,10 @@ public class AnnonceFullRepository {
 
     public Flowable<AnnonceFull> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
         return annonceFullDao.findFlowableByUidUserAndStatusIn(uidUser, status);
+    }
+
+    public Observable<AnnonceFull> findAnnonceFullByAnnonceEntity(AnnonceEntity annonceEntity) {
+        return this.annonceFullDao.findSingleByIdAnnonce(annonceEntity.getIdAnnonce()).toObservable();
     }
 
 }

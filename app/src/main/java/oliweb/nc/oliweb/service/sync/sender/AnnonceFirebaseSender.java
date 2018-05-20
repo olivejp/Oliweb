@@ -7,12 +7,9 @@ import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 /**
  * Cette classe découpe toutes les étapes nécessaires pour l'envoi d'une annonce sur Firebase
@@ -26,7 +23,6 @@ public class AnnonceFirebaseSender {
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private AnnonceFullRepository annonceFullRepository;
     private PhotoFirebaseSender photoFirebaseSender;
 
@@ -37,7 +33,6 @@ public class AnnonceFirebaseSender {
         if (instance == null) {
             instance = new AnnonceFirebaseSender();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.photoRepository = PhotoRepository.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
             instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
@@ -55,55 +50,33 @@ public class AnnonceFirebaseSender {
         Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceEntity : " + annonceEntity);
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> markAnnonceAsFailedToSend(annonceEntity))
+                .doOnError(e -> annonceRepository.markAnnonceAsFailedToSend(annonceEntity))
                 .toObservable()
-                .switchMap(this::markAsSending)
+                .switchMap(annonceRepository::markAsSending)
                 .switchMap(this::sendToFirebase)
-                .switchMap(annonceDto -> annonceRepository.findObservableByUid(annonceDto.getUuid()))
-                .switchMap(this::markAsSend)
-                .switchMap(annonceEntity1 -> annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity1.getIdAnnonce()).toObservable())
+                .switchMap(annonceRepository::findObservableByUid)
+                .switchMap(annonceRepository::markAsSend)
+                .switchMap(annonceFullRepository::findAnnonceFullByAnnonceEntity)
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())
                 .switchMap(photoFirebaseSender::sendAllPhotosToRemote)
                 .doOnComplete(() -> sendToFirebase(annonceEntity).subscribe())
                 .subscribe();
     }
 
-    public Observable<AnnonceDto> sendToFirebase(AnnonceEntity annonceEntity) {
+    /**
+     * Query the database to retreive the annonce by is Id
+     * Convert the AnnonceFull to AnnonceFirebase
+     * Try to send the AnnonceFirebase to Firbase
+     *
+     * @param annonceEntity to save to Firebase
+     * @return UID of the recorded annonce
+     */
+    public Observable<String> sendToFirebase(AnnonceEntity annonceEntity) {
         Log.d(TAG, "sendToFirebase idAnnonce : " + annonceEntity);
         return annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)
                 .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto).toObservable());
-    }
-
-    private Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsSending annonceEntity : " + annonceEntity);
-        annonceEntity.setStatut(StatusRemote.SENDING);
-        return annonceRepository.saveWithSingle(annonceEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
-    }
-
-    private Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsSend annonceEntity : " + annonceEntity);
-        annonceEntity.setStatut(StatusRemote.SEND);
-        return annonceRepository.saveWithSingle(annonceEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
-    }
-
-
-    /**
-     * Cas d'une erreur dans l'envoi, on passe l'annonce en statut Failed To Send.
-     *
-     * @param annonceEntity
-     */
-    private void markAnnonceAsFailedToSend(final AnnonceEntity annonceEntity) {
-        Log.d(TAG, "Mark message Failed To Send message : " + annonceEntity);
-        annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
-        annonceRepository.saveWithSingle(annonceEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
     }
 }
