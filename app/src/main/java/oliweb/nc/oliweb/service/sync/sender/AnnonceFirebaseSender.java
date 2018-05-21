@@ -9,6 +9,7 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 
 /**
@@ -23,8 +24,8 @@ public class AnnonceFirebaseSender {
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
     private AnnonceFullRepository annonceFullRepository;
-    private PhotoFirebaseSender photoFirebaseSender;
 
     private AnnonceFirebaseSender() {
     }
@@ -33,9 +34,9 @@ public class AnnonceFirebaseSender {
         if (instance == null) {
             instance = new AnnonceFirebaseSender();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
+            instance.photoRepository = PhotoRepository.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-            instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
         }
         return instance;
     }
@@ -46,8 +47,8 @@ public class AnnonceFirebaseSender {
      *
      * @param annonceEntity to send to Firebase
      */
-    public void processTosendAnnonceToFirebase(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "Starting processTosendAnnonceToFirebase annonceEntity : " + annonceEntity);
+    public void processToSendAnnonceToFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting processToSendAnnonceToFirebase annonceEntity : " + annonceEntity);
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> annonceRepository.markAnnonceAsFailedToSend(annonceEntity))
@@ -58,8 +59,7 @@ public class AnnonceFirebaseSender {
                 .switchMap(annonceRepository::markAsSend)
                 .switchMap(annonceFullRepository::findAnnonceFullByAnnonceEntity)
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())
-                .switchMap(photoFirebaseSender::sendAllPhotosToRemote)
-                .doOnComplete(() -> convertToFullAndSendToFirebase(annonceEntity).subscribe())
+                .switchMap(annonceFull -> photoRepository.markAsToSend(annonceFull.getPhotos()).toObservable())
                 .subscribe();
     }
 

@@ -60,10 +60,9 @@ public class DatabaseSyncListenerService extends Service {
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(annonceFirebaseSender::processTosendAnnonceToFirebase)
+                    .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
                     .subscribe());
 
-            // TODO Refacto à faire sur cette méthode pour récupérer les SwitchMap dans la méthode la plus haute
             disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

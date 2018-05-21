@@ -14,7 +14,6 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -88,14 +87,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 .flattenAsObservable(list -> list);
     }
 
-    public Observable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
+    public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
         Log.d(TAG, "Starting getAllPhotosByUidUserAndStatus uidUser : " + uidUser + " status : " + status);
-        return this.annonceFullRepository.getAllAnnoncesByUidUser(uidUser)                                   // Récupération de toutes les annonces pour l'uid user passé
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(list -> list)                                                              // On souscrit et on observe sur des threads de backend
-                .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) // Filtre pour ne prendre que les annonces avec des photos
-                .flatMapIterable(AnnonceFull::getPhotos)
-                .filter(photoEntity -> status.contains(photoEntity.getStatut().toString()));                 // Filtre sur la liste pour ne prendre que les photos avec les statuts recherchés
+        return this.photoDao.getAllPhotosByUidUserAndStatus(uidUser, status);
     }
 
     public Flowable<PhotoEntity> getAllPhotosByStatus(List<String> status) {
@@ -154,5 +148,13 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
 
     public Single<Integer> countByIdAnnonce(Long idAnnonce) {
         return photoDao.countAllPhotosByIdAnnonce(idAnnonce);
+    }
+
+    public Single<List<PhotoEntity>> markAsToSend(List<PhotoEntity> list) {
+        Log.d(TAG, "markAsToSend list : " + list);
+        return Observable.fromIterable(list)
+                .map(photoEntity ->  photoEntity.setStatut(StatusRemote.TO_SEND))
+                .switchMap(photoEntity -> saveWithSingle(photoEntity).toObservable())
+                .toList();
     }
 }

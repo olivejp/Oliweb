@@ -151,7 +151,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUriLocal(path);
-        photoEntity.setStatut(StatusRemote.TO_SEND);
+        photoEntity.setStatut(StatusRemote.NOT_TO_SEND);
         this.currentListPhoto.add(photoEntity);
         this.liveListPhoto.postValue(this.currentListPhoto);
     }

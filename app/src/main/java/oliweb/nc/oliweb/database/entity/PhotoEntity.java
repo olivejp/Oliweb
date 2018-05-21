@@ -62,8 +62,9 @@ public class PhotoEntity extends AbstractEntity<Long> implements Parcelable {
         return statut;
     }
 
-    public void setStatut(StatusRemote statut) {
+    public PhotoEntity setStatut(StatusRemote statut) {
         this.statut = statut;
+        return this;
     }
 
     public Long getIdAnnonce() {

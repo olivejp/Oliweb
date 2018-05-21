@@ -59,4 +59,8 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
     @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE statut = :status")
     public abstract Flowable<Integer> countFlowableAllPhotosByStatus(String status);
+
+    @Transaction
+    @Query("SELECT photo.* FROM photo INNER JOIN annonce ON photo.idAnnonce = annonce.idAnnonce WHERE photo.statut IN (:status) AND annonce.uidUser = :uidUser")
+    public abstract Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status);
 }

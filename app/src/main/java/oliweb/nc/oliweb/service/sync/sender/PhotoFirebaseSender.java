@@ -3,16 +3,12 @@ package oliweb.nc.oliweb.service.sync.sender;
 import android.content.Context;
 import android.util.Log;
 
-import java.util.List;
-
 import io.reactivex.Observable;
-import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
-import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
@@ -43,15 +39,13 @@ public class PhotoFirebaseSender {
         return instance;
     }
 
-    public Observable<List<PhotoEntity>> sendAllPhotosToRemote(AnnonceFull annonceFull) {
-        Log.d(TAG, "sendAllPhotosToRemote annonceFull : " + annonceFull);
-        return photoRepository.getAllPhotosByStatusAndIdAnnonce(annonceFull.getAnnonce().getId(), Utility.allStatusToSend())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .flattenAsObservable(list -> list)
-                .concatMap(this::sendPhotoToRemote)
-                .toList()
-                .toObservable();
+    public Observable<String> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
+        Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
+        return sendPhotoToRemote(photoEntity)
+                .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
+                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase);
     }
+
 
     private Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemote photoEntity : " + photoEntity);
@@ -61,14 +55,6 @@ public class PhotoFirebaseSender {
                     markPhotoAsFailedToSend(photoEntity);
                 })
                 .switchMap(uri -> markPhotoAsSend(photoEntity, uri.toString()));
-    }
-
-    public Observable<String> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
-        Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
-        return sendPhotoToRemote(photoEntity)
-                .switchMap(this::sendPhotoToRemote)
-                .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
-                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase);
     }
 
     /**

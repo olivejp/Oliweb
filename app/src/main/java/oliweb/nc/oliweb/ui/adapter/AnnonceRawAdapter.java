@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -76,8 +77,12 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
 
         // Récupération de la date de publication
-        if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
-            viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
+        if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.SEND) {
+            if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
+                viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
+            }
+        } else if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.TO_SEND){
+            viewHolderRaw.textDatePublicationAnnonce.setText("Pas encore envoyée");
         }
 
         viewHolderRaw.imgPopup.setOnClickListener(popupClickListener);
