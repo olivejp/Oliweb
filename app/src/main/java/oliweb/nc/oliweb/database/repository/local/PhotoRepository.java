@@ -88,10 +88,11 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 .flattenAsObservable(list -> list);
     }
 
-    public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
+    public Observable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
         Log.d(TAG, "Starting getAllPhotosByUidUserAndStatus uidUser : " + uidUser + " status : " + status);
         return this.annonceFullRepository.getAllAnnoncesByUidUser(uidUser)                                   // Récupération de toutes les annonces pour l'uid user passé
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())                                     // On souscrit et on observe sur des threads de backend
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .flattenAsObservable(list -> list)                                                              // On souscrit et on observe sur des threads de backend
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) // Filtre pour ne prendre que les annonces avec des photos
                 .flatMapIterable(AnnonceFull::getPhotos)
                 .filter(photoEntity -> status.contains(photoEntity.getStatut().toString()));                 // Filtre sur la liste pour ne prendre que les photos avec les statuts recherchés

@@ -31,5 +31,5 @@ public abstract class AnnonceFullDao {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uidUser = :uidUser")
-    public abstract Flowable<AnnonceFull> getAllAnnoncesByUidUser(String uidUser);
+    public abstract Single<List<AnnonceFull>> getAllAnnoncesByUidUser(String uidUser);
 }

@@ -70,21 +70,19 @@ public class FirebasePhotoStorage {
 
         Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
         if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
-            httpsReference.getFile(pairUriFile.second).addOnSuccessListener(taskSnapshot -> {
-                // Local temp file has been created
-                Log.d(TAG, "Download successful for image : " + urlPhoto + " to URI : " + pairUriFile.first);
-
-                // Save photo to DB now
-                if (pairUriFile.first != null) {
-                    PhotoEntity photoEntity = new PhotoEntity();
-                    photoEntity.setStatut(StatusRemote.SEND);
-                    photoEntity.setFirebasePath(urlPhoto);
-                    photoEntity.setUriLocal(pairUriFile.first.toString());
-                    photoEntity.setIdAnnonce(idAnnonce);
-                    photoRepository.saveWithSingle(photoEntity).subscribe();
-                }
-
-            }).addOnFailureListener(exception -> Log.d(TAG, "Download failed for image : " + urlPhoto));
+            httpsReference.getFile(pairUriFile.second)
+                    .addOnSuccessListener(taskSnapshot -> {
+                        Log.d(TAG, "Download successful for image : " + urlPhoto + " to URI : " + pairUriFile.first);
+                        if (pairUriFile.first != null) {
+                            PhotoEntity photoEntity = new PhotoEntity();
+                            photoEntity.setStatut(StatusRemote.SEND);
+                            photoEntity.setFirebasePath(urlPhoto);
+                            photoEntity.setUriLocal(pairUriFile.first.toString());
+                            photoEntity.setIdAnnonce(idAnnonce);
+                            photoRepository.saveWithSingle(photoEntity).subscribe();
+                        }
+                    })
+                    .addOnFailureListener(exception -> Log.d(TAG, "Download failed for image : " + urlPhoto));
         }
     }
 

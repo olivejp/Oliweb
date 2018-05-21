@@ -91,15 +91,17 @@ public class DatabaseSyncListenerService extends Service {
                     .doOnNext(annonceFirebaseDeleter::processToDeleteAnnonce)
                     .subscribe());
 
-            disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToDelete())
+            disposables.add(photoRepository.getAllPhotosByStatus(Utility.allStatusToDelete())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .toObservable()
                     .map(photoEntity ->
                             annonceFirebaseDeleter.deleteOnePhoto(photoEntity).toObservable()
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .switchMap(atomicBoolean -> annonceRepository.findById(photoEntity.getIdAnnonce()).toObservable())
                                     .filter(annonceEntity -> annonceEntity.getStatut() == StatusRemote.SEND)
                                     .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
+                                    .subscribe()
                     )
                     .subscribe());
 
