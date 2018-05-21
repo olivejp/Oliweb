@@ -88,7 +88,7 @@ public class DatabaseSyncListenerService extends Service {
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(annonceFirebaseDeleter::deleteAnnonce)
+                    .doOnNext(annonceFirebaseDeleter::processToDeleteAnnonce)
                     .subscribe());
 
             disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToDelete())

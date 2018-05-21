@@ -53,15 +53,12 @@ public class AnnonceFirebaseDeleter {
     }
 
     /**
-     * Lecture de toutes les annonces avec des statuts à supprimer
-     * 1 - Suppression des photos du Firebase Storage
-     * 2 - Suppression de l'annonce dans Firebase
-     * 3 - Suppression des photos dans le storage local
-     * 4 - Suppression des photos dans la base locale
-     * 5 - Suppression de l'annonce dans la base locale
+     * Récupération de l'annonce full
+     * Pour chaque annonceFull, je vais supprimer les photos
+     * Puis supprimer l'annonce de Firebase et de la base de données locale
      */
-    public void deleteAnnonce(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "Starting deleteAnnonce annonceEntity : " + annonceEntity);
+    public void processToDeleteAnnonce(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting processToDeleteAnnonce annonceEntity : " + annonceEntity);
         annonceFullRepository.findAnnonceFullByAnnonceEntity(annonceEntity)
                 .doOnNext(annonceFull -> deleteAllPhotos(annonceFull.getPhotos()))
                 .switchMap(this::deleteAnnonceAllService)
@@ -102,8 +99,8 @@ public class AnnonceFirebaseDeleter {
      * Lecture de toutes les photos avec un statut "à supprimer"
      * Pour chaque photo, je vais tenter de :
      * 1 - Supprimer sur Firebase Storage
-     * 3 - Supprimer sur le storage local
-     * 4 - Supprimer sur la database locale
+     * 2 - Supprimer sur le storage local
+     * 3 - Supprimer sur la database locale
      */
     private void deleteAllPhotos(List<PhotoEntity> listPhotosToDelete) {
         Log.d(TAG, "Starting deleteAllPhotos");
