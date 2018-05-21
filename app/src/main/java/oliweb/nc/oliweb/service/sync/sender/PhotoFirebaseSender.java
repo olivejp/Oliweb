@@ -68,7 +68,7 @@ public class PhotoFirebaseSender {
         return sendPhotoToRemote(photoEntity)
                 .switchMap(this::sendPhotoToRemote)
                 .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
-                .switchMap(annonceFirebaseSender::sendToFirebase);
+                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase);
     }
 
     /**

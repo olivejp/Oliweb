@@ -8,6 +8,7 @@ import android.util.Log;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
@@ -55,12 +56,14 @@ public class DatabaseSyncListenerService extends Service {
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
             ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
 
+            // SENDERS
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(annonceFirebaseSender::sendAnnonceToRemoteDatabase)
+                    .doOnNext(annonceFirebaseSender::processTosendAnnonceToFirebase)
                     .subscribe());
 
+            // TODO Refacto à faire sur cette méthode pour récupérer les SwitchMap dans la méthode la plus haute
             disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
@@ -81,10 +84,23 @@ public class DatabaseSyncListenerService extends Service {
                     .switchMap(messageFirebaseSender::sendMessage)
                     .subscribe());
 
+            // DELETERS
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(annonceFirebaseDeleter::deleteAnnonce)
+                    .subscribe());
+
+            disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToDelete())
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .toObservable()
+                    .map(photoEntity ->
+                            annonceFirebaseDeleter.deleteOnePhoto(photoEntity).toObservable()
+                                    .switchMap(atomicBoolean -> annonceRepository.findById(photoEntity.getIdAnnonce()).toObservable())
+                                    .filter(annonceEntity -> annonceEntity.getStatut() == StatusRemote.SEND)
+                                    .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
+                    )
                     .subscribe());
 
         } else {

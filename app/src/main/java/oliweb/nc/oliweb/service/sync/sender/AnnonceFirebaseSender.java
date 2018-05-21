@@ -46,20 +46,20 @@ public class AnnonceFirebaseSender {
      *
      * @param annonceEntity to send to Firebase
      */
-    public void sendAnnonceToRemoteDatabase(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "Starting sendAnnonceToRemoteDatabase annonceEntity : " + annonceEntity);
+    public void processTosendAnnonceToFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting processTosendAnnonceToFirebase annonceEntity : " + annonceEntity);
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> annonceRepository.markAnnonceAsFailedToSend(annonceEntity))
                 .toObservable()
                 .switchMap(annonceRepository::markAsSending)
-                .switchMap(this::sendToFirebase)
+                .switchMap(this::convertToFullAndSendToFirebase)
                 .switchMap(annonceRepository::findObservableByUid)
                 .switchMap(annonceRepository::markAsSend)
                 .switchMap(annonceFullRepository::findAnnonceFullByAnnonceEntity)
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())
                 .switchMap(photoFirebaseSender::sendAllPhotosToRemote)
-                .doOnComplete(() -> sendToFirebase(annonceEntity).subscribe())
+                .doOnComplete(() -> convertToFullAndSendToFirebase(annonceEntity).subscribe())
                 .subscribe();
     }
 
@@ -71,8 +71,8 @@ public class AnnonceFirebaseSender {
      * @param annonceEntity to save to Firebase
      * @return UID of the recorded annonce
      */
-    public Observable<String> sendToFirebase(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "sendToFirebase idAnnonce : " + annonceEntity);
+    public Observable<String> convertToFullAndSendToFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "convertToFullAndSendToFirebase idAnnonce : " + annonceEntity);
         return annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .toObservable()

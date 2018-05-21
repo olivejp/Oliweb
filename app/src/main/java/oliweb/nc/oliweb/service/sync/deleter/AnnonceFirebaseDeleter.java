@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -62,7 +63,7 @@ public class AnnonceFirebaseDeleter {
     public void deleteAnnonce(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting deleteAnnonce annonceEntity : " + annonceEntity);
         annonceFullRepository.findAnnonceFullByAnnonceEntity(annonceEntity)
-                .doOnNext(annonceFull -> deletePhotosByAnnonce(annonceFull.getPhotos()))
+                .doOnNext(annonceFull -> deleteAllPhotos(annonceFull.getPhotos()))
                 .switchMap(this::deleteAnnonceAllService)
                 .subscribe();
     }
@@ -85,7 +86,7 @@ public class AnnonceFirebaseDeleter {
                     if (atomicBoolean.get()) {
                         annonceRepository.delete(dataReturn -> {
                             if (dataReturn.isSuccessful()) {
-                                Log.e(TAG, "Delete from the local DB successful");
+                                Log.d(TAG, "Delete from the local DB successful");
                             } else {
                                 Log.e(TAG, "Fail to delete from the local DB");
                             }
@@ -104,32 +105,44 @@ public class AnnonceFirebaseDeleter {
      * 3 - Supprimer sur le storage local
      * 4 - Supprimer sur la database locale
      */
-    private void deletePhotosByAnnonce(List<PhotoEntity> listPhotosToDelete) {
-        Log.d(TAG, "Starting deletePhotosByAnnonce");
+    private void deleteAllPhotos(List<PhotoEntity> listPhotosToDelete) {
+        Log.d(TAG, "Starting deleteAllPhotos");
         for (PhotoEntity photo : listPhotosToDelete) {
-            // Suppression du Firebase Storage
-            firebasePhotoStorage.delete(photo)
-                    .doOnError(e -> {
-                        Log.e(TAG, e.getLocalizedMessage(), e);
-                        photoRepository.markAsFailedToDelete(photo).subscribe();
-                    })
-                    .doOnSuccess(atomicBoolean -> {
-                        if (atomicBoolean.get()) {
-                            // Suppression sur le device
-                            MediaUtility.deletePhotoFromDevice(contentResolver, photo);
-
-                            // Suppression de la db locale
-                            photoRepository.delete(dataReturn -> {
-                                if (dataReturn.isSuccessful()) {
-                                    Log.d(TAG, "Photo delete successful");
-                                } else {
-                                    Log.e(TAG, "Photo delete FAILED");
-                                }
-                            }, photo);
-                        }
-                    })
-                    .subscribe();
+            deleteOnePhoto(photo).subscribe();
         }
+    }
+
+    public Single<AtomicBoolean> deleteOnePhoto(PhotoEntity photo) {
+        // 1 - Suppression du Firebase Storage
+        return Single.create(emitter -> firebasePhotoStorage.delete(photo)
+                .doOnError(e -> {
+                    Log.e(TAG, e.getLocalizedMessage(), e);
+                    photoRepository.markAsFailedToDelete(photo).subscribe();
+                    emitter.onError(e);
+                })
+                .doOnSuccess(atomicBoolean -> {
+                    if (atomicBoolean.get()) {
+                        // 2 - Suppression sur le device
+                        if (MediaUtility.deletePhotoFromDevice(contentResolver, photo)) {
+                            Log.d(TAG, "Successful delete from local device");
+                        } else {
+                            Log.e(TAG, "Failed to delete photo from local device");
+                        }
+
+                        // 3 - Suppression de la db locale
+                        photoRepository.delete(dataReturn -> {
+                            if (dataReturn.isSuccessful()) {
+                                Log.d(TAG, "Photo delete successful");
+                                emitter.onSuccess(new AtomicBoolean(true));
+                            } else {
+                                Log.e(TAG, "Photo delete FAILED");
+                                emitter.onSuccess(new AtomicBoolean(false));
+                            }
+                        }, photo);
+                    }
+                })
+                .subscribe()
+        );
     }
 
 }

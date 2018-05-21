@@ -20,6 +20,8 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 07/02/2018.
@@ -81,9 +83,16 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.imgPopup.setOnClickListener(popupClickListener);
         viewHolderRaw.imgPopup.setTag(annoncePhotos);
 
+        // Calcul du nombre de photo actuellement correctes
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderRaw.textNbPhotos.setText(String.valueOf(annoncePhotos.getPhotos().size()));
+            int photoAvailable = 0;
+            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
+                if (!Utility.allStatusToAvoid().contains(photo.getStatut().toString())) {
+                    photoAvailable++;
+                }
+            }
+            viewHolderRaw.textNbPhotos.setText(String.valueOf(photoAvailable));
         } else {
             viewHolderRaw.textNbPhotos.setText("0");
         }
