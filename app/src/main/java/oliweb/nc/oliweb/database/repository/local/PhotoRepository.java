@@ -153,7 +153,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     public Single<List<PhotoEntity>> markAsToSend(List<PhotoEntity> list) {
         Log.d(TAG, "markAsToSend list : " + list);
         return Observable.fromIterable(list)
-                .map(photoEntity ->  photoEntity.setStatut(StatusRemote.TO_SEND))
+                .map(photoEntity -> {
+                    photoEntity.setStatut(StatusRemote.TO_SEND);
+                    return photoEntity;
+                })
                 .switchMap(photoEntity -> saveWithSingle(photoEntity).toObservable())
                 .toList();
     }

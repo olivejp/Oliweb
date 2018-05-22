@@ -75,6 +75,7 @@ public class AnnonceFirebaseSender {
         Log.d(TAG, "convertToFullAndSendToFirebase idAnnonce : " + annonceEntity);
         return annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)
                 .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto).toObservable());
