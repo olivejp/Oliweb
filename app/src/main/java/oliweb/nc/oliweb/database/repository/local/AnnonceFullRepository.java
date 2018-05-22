@@ -4,12 +4,13 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 
 /**
@@ -36,22 +37,20 @@ public class AnnonceFullRepository {
         return this.annonceFullDao.findSingleByIdAnnonce(idAnnonce);
     }
 
-    public Maybe<List<AnnonceFull>> getAllAnnoncesByStatus(List<String> status) {
-        return this.annonceFullDao.getAllAnnonceByStatus(status);
+    public Maybe<List<AnnonceFull>> getAllAnnoncesByUidUserAndStatus(String uidUser, List<String> status) {
+        return this.annonceFullDao.getAllAnnoncesByUidUserAndStatus(uidUser, status);
     }
 
-    public Observable<AnnonceFull> observeAllAnnoncesByStatus(List<String> status) {
-        return Observable.create(e ->
-                this.annonceFullDao.getAllAnnonceByStatus(status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .doOnSuccess(listAnnonceFull -> {
-                            for (AnnonceFull annonceFull : listAnnonceFull) {
-                                e.onNext(annonceFull);
-                            }
-                            e.onComplete();
-                        })
-                        .subscribe()
-        );
+    public Single<List<AnnonceFull>> getAllAnnoncesByUidUser(String uidUser) {
+        return this.annonceFullDao.getAllAnnoncesByUidUser(uidUser);
     }
+
+    public Flowable<AnnonceFull> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceFullDao.findFlowableByUidUserAndStatusIn(uidUser, status);
+    }
+
+    public Observable<AnnonceFull> findAnnonceFullByAnnonceEntity(AnnonceEntity annonceEntity) {
+        return this.annonceFullDao.findSingleByIdAnnonce(annonceEntity.getIdAnnonce()).toObservable();
+    }
+
 }

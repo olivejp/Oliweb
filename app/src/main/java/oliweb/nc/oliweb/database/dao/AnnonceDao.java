@@ -38,8 +38,8 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<AnnonceEntity> findLiveById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
-    public abstract Maybe<AnnonceEntity> findSingleById(Long idAnnonce);
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce")
+    public abstract Maybe<AnnonceEntity> findSingleByUid(String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")
@@ -66,10 +66,22 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
 
     @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUser <> :uidUser")
+    public abstract Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce);
+
+    @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
     public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE idAnnonce = :idAnnonce")
     public abstract Single<Integer> countById(Long idAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:statutList)")
+    public abstract Maybe<List<AnnonceEntity>> getAllAnnoncesByUidUserAndStatus(String uidUser, List<String> statutList);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
+    public abstract Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
 }

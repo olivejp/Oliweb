@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -37,19 +38,17 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     public abstract Maybe<MessageEntity> findSingleByUid(String uidMessage);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM message WHERE uidMessage = :uidMessage")
-    public abstract Single<Integer> countById(String uidMessage);
-
-    @Transaction
-    @Query("SELECT * FROM message WHERE idChat = :idChat AND statusRemote IN (:status)")
-    public abstract Maybe<List<MessageEntity>> getAllMessageByStatusByIdChat(Long idChat, List<String> status);
-
-    @Transaction
-    @Query("SELECT * FROM message WHERE statusRemote IN (:status)")
-    public abstract Maybe<List<MessageEntity>> getAllMessageByStatus(List<String> status);
-
-    @Transaction
     @Query("SELECT * FROM message WHERE idChat = :idChat")
     public abstract LiveData<List<MessageEntity>> findAllByIdChat(Long idChat);
+
+    @Transaction
+    @Query("SELECT * FROM message WHERE statusRemote IN (:status) AND uidChat <> ''")
+    public abstract Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status);
+
+
+    @Transaction
+    @Query("SELECT * FROM message WHERE idChat =:idChat")
+    public abstract Single<List<MessageEntity>> getSingleByIdChat(Long idChat);
+
 
 }

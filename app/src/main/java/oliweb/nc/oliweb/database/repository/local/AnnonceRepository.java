@@ -25,6 +25,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private static AnnonceRepository instance;
     private PhotoRepository photoRepository;
+    private ChatRepository chatRepository;
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
@@ -37,6 +38,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         if (instance == null) {
             instance = new AnnonceRepository(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
+            instance.chatRepository = ChatRepository.getInstance(context);
         }
         return instance;
     }
@@ -51,24 +53,30 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.findByUid(uidAnnonce);
     }
 
-    public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
-        Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
-        return Observable.create(emitter -> {
-            this.annonceDao.getAllAnnonceByStatus(status)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(listAnnonceStatus -> {
-                        for (AnnonceEntity annonce : listAnnonceStatus) {
-                            emitter.onNext(annonce);
-                        }
-                        emitter.onComplete();
-                    })
-                    .subscribe();
-        });
+    public Observable<AnnonceEntity> findObservableByUid(String uidAnnonce) {
+        Log.d(TAG, "Starting findObservableByUid " + uidAnnonce);
+        return this.annonceDao.findSingleByUid(uidAnnonce).toObservable();
     }
 
-    public Flowable<Integer> countFlowableAllAnnoncesByStatus(String status) {
-        return this.annonceDao.countFlowableAllAnnoncesByStatus(status);
+
+    public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
+    }
+
+    public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
+        Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
+        return Observable.create(emitter ->
+                this.annonceDao.getAllAnnonceByStatus(status)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(listAnnonceStatus -> {
+                            for (AnnonceEntity annonce : listAnnonceStatus) {
+                                emitter.onNext(annonce);
+                            }
+                            emitter.onComplete();
+                        })
+                        .subscribe()
+        );
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {
@@ -84,29 +92,87 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
+    /**
+     * Will return > 0 if true
+     *
+     * @param uidAnnonce
+     * @return
+     */
     public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
         return this.annonceDao.isAnnonceFavorite(uidAnnonce);
     }
 
+    /**
+     * Will return > 0 if true
+     *
+     * @param uidAnnonce
+     * @return
+     */
+    public Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce) {
+        return this.annonceDao.isAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
+    }
+
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
-        Log.d(TAG, "Starting markToDelete idAnnonce : " + idAnnonce);
+        Log.d(TAG, "Starting markToDeleteByAnnonce idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
-                findById(idAnnonce)
-                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
-                        .doOnSuccess(annonceEntity -> {
-                            annonceEntity.setStatut(StatusRemote.TO_DELETE);
-                            saveWithSingle(annonceEntity)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceUpdated -> {
-                                                Log.d(TAG, "saveWithSingle.doOnSuccess annonceUpdated : " + annonceUpdated);
-                                                photoRepository.markToDelete(annonceUpdated.getId())
-                                                        .doOnSuccess(emitter::onSuccess)
-                                                        .subscribe();
-                                            }
-                                    )
-                                    .subscribe();
-                        })
-                        .subscribe()
+                        findById(idAnnonce)
+                                .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
+                                .toObservable()
+                                .switchMap(this::markAsToDelete)
+                                .doOnNext(annonceEntity -> {
+                                    photoRepository.markToDeleteByAnnonce(annonceEntity)
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .subscribe();
+                                    chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .subscribe();
+                                })
+                                .subscribe()
         );
+    }
+
+    public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsSending annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.SENDING);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsSend annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.SEND);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsToDelete annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.TO_DELETE);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAnnonceAsFailedToSend(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAnnonceAsFailedToSend annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<AnnonceEntity> markAnnonceAsFailedToDelete(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAnnonceAsFailedToDelete annonceEntity : " + annonceEntity);
+        annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
+        return this.saveWithSingle(annonceEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 }

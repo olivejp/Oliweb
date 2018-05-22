@@ -69,8 +69,9 @@ public class ChatFirebase {
         return lastMessage;
     }
 
-    public void setLastMessage(String lastMessage) {
+    public ChatFirebase setLastMessage(String lastMessage) {
         this.lastMessage = lastMessage;
+        return this;
     }
 
     public long getCreationTimestamp() {
@@ -85,8 +86,9 @@ public class ChatFirebase {
         return updateTimestamp;
     }
 
-    public void setUpdateTimestamp(long updateTimestamp) {
+    public ChatFirebase setUpdateTimestamp(long updateTimestamp) {
         this.updateTimestamp = updateTimestamp;
+        return this;
     }
 
     public Map<String, Boolean> getMembers() {

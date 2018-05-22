@@ -45,12 +45,8 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
     public abstract Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM photo WHERE statut = :statut")
-    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatus(String statut);
-
-    @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:statut)")
-    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> statut);
+    public abstract Flowable<PhotoEntity> getAllPhotosByStatus(List<String> statut);
 
     @Transaction
     @Query("SELECT * FROM photo WHERE statut IN (:listStatut) AND idAnnonce = :idAnnonce")
@@ -61,10 +57,10 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
     public abstract Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM photo WHERE idPhoto = :idPhoto")
-    public abstract Single<Integer> countById(Long idPhoto);
-
-    @Transaction
     @Query("SELECT COUNT(*) FROM photo WHERE statut = :status")
     public abstract Flowable<Integer> countFlowableAllPhotosByStatus(String status);
+
+    @Transaction
+    @Query("SELECT photo.* FROM photo INNER JOIN annonce ON photo.idAnnonce = annonce.idAnnonce WHERE photo.statut IN (:status) AND annonce.uidUser = :uidUser")
+    public abstract Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status);
 }

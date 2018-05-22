@@ -159,7 +159,7 @@ public class ListChatFragment extends Fragment {
     }
 
     private void callListMessage(Long idChat) {
-        viewModel.rechercheMessageByUidChat(idChat);
+        viewModel.rechercheMessageByIdChat(idChat);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {

@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +21,9 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 07/02/2018.
@@ -39,8 +43,9 @@ public class AnnonceRawAdapter extends
         this.listAnnonces = new ArrayList<>();
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolderResult;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
@@ -51,7 +56,7 @@ public class AnnonceRawAdapter extends
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AnnoncePhotos annoncePhotos = listAnnonces.get(position);
         bindViewHolderRaw(viewHolder, annoncePhotos);
     }
@@ -74,16 +79,27 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
 
         // Récupération de la date de publication
-        if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
-            viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
+        if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.SEND) {
+            if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
+                viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
+            }
+        } else if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.TO_SEND){
+            viewHolderRaw.textDatePublicationAnnonce.setText("Pas encore envoyée");
         }
 
         viewHolderRaw.imgPopup.setOnClickListener(popupClickListener);
         viewHolderRaw.imgPopup.setTag(annoncePhotos);
 
+        // Calcul du nombre de photo actuellement correctes
         // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
         if (!annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderRaw.textNbPhotos.setText(String.valueOf(annoncePhotos.getPhotos().size()));
+            int photoAvailable = 0;
+            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
+                if (!Utility.allStatusToAvoid().contains(photo.getStatut().toString())) {
+                    photoAvailable++;
+                }
+            }
+            viewHolderRaw.textNbPhotos.setText(String.valueOf(photoAvailable));
         } else {
             viewHolderRaw.textNbPhotos.setText("0");
         }
@@ -172,8 +188,5 @@ public class AnnonceRawAdapter extends
             return this.normalLayoutRaw;
         }
 
-        public AnnonceEntity getSingleAnnonce() {
-            return this.singleAnnonce;
-        }
     }
 }

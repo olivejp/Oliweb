@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.service.messaging;
+package oliweb.nc.oliweb.service.notification;
 
 import com.google.firebase.iid.FirebaseInstanceIdService;
 

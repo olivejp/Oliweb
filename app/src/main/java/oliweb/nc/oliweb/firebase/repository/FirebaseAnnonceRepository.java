@@ -23,7 +23,8 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -33,12 +34,11 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
-    private DatabaseReference ANNONCE_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
+    private DatabaseReference annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
 
     private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
-    private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
@@ -51,14 +51,13 @@ public class FirebaseAnnonceRepository {
             instance = new FirebaseAnnonceRepository();
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
         instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
         return instance;
     }
 
     public Query queryByUidUser(String uidUser) {
         Log.d(TAG, "queryByUidUser called with uidUser = " + uidUser);
-        return ANNONCE_REF.orderByChild("utilisateur/uuid").equalTo(uidUser);
+        return annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser);
     }
 
     /**
@@ -118,7 +117,46 @@ public class FirebaseAnnonceRepository {
                         if (annonceFromFirebase.getPhotos() != null && !annonceFromFirebase.getPhotos().isEmpty()) {
                             for (String photoUrl : annonceFromFirebase.getPhotos()) {
                                 Log.d(TAG, "Try to save : " + photoUrl);
-                                firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photoUrl);
+                                if (photoUrl != null && !photoUrl.isEmpty()) {
+                                    firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photoUrl);
+                                }
+                            }
+                        }
+                    })
+                    .subscribe();
+        } catch (Exception exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+        }
+    }
+
+    public void checkAnnonceExistInLocalOrSaveIt(Context context, AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting checkAnnonceExistInLocalOrSaveIt called with annoncePhotos = " + annoncePhotos.toString());
+        annonceRepository.isAnnonceFavoriteNotTheAuthor(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(throwable -> Log.e(TAG, "isAnnonceFavoriteNotTheAuthor.doOnError " + throwable.getMessage()))
+                .doOnSuccess(integer -> {
+                    if (integer == null || integer.equals(0)) {
+                        getAnnonceFromFbToLocalDb(context, annoncePhotos);
+                    }
+                })
+                .subscribe();
+    }
+
+    private void getAnnonceFromFbToLocalDb(Context context, final AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting getAnnonceFromFbToLocalDb called with AnnoncePhotos = " + annoncePhotos.toString());
+        try {
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+            annonceEntity.setFavorite(1);
+            annonceRepository.saveWithSingle(annonceEntity)
+                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid()))
+                    .doOnSuccess(annonceEntity1 -> {
+                        Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
+                        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+                            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
+                                Log.d(TAG, "Try to save : " + photo.getFirebasePath());
+                                if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
+                                    firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photo.getFirebasePath());
+                                }
                             }
                         }
                     })
@@ -161,7 +199,7 @@ public class FirebaseAnnonceRepository {
     public Maybe<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
         return Maybe.create(e ->
-                ANNONCE_REF.child(uidAnnonce)
+                annonceRef.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -182,57 +220,62 @@ public class FirebaseAnnonceRepository {
     }
 
     /**
-     * Insert or Update an annonce into the Firebase Database
+     * Va récupérer un uid et le timestamp du serveur pour une annonceDto
      *
-     * @param annonceDto
+     * @param annonceEntity
      * @return
      */
-    public Single<AnnonceDto> saveAnnonceToFirebase(AnnonceDto annonceDto) {
-        Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
-        DatabaseReference dbRef;
-        if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
-            dbRef = ANNONCE_REF.push();
-            annonceDto.setUuid(dbRef.getKey());
-        } else {
-            dbRef = ANNONCE_REF.child(annonceDto.getUuid());
-        }
-
+    public Single<AnnonceEntity> getUidAndTimestampFromFirebase(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting getUidAndTimestampFromFirebase annonceEntity : " + annonceEntity);
         return Single.create(emitter ->
                 FirebaseUtility.getServerTimestamp()
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(datePublication -> {
-                            annonceDto.setDatePublication(datePublication);
-                            dbRef.setValue(annonceDto)
-                                    .addOnFailureListener(emitter::onError)
-                                    .addOnSuccessListener(o ->
-                                            findByUidAnnonce(annonceDto.getUuid())
-                                                    .doOnError(emitter::onError)
-                                                    .doOnSuccess(emitter::onSuccess)
-                                                    .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
-                                                    .subscribe()
-                                    );
+                        .doOnSuccess(timestamp -> {
+                            DatabaseReference dbRef;
+                            if (annonceEntity.getUid() == null || annonceEntity.getUid().isEmpty()) {
+                                dbRef = annonceRef.push();
+                                annonceEntity.setUid(dbRef.getKey());
+                            } else {
+                                dbRef = annonceRef.child(annonceEntity.getUid());
+                            }
+
+                            annonceEntity.setDatePublication(timestamp);
+                            annonceEntity.setUid(dbRef.getKey());
+                            emitter.onSuccess(annonceEntity);
                         })
                         .subscribe()
         );
     }
 
-    public Single<AnnonceDto> saveAnnonceToFirebase(Long idAnnonce) {
-        Log.d(TAG, "Starting saveAnnonceToFirebase idAnnonce : " + idAnnonce);
-        return Single.create(emitter ->
-                annonceFullRepository.findAnnoncesByIdAnnonce(idAnnonce)
-                        .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(annonceFullEntity -> {
-                            AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFullEntity);
-                            saveAnnonceToFirebase(annonceDto)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(emitter::onSuccess)
-                                    .subscribe();
-                        })
-                        .subscribe()
-        );
+    /**
+     * Insert or Update an annonce into the Firebase Database
+     *
+     * @param annonceDto
+     * @return UID de l'annonce DTO enregistré
+     */
+    public Single<String> saveAnnonceToFirebase(AnnonceDto annonceDto) {
+        Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
+        return Single.create(emitter -> {
+            if (annonceDto == null) {
+                emitter.onError((new RuntimeException("Can't save null annonceDto object to Firebase")));
+            } else if (annonceDto.getUuid() == null) {
+                emitter.onError((new RuntimeException("UID is mandatory to save in Firebase")));
+            } else {
+                annonceRef.child(annonceDto.getUuid()).setValue(annonceDto)
+                        .addOnFailureListener(emitter::onError)
+                        .addOnSuccessListener(o ->
+                                findByUidAnnonce(annonceDto.getUuid())
+                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .doOnError(emitter::onError)
+                                        .doOnSuccess(annonceDto1 -> emitter.onSuccess(annonceDto1.getUuid()))
+                                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
+                                        .subscribe()
+                        );
+            }
+        });
     }
+
 
     /**
      * Suppression d'une annonce sur Firebase Database
@@ -246,7 +289,7 @@ public class FirebaseAnnonceRepository {
             if (annonce == null || annonce.getUid() == null) {
                 emitter.onSuccess(new AtomicBoolean(true));
             } else {
-                ANNONCE_REF.child(annonce.getUid())
+                annonceRef.child(annonce.getUid())
                         .removeValue()
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUid() + " exception : " + e.getLocalizedMessage());

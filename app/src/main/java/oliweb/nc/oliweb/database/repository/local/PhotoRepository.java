@@ -6,14 +6,13 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Flowable;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.PhotoDao;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
@@ -63,19 +62,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         }
     }
 
-    public Single<PhotoEntity> findSingleById(long idPhoto) {
-        Log.d(TAG, "Starting findSingleByUid idPhoto : " + idPhoto);
-        return this.photoDao.findSingleById(idPhoto);
-    }
-
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findByIdAnnonce(idAnnonce);
-    }
-
-    public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(long idAnnonce, List<String> status) {
-        Log.d(TAG, "Starting getAllPhotosByStatusAndIdAnnonce idAnnonce : " + idAnnonce + " status : " + status);
-        return this.photoDao.getAllPhotosByStatusAndIdAnnonce(status, idAnnonce);
     }
 
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
@@ -83,60 +72,41 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
     }
 
-    public Observable<PhotoEntity> observeAllPhotosByIdAnnonce(long idAnnonce) {
-        Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
-        return this.photoDao.findAllSingleByIdAnnonce(idAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(list -> list);
+    public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
+        Log.d(TAG, "Starting getAllPhotosByUidUserAndStatus uidUser : " + uidUser + " status : " + status);
+        return this.photoDao.getAllPhotosByUidUserAndStatus(uidUser, status);
     }
 
-    public Observable<PhotoEntity> observeAllPhotosByStatus(List<String> status) {
-        return Observable.create(e ->
-                this.photoDao.getAllPhotosByStatus(status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .doOnSuccess(photoEntities -> {
-                            for (PhotoEntity photoEntity : photoEntities) {
-                                e.onNext(photoEntity);
-                            }
-                            e.onComplete();
-                        })
-                        .subscribe()
-        );
-    }
-
-    public Maybe<List<PhotoEntity>> getAllPhotosByStatus(List<String> status) {
+    public Flowable<PhotoEntity> getAllPhotosByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllPhotosByStatus status : " + status);
         return this.photoDao.getAllPhotosByStatus(status);
     }
 
-    public Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce) {
-        Log.d(TAG, "Starting countAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
-        return this.photoDao.countAllPhotosByIdAnnonce(idAnnonce);
+    public Observable<List<PhotoEntity>> markToDeleteByAnnonce(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "Starting markToDeleteByAnnonce annonceEntity : " + annonceEntity);
+        return findAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(list -> list)
+                .concatMap(this::markToDelete)
+                .toList()
+                .toObservable();
     }
 
-    public Flowable<Integer> countFlowableAllPhotosByStatus(String status) {
-        Log.d(TAG, "Starting countFlowableAllPhotosByStatus status : " + status);
-        return this.photoDao.countFlowableAllPhotosByStatus(status);
+    private Observable<PhotoEntity> markToDelete(PhotoEntity photoEntity) {
+        Log.d(TAG, "markToDelete photoEntity : " + photoEntity);
+        photoEntity.setStatut(StatusRemote.TO_DELETE);
+        return this.saveWithSingle(photoEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 
-    public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
-        Log.d(TAG, "Starting markToDelete idAnnonce : " + idAnnonce);
-        return Single.create(emitter ->
-                findAllPhotosByIdAnnonce(idAnnonce)
-                        .doOnError(emitter::onError)
-                        .flattenAsObservable(list -> list)
-                        .doOnNext(photoEntity -> {
-                            Log.d(TAG, "doOnNext photoEntity : " + photoEntity);
-                            photoEntity.setStatut(StatusRemote.TO_DELETE);
-                            saveWithSingle(photoEntity)
-                                    .doOnSuccess(photoEntity1 -> Log.d(TAG, "saveWithSingle successfull photoEntity : " + photoEntity1))
-                                    .doOnError(emitter::onError)
-                                    .subscribe();
-                        })
-                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
-                        .subscribe()
-        );
+    public Observable<PhotoEntity> markAsFailedToDelete(PhotoEntity photoEntity) {
+        Log.d(TAG, "markAsFailedToDelete photoEntity : " + photoEntity);
+        photoEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
+        return this.saveWithSingle(photoEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
     }
 
     public Single<Integer> deleteAllByIdAnnonce(Long idAnnonce) {
@@ -159,5 +129,16 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                         })
                         .subscribe()
         );
+    }
+
+    public Single<List<PhotoEntity>> markAsToSend(List<PhotoEntity> list) {
+        Log.d(TAG, "markAsToSend list : " + list);
+        return Observable.fromIterable(list)
+                .map(photoEntity -> {
+                    photoEntity.setStatut(StatusRemote.TO_SEND);
+                    return photoEntity;
+                })
+                .switchMap(photoEntity -> saveWithSingle(photoEntity).toObservable())
+                .toList();
     }
 }

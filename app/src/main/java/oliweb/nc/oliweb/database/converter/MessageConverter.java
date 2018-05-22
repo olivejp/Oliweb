@@ -18,6 +18,7 @@ public class MessageConverter {
         messageEntity.setMessage(messageFirebase.getMessage());
         messageEntity.setUidMessage(messageFirebase.getUidMessage());
         messageEntity.setTimestamp(messageFirebase.getTimestamp());
+        messageEntity.setUidChat(messageFirebase.getUidChat());
         messageEntity.setUidAuthor(messageFirebase.getUidAuthor());
         messageEntity.setStatusRemote(StatusRemote.SEND);
         return messageEntity;
@@ -31,11 +32,13 @@ public class MessageConverter {
         return listResult;
     }
 
-    public static MessageFirebase convertEntityToDto(String uidChat, MessageEntity messageEntity) {
+    public static MessageFirebase convertEntityToDto(MessageEntity messageEntity) {
         MessageFirebase messageFirebase = new MessageFirebase();
         messageFirebase.setMessage(messageEntity.getMessage());
+        messageFirebase.setUidMessage(messageEntity.getUidMessage());
         messageFirebase.setUidAuthor(messageEntity.getUidAuthor());
-        messageFirebase.setUidChat(uidChat);
+        messageFirebase.setTimestamp(messageEntity.getTimestamp());
+        messageFirebase.setUidChat(messageEntity.getUidChat());
         messageFirebase.setRead(false);
         return messageFirebase;
     }

@@ -104,10 +104,6 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageFavorite.setTag(viewHolderBeauty);
         viewHolderBeauty.imageShare.setTag(viewHolderBeauty);
 
-//        viewHolderBeauty.cardView.setOnClickListener(v -> listener.onClick(annoncePhotos, viewHolderBeauty));
-//        viewHolderBeauty.imageFavorite.setOnClickListener(v -> listener.onLike(annoncePhotos, viewHolderBeauty));
-//        viewHolderBeauty.imageShare.setOnClickListener(v -> listener.onShare(annoncePhotos, viewHolderBeauty));
-
         viewHolderBeauty.cardView.setOnClickListener(onClickListener);
         viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
         viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
@@ -222,30 +218,6 @@ public class AnnonceBeautyAdapter extends
         ViewHolderBeauty(View itemLayoutView) {
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
-        }
-
-        public TextView getTextTitreAnnonce() {
-            return textTitreAnnonce;
-        }
-
-        public TextView getTextPrixAnnonce() {
-            return textPrixAnnonce;
-        }
-
-        public TextView getTextDatePublicationAnnonce() {
-            return textDatePublicationAnnonce;
-        }
-
-        public CardView getCardView() {
-            return cardView;
-        }
-
-        public ImageView getImageFavorite() {
-            return imageFavorite;
-        }
-
-        public ImageView getImageShare() {
-            return imageShare;
         }
 
         public ImageView getImageView() {

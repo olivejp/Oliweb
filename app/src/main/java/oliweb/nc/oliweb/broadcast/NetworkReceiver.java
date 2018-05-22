@@ -47,7 +47,7 @@ public class NetworkReceiver extends BroadcastReceiver {
         notifyListener(context);
     }
 
-    public static void notifyListener(Context context) {
+    private static void notifyListener(Context context) {
         ConnectivityManager conn = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = conn != null ? conn.getActiveNetworkInfo() : null;
