@@ -8,9 +8,11 @@ import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.ChatDao;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -81,4 +83,19 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                         .subscribe()
         );
     }
+
+    public Observable<ChatEntity> markToDeleteByUidAnnonceAndUidUser(String uidAnnonce, String uidUser) {
+        Log.d(TAG, "markToDeleteByUidAnnonceAndUidUser uidAnnonce : " + uidAnnonce + " uidUser = " + uidUser);
+        return chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .toObservable()
+                .flatMap(chatEntity -> {
+                    chatEntity.setStatusRemote(StatusRemote.TO_DELETE);
+                    return this.saveWithSingle(chatEntity)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .toObservable();
+                });
+    }
+
 }

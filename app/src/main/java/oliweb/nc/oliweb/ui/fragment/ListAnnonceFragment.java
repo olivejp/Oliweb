@@ -81,6 +81,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sort = SORT_DATE;
     private int direction;
+    private ActionBar actionBar;
 
     private View.OnClickListener onClickListener = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
@@ -96,7 +97,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
-
+        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+        AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
+        viewModel.saveToFavorite(annoncePhotos);
     };
 
     public ListAnnonceFragment() {
@@ -145,7 +148,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         recyclerView.setAdapter(annonceBeautyAdapter);
 
-        ActionBar actionBar = appCompatActivity.getSupportActionBar();
+        actionBar = appCompatActivity.getSupportActionBar();
 
         if (savedInstanceState != null) {
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
@@ -156,6 +159,16 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
 
+        initAccordingToAction();
+
+        if (savedInstanceState == null) {
+            changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+        }
+
+        return view;
+    }
+
+    private void initAccordingToAction() {
         switch (action) {
             case ACTION_FAVORITE:
                 if (uidUser != null) {
@@ -186,13 +199,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 };
                 recyclerView.addOnScrollListener(scrollListener);
                 break;
+            default:
+                break;
         }
-
-        if (savedInstanceState == null) {
-            changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
-        }
-
-        return view;
     }
 
     @Override

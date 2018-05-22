@@ -65,18 +65,18 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
         Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
-        return Observable.create(emitter -> {
-            this.annonceDao.getAllAnnonceByStatus(status)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(listAnnonceStatus -> {
-                        for (AnnonceEntity annonce : listAnnonceStatus) {
-                            emitter.onNext(annonce);
-                        }
-                        emitter.onComplete();
-                    })
-                    .subscribe();
-        });
+        return Observable.create(emitter ->
+                this.annonceDao.getAllAnnonceByStatus(status)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(listAnnonceStatus -> {
+                            for (AnnonceEntity annonce : listAnnonceStatus) {
+                                emitter.onNext(annonce);
+                            }
+                            emitter.onComplete();
+                        })
+                        .subscribe()
+        );
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {
@@ -92,8 +92,24 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
+    /**
+     * Will return > 0 if true
+     *
+     * @param uidAnnonce
+     * @return
+     */
     public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
         return this.annonceDao.isAnnonceFavorite(uidAnnonce);
+    }
+
+    /**
+     * Will return > 0 if true
+     *
+     * @param uidAnnonce
+     * @return
+     */
+    public Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce) {
+        return this.annonceDao.isAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
     }
 
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
@@ -103,9 +119,15 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                                 .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
                                 .toObservable()
                                 .switchMap(this::markAsToDelete)
-                                .switchMap(photoRepository::markToDeleteByAnnonce)
+                                .doOnNext(annonceEntity -> {
+                                    photoRepository.markToDeleteByAnnonce(annonceEntity)
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .subscribe();
+                                    chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .subscribe();
+                                })
                                 .subscribe()
-                // TODO passer les chats à To_delete également
         );
     }
 

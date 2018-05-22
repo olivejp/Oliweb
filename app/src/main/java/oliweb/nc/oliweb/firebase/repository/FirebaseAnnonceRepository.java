@@ -23,6 +23,8 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
@@ -32,7 +34,7 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
-    private DatabaseReference ANNONCE_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
+    private DatabaseReference annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
 
     private static FirebaseAnnonceRepository instance;
 
@@ -55,7 +57,7 @@ public class FirebaseAnnonceRepository {
 
     public Query queryByUidUser(String uidUser) {
         Log.d(TAG, "queryByUidUser called with uidUser = " + uidUser);
-        return ANNONCE_REF.orderByChild("utilisateur/uuid").equalTo(uidUser);
+        return annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser);
     }
 
     /**
@@ -127,6 +129,43 @@ public class FirebaseAnnonceRepository {
         }
     }
 
+    public void checkAnnonceExistInLocalOrSaveIt(Context context, AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting checkAnnonceExistInLocalOrSaveIt called with annoncePhotos = " + annoncePhotos.toString());
+        annonceRepository.isAnnonceFavoriteNotTheAuthor(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(throwable -> Log.e(TAG, "isAnnonceFavoriteNotTheAuthor.doOnError " + throwable.getMessage()))
+                .doOnSuccess(integer -> {
+                    if (integer == null || integer.equals(0)) {
+                        getAnnonceFromFbToLocalDb(context, annoncePhotos);
+                    }
+                })
+                .subscribe();
+    }
+
+    private void getAnnonceFromFbToLocalDb(Context context, final AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting getAnnonceFromFbToLocalDb called with AnnoncePhotos = " + annoncePhotos.toString());
+        try {
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+            annonceEntity.setFavorite(1);
+            annonceRepository.saveWithSingle(annonceEntity)
+                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid()))
+                    .doOnSuccess(annonceEntity1 -> {
+                        Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
+                        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+                            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
+                                Log.d(TAG, "Try to save : " + photo.getFirebasePath());
+                                if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
+                                    firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photo.getFirebasePath());
+                                }
+                            }
+                        }
+                    })
+                    .subscribe();
+        } catch (Exception exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+        }
+    }
+
     private Observable<AnnonceDto> getAllAnnonceByUidUser(String uidUtilisateur) {
         Log.d(TAG, "Starting getAllAnnonceByUidUser uidUtilisateur : " + uidUtilisateur);
         return Observable.create(emitter -> queryByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -160,7 +199,7 @@ public class FirebaseAnnonceRepository {
     public Maybe<AnnonceDto> findByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
         return Maybe.create(e ->
-                ANNONCE_REF.child(uidAnnonce)
+                annonceRef.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -195,10 +234,10 @@ public class FirebaseAnnonceRepository {
                         .doOnSuccess(timestamp -> {
                             DatabaseReference dbRef;
                             if (annonceEntity.getUid() == null || annonceEntity.getUid().isEmpty()) {
-                                dbRef = ANNONCE_REF.push();
+                                dbRef = annonceRef.push();
                                 annonceEntity.setUid(dbRef.getKey());
                             } else {
-                                dbRef = ANNONCE_REF.child(annonceEntity.getUid());
+                                dbRef = annonceRef.child(annonceEntity.getUid());
                             }
 
                             annonceEntity.setDatePublication(timestamp);
@@ -223,7 +262,7 @@ public class FirebaseAnnonceRepository {
             } else if (annonceDto.getUuid() == null) {
                 emitter.onError((new RuntimeException("UID is mandatory to save in Firebase")));
             } else {
-                ANNONCE_REF.child(annonceDto.getUuid()).setValue(annonceDto)
+                annonceRef.child(annonceDto.getUuid()).setValue(annonceDto)
                         .addOnFailureListener(emitter::onError)
                         .addOnSuccessListener(o ->
                                 findByUidAnnonce(annonceDto.getUuid())
@@ -250,7 +289,7 @@ public class FirebaseAnnonceRepository {
             if (annonce == null || annonce.getUid() == null) {
                 emitter.onSuccess(new AtomicBoolean(true));
             } else {
-                ANNONCE_REF.child(annonce.getUid())
+                annonceRef.child(annonce.getUid())
                         .removeValue()
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Fail to delete annonce on Firebase Database : " + annonce.getUid() + " exception : " + e.getLocalizedMessage());

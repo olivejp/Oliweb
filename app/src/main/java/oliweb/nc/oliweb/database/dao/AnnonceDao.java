@@ -66,6 +66,10 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
 
     @Transaction
+    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUser <> :uidUser")
+    public abstract Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce);
+
+    @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
     public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
