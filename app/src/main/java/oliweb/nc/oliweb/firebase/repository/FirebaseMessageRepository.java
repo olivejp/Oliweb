@@ -75,19 +75,17 @@ public class FirebaseMessageRepository {
      */
     public Single<MessageEntity> getUidAndTimestampFromFirebase(@NonNull String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "Starting getUidAndTimestampFromFirebase uidChat : " + uidChat + " messageEntity : " + messageEntity);
-        return Single.create(emitter ->
-                FirebaseUtility.getServerTimestamp()
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(timestamp -> {
+        return FirebaseUtility.getServerTimestamp()
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .map(timestamp -> {
                             DatabaseReference newMessageRef = MSG_REF.child(uidChat).push();
                             messageEntity.setTimestamp(timestamp);
                             messageEntity.setUidMessage(newMessageRef.getKey());
                             messageEntity.setUidChat(uidChat);
-                            emitter.onSuccess(messageEntity);
-                        })
-                        .subscribe()
-        );
+                            return messageEntity;
+                        }
+                );
     }
 
 

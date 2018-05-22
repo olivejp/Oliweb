@@ -75,11 +75,9 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(chatRead -> emitter.onComplete())
-                        .doOnComplete(() ->
-                                saveWithSingle(chatEntity)
-                                        .doOnSuccess(emitter::onSuccess)
-                                        .doOnError(emitter::onError)
-                                        .subscribe())
+                        .switchIfEmpty(saveWithSingle(chatEntity)
+                                .doOnSuccess(emitter::onSuccess)
+                                .doOnError(emitter::onError))
                         .subscribe()
         );
     }

@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
@@ -42,8 +43,9 @@ public class AnnonceRawAdapter extends
         this.listAnnonces = new ArrayList<>();
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolderResult;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
@@ -54,7 +56,7 @@ public class AnnonceRawAdapter extends
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AnnoncePhotos annoncePhotos = listAnnonces.get(position);
         bindViewHolderRaw(viewHolder, annoncePhotos);
     }
@@ -186,8 +188,5 @@ public class AnnonceRawAdapter extends
             return this.normalLayoutRaw;
         }
 
-        public AnnonceEntity getSingleAnnonce() {
-            return this.singleAnnonce;
-        }
     }
 }
