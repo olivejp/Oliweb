@@ -8,7 +8,6 @@ import android.util.Log;
 import java.util.List;
 
 import io.reactivex.Flowable;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -26,12 +25,10 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     private static final String TAG = PhotoRepository.class.getName();
     private static PhotoRepository instance;
     private PhotoDao photoDao;
-    private AnnonceFullRepository annonceFullRepository;
 
     private PhotoRepository(Context context) {
         super(context);
         this.photoDao = this.db.getPhotoDao();
-        this.annonceFullRepository = AnnonceFullRepository.getInstance(context);
         this.dao = this.photoDao;
     }
 
@@ -70,21 +67,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         return this.photoDao.findByIdAnnonce(idAnnonce);
     }
 
-    public Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(long idAnnonce, List<String> status) {
-        Log.d(TAG, "Starting getAllPhotosByStatusAndIdAnnonce idAnnonce : " + idAnnonce + " status : " + status);
-        return this.photoDao.getAllPhotosByStatusAndIdAnnonce(status, idAnnonce);
-    }
-
     public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
-    }
-
-    public Observable<PhotoEntity> observeAllPhotosByIdAnnonce(long idAnnonce) {
-        Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
-        return this.photoDao.findAllSingleByIdAnnonce(idAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .flattenAsObservable(list -> list);
     }
 
     public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
@@ -144,10 +129,6 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                         })
                         .subscribe()
         );
-    }
-
-    public Single<Integer> countByIdAnnonce(Long idAnnonce) {
-        return photoDao.countAllPhotosByIdAnnonce(idAnnonce);
     }
 
     public Single<List<PhotoEntity>> markAsToSend(List<PhotoEntity> list) {
