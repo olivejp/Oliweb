@@ -40,6 +40,13 @@ public class FirebaseRetrieverService {
         return instance;
     }
 
+    /**
+     * Lecture de toutes les annonces présentes dans Firebase pour cet utilisateur
+     * et récupération de ces annonces dans la base locale
+     *
+     * @param context
+     * @param uidUser
+     */
     public void synchronize(Context context, String uidUser) {
         Log.d(TAG, "synchronize");
         firebaseAnnonceRepository.queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {

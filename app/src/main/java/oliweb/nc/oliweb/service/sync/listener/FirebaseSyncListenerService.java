@@ -179,7 +179,9 @@ public class FirebaseSyncListenerService extends Service {
     }
 
     /**
-     * Ecoute tous les chats avec l'uid user comme membre et pour tout cela, va lancer
+     * Recherche tous les chats pour lesquels l'utilisateur connecté est membre
+     * et va attacher un chatListener pour chacun d'entre eux pour écouter les nouveaux
+     * messages qui y arriveront.
      *
      * @param uidUser
      */
