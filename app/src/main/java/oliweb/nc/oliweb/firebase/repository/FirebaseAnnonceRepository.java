@@ -82,8 +82,8 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-    public void saveAsFavorite(Context context, AnnonceDto annonceDto) {
-        Log.d(TAG, "Starting saveAsFavorite called with annonceDto = " + annonceDto.toString());
+    public void saveAnnonceDtoToLocalDb(Context context, AnnonceDto annonceDto) {
+        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
         annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
@@ -105,7 +105,7 @@ public class FirebaseAnnonceRepository {
     }
 
     public void saveAsFavorite(Context context, AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting saveAsFavorite called with annoncePhotos = " + annoncePhotos.toString());
+        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
         annonceRepository.isAnnonceFavoriteNotTheAuthor(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(throwable -> Log.e(TAG, "isAnnonceFavoriteNotTheAuthor.doOnError " + throwable.getMessage()))

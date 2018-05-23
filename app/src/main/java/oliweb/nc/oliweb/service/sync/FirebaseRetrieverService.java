@@ -18,23 +18,23 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
  * Created by orlanth23 on 03/03/2018.
  * This class allows to retreive {@link AnnonceDto} from Firebase corresponding to the given UID User.
  */
-public class FirebaseRetreiverService {
+public class FirebaseRetrieverService {
 
-    private static final String TAG = FirebaseRetreiverService.class.getName();
+    private static final String TAG = FirebaseRetrieverService.class.getName();
 
-    private static FirebaseRetreiverService instance;
+    private static FirebaseRetrieverService instance;
 
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
 
-    private FirebaseRetreiverService() {
+    private FirebaseRetrieverService() {
     }
 
-    public static FirebaseRetreiverService getInstance(Context context) {
+    public static FirebaseRetrieverService getInstance(Context context) {
         if (instance == null) {
-            instance = new FirebaseRetreiverService();
+            instance = new FirebaseRetrieverService();
         }
         instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
         return instance;
@@ -49,7 +49,7 @@ public class FirebaseRetreiverService {
                     HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
                         for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
-                            firebaseAnnonceRepository.saveAsFavorite(context, entry.getValue());
+                            firebaseAnnonceRepository.saveAnnonceDtoToLocalDb(context, entry.getValue());
                         }
                     }
                 }
