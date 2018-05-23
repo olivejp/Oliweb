@@ -55,7 +55,7 @@ public class ChatRepositoryTest {
 
         // Insert
         TestObserver<ChatEntity> listTestObserver = new TestObserver<>();
-        chatRepository.saveWithSingle(chat).subscribe(listTestObserver);
+        chatRepository.singleSave(chat).subscribe(listTestObserver);
         waitTerminalEvent(listTestObserver,5);
         listTestObserver.assertNoErrors();
         listTestObserver.dispose();
@@ -113,7 +113,7 @@ public class ChatRepositoryTest {
 
         // Test Insert
         TestObserver<ChatEntity> testObserverInsert = new TestObserver<>();
-        chatRepository.saveWithSingle(chat).subscribe(testObserverInsert);
+        chatRepository.singleSave(chat).subscribe(testObserverInsert);
         waitTerminalEvent(testObserverInsert, 5);
         testObserverInsert.assertNoErrors();
         testObserverInsert.assertValue(chatEntity -> chatEntity.getUidAnnonce().equals("uidAnnonce") && chatEntity.getUidSeller().equals("uidSeller"));
@@ -123,7 +123,7 @@ public class ChatRepositoryTest {
         // Test Update
         chatSaved.setUidSeller("newUidSeller");
         TestObserver<ChatEntity> testObserverUpdate = new TestObserver<>();
-        chatRepository.saveWithSingle(chatSaved).subscribe(testObserverUpdate);
+        chatRepository.singleSave(chatSaved).subscribe(testObserverUpdate);
         waitTerminalEvent(testObserverUpdate, 5);
         testObserverUpdate.assertNoErrors();
         testObserverUpdate.assertValue(chatEntity -> chatSaved.getId().equals(chatEntity.getId()) && chatEntity.getUidSeller().equals("newUidSeller"));

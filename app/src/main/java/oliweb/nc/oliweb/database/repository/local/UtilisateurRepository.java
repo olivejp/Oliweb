@@ -94,7 +94,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
                         .doOnSuccess(utilisateurEntity -> {
                             // Mise à jour de la date de dernière connexion
                             utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
-                            saveWithSingle(utilisateurEntity)
+                            singleSave(utilisateurEntity)
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(emitter::onSuccess)
                                     .subscribe();
@@ -105,7 +105,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
                             utilisateurEntity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
                             utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
                             utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-                            saveWithSingle(utilisateurEntity)
+                            singleSave(utilisateurEntity)
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(emitter::onSuccess)
                                     .subscribe();

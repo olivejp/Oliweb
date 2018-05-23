@@ -108,6 +108,6 @@ public class MainActivityViewModel extends AndroidViewModel {
     // Vérification que l'annonce n'existe pas deja dans la DB
     // avec le statut Favorite et que je ne suis pas l'auteur de cette annonce.
     public void saveToFavorite(AnnoncePhotos annoncePhotos) {
-        this.firebaseAnnonceRespository.checkAnnonceExistInLocalOrSaveIt(getApplication().getApplicationContext(), annoncePhotos);
+        this.firebaseAnnonceRespository.saveAsFavorite(getApplication().getApplicationContext(), annoncePhotos);
     }
 }

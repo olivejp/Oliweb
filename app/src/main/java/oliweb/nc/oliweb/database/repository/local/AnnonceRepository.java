@@ -134,7 +134,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAsSending annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.SENDING);
-        return this.saveWithSingle(annonceEntity)
+        return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
@@ -143,7 +143,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAsSend annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.SEND);
-        return this.saveWithSingle(annonceEntity)
+        return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
@@ -152,7 +152,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAsToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.TO_DELETE);
-        return this.saveWithSingle(annonceEntity)
+        return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
@@ -161,7 +161,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAnnonceAsFailedToSend(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAnnonceAsFailedToSend annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
-        return this.saveWithSingle(annonceEntity)
+        return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
@@ -170,7 +170,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAnnonceAsFailedToDelete(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAnnonceAsFailedToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
-        return this.saveWithSingle(annonceEntity)
+        return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();

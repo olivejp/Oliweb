@@ -67,7 +67,7 @@ public class ChatFirebaseSender {
     private Observable<ChatEntity> markChatAsSending(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSending chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SENDING);
-        return chatRepository.saveWithSingle(chatEntity)
+        return chatRepository.singleSave(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -99,7 +99,7 @@ public class ChatFirebaseSender {
     private Observable<ChatEntity> markChatAsSend(ChatEntity chatEntity) {
         Log.d(TAG, "markChatAsSend chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.SEND);
-        return chatRepository.saveWithSingle(chatEntity)
+        return chatRepository.singleSave(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -117,7 +117,7 @@ public class ChatFirebaseSender {
                 .flattenAsObservable(list -> list)
                 .doOnNext(messageEntity -> {
                     messageEntity.setUidChat(chatEntity.getUidChat());
-                    messageRepository.saveWithSingle(messageEntity)
+                    messageRepository.singleSave(messageEntity)
                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .subscribe();
                 });
@@ -131,7 +131,7 @@ public class ChatFirebaseSender {
     private void markChatAsFailedToSend(final ChatEntity chatEntity) {
         Log.d(TAG, "Mark chat Failed To Send chatEntity : " + chatEntity);
         chatEntity.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        chatRepository.saveWithSingle(chatEntity)
+        chatRepository.singleSave(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }

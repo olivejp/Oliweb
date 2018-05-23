@@ -57,7 +57,7 @@ public class AnnonceRepositoryTest {
 
     private AnnonceEntity saveSingleTest(AnnonceEntity annonceEntity) {
         TestObserver<AnnonceEntity> subscriberInsert = new TestObserver<>();
-        annonceRepository.saveWithSingle(annonceEntity).subscribe(subscriberInsert);
+        annonceRepository.singleSave(annonceEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
@@ -135,7 +135,7 @@ public class AnnonceRepositoryTest {
         AnnonceEntity annonceEntity1 = initAnnonce("uidAnnonce1", UID_USER, StatusRemote.TO_SEND, "titre1", "description1", listCategorie.get(0).getId());
 
         TestObserver<AnnonceEntity> subscriberInsert = new TestObserver<>();
-        annonceRepository.saveWithSingle(annonceEntity1).subscribe(subscriberInsert);
+        annonceRepository.singleSave(annonceEntity1).subscribe(subscriberInsert);
 
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();

@@ -65,7 +65,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
-        return this.firebaseAnnonceRepository.findByUidAnnonce(uidAnnonce);
+        return this.firebaseAnnonceRepository.maybeFindByUidAnnonce(uidAnnonce);
     }
 
     public boolean isTwoPane() {
@@ -153,11 +153,11 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                         })
                         .doOnComplete(() -> {
                                     Log.d(TAG, "findOrCreateNewChat.doOnComplete");
-                                    chatRepository.saveWithSingle(createChatEntity(uidUser, annonce))
+                                    chatRepository.singleSave(createChatEntity(uidUser, annonce))
                                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                             .doOnSuccess(chatCreated -> {
-                                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.saveWithSingle.doOnSuccess chatCreated : " + chatCreated);
+                                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
                                                 currentChat = chatCreated;
                                                 selectedIdChat = chatCreated.getIdChat();
                                                 emitter.onSuccess(currentChat);
@@ -189,7 +189,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
 
         return Single.create(emitter ->
-                messageRepository.saveWithSingle(messageEntity)
+                messageRepository.singleSave(messageEntity)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(entity -> emitter.onSuccess(new AtomicBoolean(true)))

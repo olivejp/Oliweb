@@ -65,7 +65,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public void addToFavorite(AnnoncePhotos annoncePhotos) {
         AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
         annonceEntity.setFavorite(1);
-        annonceRepository.saveWithSingle(annonceEntity)
+        annonceRepository.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(annonceEntity1 -> {
                     Log.d(TAG, "Favorite successfully added");

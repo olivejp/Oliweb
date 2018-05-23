@@ -68,7 +68,7 @@ public class PhotoFirebaseSender {
         Log.d(TAG, "Mark photo has been Send photo : " + photoEntity + " downloadUrl : " + downloadUrl);
         photoEntity.setStatut(StatusRemote.SEND);
         photoEntity.setFirebasePath(downloadUrl);
-        return photoRepository.saveWithSingle(photoEntity)
+        return photoRepository.singleSave(photoEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -81,7 +81,7 @@ public class PhotoFirebaseSender {
     private void markPhotoAsFailedToSend(final PhotoEntity photoEntity) {
         Log.d(TAG, "Mark photo Failed To Send message : " + photoEntity);
         photoEntity.setStatut(StatusRemote.FAILED_TO_SEND);
-        photoRepository.saveWithSingle(photoEntity)
+        photoRepository.singleSave(photoEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }

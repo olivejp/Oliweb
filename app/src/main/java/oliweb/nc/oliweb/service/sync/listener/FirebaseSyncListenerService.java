@@ -42,8 +42,8 @@ public class FirebaseSyncListenerService extends Service {
     private MessageRepository messageRepository;
 
     private Query queryChat;
-    private List<Query> listQueryListener;
-    private ValueEventListener listenerChat = new ValueEventListener() {
+    private List<Query> listChatQueryListener;
+    private ValueEventListener chatListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             try {
@@ -71,7 +71,7 @@ public class FirebaseSyncListenerService extends Service {
             Log.e(TAG, databaseError.getMessage());
         }
     };
-    private ChildEventListener childListener = new ChildEventListener() {
+    private ChildEventListener chatChildListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
@@ -114,7 +114,7 @@ public class FirebaseSyncListenerService extends Service {
                             messageEntity.setMessage(message.getMessage());
                             messageEntity.setTimestamp(message.getTimestamp());
                             messageEntity.setUidAuthor(message.getUidAuthor());
-                            messageRepository.saveWithSingle(messageEntity)
+                            messageRepository.singleSave(messageEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                     .subscribe();
@@ -155,7 +155,7 @@ public class FirebaseSyncListenerService extends Service {
         } else {
             chatRepository = ChatRepository.getInstance(this);
             messageRepository = MessageRepository.getInstance(this);
-            listQueryListener = new ArrayList<>();
+            listChatQueryListener = new ArrayList<>();
 
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
@@ -173,7 +173,7 @@ public class FirebaseSyncListenerService extends Service {
         Log.d(TAG, "Stop FirebaseSyncListenerService Bye bye");
 
         // Suppression des listeners
-        queryChat.removeEventListener(listenerChat);
+        queryChat.removeEventListener(chatListener);
         clearMessageListener();
         super.onDestroy();
     }
@@ -190,7 +190,7 @@ public class FirebaseSyncListenerService extends Service {
                 .orderByChild("members/" + uidUser)
                 .equalTo(true);
 
-        queryChat.addValueEventListener(listenerChat);
+        queryChat.addValueEventListener(chatListener);
     }
 
     /**
@@ -214,10 +214,10 @@ public class FirebaseSyncListenerService extends Service {
 
                             // Création de listener pour chacun de ces chats
                             Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("timestamp");
-                            query.addChildEventListener(childListener);
+                            query.addChildEventListener(chatChildListener);
 
                             // Ajout de la query et du listener à notre liste
-                            listQueryListener.add(query);
+                            listChatQueryListener.add(query);
                         }
                     }
                 })
@@ -225,9 +225,9 @@ public class FirebaseSyncListenerService extends Service {
     }
 
     private void clearMessageListener() {
-        for (Query query : listQueryListener) {
+        for (Query query : listChatQueryListener) {
             if (query != null) {
-                query.removeEventListener(childListener);
+                query.removeEventListener(chatChildListener);
             }
         }
     }

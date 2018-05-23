@@ -131,7 +131,7 @@ public class ProfilViewModel extends AndroidViewModel {
     public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
         return Single.create(emitter -> {
             utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-            this.utilisateurRepository.saveWithSingle(utilisateurEntity)
+            this.utilisateurRepository.singleSave(utilisateurEntity)
                     .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                     .doOnError(emitter::onError)
                     .doOnSuccess(utilisateurEntity1 -> {

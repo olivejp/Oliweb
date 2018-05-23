@@ -77,7 +77,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(chatRead -> emitter.onComplete())
-                        .switchIfEmpty(saveWithSingle(chatEntity)
+                        .switchIfEmpty(singleSave(chatEntity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError))
                         .subscribe()
@@ -92,7 +92,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                 .toObservable()
                 .flatMap(chatEntity -> {
                     chatEntity.setStatusRemote(StatusRemote.TO_DELETE);
-                    return this.saveWithSingle(chatEntity)
+                    return this.singleSave(chatEntity)
                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .toObservable();
                 });

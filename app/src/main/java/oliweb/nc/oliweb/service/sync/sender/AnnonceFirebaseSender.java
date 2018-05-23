@@ -78,6 +78,6 @@ public class AnnonceFirebaseSender {
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)
-                .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto).toObservable());
+                .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceDtoToFirebase(annonceDto).toObservable());
     }
 }

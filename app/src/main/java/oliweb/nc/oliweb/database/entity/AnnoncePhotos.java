@@ -67,4 +67,12 @@ public class AnnoncePhotos implements Parcelable {
             return new AnnoncePhotos[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "AnnoncePhotos{" +
+                "annonceEntity=" + annonceEntity +
+                ", photos=" + photos +
+                '}';
+    }
 }

@@ -66,7 +66,7 @@ public class CoreSync {
                                     if (success.get()) {
                                         Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
                                         utilisateur.setStatut(StatusRemote.SEND);
-                                        utilisateurRepository.saveWithSingle(utilisateur)
+                                        utilisateurRepository.singleSave(utilisateur)
                                                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                                                 .subscribe();
                                     }

@@ -56,45 +56,23 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return this.messageDao.findFlowableByStatusAndUidChatNotNull(status);
     }
 
-    // TODO refacto de cette méthode
     public void saveMessageIfNotExist(MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessageIfNotExist messageFirebase : " + messageFirebase);
-        chatRepository.findByUid(messageFirebase.getUidChat())
+        messageDao.findSingleByUid(messageFirebase.getUidMessage())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(chatEntity ->
-                        messageDao.findSingleByUid(messageFirebase.getUidMessage())
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .doOnSuccess(m -> Log.d(TAG, "Message with UID : " + m.getUidMessage() + " already exist. No need to create a new one."))
-                                .doOnComplete(() -> {
-                                            Log.d(TAG, "Message was not found with UID : " + messageFirebase.getUidMessage() + " in the local DB. We'll try to create one.");
-                                            MessageEntity messageEntity = MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase);
-                                            saveWithSingle(messageEntity)
-                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                    .doOnSuccess(messageEntity1 -> {
-                                                                Log.d(TAG, "Message with UID " + messageEntity.getUidMessage() + " correctly inserted. We'll try to update the Chat " + chatEntity.getUidChat());
-                                                                chatRepository.findByUid(messageEntity1.getUidChat())
-                                                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                        .doOnSuccess(chatEntity1 -> {
-                                                                            chatEntity1.setLastMessage(messageFirebase.getMessage());
-                                                                            chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
-                                                                            chatRepository.saveWithSingle(chatEntity1)
-                                                                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                                                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                                                                    .doOnSuccess(chatEntity2 -> Log.d(TAG, "Successful update of the chat : " + chatEntity2))
-                                                                                    .subscribe();
-                                                                        })
-                                                                        .subscribe();
-                                                            }
-                                                    )
-                                                    .subscribe();
-                                        }
-                                )
-                                .subscribe()
-                )
+                .doOnComplete(() -> chatRepository.findByUid(messageFirebase.getUidChat())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
+                        .flatMapSingle(this::singleSave)
+                        .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
+                        .flatMapSingle(chatEntity1 -> {
+                            chatEntity1.setLastMessage(messageFirebase.getMessage());
+                            chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
+                            return chatRepository.singleSave(chatEntity1);
+                        })
+                        .subscribe())
                 .subscribe();
     }
 }

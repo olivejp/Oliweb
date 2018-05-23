@@ -114,7 +114,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
             currentAnnonce.setContactByMsg(message ? "O" : "N");
             currentAnnonce.setUidUser(uidUser);
 
-            annonceRepository.saveWithSingle(currentAnnonce)
+            annonceRepository.singleSave(currentAnnonce)
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnSuccess(emitter::onSuccess)
                     .doOnError(emitter::onError)
@@ -132,7 +132,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                     Observable.fromIterable(currentListPhoto)
                             .doOnError(emitter::onError)
                             .doOnNext(photoEntity ->
-                                    this.photoRepository.saveWithSingle(photoEntity)
+                                    this.photoRepository.singleSave(photoEntity)
                                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(emitter::onError)
                                             .doOnSuccess(list::add)

@@ -49,7 +49,7 @@ public class FirebaseRetreiverService {
                     HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
                         for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
-                            firebaseAnnonceRepository.checkAnnonceExistInLocalOrSaveIt(context, entry.getValue());
+                            firebaseAnnonceRepository.saveAsFavorite(context, entry.getValue());
                         }
                     }
                 }

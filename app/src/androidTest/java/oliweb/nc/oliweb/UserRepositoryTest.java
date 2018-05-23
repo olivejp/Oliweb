@@ -53,7 +53,7 @@ public class UserRepositoryTest {
     private UtilisateurEntity saveUser(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
         UtilisateurEntity utilisateurEntity = initUtilisateur(uidUser, profile, email);
         TestObserver<UtilisateurEntity> subscriberInsert = new TestObserver<>();
-        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsert);
+        userRepository.singleSave(utilisateurEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
@@ -167,7 +167,7 @@ public class UserRepositoryTest {
 
         // Try to send updated utilisateur to database
         TestObserver<UtilisateurEntity> subscriberUpdate = new TestObserver<>();
-        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberUpdate);
+        userRepository.singleSave(utilisateurEntity).subscribe(subscriberUpdate);
         waitTerminalEvent(subscriberUpdate, 5);
         subscriberUpdate.assertNoErrors();
         subscriberUpdate.assertValueAt(0, entity -> entity.getUid().equals("123") && entity.getProfile().equals(profileUpdated) && entity.getEmail().equals(emailUpdated));
@@ -195,7 +195,7 @@ public class UserRepositoryTest {
 
         // Save (insert) the new user
         TestObserver<UtilisateurEntity> subscriberSave = new TestObserver<>();
-        userRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberSave);
+        userRepository.singleSave(utilisateurEntity).subscribe(subscriberSave);
         waitTerminalEvent(subscriberSave, 5);
         subscriberSave.assertNoErrors();
         UtilisateurEntity userInserted = subscriberSave.values().get(0);
@@ -208,7 +208,7 @@ public class UserRepositoryTest {
 
         // Save (update) the updated user
         TestObserver<UtilisateurEntity> subscriberSave1 = new TestObserver<>();
-        userRepository.saveWithSingle(userInserted).subscribe(subscriberSave1);
+        userRepository.singleSave(userInserted).subscribe(subscriberSave1);
         waitTerminalEvent(subscriberSave1, 5);
         subscriberSave1.assertNoErrors();
         subscriberSave1.assertValueAt(0, entity -> entity.getProfile().equals(UPDATED_PROFILE) && entity.getEmail().equals(EMAIL_UPDATED));

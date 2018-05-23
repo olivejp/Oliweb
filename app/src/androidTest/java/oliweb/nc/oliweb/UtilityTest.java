@@ -102,7 +102,7 @@ class UtilityTest {
         categorieEntity.setCouleur("123456");
 
         TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
-        categorieRepository.saveWithSingle(categorieEntity).subscribe(subscriberInsertCategorie);
+        categorieRepository.singleSave(categorieEntity).subscribe(subscriberInsertCategorie);
         waitTerminalEvent(subscriberInsertCategorie, 5);
 
         subscriberInsertCategorie.dispose();
@@ -113,7 +113,7 @@ class UtilityTest {
         utilisateurEntity.setUid(UID_USER);
 
         TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
-        utilisateurRepository.saveWithSingle(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
+        utilisateurRepository.singleSave(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
         waitTerminalEvent(subscriberInsertUtilisateur, 5);
 
         subscriberInsertUtilisateur.dispose();

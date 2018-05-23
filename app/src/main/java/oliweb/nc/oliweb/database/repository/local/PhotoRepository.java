@@ -95,7 +95,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     private Observable<PhotoEntity> markToDelete(PhotoEntity photoEntity) {
         Log.d(TAG, "markToDelete photoEntity : " + photoEntity);
         photoEntity.setStatut(StatusRemote.TO_DELETE);
-        return this.saveWithSingle(photoEntity)
+        return this.singleSave(photoEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -103,7 +103,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     public Observable<PhotoEntity> markAsFailedToDelete(PhotoEntity photoEntity) {
         Log.d(TAG, "markAsFailedToDelete photoEntity : " + photoEntity);
         photoEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
-        return this.saveWithSingle(photoEntity)
+        return this.singleSave(photoEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
@@ -138,7 +138,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                     photoEntity.setStatut(StatusRemote.TO_SEND);
                     return photoEntity;
                 })
-                .switchMap(photoEntity -> saveWithSingle(photoEntity).toObservable())
+                .switchMap(photoEntity -> singleSave(photoEntity).toObservable())
                 .toList();
     }
 }

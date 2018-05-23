@@ -74,7 +74,7 @@ public class MessageFirebaseSender {
     private Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
         Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
         messageSaved.setStatusRemote(StatusRemote.SENDING);
-        return messageRepository.saveWithSingle(messageSaved)
+        return messageRepository.singleSave(messageSaved)
                 .doOnError(e -> markMessageAsFailedToSend(messageSaved))
                 .toObservable();
     }
@@ -101,7 +101,7 @@ public class MessageFirebaseSender {
     private Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
         Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
-        return messageRepository.saveWithSingle(messageEntity)
+        return messageRepository.singleSave(messageEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -114,7 +114,7 @@ public class MessageFirebaseSender {
     private void markMessageAsFailedToSend(final MessageEntity messageFailedToSend) {
         Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
         messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        messageRepository.saveWithSingle(messageFailedToSend)
+        messageRepository.singleSave(messageFailedToSend)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
