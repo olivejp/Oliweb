@@ -123,7 +123,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public Single<List<PhotoEntity>> savePhotos(AnnonceEntity annonce) {
-        Log.d(TAG, "Starting savePhotos currentAnnonce : " + annonce);
+        Log.d(TAG, "Starting savePhotos annonce : " + annonce);
         for (PhotoEntity photo : currentListPhoto) {
             photo.setIdAnnonce(annonce.getId());
         }

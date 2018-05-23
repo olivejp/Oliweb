@@ -42,7 +42,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/chat_popup_menu"
         app:layout_constraintTop_toBottomOf="@id/chat_titre_annonce"
-        tools:text="Ceci est le dernier message que j'ai recu pour cette currentAnnonce.Et c'est vraiment un très long message qu'il faut absolument que je coupe.lmsdkflmqskdflmqskdflmkqsdflkqsdlmfkqsdlmfkqsdlmfk qsdfk qsdlmfk qslmdfk qsdlfk qsdlfk qsdlmfk qsdlfk qsdflmk qsdfk qsdflqk sdf" />
+        tools:text="Ceci est le dernier message que j'ai recu pour cette annonce.Et c'est vraiment un très long message qu'il faut absolument que je coupe.lmsdkflmqskdflmqskdflmkqsdflkqsdlmfkqsdlmfkqsdlmfk qsdfk qsdlmfk qslmdfk qsdlfk qsdlfk qsdlmfk qsdlfk qsdflmk qsdfk qsdflqk sdf" />
 
     <ImageView
         android:id="@+id/chat_popup_menu"

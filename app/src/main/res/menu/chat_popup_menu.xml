@@ -4,6 +4,6 @@
     <item
         android:id="@+id/chat_open_annonce"
         android:icon="@drawable/ic_search_grey_900_48dp"
-        android:title="Voir currentAnnonce"
+        android:title="Voir annonce"
         app:showAsAction="always" />
 </menu>
