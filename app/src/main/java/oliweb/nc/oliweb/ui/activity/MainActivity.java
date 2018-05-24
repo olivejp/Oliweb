@@ -53,7 +53,7 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener, ListAnnonceFragment.SignInActivity {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -240,7 +240,8 @@ public class MainActivity extends AppCompatActivity
     /**
      * Remise à blanc des champs spécifiques à la connexion
      */
-    private void signOut() {
+    @Override
+    public void signOut() {
         AuthUI.getInstance()
                 .signOut(this)
                 .addOnCompleteListener(task -> {
@@ -250,7 +251,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void signIn(int requestCode) {
+    @Override
+    public void signIn(int requestCode) {
         if (NetworkReceiver.checkConnection(this)) {
             signOut();
             Utility.callLoginUi(this, requestCode);

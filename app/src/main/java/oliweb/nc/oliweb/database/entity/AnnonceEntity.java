@@ -38,12 +38,13 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
     private long idCategorie;
     private String debattre;
     private Integer favorite;
+    private String uidUserFavorite;
 
     public AnnonceEntity() {
     }
 
     @Ignore
-    public AnnonceEntity(@NonNull Long idAnnonce, String uid, String titre, String description, StatusRemote statut, String uidUser, long idCategorie) {
+    public AnnonceEntity(@NonNull Long idAnnonce, String uid, String titre, String description, StatusRemote statut, String uidUser, long idCategorie, String uidUserFavorite) {
         this.idAnnonce = idAnnonce;
         this.uid = uid;
         this.titre = titre;
@@ -51,6 +52,7 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
         this.statut = statut;
         this.uidUser = uidUser;
         this.idCategorie = idCategorie;
+        this.uidUserFavorite = uidUserFavorite;
     }
 
     @NonNull
@@ -179,6 +181,15 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
         return favorite != null && favorite.equals(1);
     }
 
+    @Exclude
+    public String getUidUserFavorite() {
+        return uidUserFavorite;
+    }
+
+    public void setUidUserFavorite(String uidUserFavorite) {
+        this.uidUserFavorite = uidUserFavorite;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -250,6 +261,7 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
                 ", idCategorie=" + idCategorie +
                 ", debattre='" + debattre + '\'' +
                 ", favorite=" + favorite +
+                ", uidUserFavorite='" + uidUserFavorite + '\'' +
                 '}';
     }
 }

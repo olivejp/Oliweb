@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -12,6 +13,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,9 +45,12 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+    private static final String TAG = ListAnnonceFragment.class.getName();
+
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
 
@@ -82,6 +87,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int sort = SORT_DATE;
     private int direction;
     private ActionBar actionBar;
+    private SignInActivity signInActivity;
 
     private View.OnClickListener onClickListener = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
@@ -97,9 +103,19 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-        AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-        viewModel.saveToFavorite(annoncePhotos);
+        if (uidUser == null) {
+            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
+                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
+                    .show();
+        } else {
+            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
+            if (!annoncePhotos.getAnnonceEntity().getUidUser().equals(uidUser)) {
+                viewModel.saveToFavorite(uidUser, annoncePhotos);
+            } else {
+                Snackbar.make(recyclerView, "Vous possédez cette annonce", Snackbar.LENGTH_LONG).show();
+            }
+        }
     };
 
     public ListAnnonceFragment() {
@@ -120,7 +136,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        appCompatActivity = (AppCompatActivity) context;
+        try {
+            appCompatActivity = (AppCompatActivity) context;
+            signInActivity = (SignInActivity) context;
+        } catch (ClassCastException e) {
+            Log.e(TAG, "Context should be an AppCompatActivity and implements SignInActivity", e);
+        }
     }
 
     @Override
@@ -343,5 +364,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+    }
+
+    public interface SignInActivity {
+        void signIn(int requestCode);
+
+        void signOut();
     }
 }

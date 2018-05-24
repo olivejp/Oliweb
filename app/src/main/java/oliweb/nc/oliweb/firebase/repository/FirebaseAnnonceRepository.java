@@ -104,24 +104,25 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-    public void saveAsFavorite(Context context, AnnoncePhotos annoncePhotos) {
+    public void saveAsFavorite(String uidUser, Context context, AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
         annonceRepository.isAnnonceFavoriteNotTheAuthor(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(throwable -> Log.e(TAG, "isAnnonceFavoriteNotTheAuthor.doOnError " + throwable.getMessage()))
                 .doOnSuccess(integer -> {
                     if (integer == null || integer.equals(0)) {
-                        saveFavoriteAnnonceFromFbToLocalDb(context, annoncePhotos);
+                        saveFavoriteAnnonceFromFbToLocalDb(uidUser, context, annoncePhotos);
                     }
                 })
                 .subscribe();
     }
 
-    private void saveFavoriteAnnonceFromFbToLocalDb(Context context, final AnnoncePhotos annoncePhotos) {
+    private void saveFavoriteAnnonceFromFbToLocalDb(String uidUser, Context context, final AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting saveFavoriteAnnonceFromFbToLocalDb called with AnnoncePhotos = " + annoncePhotos.toString());
         try {
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
             annonceEntity.setFavorite(1);
+            annonceEntity.setUidUserFavorite(uidUser);
             annonceRepository.singleSave(annonceEntity)
                     .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid()))
                     .doOnSuccess(annonceEntity1 -> {
