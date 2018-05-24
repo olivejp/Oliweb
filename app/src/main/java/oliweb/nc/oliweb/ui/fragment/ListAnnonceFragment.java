@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -103,18 +104,19 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
-        if (uidUser == null) {
-            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
-                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
-                    .show();
-        } else {
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (!annoncePhotos.getAnnonceEntity().getUidUser().equals(uidUser)) {
-                viewModel.saveToFavorite(uidUser, annoncePhotos);
+            if (!annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
+                viewModel.saveToFavorite(uidCurrentUser, annoncePhotos);
             } else {
                 Snackbar.make(recyclerView, "Vous possédez cette annonce", Snackbar.LENGTH_LONG).show();
             }
+        } else {
+            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
+                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
+                    .show();
         }
     };
 
@@ -198,8 +200,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     }
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
+                            Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
                             annoncePhotosList = (ArrayList<AnnoncePhotos>) annoncePhotos;
                             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+                            linearLayout.setVisibility(View.GONE);
+                            recyclerView.setVisibility(View.VISIBLE);
                         } else {
                             linearLayout.setVisibility(View.VISIBLE);
                             recyclerView.setVisibility(View.GONE);

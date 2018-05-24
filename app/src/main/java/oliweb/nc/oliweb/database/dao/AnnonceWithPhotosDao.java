@@ -23,7 +23,7 @@ public abstract class AnnonceWithPhotosDao {
     public abstract LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE uidUser = :uuidUtilisateur AND favorite = 1")
+    @Query("SELECT * FROM annonce WHERE uidUserFavorite = :uuidUtilisateur AND favorite = 1")
     public abstract LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
 
     @Transaction

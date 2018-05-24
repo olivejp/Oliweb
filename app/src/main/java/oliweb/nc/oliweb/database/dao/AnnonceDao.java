@@ -54,7 +54,7 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statutToAvoid);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND favorite = 1")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUserFavorite = :uidUser AND favorite = 1")
     public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser);
 
     @Transaction
