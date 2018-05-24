@@ -45,6 +45,17 @@
             <meta-data
                 android:name="android.app.default_searchable"
                 android:value="oliweb.nc.oliweb.ui.activity.SearchActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oliweb-ec245.firebaseapp.com"
+                    android:scheme="http" />
+                <data
+                    android:host="oliweb-ec245.firebaseapp.com"
+                    android:scheme="https" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".ui.activity.PostAnnonceActivity"
@@ -188,11 +199,11 @@
         <service
             android:name=".service.sync.listener.FirebaseSyncListenerService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
         <service
             android:name=".service.sync.listener.DatabaseSyncListenerService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
     </application>
 
 </manifest>

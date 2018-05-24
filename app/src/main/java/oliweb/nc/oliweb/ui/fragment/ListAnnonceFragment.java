@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.fragment;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -18,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -32,7 +34,9 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -100,7 +104,42 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private View.OnClickListener onClickListenerShare = v -> {
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
+            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
 
+//            Uri link = DynamicLynksGenerator.generateLong(uidCurrentUser, annonceEntity.getUid());
+//            Intent sendIntent = new Intent();
+//            String msg = "Hey, regarde cette petite annonce : " + link;
+//            sendIntent.setAction(Intent.ACTION_SEND);
+//            sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
+//            sendIntent.setType("text/plain");
+//            startActivity(sendIntent);
+
+
+            DynamicLynksGenerator.generate(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
+                @Override
+                public void getLink(Uri shortLink, Uri flowchartLink) {
+                    Intent sendIntent = new Intent();
+                    String msg = "Hey, regarde cette petite annonce : " + shortLink;
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
+                    sendIntent.setType("text/plain");
+                    startActivity(sendIntent);
+                }
+
+                @Override
+                public void getLinkError() {
+                    Snackbar.make(recyclerView, "Une erreur n'a pas permis le partage", Snackbar.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
+                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
+                    .show();
+        }
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
@@ -111,7 +150,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             if (!annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
                 viewModel.saveToFavorite(uidCurrentUser, annoncePhotos);
             } else {
-                Snackbar.make(recyclerView, "Vous possédez cette annonce", Snackbar.LENGTH_LONG).show();
+                Toast.makeText(appCompatActivity, "Cette annonce vous appartient", Toast.LENGTH_LONG).show();
             }
         } else {
             Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)

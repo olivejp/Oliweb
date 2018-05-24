@@ -6,6 +6,7 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -17,6 +18,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +30,7 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -106,6 +109,12 @@ public class MainActivity extends AppCompatActivity
         numberChatBadge.setGravity(Gravity.CENTER_VERTICAL);
         numberChatBadge.setText(String.valueOf(integer));
     };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        catchDynamicLink();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -296,6 +305,21 @@ public class MainActivity extends AppCompatActivity
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
+    }
+
+    private void catchDynamicLink() {
+        FirebaseDynamicLinks.getInstance()
+                .getDynamicLink(getIntent())
+                .addOnSuccessListener(this, data -> {
+                    // Get deep link from result (may be null if no link is found)
+                    Uri deepLink = null;
+                    if (data != null && data.getLink() != null) {
+                        deepLink = data.getLink();
+                        String from = deepLink.getQueryParameter("from");
+                        Toast.makeText(MainActivity.this, from, Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(this, e -> Log.w(TAG, "getDynamicLink:onFailure", e));
     }
 
     private void initViewsForThisUser(FirebaseUser user) {
