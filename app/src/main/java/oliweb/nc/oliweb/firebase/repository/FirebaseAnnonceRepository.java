@@ -23,9 +23,8 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
@@ -39,6 +38,7 @@ public class FirebaseAnnonceRepository {
     private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
@@ -51,6 +51,7 @@ public class FirebaseAnnonceRepository {
             instance = new FirebaseAnnonceRepository();
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
+        instance.photoRepository = PhotoRepository.getInstance(context);
         instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
         return instance;
     }
@@ -104,43 +105,7 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-    public void saveAsFavorite(String uidUser, Context context, AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
-        annonceRepository.isAnnonceFavoriteNotTheAuthor(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(throwable -> Log.e(TAG, "isAnnonceFavoriteNotTheAuthor.doOnError " + throwable.getMessage()))
-                .doOnSuccess(integer -> {
-                    if (integer == null || integer.equals(0)) {
-                        saveFavoriteAnnonceFromFbToLocalDb(uidUser, context, annoncePhotos);
-                    }
-                })
-                .subscribe();
-    }
 
-    private void saveFavoriteAnnonceFromFbToLocalDb(String uidUser, Context context, final AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting saveFavoriteAnnonceFromFbToLocalDb called with AnnoncePhotos = " + annoncePhotos.toString());
-        try {
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
-            annonceEntity.setFavorite(1);
-            annonceEntity.setUidUserFavorite(uidUser);
-            annonceRepository.singleSave(annonceEntity)
-                    .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid()))
-                    .doOnSuccess(annonceEntity1 -> {
-                        Log.d(TAG, "Annonce has been stored successfully : " + annonceEntity1.getTitre());
-                        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-                            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
-                                Log.d(TAG, "Try to save : " + photo.getFirebasePath());
-                                if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
-                                    firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photo.getFirebasePath());
-                                }
-                            }
-                        }
-                    })
-                    .subscribe();
-        } catch (Exception exception) {
-            Log.e(TAG, exception.getLocalizedMessage(), exception);
-        }
-    }
 
     private Observable<AnnonceDto> observeAllAnnonceByUidUser(String uidUtilisateur) {
         Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUtilisateur : " + uidUtilisateur);

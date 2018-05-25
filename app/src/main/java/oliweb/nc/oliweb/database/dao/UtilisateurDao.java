@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
@@ -50,5 +51,5 @@ public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, L
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
-    public abstract Maybe<List<UtilisateurEntity>> getAllUtilisateursByStatus(List<String> statutList);
+    public abstract Flowable<UtilisateurEntity> getAllUtilisateursByStatus(List<String> statutList);
 }

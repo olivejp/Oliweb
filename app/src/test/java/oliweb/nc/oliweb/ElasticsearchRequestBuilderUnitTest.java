@@ -1,14 +1,19 @@
 package oliweb.nc.oliweb;
 
+import android.util.Log;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 
+@RunWith(JUnit4.class)
 public class ElasticsearchRequestBuilderUnitTest {
 
     @Test
@@ -17,7 +22,7 @@ public class ElasticsearchRequestBuilderUnitTest {
         elasticsearchQueryBuilder.setFrom(2);
         elasticsearchQueryBuilder.setSize(10);
 
-        List<String > listFields = new ArrayList<>();
+        List<String> listFields = new ArrayList<>();
         listFields.add("titre");
         listFields.add("description");
 
@@ -28,5 +33,15 @@ public class ElasticsearchRequestBuilderUnitTest {
         String valueReturned = elasticsearchQueryBuilder.build();
         Assert.assertNotNull(valueReturned);
         Assert.assertEquals("{\"from\":2,\"size\":10,\"query\":{\"multi_match\":{\"query\":\"recherche\",\"fields\":[\"titre\",\"description\"]}},\"sort\":[{\"datePublication\":{\"order\":\"ASC\"}}]}", valueReturned);
+    }
+
+    @Test
+    public void test_bidon() throws Exception {
+        List<String> list = null;
+        if (list != null && !list.isEmpty()) {
+            for (String sdf : list) {
+                Log.d(";sdf", sdf);
+            }
+        }
     }
 }

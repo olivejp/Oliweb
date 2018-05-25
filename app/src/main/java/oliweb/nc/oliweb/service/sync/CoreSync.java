@@ -55,7 +55,7 @@ public class CoreSync {
     private void startSendingUser() {
         Log.d(TAG, "Starting startSendingUser");
         utilisateurRepository
-                .observeAllUtilisateursByStatus(Utility.allStatusToSend())
+                .getAllUtilisateursByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .doOnComplete(() -> Log.d(TAG, "All users to send has been send"))

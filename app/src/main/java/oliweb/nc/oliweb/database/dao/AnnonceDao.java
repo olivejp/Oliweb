@@ -50,7 +50,7 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND statut NOT IN (:statutToAvoid)")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND statut NOT IN (:statutToAvoid) AND favorite <> 1")
     public abstract LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statutToAvoid);
 
     @Transaction
@@ -58,7 +58,7 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<Integer> countAllFavoritesByUser(String uidUser);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUtilisateur AND uid = :uidAnnonce")
+    @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUtilisateur AND uid = :uidAnnonce AND favorite <> 1")
     public abstract Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
@@ -66,8 +66,8 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUser <> :uidUser")
-    public abstract Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce);
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUserFavorite = :uidUser")
+    public abstract Maybe<AnnonceEntity> getAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")

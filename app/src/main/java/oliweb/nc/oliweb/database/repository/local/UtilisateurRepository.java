@@ -10,8 +10,8 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
@@ -58,45 +58,30 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
                 .subscribe());
     }
 
-    public Single<AtomicBoolean> hasBeenSync(String uidUser) {
-        return Single.create(e -> findSingleByUid(uidUser)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnSuccess(utilisateurEntity -> e.onSuccess(new AtomicBoolean(utilisateurEntity.getStatut().equals(StatusRemote.SEND))))
-                .doOnComplete(() -> e.onSuccess(new AtomicBoolean(false)))
-                .doOnError(e::onError)
-                .subscribe());
-    }
-
-    private Maybe<List<UtilisateurEntity>> getAllUtilisateursByStatus(List<String> status) {
+    public Flowable<UtilisateurEntity> getAllUtilisateursByStatus(List<String> status) {
         return utilisateurDao.getAllUtilisateursByStatus(status);
     }
 
-    public Observable<UtilisateurEntity> observeAllUtilisateursByStatus(List<String> status) {
-        return Observable.create(e ->
-                getAllUtilisateursByStatus(status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e::onError)
-                        .doOnSuccess(utilisateurEntities -> {
-                            for (UtilisateurEntity utilisateurEntity : utilisateurEntities) {
-                                e.onNext(utilisateurEntity);
-                            }
-                            e.onComplete();
-                        })
-                        .subscribe()
-        );
-    }
-
-    public Single<UtilisateurEntity> registerUser(FirebaseUser firebaseUser) {
-        Log.d(TAG, "Starting registerUser firebaseUser : " + firebaseUser);
+    /**
+     * Création ou mise à jour de l'utilisateur dans Firebase
+     *
+     * @param firebaseUser
+     * @return AtomicBoolean sera égal à true si c'est une création
+     * false si c'est une mise à jour.
+     * Si la mise à jour ou la création ont échoué onError sera appelé.
+     */
+    public Single<AtomicBoolean> saveUserFromFirebase(FirebaseUser firebaseUser) {
+        Log.d(TAG, "Starting saveUserFromFirebase firebaseUser : " + firebaseUser);
         return Single.create(emitter ->
                 findSingleByUid(firebaseUser.getUid())
                         .doOnError(emitter::onError)
                         .doOnSuccess(utilisateurEntity -> {
                             // Mise à jour de la date de dernière connexion
                             utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
+                            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
                             singleSave(utilisateurEntity)
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(emitter::onSuccess)
+                                    .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(false)))
                                     .subscribe();
                         })
                         .doOnComplete(() -> {
@@ -107,7 +92,7 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
                             utilisateurEntity.setStatut(StatusRemote.TO_SEND);
                             singleSave(utilisateurEntity)
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(emitter::onSuccess)
+                                    .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(true)))
                                     .subscribe();
                         })
                         .subscribe()

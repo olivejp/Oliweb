@@ -33,6 +33,8 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -110,15 +112,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
 
-//            Uri link = DynamicLynksGenerator.generateLong(uidCurrentUser, annonceEntity.getUid());
-//            Intent sendIntent = new Intent();
-//            String msg = "Hey, regarde cette petite annonce : " + link;
-//            sendIntent.setAction(Intent.ACTION_SEND);
-//            sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-//            sendIntent.setType("text/plain");
-//            startActivity(sendIntent);
-
-
             DynamicLynksGenerator.generate(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
@@ -143,19 +136,23 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (!annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
-                viewModel.saveToFavorite(uidCurrentUser, annoncePhotos);
-            } else {
-                Toast.makeText(appCompatActivity, "Cette annonce vous appartient", Toast.LENGTH_LONG).show();
-            }
-        } else {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
                     .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
                     .show();
+        } else {
+            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
+            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
+            if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
+                Toast.makeText(appCompatActivity, "Cette annonce vous appartient", Toast.LENGTH_LONG).show();
+            } else {
+                viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
+                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                        .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
+                        .doOnComplete(() -> Toast.makeText(appCompatActivity, "Annonce déjà dans les favoris", Toast.LENGTH_LONG).show())
+                        .subscribe();
+            }
         }
     };
 

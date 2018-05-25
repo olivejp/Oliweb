@@ -34,6 +34,8 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -218,14 +220,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         } else if (id == R.id.nav_profile) {
-            Intent intent = new Intent();
-            intent.setClass(this, ProfilActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
-            bundle.putBoolean(UPDATE, true);
-            intent.putExtras(bundle);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            callProfilActivity();
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
@@ -246,6 +241,17 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void callProfilActivity() {
+        Intent intent = new Intent();
+        intent.setClass(this, ProfilActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
+        bundle.putBoolean(UPDATE, true);
+        intent.putExtras(bundle);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
     /**
      * Remise à blanc des champs spécifiques à la connexion
      */
@@ -263,24 +269,17 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void signIn(int requestCode) {
         if (NetworkReceiver.checkConnection(this)) {
-            signOut();
             Utility.callLoginUi(this, requestCode);
         } else {
-            Snackbar.make(navigationView, "Une connexion est requise pour se connecter", Snackbar.LENGTH_LONG).show();
+            Toast.makeText(this, "Une connexion est requise pour se connecter", Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Authentification simple
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_CANCELED) {
-                // Sign in was canceled by the user, finish the activity
-                Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
-            }
-            if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Bienvenue", Toast.LENGTH_LONG).show();
-            }
+        if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
         }
 
         // On vient de créer une nouvelle annonce.
@@ -388,10 +387,22 @@ public class MainActivity extends AppCompatActivity
             prepareNavigationMenu();
             if (mFirebaseUser != null) {
 
-                // Sauvegarde dans les préférences, dans le cas d'une déconnexion
+                // Sauvegarde de l'uid de l'utilisateur dans les préférences, dans le cas d'une déconnexion
                 SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(mFirebaseUser.getUid());
 
-                viewModel.saveUser(mFirebaseUser);
+                // Sauvegarde de l'utilisateur
+                viewModel.saveUser(mFirebaseUser)
+                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                        .doOnError(e -> Toast.makeText(this, "Utilisateur non sauvegardé", Toast.LENGTH_LONG).show())
+                        .doOnSuccess(atomicBoolean -> {
+                            if (atomicBoolean.get()) {
+                                Snackbar.make(navigationView, "Bienvenue sur Oliweb", Snackbar.LENGTH_LONG).setAction("Voir mon profil", v -> callProfilActivity()).show();
+                            } else {
+                                Toast.makeText(this, String.format("Content de vous revoir %s", mFirebaseUser.getDisplayName()), Toast.LENGTH_LONG).show();
+                            }
+                        })
+                        .subscribe();
+
                 initViewsForThisUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {

@@ -13,6 +13,13 @@ import static oliweb.nc.oliweb.utility.Constants.OLIWEB_SITE;
  * Created by orlanth23 on 24/05/2018.
  */
 public class DynamicLynksGenerator {
+
+    /**
+     * @param uidUser
+     * @param uidAnnonce
+     * @param dynamicLinkListener
+     * @return
+     */
     public static Task<ShortDynamicLink> generate(String uidUser, String uidAnnonce, DynamicLinkListener dynamicLinkListener) {
         return FirebaseDynamicLinks.getInstance()
                 .createDynamicLink()

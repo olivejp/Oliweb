@@ -202,7 +202,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             return true;
         }
         if (idItem == R.id.menu_synchronyze) {
-            callForFirebaseSync();
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observe(this, atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
                     viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);

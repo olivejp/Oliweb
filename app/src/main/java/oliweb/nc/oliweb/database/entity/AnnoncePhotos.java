@@ -5,7 +5,6 @@ import android.arch.persistence.room.Relation;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,6 +36,14 @@ public class AnnoncePhotos implements Parcelable {
 
 
     @Override
+    public String toString() {
+        return "AnnoncePhotos{" +
+                "annonceEntity=" + annonceEntity +
+                ", photos=" + photos +
+                '}';
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -44,7 +51,7 @@ public class AnnoncePhotos implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.annonceEntity, flags);
-        dest.writeList(this.photos);
+        dest.writeTypedList(this.photos);
     }
 
     public AnnoncePhotos() {
@@ -52,11 +59,10 @@ public class AnnoncePhotos implements Parcelable {
 
     protected AnnoncePhotos(Parcel in) {
         this.annonceEntity = in.readParcelable(AnnonceEntity.class.getClassLoader());
-        this.photos = new ArrayList<>();
-        in.readList(this.photos, PhotoEntity.class.getClassLoader());
+        this.photos = in.createTypedArrayList(PhotoEntity.CREATOR);
     }
 
-    public static final Parcelable.Creator<AnnoncePhotos> CREATOR = new Parcelable.Creator<AnnoncePhotos>() {
+    public static final Creator<AnnoncePhotos> CREATOR = new Creator<AnnoncePhotos>() {
         @Override
         public AnnoncePhotos createFromParcel(Parcel source) {
             return new AnnoncePhotos(source);
@@ -67,12 +73,4 @@ public class AnnoncePhotos implements Parcelable {
             return new AnnoncePhotos[size];
         }
     };
-
-    @Override
-    public String toString() {
-        return "AnnoncePhotos{" +
-                "annonceEntity=" + annonceEntity +
-                ", photos=" + photos +
-                '}';
-    }
 }

@@ -226,6 +226,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         if (seller != null && seller.getTelephone() != null && !seller.getTelephone().isEmpty()) {
             Intent phoneIntent = new Intent(Intent.ACTION_CALL);
             phoneIntent.setData(Uri.parse(seller.getTelephone()));
+        } else {
+            Toast.makeText(AnnonceDetailActivity.this, "Impossible de récupérer les informations du vendeur", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -243,6 +245,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             } catch (android.content.ActivityNotFoundException ex) {
                 Toast.makeText(AnnonceDetailActivity.this, "Pas de client mail installé", Toast.LENGTH_SHORT).show();
             }
+        } else {
+            Toast.makeText(AnnonceDetailActivity.this, "Impossible de récupérer les informations du vendeur", Toast.LENGTH_SHORT).show();
         }
     }
 

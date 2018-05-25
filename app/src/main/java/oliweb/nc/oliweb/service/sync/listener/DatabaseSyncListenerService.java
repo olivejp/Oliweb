@@ -13,6 +13,8 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.deleter.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
@@ -49,12 +51,14 @@ public class DatabaseSyncListenerService extends Service {
             ChatRepository chatRepository = ChatRepository.getInstance(this);
             MessageRepository messageRepository = MessageRepository.getInstance(this);
             AnnonceRepository annonceRepository = AnnonceRepository.getInstance(this);
+            UtilisateurRepository utilisateurRepository = UtilisateurRepository.getInstance(this);
             PhotoRepository photoRepository = PhotoRepository.getInstance(this);
             AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
             AnnonceFirebaseDeleter annonceFirebaseDeleter = AnnonceFirebaseDeleter.getInstance(this);
             PhotoFirebaseSender photoFirebaseSender = PhotoFirebaseSender.getInstance(this);
             MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
             ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
+            FirebaseUserRepository firebaseUserRepository = FirebaseUserRepository.getInstance();
 
             // SENDERS
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
@@ -83,6 +87,23 @@ public class DatabaseSyncListenerService extends Service {
                     .switchMap(messageFirebaseSender::sendMessage)
                     .subscribe());
 
+            disposables.add(utilisateurRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                    .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
+                            .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                            .doOnSuccess(success -> {
+                                if (success.get()) {
+                                    Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
+                                    utilisateur.setStatut(StatusRemote.SEND);
+                                    utilisateurRepository.singleSave(utilisateur)
+                                            .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                                            .subscribe();
+                                }
+                            })
+                    )
+                    .subscribe());
+
             // DELETERS
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -103,7 +124,6 @@ public class DatabaseSyncListenerService extends Service {
                                     .subscribe()
                     )
                     .subscribe());
-
         } else {
             // Si pas d UID user on sort tout de suite du service
             stopSelf();

@@ -10,6 +10,7 @@ import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
@@ -61,6 +62,17 @@ public class FirebasePhotoStorage {
                                     .addOnSuccessListener(e::onSuccess)
                     );
         });
+    }
+
+    public void saveFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
+        Log.d(TAG, "saveFromRemoteToLocal : " + listPhoto);
+        if (listPhoto != null && !listPhoto.isEmpty()) {
+            for (PhotoEntity photo : listPhoto) {
+                if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
+                    saveFromRemoteToLocal(context, idAnnonce, photo.getFirebasePath());
+                }
+            }
+        }
     }
 
     public void saveFromRemoteToLocal(Context context, final long idAnnonce, final String urlPhoto) {

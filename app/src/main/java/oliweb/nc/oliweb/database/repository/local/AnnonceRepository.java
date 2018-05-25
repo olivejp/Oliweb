@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Flowable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -108,8 +109,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param uidAnnonce
      * @return
      */
-    public Single<Integer> isAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce) {
-        return this.annonceDao.isAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
+    public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUser(String uidUser, String uidAnnonce) {
+        return this.annonceDao.getAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
     }
 
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
