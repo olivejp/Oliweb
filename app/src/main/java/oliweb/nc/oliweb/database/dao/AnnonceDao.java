@@ -62,8 +62,8 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND favorite = 1")
-    public abstract Single<Integer> isAnnonceFavorite(String uidAnnonce);
+    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND uidUserFavorite = :uidUser AND favorite = 1")
+    public abstract Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUserFavorite = :uidUser")

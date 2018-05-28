@@ -14,7 +14,9 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -27,6 +29,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     private static AnnonceRepository instance;
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
+    private FirebasePhotoStorage firebasePhotoStorage;
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
@@ -38,6 +41,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public static synchronized AnnonceRepository getInstance(Context context) {
         if (instance == null) {
             instance = new AnnonceRepository(context);
+            instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
             instance.chatRepository = ChatRepository.getInstance(context);
         }
@@ -59,6 +63,38 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.findSingleByUid(uidAnnonce).toObservable();
     }
 
+    /**
+     * Maybe renverra un onComplete si elle trouve déjà une annonce dans les favoris avec l'uid User et l'Uid annonce
+     * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer en base si l'annonce n'existait pas dans les favoris.
+     * renverra onError dans le cas d'une erreur.
+     *
+     * @param context
+     * @param uidUser
+     * @param annoncePhotos
+     * @return
+     */
+    public Maybe<AnnonceEntity> saveToFavorite(Context context, String uidUser, AnnoncePhotos annoncePhotos) {
+        return Maybe.create(emitter ->
+                getAnnonceFavoriteByUidUserAndUidAnnonce(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(annonceEntity -> emitter.onComplete())
+                        .doOnComplete(() -> {
+                            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+                            annonceEntity.setFavorite(1);
+                            annonceEntity.setUidUserFavorite(uidUser);
+                            singleSave(annonceEntity)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(emitter::onError)
+                                    .doOnSuccess(annonceSaved -> {
+                                        this.firebasePhotoStorage.saveFromRemoteToLocal(context, annonceSaved.getId(), annoncePhotos.getPhotos());
+                                        emitter.onSuccess(annonceSaved);
+                                    })
+                                    .subscribe();
+                        })
+                        .subscribe()
+        );
+    }
 
     public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
         return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
@@ -99,8 +135,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param uidAnnonce
      * @return
      */
-    public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
-        return this.annonceDao.isAnnonceFavorite(uidAnnonce);
+    public Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce) {
+        return this.annonceDao.isAnnonceFavorite(uidUser, uidAnnonce);
     }
 
     /**
@@ -109,26 +145,26 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param uidAnnonce
      * @return
      */
-    public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUser(String uidUser, String uidAnnonce) {
+    public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
         return this.annonceDao.getAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
     }
 
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
         Log.d(TAG, "Starting markToDeleteByAnnonce idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
-                        findById(idAnnonce)
-                                .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
-                                .toObservable()
-                                .switchMap(this::markAsToDelete)
-                                .doOnNext(annonceEntity -> {
-                                    photoRepository.markToDeleteByAnnonce(annonceEntity)
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .subscribe();
-                                    chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .subscribe();
-                                })
-                                .subscribe()
+                findById(idAnnonce)
+                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
+                        .toObservable()
+                        .switchMap(this::markAsToDelete)
+                        .doOnNext(annonceEntity -> {
+                            photoRepository.markToDeleteByAnnonce(annonceEntity)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .subscribe();
+                            chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .subscribe();
+                        })
+                        .subscribe()
         );
     }
 

@@ -39,11 +39,13 @@ public class PhotoFirebaseSender {
         return instance;
     }
 
-    public Observable<String> sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
+    public void sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
-        return sendPhotoToRemote(photoEntity)
+        sendPhotoToRemote(photoEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
-                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase);
+                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
+                .subscribe();
     }
 
 

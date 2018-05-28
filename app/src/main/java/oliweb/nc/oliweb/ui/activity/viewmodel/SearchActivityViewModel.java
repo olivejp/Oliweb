@@ -5,7 +5,6 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -19,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -62,21 +61,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
         };
     }
 
-    public void addToFavorite(AnnoncePhotos annoncePhotos) {
-        AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
-        annonceEntity.setFavorite(1);
-        annonceRepository.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(annonceEntity1 -> {
-                    Log.d(TAG, "Favorite successfully added");
-                    if (liveListAnnonce.getValue() != null && !liveListAnnonce.getValue().isEmpty()) {
-                        int index = liveListAnnonce.getValue().indexOf(annoncePhotos);
-                        liveListAnnonce.getValue().get(index).getAnnonceEntity().setIdAnnonce(annonceEntity1.getId());
-                    }
-                    liveListAnnonce.postValue(liveListAnnonce.getValue());
-                })
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
-                .subscribe();
+    public Maybe<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+        return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 
     public LiveData<List<AnnoncePhotos>> getLiveListAnnonce() {
@@ -96,8 +82,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return loading;
     }
 
-    public Single<Integer> isAnnonceFavorite(String uidAnnonce) {
-        return annonceRepository.isAnnonceFavorite(uidAnnonce);
+    public Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce) {
+        return annonceRepository.isAnnonceFavorite(uidUser, uidAnnonce);
     }
 
     private void updateLoadingStatus(boolean status) {

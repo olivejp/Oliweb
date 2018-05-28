@@ -20,7 +20,7 @@ Comportement en mode Hors Connexion
 
 
 
-Je veux pouvoir avoir un historique des conversations concernant une currentAnnonce en particulier et par auteur.
+Je veux pouvoir avoir un historique des conversations concernant une annonce en particulier et par auteur.
 Pour chaque conversation je voudrai avoir la photo de l'auteur à côté de la conversation.
 
 - La photo ne sera pas stockée dans le content provider (mais elle pourrait être mise en cache par Glide).

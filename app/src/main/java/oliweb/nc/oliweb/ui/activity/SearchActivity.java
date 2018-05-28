@@ -4,7 +4,9 @@ import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
@@ -18,11 +20,16 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -60,7 +67,6 @@ public class SearchActivity extends AppCompatActivity {
     private int tri;
     private int direction;
     private int currentPage = 0;
-    private EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +100,7 @@ public class SearchActivity extends AppCompatActivity {
                 onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
-        endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
+        EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
                 currentPage++;
@@ -104,7 +110,6 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
-
 
         initViewModelObservers();
 
@@ -172,7 +177,7 @@ public class SearchActivity extends AppCompatActivity {
             int from = currentPage * Constants.PER_PAGE_REQUEST;
             searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
         } else {
-            Toast.makeText(this, "Can't search without internet connection", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Une connexion est requise pour rechercher", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -215,25 +220,40 @@ public class SearchActivity extends AppCompatActivity {
     };
 
     private View.OnClickListener onClickListenerShare = v -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-        sharingIntent.setType("text/plain");
-        String shareBody = viewHolder.getAnnoncePhotos().getAnnonceEntity().getDescription();
-        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, viewHolder.getAnnoncePhotos().getAnnonceEntity().getTitre());
-        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-        startActivity(Intent.createChooser(sharingIntent, "Partager via"));
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
+            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+
+            DynamicLynksGenerator.generateShorlLink(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
+                @Override
+                public void getLink(Uri shortLink, Uri flowchartLink) {
+                    Intent sendIntent = new Intent();
+                    String msg = "Hey, regarde cette petite annonce : " + shortLink;
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
+                    sendIntent.setType("text/plain");
+                    startActivity(sendIntent);
+                }
+
+                @Override
+                public void getLinkError() {
+                    Snackbar.make(recyclerView, "Une erreur n'a pas permis le partage", Snackbar.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG).show();
+        }
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-        Log.d(TAG, "Click on add to favorite");
-        searchActivityViewModel.isAnnonceFavorite(viewHolder.getAnnoncePhotos().getAnnonceEntity().getUid())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(integer -> {
-                    if (integer == null || integer == 0) {
-                        searchActivityViewModel.addToFavorite(viewHolder.getAnnoncePhotos());
-                    }
-                });
+        searchActivityViewModel.saveToFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
+                .doOnComplete(() -> Toast.makeText(this, "Annonce déjà dans les favoris", Toast.LENGTH_LONG).show())
+                .subscribe();
     };
 }

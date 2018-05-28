@@ -61,24 +61,28 @@ public class DatabaseSyncListenerService extends Service {
             FirebaseUserRepository firebaseUserRepository = FirebaseUserRepository.getInstance();
 
             // SENDERS
+            // Envoi toutes les annonces
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
                     .subscribe());
 
+            // Envoi toutes les photos
             disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnNext(photoEntity -> photoFirebaseSender.sendPhotoToRemoteAndUpdateAnnonce(photoEntity).subscribe())
+                    .doOnNext(photoFirebaseSender::sendPhotoToRemoteAndUpdateAnnonce)
                     .subscribe());
 
+            // Envoi tous les chats
             disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(chatFirebaseSender::sendNewChat)
                     .subscribe());
 
+            // Envoi tous les messages
             disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
@@ -87,6 +91,7 @@ public class DatabaseSyncListenerService extends Service {
                     .switchMap(messageFirebaseSender::sendMessage)
                     .subscribe());
 
+            // Envoi tous les utilisateurs
             disposables.add(utilisateurRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))

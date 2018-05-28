@@ -4,7 +4,6 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -127,27 +126,8 @@ public class MainActivityViewModel extends AndroidViewModel {
      */
     public Maybe<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
-        return annonceRepository.getAnnonceFavoriteByUidUser(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(throwable -> Log.e(TAG, "getAnnonceFavoriteByUidUser.doOnError " + throwable.getMessage()))
-                .switchIfEmpty(saveFavoriteAnnonceFromFbToLocalDb(uidUser, getApplication().getApplicationContext(), annoncePhotos).toMaybe());
+        return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 
-    /**
-     * @param uidUser
-     * @param context
-     * @param annoncePhotos
-     * @return
-     */
-    private Single<AnnonceEntity> saveFavoriteAnnonceFromFbToLocalDb(String uidUser, Context context, final AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting saveFavoriteAnnonceFromFbToLocalDb called with AnnoncePhotos = " + annoncePhotos.toString());
 
-        AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
-        annonceEntity.setFavorite(1);
-        annonceEntity.setUidUserFavorite(uidUser);
-
-        return annonceRepository.singleSave(annonceEntity)
-                .doOnError(throwable -> Log.e(TAG, "Annonce has not been stored correctly UidAnnonce : " + annonceEntity.getUid()))
-                .doOnSuccess(annonceSaved -> firebasePhotoStorage.saveFromRemoteToLocal(context, annonceSaved.getId(), annoncePhotos.getPhotos()));
-    }
 }
