@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
+    private FirebaseDynamicLinks mFirebaseDynamicLinks;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
@@ -135,6 +136,7 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu = navigationView.getMenu();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseDynamicLinks = FirebaseDynamicLinks.getInstance();
 
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -335,10 +337,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     // TODO : Finir l'intégration de Dynamic Links
-    // Pour le moment je boucle sans cesse
+    // Pour le moment je boucle sans cesse car getDynamicLink ne clear pas les datas de l'intent.
     private void catchDynamicLink() {
-        FirebaseDynamicLinks.getInstance()
-                .getDynamicLink(getIntent())
+        mFirebaseDynamicLinks.getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {
                     Uri deepLink = null;
                     if (data != null && data.getLink() != null) {

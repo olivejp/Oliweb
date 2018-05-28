@@ -254,7 +254,7 @@ public class SearchActivity extends AppCompatActivity {
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
 
-            DynamicLynksGenerator.generateShorlLink(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     Intent sendIntent = new Intent();

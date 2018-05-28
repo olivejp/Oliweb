@@ -26,7 +26,7 @@ public class DynamicLynksGenerator {
      * @param dynamicLinkListener
      * @return
      */
-    public static Task<ShortDynamicLink> generateShorlLink(String uidUser, String uidAnnonce, DynamicLinkListener dynamicLinkListener) {
+    public static Task<ShortDynamicLink> generateShortLink(String uidUser, String uidAnnonce, DynamicLinkListener dynamicLinkListener) {
         String generatedLink = generateLink(uidUser, uidAnnonce);
         return FirebaseDynamicLinks.getInstance()
                 .createDynamicLink()
