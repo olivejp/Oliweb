@@ -7,6 +7,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 
 /**
@@ -27,6 +28,6 @@ public abstract class AnnonceWithPhotosDao {
     public abstract LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce")
-    public abstract LiveData<AnnoncePhotos> findAnnonceByUidAnnonce(String uidAnnonce);
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND uidUserFavorite = :uidUser AND favorite = 1")
+    public abstract Maybe<AnnoncePhotos> findFavoriteAnnonceByUidAnnonce(String uidUser, String uidAnnonce);
 }

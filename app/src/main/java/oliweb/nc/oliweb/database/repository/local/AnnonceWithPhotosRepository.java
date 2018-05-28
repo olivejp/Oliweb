@@ -5,6 +5,7 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -37,7 +38,7 @@ public class AnnonceWithPhotosRepository {
         return this.annonceWithPhotosDao.findFavoritesByUidUser(uuidUtilisateur);
     }
 
-    public LiveData<AnnoncePhotos> findAnnonceByUidAnnonce(String uidAnnonce) {
-        return this.annonceWithPhotosDao.findAnnonceByUidAnnonce(uidAnnonce);
+    public Maybe<AnnoncePhotos> findFavoriteAnnonceByUidAnnonce(String uidUser, String uidAnnonce) {
+        return this.annonceWithPhotosDao.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce);
     }
 }

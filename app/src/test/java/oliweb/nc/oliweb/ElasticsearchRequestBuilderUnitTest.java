@@ -9,7 +9,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 
@@ -43,5 +45,16 @@ public class ElasticsearchRequestBuilderUnitTest {
                 Log.d(";sdf", sdf);
             }
         }
+    }
+
+
+    @Test
+    public void test_bidon_2() throws Exception {
+        Map<String, String> urlParam = new HashMap<>();
+        urlParam.put("1","xcfgdgsdf");
+        urlParam.put("2","sdkdfgdfgjf");
+        urlParam.put("3","dfgdsfg dfgs dddsf g");
+        String value = urlParam.toString();
+        Log.d("tag", value);
     }
 }

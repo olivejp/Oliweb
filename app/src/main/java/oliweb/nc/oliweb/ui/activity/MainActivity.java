@@ -38,6 +38,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
@@ -48,6 +49,7 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
@@ -133,7 +135,6 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu = navigationView.getMenu();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
-        defineAuthListener();
 
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -241,17 +242,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void callProfilActivity() {
-        Intent intent = new Intent();
-        intent.setClass(this, ProfilActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
-        bundle.putBoolean(UPDATE, true);
-        intent.putExtras(bundle);
-        startActivity(intent);
-        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-    }
-
     /**
      * Remise à blanc des champs spécifiques à la connexion
      */
@@ -294,6 +284,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         if (mFirebaseAuth != null) {
+            mAuthStateListener = defineAuthListener();
             mFirebaseAuth.addAuthStateListener(mAuthStateListener);
         }
     }
@@ -306,19 +297,71 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onDialogPositiveClick(NoticeDialogFragment dialog) {
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
+            SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
+            dialog.dismiss();
+        }
+    }
+
+    @Override
+    public void onDialogNegativeClick(NoticeDialogFragment dialog) {
+        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
+        }
+        dialog.dismiss();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        ListAnnonceFragment listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
+        if (listAnnonceFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_ANNONCE, listAnnonceFragment);
+        }
+
+        ListChatFragment listChatFragment = (ListChatFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CHAT);
+        if (listChatFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void sortHasBeenUpdated(int sort) {
+        SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(sort);
+        viewModel.updateSort(sort);
+    }
+
+    // TODO : Finir l'intégration de Dynamic Links
+    // Pour le moment je boucle sans cesse
     private void catchDynamicLink() {
         FirebaseDynamicLinks.getInstance()
                 .getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {
-                    // Get deep link from result (may be null if no link is found)
                     Uri deepLink = null;
                     if (data != null && data.getLink() != null) {
                         deepLink = data.getLink();
+                        String uidAnnonce = deepLink.getLastPathSegment();
                         String from = deepLink.getQueryParameter("from");
-                        Toast.makeText(MainActivity.this, from, Toast.LENGTH_LONG).show();
+                        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+                        if (uidUser != null) {
+                            // On enregistre l'annonce dans nos favoris.
+                            viewModel.saveToFavorite(uidUser, uidAnnonce)
+                                    .doOnComplete(() -> Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show())
+                                    .doOnSuccess(this::callAnnonceDetailActivity)
+                                    .subscribe();
+                        }
                     }
                 })
                 .addOnFailureListener(this, e -> Log.w(TAG, "getDynamicLink:onFailure", e));
+    }
+
+    private void callAnnonceDetailActivity(AnnoncePhotos annoncePhotos) {
+        Intent intent = new Intent(this, AnnonceDetailActivity.class);
+        intent.putExtra(ARG_ANNONCE, annoncePhotos);
+        startActivity(intent);
     }
 
     private void initViewsForThisUser(FirebaseUser user) {
@@ -377,8 +420,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void defineAuthListener() {
-        mAuthStateListener = firebaseAuth -> {
+    private FirebaseAuth.AuthStateListener defineAuthListener() {
+        return firebaseAuth -> {
             if ((mFirebaseUser != null && mFirebaseUser == firebaseAuth.getCurrentUser())) {
                 return;
             }
@@ -436,6 +479,17 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
     }
 
+    private void callProfilActivity() {
+        Intent intent = new Intent();
+        intent.setClass(this, ProfilActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
+        bundle.putBoolean(UPDATE, true);
+        intent.putExtras(bundle);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
     private void callFavoriteFragment() {
         ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(mFirebaseUser.getUid(), ACTION_FAVORITE);
         getSupportFragmentManager()
@@ -445,40 +499,4 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    @Override
-    public void onDialogPositiveClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
-            SyncService.launchSynchroFromFirebase(MainActivity.this, mFirebaseUser.getUid());
-            dialog.dismiss();
-        }
-    }
-
-    @Override
-    public void onDialogNegativeClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
-        }
-        dialog.dismiss();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        ListAnnonceFragment listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
-        if (listAnnonceFragment != null) {
-            getSupportFragmentManager().putFragment(outState, TAG_LIST_ANNONCE, listAnnonceFragment);
-        }
-
-        ListChatFragment listChatFragment = (ListChatFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CHAT);
-        if (listChatFragment != null) {
-            getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
-        }
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void sortHasBeenUpdated(int sort) {
-        SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(sort);
-        viewModel.updateSort(sort);
-    }
 }

@@ -15,7 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
@@ -23,7 +25,6 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -36,7 +37,6 @@ public class MainActivityViewModel extends AndroidViewModel {
     private UtilisateurRepository utilisateurRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
-    private FirebasePhotoStorage firebasePhotoStorage;
     private AnnonceRepository annonceRepository;
     private ChatRepository chatRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
@@ -49,7 +49,6 @@ public class MainActivityViewModel extends AndroidViewModel {
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         chatRepository = ChatRepository.getInstance(application.getApplicationContext());
         firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
-        firebasePhotoStorage = FirebasePhotoStorage.getInstance(application.getApplicationContext());
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
@@ -129,5 +128,21 @@ public class MainActivityViewModel extends AndroidViewModel {
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 
+    /**
+     * Vérification que l'annonce n'existe pas deja dans la DB
+     * avec le statut Favorite et que je ne suis pas l'auteur de cette annonce.
+     *
+     * @param uidUser
+     * @param uidAnnonce
+     * @return
+     */
+    public Maybe<AnnoncePhotos> saveToFavorite(String uidUser, String uidAnnonce) {
+        return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
+                .flatMap(annoncePhotos -> annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos))
+                .flatMap(annonceEntity -> annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce));
+    }
 
 }

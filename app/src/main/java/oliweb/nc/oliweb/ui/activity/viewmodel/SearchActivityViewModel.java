@@ -44,8 +44,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
 
-    private List<AnnoncePhotos> listAnnonce;
-    private MutableLiveData<List<AnnoncePhotos>> liveListAnnonce;
+    private ArrayList<AnnoncePhotos> listAnnonce;
+    private MutableLiveData<ArrayList<AnnoncePhotos>> liveListAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
     private AnnonceRepository annonceRepository;
@@ -65,7 +65,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 
-    public LiveData<List<AnnoncePhotos>> getLiveListAnnonce() {
+    public LiveData<ArrayList<AnnoncePhotos>> getLiveListAnnonce() {
         if (liveListAnnonce == null) {
             liveListAnnonce = new MutableLiveData<>();
             listAnnonce = new ArrayList<>();
@@ -109,15 +109,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
             listAnnonce.clear();
         }
 
-        ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
-        builder.setSize(pagingSize);
-        builder.setFrom(from);
 
         List<String> listField = new ArrayList<>();
         listField.add("titre");
         listField.add("description");
-
-        builder.setMultiMatchQuery(listField, query);
 
         String directionStr;
         if (direction == ASC) {
@@ -135,7 +130,11 @@ public class SearchActivityViewModel extends AndroidViewModel {
             field = "datePublication";
         }
 
-        builder.addSortingFields(field, directionStr);
+        ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
+        builder.setSize(pagingSize)
+                .setFrom(from)
+                .setMultiMatchQuery(listField, query)
+                .addSortingFields(field, directionStr);
 
         // Création d'une nouvelle request dans la table request
         newRequestRef = requestReference.push();
@@ -170,6 +169,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                updateLoadingStatus(false);
             }
         });
     }

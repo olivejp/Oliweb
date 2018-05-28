@@ -24,7 +24,6 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
@@ -38,7 +37,6 @@ public class FirebaseAnnonceRepository {
     private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
     };
@@ -51,12 +49,11 @@ public class FirebaseAnnonceRepository {
             instance = new FirebaseAnnonceRepository();
         }
         instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.photoRepository = PhotoRepository.getInstance(context);
         instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
         return instance;
     }
 
-    public Query queryByUidUser(String uidUser) {
+    private Query queryByUidUser(String uidUser) {
         Log.d(TAG, "queryByUidUser called with uidUser = " + uidUser);
         return annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser);
     }
@@ -83,7 +80,46 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-    public void saveAnnonceDtoToLocalDb(Context context, AnnonceDto annonceDto) {
+    /**
+     * Go read all the annonces for a specified uid user, then record all those ones to the local DB.
+     *
+     * @param context
+     * @param uidUser
+     */
+    public void saveAnnoncesByUidUser(Context context, String uidUser) {
+        queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+                    HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
+                    if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
+                        for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                            saveAnnonceDtoToLocalDb(context, entry.getValue());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        });
+    }
+
+    /**
+     * Will save an AnnonceDto to the Local DB.
+     * This method will also take care to download all the photo
+     * <p>
+     * Count in local DB all the record with the same Uid User and Uid Annonce.
+     * If no one exist, convert AnnonceDto to AnnonceEntity
+     * Try to save this new AnnonceEntity
+     * If AnnonceDto contained photos, try to save all the photos
+     *
+     * @param context
+     * @param annonceDto
+     */
+    private void saveAnnonceDtoToLocalDb(Context context, AnnonceDto annonceDto) {
         Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
         annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -105,11 +141,15 @@ public class FirebaseAnnonceRepository {
                 .subscribe();
     }
 
-
-
-    private Observable<AnnonceDto> observeAllAnnonceByUidUser(String uidUtilisateur) {
-        Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUtilisateur : " + uidUtilisateur);
-        return Observable.create(emitter -> queryByUidUser(uidUtilisateur).addListenerForSingleValueEvent(new ValueEventListener() {
+    /**
+     * Will emits all the AnnonceDto from Firebase for a given uid User
+     *
+     * @param uidUser uid of the user, we're looking for
+     * @return Observable<AnnonceDto> wich will emit AnnonceDto
+     */
+    private Observable<AnnonceDto> observeAllAnnonceByUidUser(String uidUser) {
+        Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUtilisateur : " + uidUser);
+        return Observable.create(emitter -> queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot == null || dataSnapshot.getValue() == null) {
@@ -137,6 +177,12 @@ public class FirebaseAnnonceRepository {
         }));
     }
 
+    /**
+     * Retrieve an annonce on Firebase Database based on its uidAnnonce
+     *
+     * @param uidAnnonce to retrieve
+     * @return AnnonceDto
+     */
     public Maybe<AnnonceDto> maybeFindByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting maybeFindByUidAnnonce uidAnnonce : " + uidAnnonce);
         return Maybe.create(e ->

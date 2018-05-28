@@ -64,7 +64,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     /**
-     * Maybe renverra un onComplete si elle trouve déjà une annonce dans les favoris avec l'uid User et l'Uid annonce
+     * renverra onComplete si elle trouve déjà une annonce dans les favoris avec l'uid User et l'Uid annonce
      * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer en base si l'annonce n'existait pas dans les favoris.
      * renverra onError dans le cas d'une erreur.
      *

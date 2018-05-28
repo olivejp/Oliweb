@@ -22,6 +22,8 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -49,6 +51,9 @@ public class SearchActivity extends AppCompatActivity {
     private static final String TAG = SearchActivity.class.getName();
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
+    private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
+    private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
+
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
 
@@ -61,6 +66,7 @@ public class SearchActivity extends AppCompatActivity {
     Toolbar toolbar;
 
     private String query;
+    private ArrayList<AnnoncePhotos> listAnnonce;
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel searchActivityViewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
@@ -84,6 +90,7 @@ public class SearchActivity extends AppCompatActivity {
         if (Intent.ACTION_SEARCH.equals(intentParam.getAction())) {
             query = intentParam.getStringExtra(SearchManager.QUERY);
         }
+
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -113,8 +120,19 @@ public class SearchActivity extends AppCompatActivity {
 
         initViewModelObservers();
 
-        currentPage = 0;
-        launchNewSearch(currentPage);
+        // Récupération des données sauvegardées
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SAVED_CURRENT_PAGE)) {
+                currentPage = savedInstanceState.getInt(SAVED_CURRENT_PAGE);
+            }
+            if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
+                listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
+                initAdapter(listAnnonce);
+            }
+        } else {
+            currentPage = 0;
+            launchNewSearch(currentPage);
+        }
     }
 
     @Override
@@ -172,6 +190,13 @@ public class SearchActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SAVED_CURRENT_PAGE, currentPage);
+        outState.putParcelableArrayList(SAVED_LIST_ANNONCE, listAnnonce);
+    }
+
     private void launchNewSearch(int currentPage) {
         if (searchActivityViewModel.isConnected()) {
             int from = currentPage * Constants.PER_PAGE_REQUEST;
@@ -199,15 +224,18 @@ public class SearchActivity extends AppCompatActivity {
         );
 
         // On écoute les changements sur la liste des annonces retournées par la recherche
-        searchActivityViewModel.getLiveListAnnonce().observe(this, annonceWithPhotos -> {
-            if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
-                linearLayout.setVisibility(View.GONE);
-                annonceBeautyAdapter.setListAnnonces(annonceWithPhotos);
-                annonceBeautyAdapter.notifyDataSetChanged();
-            } else {
-                linearLayout.setVisibility(View.VISIBLE);
-            }
-        });
+        searchActivityViewModel.getLiveListAnnonce().observe(this, this::initAdapter);
+    }
+
+    private void initAdapter(ArrayList<AnnoncePhotos> annonceWithPhotos) {
+        this.listAnnonce = annonceWithPhotos;
+        if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
+            linearLayout.setVisibility(View.GONE);
+            annonceBeautyAdapter.setListAnnonces(this.listAnnonce);
+            annonceBeautyAdapter.notifyDataSetChanged();
+        } else {
+            linearLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     private View.OnClickListener onClickListener = v -> {
