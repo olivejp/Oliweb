@@ -13,7 +13,9 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
@@ -64,40 +66,55 @@ public class FirebasePhotoStorage {
         });
     }
 
-    public void saveFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
+    public Single<AtomicBoolean> saveFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
         Log.d(TAG, "saveFromRemoteToLocal : " + listPhoto);
-        if (listPhoto != null && !listPhoto.isEmpty()) {
-            for (PhotoEntity photo : listPhoto) {
-                if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
-                    saveFromRemoteToLocal(context, idAnnonce, photo.getFirebasePath());
-                }
+        return Single.create(emitter -> {
+            if (listPhoto != null && !listPhoto.isEmpty()) {
+                Observable.fromIterable(listPhoto)
+                        .filter(photo -> photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty())
+                        .switchMapSingle(photoEntity -> saveFromRemoteToLocal(context, idAnnonce, photoEntity.getFirebasePath()))
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .subscribe();
+            } else {
+                emitter.onError(new RuntimeException("Liste des photos à sauvegarder vide"));
             }
-        }
+        });
     }
 
-    public void saveFromRemoteToLocal(Context context, final long idAnnonce, final String urlPhoto) {
+    public Single<PhotoEntity> saveFromRemoteToLocal(Context context, final long idAnnonce, final String urlPhoto) {
         Log.d(TAG, "saveFromRemoteToLocal : " + urlPhoto);
-        if (urlPhoto != null && !urlPhoto.isEmpty()) {
-            boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
-            StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
-
-            Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
-            if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
-                httpsReference.getFile(pairUriFile.second)
-                        .addOnSuccessListener(taskSnapshot -> {
-                            Log.d(TAG, "Download successful for image : " + urlPhoto + " to URI : " + pairUriFile.first);
-                            if (pairUriFile.first != null) {
-                                PhotoEntity photoEntity = new PhotoEntity();
-                                photoEntity.setStatut(StatusRemote.SEND);
-                                photoEntity.setFirebasePath(urlPhoto);
-                                photoEntity.setUriLocal(pairUriFile.first.toString());
-                                photoEntity.setIdAnnonce(idAnnonce);
-                                photoRepository.singleSave(photoEntity).subscribe();
-                            }
-                        })
-                        .addOnFailureListener(exception -> Log.d(TAG, "Download failed for image : " + urlPhoto));
+        return Single.create(emitter -> {
+            if (urlPhoto == null || urlPhoto.isEmpty()) {
+                emitter.onError(new RuntimeException("Impossible de sauvegarder une photo sans URL"));
+            } else {
+                boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
+                Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
+                if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
+                    StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlPhoto);
+                    httpsReference.getFile(pairUriFile.second)
+                            .addOnSuccessListener(taskSnapshot -> {
+                                Log.d(TAG, "Download successful for image : " + urlPhoto + " to URI : " + pairUriFile.first);
+                                if (pairUriFile.first != null) {
+                                    PhotoEntity photoEntity = new PhotoEntity();
+                                    photoEntity.setStatut(StatusRemote.SEND);
+                                    photoEntity.setFirebasePath(urlPhoto);
+                                    photoEntity.setUriLocal(pairUriFile.first.toString());
+                                    photoEntity.setIdAnnonce(idAnnonce);
+                                    photoRepository.singleSave(photoEntity)
+                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                            .doOnSuccess(emitter::onSuccess)
+                                            .subscribe();
+                                }
+                            })
+                            .addOnFailureListener(exception -> {
+                                Log.d(TAG, "Download failed for image : " + urlPhoto);
+                                emitter.onError(exception);
+                            });
+                } else {
+                    emitter.onError(new RuntimeException("Impossible de sauvegarder une image sans URI dans le content provider"));
+                }
             }
-        }
+        });
     }
 
     /**

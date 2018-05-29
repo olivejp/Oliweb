@@ -281,7 +281,6 @@ public class SearchActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
-                .doOnComplete(() -> Toast.makeText(this, "Annonce déjà dans les favoris", Toast.LENGTH_LONG).show())
                 .subscribe();
     };
 }

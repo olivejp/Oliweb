@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
+    private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
 
     private LiveData<Integer> liveCountAllActiveAnnonce;
     private LiveData<Integer> liveCountAllFavorite;
@@ -96,6 +97,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
+    private boolean dynamicLinkProcessed = false;
 
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
         TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
@@ -327,6 +329,9 @@ public class MainActivity extends AppCompatActivity
         if (listChatFragment != null) {
             getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
         }
+
+        outState.putBoolean(SAVED_DYNAMIC_LINK_PROCESSED, dynamicLinkProcessed);
+
         super.onSaveInstanceState(outState);
     }
 
@@ -342,14 +347,16 @@ public class MainActivity extends AppCompatActivity
         mFirebaseDynamicLinks.getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {
                     Uri deepLink = null;
-                    if (data != null && data.getLink() != null) {
+                    if (data != null && data.getLink() != null && !dynamicLinkProcessed) {
                         deepLink = data.getLink();
                         String uidAnnonce = deepLink.getLastPathSegment();
                         String from = deepLink.getQueryParameter("from");
                         String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-                        if (uidUser != null) {
+                        if (uidUser != null && uidAnnonce != null) {
                             // On enregistre l'annonce dans nos favoris.
+                            dynamicLinkProcessed = true;
                             viewModel.saveToFavorite(uidUser, uidAnnonce)
+                                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                                     .doOnComplete(() -> Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show())
                                     .doOnSuccess(this::callAnnonceDetailActivity)
                                     .subscribe();

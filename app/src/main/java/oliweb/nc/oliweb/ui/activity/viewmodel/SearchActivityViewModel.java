@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
@@ -61,7 +60,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         };
     }
 
-    public Maybe<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    public Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 

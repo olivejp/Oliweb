@@ -150,7 +150,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
-                        .doOnComplete(() -> Toast.makeText(appCompatActivity, "Annonce déjà dans les favoris", Toast.LENGTH_LONG).show())
                         .subscribe();
             }
         }

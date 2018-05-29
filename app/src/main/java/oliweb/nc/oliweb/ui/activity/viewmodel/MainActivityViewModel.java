@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -123,7 +122,7 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @param annoncePhotos
      * @return
      */
-    public Maybe<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    public Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
@@ -138,11 +137,10 @@ public class MainActivityViewModel extends AndroidViewModel {
      */
     public Maybe<AnnoncePhotos> saveToFavorite(String uidUser, String uidAnnonce) {
         return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnoncePhotos)
-                .flatMap(annoncePhotos -> annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos))
-                .flatMap(annonceEntity -> annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce));
+                .flatMapSingle(annoncePhotos -> annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos))
+                .flatMapMaybe(annonceEntity -> annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce));
     }
 
 }

@@ -64,8 +64,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     /**
-     * renverra onComplete si elle trouve déjà une annonce dans les favoris avec l'uid User et l'Uid annonce
-     * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer en base si l'annonce n'existait pas dans les favoris.
+     * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer ou celle déjà existante.
      * renverra onError dans le cas d'une erreur.
      *
      * @param context
@@ -73,12 +72,12 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param annoncePhotos
      * @return
      */
-    public Maybe<AnnonceEntity> saveToFavorite(Context context, String uidUser, AnnoncePhotos annoncePhotos) {
-        return Maybe.create(emitter ->
-                getAnnonceFavoriteByUidUserAndUidAnnonce(annoncePhotos.getAnnonceEntity().getUidUser(), annoncePhotos.getAnnonceEntity().getUid())
+    public Single<AnnonceEntity> saveToFavorite(Context context, String uidUser, AnnoncePhotos annoncePhotos) {
+        return Single.create(emitter ->
+                getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(annonceEntity -> emitter.onComplete())
+                        .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() -> {
                             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
                             annonceEntity.setFavorite(1);
@@ -146,7 +145,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @return
      */
     public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
-        return this.annonceDao.getAnnonceFavoriteNotTheAuthor(uidUser, uidAnnonce);
+        return this.annonceDao.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
     public Single<AtomicBoolean> markToDelete(Long idAnnonce) {

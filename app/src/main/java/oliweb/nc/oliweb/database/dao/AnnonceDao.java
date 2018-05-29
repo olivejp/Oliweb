@@ -67,7 +67,7 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUserFavorite = :uidUser")
-    public abstract Maybe<AnnonceEntity> getAnnonceFavoriteNotTheAuthor(String uidUser, String uidAnnonce);
+    public abstract Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
