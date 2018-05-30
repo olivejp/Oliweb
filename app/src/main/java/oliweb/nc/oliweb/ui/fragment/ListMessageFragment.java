@@ -28,6 +28,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageAdapter;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -62,6 +63,7 @@ public class ListMessageFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        Utility.hideKeyboard(appCompatActivity);
         recyclerView.setAdapter(null);
         super.onDestroyView();
     }

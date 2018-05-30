@@ -43,6 +43,7 @@ import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
@@ -57,6 +58,8 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
+
+    private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     private static final String ARG_UID_USER = "ARG_UID_USER";
     private static final String ARG_ACTION = "ARG_ACTION";
@@ -95,6 +98,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int direction;
     private ActionBar actionBar;
     private SignInActivity signInActivity;
+    private LoadingDialogFragment loadingDialogFragment;
 
     private View.OnClickListener onClickListener = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
@@ -112,9 +116,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
 
+            // Display a loading spinner
+            loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText("Création d'un lien de partage");
+            loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
+
             DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
+                    loadingDialogFragment.dismiss();
                     Intent sendIntent = new Intent();
                     String msg = "Hey, regarde cette petite annonce : " + shortLink;
                     sendIntent.setAction(Intent.ACTION_SEND);
@@ -125,6 +135,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
                 @Override
                 public void getLinkError() {
+                    loadingDialogFragment.dismiss();
                     Snackbar.make(recyclerView, "Une erreur n'a pas permis le partage", Snackbar.LENGTH_LONG).show();
                 }
             });
@@ -149,7 +160,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             } else {
                 viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
+                        .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG)
+                                .setAction("Mes favoris", v12 -> {
+                                    appCompatActivity.getSupportFragmentManager()
+                                            .beginTransaction()
+                                            .replace(R.id.main_frame, ListAnnonceFragment.getInstance(uidCurrentUser, ACTION_FAVORITE))
+                                            .addToBackStack(null)
+                                            .commit();
+                                })
+                                .show())
                         .subscribe();
             }
         }
