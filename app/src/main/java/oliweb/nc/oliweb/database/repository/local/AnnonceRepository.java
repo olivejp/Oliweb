@@ -29,7 +29,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     private static AnnonceRepository instance;
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
-    private FirebasePhotoStorage firebasePhotoStorage;
+    private FirebasePhotoStorage fbPhotoStorage;
     private AnnonceDao annonceDao;
 
     private AnnonceRepository(Context context) {
@@ -41,7 +41,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public static synchronized AnnonceRepository getInstance(Context context) {
         if (instance == null) {
             instance = new AnnonceRepository(context);
-            instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
+            instance.fbPhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
             instance.chatRepository = ChatRepository.getInstance(context);
         }
@@ -68,8 +68,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * renverra onError dans le cas d'une erreur.
      *
      * @param context
-     * @param uidUser
-     * @param annoncePhotos
+     * @param uidUser qui veut rajouter cette annonce dans ses favoris
+     * @param annoncePhotos qui sera sauvé avec ses photos
      * @return
      */
     public Single<AnnonceEntity> saveToFavorite(Context context, String uidUser, AnnoncePhotos annoncePhotos) {
@@ -85,10 +85,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                             singleSave(annonceEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceSaved -> {
-                                        this.firebasePhotoStorage.saveFromRemoteToLocal(context, annonceSaved.getId(), annoncePhotos.getPhotos());
-                                        emitter.onSuccess(annonceSaved);
-                                    })
+                                    .doOnSuccess(annonceEntity1 -> this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos())
+                                            .doOnError(emitter::onError)
+                                            .doOnSuccess(atomicBoolean -> emitter.onSuccess(annonceEntity1))
+                                            .subscribe())
                                     .subscribe();
                         })
                         .subscribe()
@@ -144,11 +144,11 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param uidAnnonce
      * @return
      */
-    public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+    private Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
         return this.annonceDao.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
-    public Single<AtomicBoolean> markToDelete(Long idAnnonce) {
+    public Single<AtomicBoolean> markAsToDelete(Long idAnnonce) {
         Log.d(TAG, "Starting markToDeleteByAnnonce idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
                 findById(idAnnonce)
@@ -185,7 +185,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                 .toObservable();
     }
 
-    public Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
+    private Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
         Log.d(TAG, "markAsToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.TO_DELETE);
         return this.singleSave(annonceEntity)
@@ -194,8 +194,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                 .toObservable();
     }
 
-    public Observable<AnnonceEntity> markAnnonceAsFailedToSend(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAnnonceAsFailedToSend annonceEntity : " + annonceEntity);
+    public Observable<AnnonceEntity> markAsFailedToSend(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsFailedToSend annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -203,8 +203,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                 .toObservable();
     }
 
-    public Observable<AnnonceEntity> markAnnonceAsFailedToDelete(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAnnonceAsFailedToDelete annonceEntity : " + annonceEntity);
+    public Observable<AnnonceEntity> markAsFailedToDelete(AnnonceEntity annonceEntity) {
+        Log.d(TAG, "markAsFailedToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

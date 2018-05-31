@@ -77,7 +77,7 @@ public class AnnonceFirebaseDeleter {
         return firebaseAnnonceRepository.delete(annonceFull.getAnnonce())
                 .doOnError(exception -> {
                     Log.e(TAG, "Failed to delete from the Firebase Database => " + exception.getLocalizedMessage(), exception);
-                    annonceRepository.markAnnonceAsFailedToDelete(annonceFull.getAnnonce()).subscribe();
+                    annonceRepository.markAsFailedToDelete(annonceFull.getAnnonce()).subscribe();
                 })
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {

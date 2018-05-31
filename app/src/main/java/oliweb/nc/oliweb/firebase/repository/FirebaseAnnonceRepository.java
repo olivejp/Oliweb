@@ -135,7 +135,7 @@ public class FirebaseAnnonceRepository {
                 .filter(annonceEntity -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
                 .doOnSuccess(annonceEntity1 -> {
                     for (String photoUrl : annonceDto.getPhotos()) {
-                        firebasePhotoStorage.saveFromRemoteToLocal(context, annonceEntity1.getId(), photoUrl);
+                        firebasePhotoStorage.savePhotoToLocalByUrl(context, annonceEntity1.getId(), photoUrl);
                     }
                 })
                 .subscribe();

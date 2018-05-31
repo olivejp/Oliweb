@@ -62,6 +62,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
      * @param idAnnonce
      */
     public Single<AtomicBoolean> markToDelete(long idAnnonce) {
-        return this.annonceRepository.markToDelete(idAnnonce);
+        return this.annonceRepository.markAsToDelete(idAnnonce);
     }
 }

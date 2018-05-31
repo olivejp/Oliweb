@@ -93,7 +93,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     }
 
     private Observable<PhotoEntity> markToDelete(PhotoEntity photoEntity) {
-        Log.d(TAG, "markToDelete photoEntity : " + photoEntity);
+        Log.d(TAG, "markAsToDelete photoEntity : " + photoEntity);
         photoEntity.setStatut(StatusRemote.TO_DELETE);
         return this.singleSave(photoEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

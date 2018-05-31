@@ -12,6 +12,7 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -44,45 +45,58 @@ public class FirebasePhotoStorage {
 
     /**
      * Read the photo URI, then send the photo to Firebase Storage.
-     * The Single<String> will return the Downloadpath of the photo
+     * If success, Single<Uri> will return the DownloadPath of the photo
+     * If error, the Single will launch an error
      *
      * @param photo to store
      * @return the download path of the downloaded photo
      */
-    public Single<Uri> savePhotoToRemote(PhotoEntity photo) {
-        Log.d(TAG, "Starting savePhotoToRemote photo : " + photo);
+    public Single<Uri> sendPhotoToRemote(PhotoEntity photo) {
+        Log.d(TAG, "Starting sendPhotoToRemote photo : " + photo);
         return Single.create(e -> {
-            File file = new File(photo.getUriLocal());
-            String fileName = file.getName();
-            StorageReference storageReference = fireStorage.child(fileName);
-            storageReference.putFile(Uri.parse(photo.getUriLocal()))
-                    .addOnFailureListener(e::onError)
-                    .addOnSuccessListener(taskSnapshot ->
-                            // Récupération du lien pour télécharger l'image
-                            storageReference.getDownloadUrl()
-                                    .addOnFailureListener(e::onError)
-                                    .addOnSuccessListener(e::onSuccess)
-                    );
-        });
-    }
-
-    public Single<AtomicBoolean> saveFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
-        Log.d(TAG, "saveFromRemoteToLocal : " + listPhoto);
-        return Single.create(emitter -> {
-            if (listPhoto != null && !listPhoto.isEmpty()) {
-                Observable.fromIterable(listPhoto)
-                        .filter(photo -> photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty())
-                        .switchMapSingle(photoEntity -> saveFromRemoteToLocal(context, idAnnonce, photoEntity.getFirebasePath()))
-                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
-                        .subscribe();
+            if (photo.getUriLocal() == null || photo.getUriLocal().isEmpty()) {
+                e.onError(new RuntimeException("URI nécessaire pour sauvegarder une photo"));
             } else {
-                emitter.onError(new RuntimeException("Liste des photos à sauvegarder vide"));
+                File file = new File(photo.getUriLocal());
+                String fileName = file.getName();
+                StorageReference storageReference = fireStorage.child(fileName);
+                storageReference.putFile(Uri.parse(photo.getUriLocal()))
+                        .addOnFailureListener(e::onError)
+                        .addOnSuccessListener(taskSnapshot ->
+                                storageReference.getDownloadUrl()
+                                        .addOnFailureListener(e::onError)
+                                        .addOnSuccessListener(e::onSuccess)
+                        );
             }
         });
     }
 
-    public Single<PhotoEntity> saveFromRemoteToLocal(Context context, final long idAnnonce, final String urlPhoto) {
-        Log.d(TAG, "saveFromRemoteToLocal : " + urlPhoto);
+    /**
+     * @param context
+     * @param idAnnonce
+     * @param listPhoto
+     * @return The number of photos correctly saved
+     */
+    public Single<AtomicInteger> savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
+        Log.d(TAG, "savePhotosFromRemoteToLocal : " + listPhoto);
+        return Single.create(emitter -> {
+            AtomicInteger result = new AtomicInteger(0);
+            if (listPhoto == null || listPhoto.isEmpty()) {
+                emitter.onError(new RuntimeException("Liste des photos à sauvegarder vide"));
+            } else {
+                Observable.fromIterable(listPhoto)
+                        .doOnComplete(() -> emitter.onSuccess(result))
+                        .filter(photo -> photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty())
+                        .switchMapSingle(photoEntity -> savePhotoToLocalByUrl(context, idAnnonce, photoEntity.getFirebasePath())
+                                .doOnSuccess(photoEntity1 -> result.incrementAndGet())
+                                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception)))
+                        .subscribe();
+            }
+        });
+    }
+
+    public Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
+        Log.d(TAG, "savePhotoToLocalByUrl : " + urlPhoto);
         return Single.create(emitter -> {
             if (urlPhoto == null || urlPhoto.isEmpty()) {
                 emitter.onError(new RuntimeException("Impossible de sauvegarder une photo sans URL"));

@@ -51,7 +51,7 @@ public class PhotoFirebaseSender {
 
     private Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemote photoEntity : " + photoEntity);
-        return this.firebasePhotoStorage.savePhotoToRemote(photoEntity).toObservable()
+        return this.firebasePhotoStorage.sendPhotoToRemote(photoEntity).toObservable()
                 .doOnError(exception -> {
                     Log.e(TAG, exception.getLocalizedMessage(), exception);
                     markPhotoAsFailedToSend(photoEntity);

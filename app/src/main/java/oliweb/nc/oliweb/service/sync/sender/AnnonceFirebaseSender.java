@@ -51,7 +51,7 @@ public class AnnonceFirebaseSender {
         Log.d(TAG, "Starting processToSendAnnonceToFirebase annonceEntity : " + annonceEntity);
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> annonceRepository.markAnnonceAsFailedToSend(annonceEntity))
+                .doOnError(e -> annonceRepository.markAsFailedToSend(annonceEntity))
                 .toObservable()
                 .switchMap(annonceRepository::markAsSending)
                 .switchMap(this::convertToFullAndSendToFirebase)
