@@ -28,6 +28,7 @@ import java.util.UUID;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
  * Created by orlanth23 on 03/02/2018.
@@ -335,5 +336,15 @@ public class MediaUtility {
 
         IOUtils.closeQuietly(inputStream);
         IOUtils.closeQuietly(outStream);
+    }
+
+    public static Pair<Uri, File> createNewImagePairUriFile(Context context) {
+        boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
+        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
+        if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
+            return pairUriFile;
+        } else {
+            return null;
+        }
     }
 }
