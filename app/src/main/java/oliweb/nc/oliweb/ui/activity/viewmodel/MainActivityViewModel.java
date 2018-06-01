@@ -123,7 +123,7 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @return
      */
     public Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annoncePhotos = " + annoncePhotos.toString());
+        Log.d(TAG, "Starting saveToFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
     }
 

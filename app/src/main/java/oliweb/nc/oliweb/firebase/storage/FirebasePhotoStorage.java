@@ -12,9 +12,7 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -95,23 +93,36 @@ public class FirebasePhotoStorage {
      * @param listPhoto
      * @return The number of photos correctly saved
      */
-    public Single<AtomicInteger> savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
+    public void savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
         Log.d(TAG, "savePhotosFromRemoteToLocal : " + listPhoto);
-        return Single.create(emitter -> {
-            AtomicInteger result = new AtomicInteger(0);
-            if (listPhoto == null || listPhoto.isEmpty()) {
-                emitter.onError(new RuntimeException("Can't save empty list"));
-            } else {
-                Observable.fromIterable(listPhoto)
-                        .doOnComplete(() -> emitter.onSuccess(result))
-                        .filter(photo -> photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty())
-                        .switchMapSingle(photoEntity -> savePhotoToLocalByUrl(context, idAnnonce, photoEntity.getFirebasePath())
-                                .doOnSuccess(photoEntity1 -> result.incrementAndGet())
-                                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception)))
+        for (PhotoEntity photo : listPhoto) {
+            if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
+                savePhotoToLocalByUrl(context, idAnnonce, photo.getFirebasePath())
+                        .doOnSuccess(photoEntity1 -> Log.d(TAG, "Photo correctly inserted " + photoEntity1.getUriLocal()))
+                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                         .subscribe();
             }
-        });
+        }
     }
+
+    public void savePhotoToLocalByListUrl(Context context, final long idAnnonce, List<String> listPhotoUrl) {
+        Log.d(TAG, "savePhotoToLocalByListUrl : " + listPhotoUrl);
+        for (String urlPhoto : listPhotoUrl) {
+            Pair<Uri, File> pairUriFile = createNewImagePairUriFile(context);
+            downloadFileFromStorage(pairUriFile.second, urlPhoto)
+                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                    .doOnSuccess(atomicBoolean -> {
+                        if (atomicBoolean.get()) {
+                            photoRepository.singleSave(createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString()))
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                                    .subscribe();
+                        }
+                    })
+                    .subscribe();
+        }
+    }
+
 
     public Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
         Log.d(TAG, "savePhotoToLocalByUrl : " + urlPhoto);

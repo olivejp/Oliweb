@@ -85,10 +85,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                             singleSave(annonceEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceEntity1 -> this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos())
-                                            .doOnError(emitter::onError)
-                                            .doOnSuccess(atomicBoolean -> emitter.onSuccess(annonceEntity1))
-                                            .subscribe())
+                                    .doOnSuccess(annonceEntity1 -> this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos()))
                                     .subscribe();
                         })
                         .subscribe()

@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v4.util.Pair;
@@ -338,13 +339,23 @@ public class MediaUtility {
         IOUtils.closeQuietly(outStream);
     }
 
+    @NonNull
     public static Pair<Uri, File> createNewImagePairUriFile(Context context) {
         boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
         Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
-        if (pairUriFile != null && pairUriFile.second != null && pairUriFile.first != null) {
-            return pairUriFile;
-        } else {
-            return null;
+
+        if (pairUriFile == null) {
+            throw new MediaUtilityException("Pair Uri & File ne peut pas être null");
         }
+
+        if (pairUriFile.second == null) {
+            throw new MediaUtilityException("File ne peut pas être null");
+        }
+
+        if (pairUriFile.first == null) {
+            throw new MediaUtilityException("Uri ne peut pas être null");
+        }
+
+        return pairUriFile;
     }
 }

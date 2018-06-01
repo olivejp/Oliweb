@@ -43,7 +43,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         save(photoEntity, null);
     }
 
-    public void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
+    private void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
         Log.d(TAG, "Starting save photoEntity : " + photoEntity);
         if (photoEntity != null) {
             this.photoDao.findSingleById(photoEntity.getId())
