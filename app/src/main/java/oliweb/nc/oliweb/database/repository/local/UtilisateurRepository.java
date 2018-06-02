@@ -76,8 +76,9 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
                 findSingleByUid(firebaseUser.getUid())
                         .doOnError(emitter::onError)
                         .doOnSuccess(utilisateurEntity -> {
-                            // Mise à jour de la date de dernière connexion
+                            // Mise à jour de la date de dernière connexion et du dernier token de device utilisé
                             utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
+                            utilisateurEntity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
                             utilisateurEntity.setStatut(StatusRemote.TO_SEND);
                             singleSave(utilisateurEntity)
                                     .doOnError(emitter::onError)
