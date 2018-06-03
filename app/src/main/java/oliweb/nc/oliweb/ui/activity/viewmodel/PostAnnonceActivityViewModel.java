@@ -160,21 +160,12 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.currentListPhoto.size() < 4;
     }
 
-    public boolean removePhotoToCurrentList(PhotoEntity photoEntity) {
-        boolean retour = false;
+    public void removePhotoToCurrentList(PhotoEntity photoEntity) {
         if (this.currentListPhoto.contains(photoEntity)) {
-
-            if (photoEntity.getStatut().equals(StatusRemote.SEND)) {
-                photoEntity.setStatut(StatusRemote.TO_DELETE);
-                this.photoRepository.update(photoEntity);
-                retour = true;
-            } else {
-                retour = this.currentListPhoto.remove(photoEntity);
-            }
-
+            photoEntity.setStatut(StatusRemote.TO_DELETE);
+            this.photoRepository.update(photoEntity);
             this.liveListPhoto.postValue(this.currentListPhoto);
         }
-        return retour;
     }
 
     public List<PhotoEntity> getCurrentListPhoto() {

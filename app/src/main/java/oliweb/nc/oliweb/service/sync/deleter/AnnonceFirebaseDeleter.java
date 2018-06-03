@@ -110,7 +110,7 @@ public class AnnonceFirebaseDeleter {
     }
 
     public Single<AtomicBoolean> deleteOnePhoto(PhotoEntity photo) {
-        // 1 - Suppression du Firebase Storage
+        // 1 - Suppression du Firebase Storage, si la photo n'est pas présente dans Firebase, on renverra quand même true.
         return Single.create(emitter -> firebasePhotoStorage.delete(photo)
                 .doOnError(e -> {
                     Log.e(TAG, e.getLocalizedMessage(), e);
