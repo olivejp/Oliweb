@@ -69,13 +69,13 @@ public class DatabaseSyncListenerService extends Service {
                     .subscribe());
 
             // Envoi toutes les photos
-            disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .toObservable()
-                    .switchMap(photoRepository::markAsSending)
-                    .doOnNext(photoFirebaseSender::sendPhotoToRemoteAndUpdateAnnonce)
-                    .subscribe());
+//            disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
+//                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+//                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+//                    .toObservable()
+//                    .switchMap(photoRepository::markAsSending)
+//                    .doOnNext(photoFirebaseSender::sendPhotoToRemoteAndUpdateAnnonce)
+//                    .subscribe());
 
             // Envoi tous les chats
             disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())

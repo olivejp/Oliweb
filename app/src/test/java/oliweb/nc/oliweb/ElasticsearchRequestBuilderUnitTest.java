@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 
 @RunWith(JUnit4.class)
@@ -56,5 +59,28 @@ public class ElasticsearchRequestBuilderUnitTest {
         urlParam.put("3","dfgdsfg dfgs dddsf g");
         String value = urlParam.toString();
         Log.d("tag", value);
+    }
+
+    @Test
+    public void test_bidon_3() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("1");
+        list.add("2");
+        list.add("3");
+        list.add("4");
+
+        TestObserver<String> subscriber = new TestObserver<>();
+
+        Observable.fromIterable(list)
+                .doOnNext(System.out::println)
+                .doOnComplete(() -> System.out.println("FIN"))
+                .subscribe(subscriber);
+
+        if (!subscriber.awaitTerminalEvent(5, TimeUnit.SECONDS)) {
+            Assert.assertTrue(false);
+        } else {
+            subscriber.assertNoErrors();
+            subscriber.assertComplete();
+        }
     }
 }

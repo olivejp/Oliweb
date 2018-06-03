@@ -105,6 +105,11 @@ public class FirebasePhotoStorage {
         }
     }
 
+    /**
+     * @param context
+     * @param idAnnonce
+     * @param listPhotoUrl
+     */
     public void savePhotoToLocalByListUrl(Context context, final long idAnnonce, List<String> listPhotoUrl) {
         Log.d(TAG, "savePhotoToLocalByListUrl : " + listPhotoUrl);
         for (String urlPhoto : listPhotoUrl) {
@@ -123,8 +128,7 @@ public class FirebasePhotoStorage {
         }
     }
 
-
-    public Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
+    private Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
         Log.d(TAG, "savePhotoToLocalByUrl : " + urlPhoto);
         return Single.create(emitter -> {
             if (urlPhoto == null || urlPhoto.isEmpty()) {
@@ -183,6 +187,15 @@ public class FirebasePhotoStorage {
         });
     }
 
+    /**
+     * Delete a file from Firebase Storage based on its fileName
+     *
+     * @param fileName of the file we want to delete
+     * @return atomicBoolean will be true :
+     * -if no object with this fileName has been found
+     * -if delete is successful
+     * will return a exception in case of error
+     */
     private Single<AtomicBoolean> deleteFromStorage(String fileName) {
         return Single.create(emitter -> {
             StorageReference storageReference = fireStorage.child(fileName);
@@ -197,7 +210,7 @@ public class FirebasePhotoStorage {
                             emitter.onSuccess(new AtomicBoolean(true));
                         } else {
                             Log.e(TAG, "Failed to delete image on Firebase Storage : " + fileName + "exception : " + e.getMessage(), e);
-                            emitter.onSuccess(new AtomicBoolean(false));
+                            emitter.onError(e);
                         }
                     });
         });

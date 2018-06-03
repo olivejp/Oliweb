@@ -3,7 +3,11 @@ package oliweb.nc.oliweb.service.sync.sender;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
@@ -39,15 +43,16 @@ public class PhotoFirebaseSender {
         return instance;
     }
 
-    public void sendPhotoToRemoteAndUpdateAnnonce(PhotoEntity photoEntity) {
-        Log.d(TAG, "sendPhotoToRemoteAndUpdateAnnonce photoEntity : " + photoEntity);
-        sendPhotoToRemote(photoEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .switchMap(photoEntity1 -> annonceRepository.findById(photoEntity1.getIdAnnonce()).toObservable())
-                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
-                .subscribe();
+    public Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
+        Log.d(TAG, "sendPhotosToRemote listPhoto : " + listPhoto);
+        return Single.create(emitter ->
+                Observable.fromIterable(listPhoto)
+                        .doOnError(emitter::onError)
+                        .concatMap(this::sendPhotoToRemote)
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .subscribe()
+        );
     }
-
 
     private Observable<PhotoEntity> sendPhotoToRemote(PhotoEntity photoEntity) {
         Log.d(TAG, "sendPhotoToRemote photoEntity : " + photoEntity);

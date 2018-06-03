@@ -25,6 +25,7 @@ public class AnnonceFirebaseSender {
 
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
+    private PhotoFirebaseSender photoFirebaseSender;
     private AnnonceFullRepository annonceFullRepository;
 
     private AnnonceFirebaseSender() {
@@ -35,6 +36,7 @@ public class AnnonceFirebaseSender {
             instance = new AnnonceFirebaseSender();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
+            instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
         }
@@ -59,14 +61,15 @@ public class AnnonceFirebaseSender {
                 .switchMap(annonceRepository::markAsSend)
                 .switchMap(annonceFullRepository::findAnnonceFullByAnnonceEntity)
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())
-                .switchMap(annonceFull -> photoRepository.markAsToSend(annonceFull.getPhotos()).toObservable())
+                .switchMapSingle(annonceFull -> photoFirebaseSender.sendPhotosToRemote(annonceFull.getPhotos()))
+                .switchMap(atomicBoolean -> convertToFullAndSendToFirebase(annonceEntity))
                 .subscribe();
     }
 
     /**
-     * Query the database to retreive the annonce by is Id
+     * Query the database to retrieve the annonce by is Id
      * Convert the AnnonceFull to AnnonceFirebase
-     * Try to send the AnnonceFirebase to Firbase
+     * Try to send the AnnonceFirebase to Firebase
      *
      * @param annonceEntity to save to Firebase
      * @return UID of the recorded annonce
