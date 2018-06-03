@@ -71,7 +71,50 @@ public class FirebaseSyncListenerService extends Service {
             Log.e(TAG, databaseError.getMessage());
         }
     };
+
     private ChildEventListener chatChildListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            if (dataSnapshot != null) {
+                ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
+                if (chatFirebase != null) {
+                    chatRepository.deleteByUid(chatFirebase.getUid())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                            .doOnSuccess(atomicBoolean -> {
+                                if (atomicBoolean.get()) {
+                                    Log.d(TAG, "Successfuly delete chat in the local DB");
+                                } else {
+                                    Log.d(TAG, "Fail to delete chat in the local DB");
+                                }
+                            })
+                            .subscribe();
+                }
+            }
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+    private ChildEventListener messageChildListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             MessageFirebase message = dataSnapshot.getValue(MessageFirebase.class);
@@ -193,6 +236,7 @@ public class FirebaseSyncListenerService extends Service {
                 .equalTo(true);
 
         queryChat.addValueEventListener(chatListener);
+        queryChat.addChildEventListener(chatChildListener);
     }
 
     /**
@@ -216,7 +260,7 @@ public class FirebaseSyncListenerService extends Service {
 
                             // Création de listener pour chacun de ces chats
                             Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("timestamp");
-                            query.addChildEventListener(chatChildListener);
+                            query.addChildEventListener(messageChildListener);
 
                             // Ajout de la query et du listener à notre liste
                             listChatQueryListener.add(query);
@@ -229,7 +273,7 @@ public class FirebaseSyncListenerService extends Service {
     private void clearMessageListener() {
         for (Query query : listChatQueryListener) {
             if (query != null) {
-                query.removeEventListener(chatChildListener);
+                query.removeEventListener(messageChildListener);
             }
         }
     }

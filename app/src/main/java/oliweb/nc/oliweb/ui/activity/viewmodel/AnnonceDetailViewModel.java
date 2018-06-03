@@ -38,5 +38,4 @@ public class AnnonceDetailViewModel extends AndroidViewModel {
         }
         return fbSellerLiveData;
     }
-
 }

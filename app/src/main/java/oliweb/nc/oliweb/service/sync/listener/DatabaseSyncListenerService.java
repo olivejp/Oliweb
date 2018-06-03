@@ -72,6 +72,8 @@ public class DatabaseSyncListenerService extends Service {
             disposables.add(photoRepository.getAllPhotosByUidUserAndStatus(uidUser, Utility.allStatusToSend())
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .toObservable()
+                    .switchMap(photoRepository::markAsSending)
                     .doOnNext(photoFirebaseSender::sendPhotoToRemoteAndUpdateAnnonce)
                     .subscribe());
 

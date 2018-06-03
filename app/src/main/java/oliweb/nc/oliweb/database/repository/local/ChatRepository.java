@@ -5,10 +5,12 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.ChatDao;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -68,6 +70,25 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
         Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser + " status : " + status);
         return this.chatDao.countAllFavoritesByUser(uidUser, status);
+    }
+
+    public Single<AtomicBoolean> deleteByUid(String uid) {
+        Log.d(TAG, "Starting deleteByUid uid : " + uid);
+        return Single.create(emitter -> {
+            this.chatDao.findByUid(uid)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(chatEntity ->
+                            delete(dataReturn -> {
+                                if (dataReturn.isSuccessful()) {
+                                    emitter.onSuccess(new AtomicBoolean(true));
+                                } else {
+                                    emitter.onSuccess(new AtomicBoolean(false));
+                                }
+                            }, chatEntity)
+                    )
+                    .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                    .subscribe();
+        });
     }
 
     public Maybe<ChatEntity> saveIfNotExist(ChatEntity chatEntity) {

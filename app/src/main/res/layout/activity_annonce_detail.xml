@@ -136,14 +136,29 @@
                         app:srcCompat="@drawable/ic_message_white_48dp" />
                 </LinearLayout>
 
+
                 <TextView
-                    android:id="@+id/text_date_publication"
-                    android:layout_width="match_parent"
+                    android:id="@+id/posted"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Posté le "
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textSize="12sp"
                     android:textStyle="italic"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/linear_actions" />
+
+                <TextView
+                    android:id="@+id/text_date_publication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    app:layout_constraintLeft_toRightOf="@+id/posted"
                     app:layout_constraintTop_toBottomOf="@+id/linear_actions"
                     tools:text="12 avr. 18 à 15:30" />
 

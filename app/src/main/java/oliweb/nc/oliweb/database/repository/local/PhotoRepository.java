@@ -141,4 +141,12 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                 .switchMap(photoEntity -> singleSave(photoEntity).toObservable())
                 .toList();
     }
+
+    public Observable<PhotoEntity> markAsSending(PhotoEntity photoEntity) {
+        Log.d(TAG, "markAsSending photoEntity : " + photoEntity);
+        photoEntity.setStatut(StatusRemote.SENDING);
+        return this.singleSave(photoEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
 }
