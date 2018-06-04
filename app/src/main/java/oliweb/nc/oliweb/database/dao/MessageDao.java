@@ -38,7 +38,7 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     public abstract Maybe<MessageEntity> findSingleByUid(String uidMessage);
 
     @Transaction
-    @Query("SELECT * FROM message WHERE idChat = :idChat")
+    @Query("SELECT * FROM message WHERE idChat = :idChat ORDER BY timestamp ASC")
     public abstract LiveData<List<MessageEntity>> findAllByIdChat(Long idChat);
 
     @Transaction

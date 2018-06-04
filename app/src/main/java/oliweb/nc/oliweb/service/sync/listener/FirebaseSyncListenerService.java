@@ -205,7 +205,7 @@ public class FirebaseSyncListenerService extends Service {
             // Récupération des chats de l'utilisateur connecté
             listenForChatByUidUser(uidUser);
 
-            // Création d'observers pour écouter les nouveaux chats
+            // Création d'observers pour écouter les nouveaux messages
             listenForMessageByUidUser(uidUser);
         }
         return START_NOT_STICKY;

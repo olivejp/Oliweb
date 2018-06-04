@@ -88,7 +88,7 @@ public class ListMessageFragment extends Fragment {
         adapter = new MessageAdapter();
         recyclerView.setAdapter(adapter);
 
-        // Sur l'action finale du prix on va sauvegarder l'annonce.
+        // Sur l'action du message, on tente d'envoyer le texte
         textToSend.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 clickOnSendButton(textToSend);
