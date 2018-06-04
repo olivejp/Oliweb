@@ -98,12 +98,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private AnnonceBeautyAdapter annonceBeautyAdapter;
     private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
     private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-    private int sort = SORT_DATE;
-    private int direction;
+    private int sortSelected = SORT_DATE;
+    private int directionSelected;
     private ActionBar actionBar;
     private SignInActivity signInActivity;
     private LoadingDialogFragment loadingDialogFragment;
 
+    /**
+     * OnClickListener that should open AnnonceDetailActivity
+     */
     private View.OnClickListener onClickListener = v -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
@@ -113,6 +116,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         startActivity(intent, options.toBundle());
     };
 
+    /**
+     * OnClickListener that share an annonce with a DynamicLink
+     */
     private View.OnClickListener onClickListenerShare = v -> {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
@@ -150,6 +156,13 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
+    /**
+     * OnClickListener that add an annonce and all of this photo into the favorite.
+     * This save all the photos of the annonce in the device and the annonce into the local database
+     * If the annonce was already into the database it remove all the photo from the device,
+     * delete all the photos from the database,
+     * delete the annonce from the database.
+     */
     private View.OnClickListener onClickListenerFavorite = v -> {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
@@ -315,21 +328,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (newSort != null) {
             switch (newSort) {
                 case 0:
-                    sort = SORT_PRICE;
-                    direction = DESC;
+                    sortSelected = SORT_PRICE;
+                    directionSelected = DESC;
                     break;
                 case 1:
-                    sort = SORT_PRICE;
-                    direction = ASC;
+                    sortSelected = SORT_PRICE;
+                    directionSelected = ASC;
                     break;
                 case 2:
-                    sort = SORT_DATE;
-                    direction = ASC;
+                    sortSelected = SORT_DATE;
+                    directionSelected = ASC;
                     break;
                 case 3:
                 default:
-                    sort = SORT_DATE;
-                    direction = DESC;
+                    sortSelected = SORT_DATE;
+                    directionSelected = DESC;
                     break;
             }
 
@@ -340,7 +353,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 annoncePhotosList = list;
                 loadMoreDatas();
             } else if (action.equals(ACTION_FAVORITE)) {
-                LoadMostRecentAnnonceTask.sortList(annoncePhotosList, this.sort, direction);
+                LoadMostRecentAnnonceTask.sortList(annoncePhotosList, this.sortSelected, directionSelected);
                 annonceBeautyAdapter.notifyDataSetChanged();
             }
         }
@@ -351,7 +364,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
-        switch (sort) {
+        switch (sortSelected) {
             case SORT_DATE:
                 loadSortDate().addListenerForSingleValueEvent(valueEventListener);
                 break;
@@ -365,7 +378,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private Query loadSortPrice() {
         Query query = annoncesReference.orderByChild("prix");
-        if (direction == ASC) {
+        if (directionSelected == ASC) {
             Integer lastPrice = 0;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
                 if (annoncePhotos.getAnnonceEntity().getPrix() > lastPrice) {
@@ -373,7 +386,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 }
             }
             query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (direction == DESC) {
+        } else if (directionSelected == DESC) {
             Integer lastPrice = Integer.MAX_VALUE;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
                 if (lastPrice < annoncePhotos.getAnnonceEntity().getPrix()) {
@@ -387,7 +400,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private Query loadSortDate() {
         Query query = annoncesReference.orderByChild("datePublication");
-        if (direction == ASC) {
+        if (directionSelected == ASC) {
             Long lastDate = 0L;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
                 if (annoncePhotos.getAnnonceEntity().getDatePublication() > lastDate) {
@@ -395,7 +408,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 }
             }
             query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (direction == DESC) {
+        } else if (directionSelected == DESC) {
             Long lastDate = Long.MAX_VALUE;
             for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
                 if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
@@ -413,7 +426,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             if (dataSnapshot != null && dataSnapshot.getValue() != null) {
                 // Lancement d'une tache pour aller vérifier les annonces déjà reçues
                 LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
-                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sort, direction));
+                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sortSelected, directionSelected));
             }
         }
 
@@ -433,8 +446,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
-        outState.putInt(SAVE_SORT, sort);
-        outState.putInt(SAVE_DIRECTION, direction);
+        outState.putInt(SAVE_SORT, sortSelected);
+        outState.putInt(SAVE_DIRECTION, directionSelected);
     }
 
     @Override
