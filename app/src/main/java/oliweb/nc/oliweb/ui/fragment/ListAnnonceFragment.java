@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
@@ -87,6 +88,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @BindView(R.id.empty_favorite_linear)
     LinearLayout linearLayout;
 
+    @BindView(R.id.constraint_list_annonce)
+    ConstraintLayout constraintLayout;
+
     private String uidUser;
     private String action;
     private AppCompatActivity appCompatActivity;
@@ -158,18 +162,32 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
                 Toast.makeText(appCompatActivity, "Cette annonce vous appartient", Toast.LENGTH_LONG).show();
             } else {
-                viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
-                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG)
-                                .setAction("Mes favoris", v12 -> {
-                                    appCompatActivity.getSupportFragmentManager()
-                                            .beginTransaction()
-                                            .replace(R.id.main_frame, ListAnnonceFragment.getInstance(uidCurrentUser, ACTION_FAVORITE))
-                                            .addToBackStack(null)
-                                            .commit();
-                                })
-                                .show())
-                        .subscribe();
+                if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
+                    // Suppression des favoris
+                    viewModel.removeFromFavorite(uidCurrentUser, annoncePhotos)
+                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(atomicBoolean -> {
+                                if (atomicBoolean.get()) {
+                                    Snackbar.make(constraintLayout, "Annonce retirée des favoris", Snackbar.LENGTH_LONG).show();
+                                }
+                            })
+                            .subscribe();
+                } else {
+                    // Ajout dans les favoris
+                    viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
+                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .doOnSuccess(annonceEntity -> Snackbar.make(constraintLayout, "Annonce bien ajoutée aux favoris", Snackbar.LENGTH_LONG)
+                                    .setAction("Mes favoris", v12 ->
+                                            appCompatActivity.getSupportFragmentManager()
+                                                    .beginTransaction()
+                                                    .replace(R.id.main_frame, ListAnnonceFragment.getInstance(uidCurrentUser, ACTION_FAVORITE))
+                                                    .addToBackStack(null)
+                                                    .commit()
+                                    )
+                                    .show())
+                            .subscribe();
+                }
             }
         }
     };

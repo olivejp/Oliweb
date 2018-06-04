@@ -19,11 +19,15 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -38,6 +42,8 @@ public class MainActivityViewModel extends AndroidViewModel {
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private AnnonceRepository annonceRepository;
     private ChatRepository chatRepository;
+    private PhotoRepository photoRepository;
+    private FirebasePhotoStorage firebasePhotoStorage;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
 
@@ -46,6 +52,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
+        firebasePhotoStorage = FirebasePhotoStorage.getInstance(application.getApplicationContext());
         chatRepository = ChatRepository.getInstance(application.getApplicationContext());
         firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
     }
@@ -60,7 +68,6 @@ public class MainActivityViewModel extends AndroidViewModel {
             shouldAskQuestion = new MutableLiveData<>();
         }
         shouldAskQuestion.setValue(new AtomicBoolean(false));
-
         if (uidUtilisateur != null) {
             firebaseAnnonceRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
         }
@@ -112,6 +119,31 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
         return this.chatRepository.countAllChatsByUser(uidUser, status);
+    }
+
+    public Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
+        return Single.create(emitter ->
+                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(annoncePhotos1 -> {
+                                    if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+                                        // Suppression de toutes les photos
+                                        for (PhotoEntity photo : annoncePhotos1.getPhotos()) {
+                                            // Suppression du device
+                                            MediaUtility.deletePhotoFromDevice(getApplication().getContentResolver(), photo);
+
+                                            // Suppression de la DB
+                                            photoRepository.delete(photo);
+                                        }
+                                    }
+                                    Log.d(TAG, "Starting removeFromFavorite with uidUser : " + uidUser + " annoncePhotos1 : " + annoncePhotos1);
+                                    annonceRepository.removeFromFavorite(uidUser, annoncePhotos1);
+                                    emitter.onSuccess(new AtomicBoolean(true));
+                                }
+                        )
+                        .subscribe()
+        );
     }
 
     /**

@@ -68,7 +68,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * renverra onError dans le cas d'une erreur.
      *
      * @param context
-     * @param uidUser qui veut rajouter cette annonce dans ses favoris
+     * @param uidUser       qui veut rajouter cette annonce dans ses favoris
      * @param annoncePhotos qui sera sauvé avec ses photos
      * @return
      */
@@ -85,7 +85,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                             singleSave(annonceEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceEntity1 -> this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos()))
+                                    .doOnSuccess(annonceEntity1 -> {
+                                        this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos());
+                                        emitter.onSuccess(annonceEntity1);
+                                    })
                                     .subscribe();
                         })
                         .subscribe()
@@ -133,6 +136,17 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      */
     public Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce) {
         return this.annonceDao.isAnnonceFavorite(uidUser, uidAnnonce);
+    }
+
+    /**
+     * Retire l'annonce des favoris
+     *
+     * @param uidCurrentUser
+     * @param annoncePhotos
+     * @return
+     */
+    public void removeFromFavorite(String uidCurrentUser, AnnoncePhotos annoncePhotos) {
+        annonceDao.deleteFromFavorite(uidCurrentUser, annoncePhotos.getAnnonceEntity().getUid());
     }
 
     /**
