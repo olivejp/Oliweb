@@ -28,9 +28,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+
+import java.util.HashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -91,10 +96,13 @@ public class MainActivity extends AppCompatActivity
     private TextView profileEmail;
     private Menu navigationViewMenu;
 
-    private FirebaseUser mFirebaseUser;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseDynamicLinks mFirebaseDynamicLinks;
+    private FirebaseRemoteConfig mFirebaseConfig;
+
+    private FirebaseUser mFirebaseUser;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+
     private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
     private boolean dynamicLinkProcessed = false;
@@ -139,6 +147,12 @@ public class MainActivity extends AppCompatActivity
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseDynamicLinks = FirebaseDynamicLinks.getInstance();
+        mFirebaseConfig = FirebaseRemoteConfig.getInstance();
+        mFirebaseConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(true)
+                .build());
+
+        initConfigDefaultValues();
 
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -168,6 +182,15 @@ public class MainActivity extends AppCompatActivity
             listChatFragment = (ListChatFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CHAT);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
         }
+    }
+
+    private void initConfigDefaultValues() {
+        HashMap<String, Object> defaults = new HashMap<>();
+        defaults.put("column_number_portrait", 2);
+        defaults.put("column_number_landscape", 3);
+        mFirebaseConfig.setDefaults(defaults);
+        final Task<Void> fetch = mFirebaseConfig.fetch(0);
+        fetch.addOnSuccessListener(aVoid -> mFirebaseConfig.activateFetched());
     }
 
     @Override
