@@ -98,7 +98,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
         return Single.create(emitter -> findById(entity.getId())
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)
-                .doOnSuccess(chatEntityRead ->
+                .doOnSuccess(entityRead ->
                         updateSingle(entity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)

@@ -174,10 +174,10 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     /**
-     * Insert new message into local DB
+     * Insert new message into local DB and update the last message in the chat
      *
-     * @param message
-     * @return
+     * @param message String to insert as a new message in the loca DB
+     * @return True if insertion is successful, false otherwise
      */
     public Single<AtomicBoolean> saveMessage(String message) {
         Log.d(TAG, "saveMessage message : " + message);
@@ -192,7 +192,18 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 messageRepository.singleSave(messageEntity)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(entity -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .doOnSuccess(entity -> {
+                            // Update the last message in the chat
+                            chatRepository.findById(selectedIdChat)
+                                    .doOnError(emitter::onError)
+                                    .doOnSuccess(chatEntity -> {
+                                        chatEntity.setLastMessage(message);
+                                        chatRepository.update(chatEntity);
+                                        emitter.onSuccess(new AtomicBoolean(true));
+                                    })
+                                    .subscribe();
+
+                        })
                         .subscribe()
         );
     }
