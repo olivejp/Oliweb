@@ -89,6 +89,7 @@ dependencies {
     // LeakCanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+    implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha02'
 }
 
 apply plugin: 'com.google.gms.google-services'
