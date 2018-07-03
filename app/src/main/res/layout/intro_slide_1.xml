@@ -9,38 +9,49 @@
         android:id="@+id/title_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/slide_title"
-        android:layout_marginTop="100dp"
-        android:text="Bienvenue sur Colis NC"
+        android:text="Bienvenue sur"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_title"
         android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/title_application"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <TextView
+        android:id="@+id/title_application"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/slide_title"
+        android:fontFamily="@font/dancing_font_family"
+        android:text="Oliweb"
+        android:textColor="@android:color/white"
+        android:textSize="72sp"
+        android:textStyle="bold"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/title_slide_1" />
 
     <ImageView
-        android:id="@+id/img_aftership"
+        android:id="@+id/img_heart"
         android:layout_width="@dimen/img_width_height"
         android:layout_height="@dimen/img_width_height"
-        android:layout_marginTop="50dp"
+        android:contentDescription=""
         android:elevation="0dp"
-        app:srcCompat="@drawable/ic_favorite_border_grey_900_48dp"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_slide_1" />
-
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_application"
+        app:srcCompat="@drawable/ic_favorite_border_grey_900_48dp" />
 
     <TextView
         android:id="@+id/text_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
         android:paddingLeft="@dimen/desc_padding"
         android:paddingRight="@dimen/desc_padding"
-        android:text="Nous interrogeons deux fournisseurs de données pour un maximum d'informations sur vos colis"
+        android:text="Gérer vos petites annonces depuis votre smartphone."
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_desc"
-        app:layout_constraintTop_toBottomOf="@+id/img_aftership" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/img_heart" />
 </android.support.constraint.ConstraintLayout>

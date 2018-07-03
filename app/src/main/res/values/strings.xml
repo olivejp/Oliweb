@@ -110,5 +110,6 @@
     <string name="mes_conversations">Mes conversations</string>
     <string name="title_activity_chats">Mes conversations</string>
     <string name="image_profil_transition">image_profil_transition</string>
+    <string name="description_slide_2">Marre de ce vieux canapé !\nPrenez une photo et vendez le.</string>
 
 </resources>

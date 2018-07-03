@@ -9,8 +9,8 @@
     <dimen name="dots_height">30dp</dimen>
     <dimen name="dots_margin_bottom">20dp</dimen>
     <dimen name="img_width_height">150dp</dimen>
-    <dimen name="slide_title">28dp</dimen>
-    <dimen name="slide_desc">16dp</dimen>
+    <dimen name="slide_title">28sp</dimen>
+    <dimen name="slide_desc">20sp</dimen>
     <dimen name="spacing_tight">4dp</dimen>
     <dimen name="spacing_medium">8dp</dimen>
     <dimen name="spacing_large">16dp</dimen>

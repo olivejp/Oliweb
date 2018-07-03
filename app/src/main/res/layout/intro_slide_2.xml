@@ -10,8 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/slide_title"
-        android:layout_marginTop="100dp"
-        android:text="Arrivé à bon port"
+        android:text="Vendez vos biens inutiles"
+        android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_title"
         android:textStyle="bold"
@@ -24,10 +24,11 @@
         android:layout_width="@dimen/img_width_height"
         android:layout_height="@dimen/img_width_height"
         android:layout_marginTop="50dp"
+        android:contentDescription=""
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
-        app:srcCompat="@drawable/ic_add_white_48dp" />
+        app:srcCompat="@drawable/ic_add_a_photo_white_48dp" />
 
 
     <TextView
@@ -37,9 +38,12 @@
         android:layout_marginTop="50dp"
         android:paddingLeft="@dimen/desc_padding"
         android:paddingRight="@dimen/desc_padding"
-        android:text="Ne perdez plus le fil. Soyez informé à tout moment de l'emplacement de votre colis."
+        android:text="@string/description_slide_2"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_desc"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/img_aftership" />
 </android.support.constraint.ConstraintLayout>
