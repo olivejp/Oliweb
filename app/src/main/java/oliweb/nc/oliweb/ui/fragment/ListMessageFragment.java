@@ -14,10 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,16 +34,14 @@ import oliweb.nc.oliweb.utility.Utility;
 /**
  * Created by 2761oli on 23/03/2018.
  */
-
 public class ListMessageFragment extends Fragment {
     private static final String TAG = ListMessageFragment.class.getName();
-
-    private String uidUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private AppCompatActivity appCompatActivity;
     private MessageAdapter adapter;
     private MyChatsActivityViewModel viewModel;
     private boolean initializeAdapterLater = false;
+    private String uidUser;
 
     private AnnonceEntity annonce;
 
@@ -52,8 +51,8 @@ public class ListMessageFragment extends Fragment {
     @BindView(R.id.text_to_send)
     EditText textToSend;
 
-    @BindView(R.id.button_send_message)
-    ImageView imageSend;
+    @BindView(R.id.text_empty_list)
+    TextView textViewEmpty;
 
     @Override
     public void onAttach(Context context) {
@@ -72,6 +71,11 @@ public class ListMessageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            uidUser = user.getUid();
+        }
     }
 
     @Override
@@ -116,7 +120,14 @@ public class ListMessageFragment extends Fragment {
     }
 
     private void initializeAdapterByIdChat(Long idChat) {
-        viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> adapter.setMessageEntities(listMessages));
+        viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
+            if (listMessages != null && !listMessages.isEmpty()) {
+                adapter.setMessageEntities(listMessages);
+                textViewEmpty.setVisibility(View.GONE);
+            } else {
+                textViewEmpty.setVisibility(View.VISIBLE);
+            }
+        });
         initializeAdapterLater = false;
     }
 
