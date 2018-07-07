@@ -131,7 +131,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment.setText("Création d'un lien de partage");
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity.getUid(), new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

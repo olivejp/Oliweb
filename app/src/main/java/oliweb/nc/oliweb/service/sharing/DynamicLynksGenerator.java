@@ -2,10 +2,13 @@ package oliweb.nc.oliweb.service.sharing;
 
 import android.net.Uri;
 
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
-import com.google.firebase.dynamiclinks.ShortDynamicLink;
+
+import java.util.List;
+
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 
 import static oliweb.nc.oliweb.utility.Constants.OLIWEB_ANNONCE_VIEW_PATH;
 import static oliweb.nc.oliweb.utility.Constants.OLIWEB_DYNAMIC_LINK_DOMAIN;
@@ -22,18 +25,29 @@ public class DynamicLynksGenerator {
 
     /**
      * @param uidUser
-     * @param uidAnnonce
+     * @param annonce
      * @param dynamicLinkListener
      * @return
      */
-    public static Task<ShortDynamicLink> generateShortLink(String uidUser, String uidAnnonce, DynamicLinkListener dynamicLinkListener) {
-        String generatedLink = generateLink(uidUser, uidAnnonce);
-        return FirebaseDynamicLinks.getInstance()
+    public static void generateShortLink(String uidUser, AnnonceEntity annonce, List<PhotoEntity> listPhoto, DynamicLinkListener dynamicLinkListener) {
+        String generatedLink = generateLink(uidUser, annonce.getUid());
+        Uri photoUri = null;
+
+        if (listPhoto != null && !listPhoto.isEmpty()) {
+            photoUri = Uri.parse(listPhoto.get(0).getFirebasePath());
+        }
+
+        FirebaseDynamicLinks.getInstance()
                 .createDynamicLink()
                 .setLink(Uri.parse(generatedLink))
                 .setDynamicLinkDomain(OLIWEB_DYNAMIC_LINK_DOMAIN)
                 .setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
                 .setIosParameters(new DynamicLink.IosParameters.Builder(generatedLink).build())
+                .setSocialMetaTagParameters(new DynamicLink.SocialMetaTagParameters.Builder()
+                        .setTitle(annonce.getTitre())
+                        .setDescription(annonce.getDescription())
+                        .setImageUrl(photoUri)
+                        .build())
                 .buildShortDynamicLink()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
