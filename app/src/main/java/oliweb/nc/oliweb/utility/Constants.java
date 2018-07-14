@@ -7,7 +7,7 @@ public class Constants {
     public static final String PARAM_CRE = "CRE";
     public static final int MAX_SIZE = 512;
 
-    public static final int PER_PAGE_REQUEST = 20;
+    public static final int PER_PAGE_REQUEST = 10;
 
     public static final String FIREBASE_DB_TIME_REF = "timestamp";
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
