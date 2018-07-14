@@ -1,7 +1,5 @@
 package oliweb.nc.oliweb;
 
-import android.util.Log;
-
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -9,9 +7,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -22,7 +18,7 @@ import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 public class ElasticsearchRequestBuilderUnitTest {
 
     @Test
-    public void test_elasticsearch_query_builder() throws Exception {
+    public void test_elasticsearch_query_builder() {
         ElasticsearchQueryBuilder elasticsearchQueryBuilder = new ElasticsearchQueryBuilder();
         elasticsearchQueryBuilder.setFrom(2);
         elasticsearchQueryBuilder.setSize(10);
@@ -41,28 +37,7 @@ public class ElasticsearchRequestBuilderUnitTest {
     }
 
     @Test
-    public void test_bidon() throws Exception {
-        List<String> list = null;
-        if (list != null && !list.isEmpty()) {
-            for (String sdf : list) {
-                Log.d(";sdf", sdf);
-            }
-        }
-    }
-
-
-    @Test
-    public void test_bidon_2() throws Exception {
-        Map<String, String> urlParam = new HashMap<>();
-        urlParam.put("1","xcfgdgsdf");
-        urlParam.put("2","sdkdfgdfgjf");
-        urlParam.put("3","dfgdsfg dfgs dddsf g");
-        String value = urlParam.toString();
-        Log.d("tag", value);
-    }
-
-    @Test
-    public void test_bidon_3() throws Exception {
+    public void test_bidon_3() {
         List<String> list = new ArrayList<>();
         list.add("1");
         list.add("2");
@@ -77,7 +52,7 @@ public class ElasticsearchRequestBuilderUnitTest {
                 .subscribe(subscriber);
 
         if (!subscriber.awaitTerminalEvent(5, TimeUnit.SECONDS)) {
-            Assert.assertTrue(false);
+            Assert.fail();
         } else {
             subscriber.assertNoErrors();
             subscriber.assertComplete();
