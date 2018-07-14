@@ -124,8 +124,10 @@ public class ListMessageFragment extends Fragment {
             if (listMessages != null && !listMessages.isEmpty()) {
                 adapter.setMessageEntities(listMessages);
                 textViewEmpty.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
             } else {
                 textViewEmpty.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
             }
         });
         initializeAdapterLater = false;

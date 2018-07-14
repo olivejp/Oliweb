@@ -22,9 +22,13 @@
 # Add this global rule
 -keepattributes Signature
 
+-keep class android.support.v7.widget.SearchView { *; }
+
+-keep class oliweb.nc.oliweb.** { *; }
 -keepclassmembers class oliweb.nc.oliweb.** {
   *;
 }
+-dontwarn oliweb.nc.oliweb.**
 
 -keep class com.caverock.** { *; }
 -dontwarn com.caverock.**
