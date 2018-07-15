@@ -111,5 +111,9 @@
     <string name="title_activity_chats">Mes conversations</string>
     <string name="image_profil_transition">image_profil_transition</string>
     <string name="description_slide_2">Marre de ce vieux canapé !\nPrenez une photo et vendez le.</string>
+    <string name="sign_in_required">Un compte est requis</string>
+    <string name="sign_in">Se connecter</string>
+    <string name="dynamic_link_creation">Création d\'un lien de partage</string>
+    <string name="link_share_error">Une erreur n\'a pas permis le partage</string>
 
 </resources>

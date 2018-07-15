@@ -128,7 +128,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
-            loadingDialogFragment.setText("Création d'un lien de partage");
+            loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
             DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
@@ -146,12 +146,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 @Override
                 public void getLinkError() {
                     loadingDialogFragment.dismiss();
-                    Snackbar.make(recyclerView, "Une erreur n'a pas permis le partage", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(recyclerView, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
                 }
             });
         } else {
-            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
-                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
+            Snackbar.make(recyclerView, R.string.sign_in_required, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.sign_in, v1 -> signInActivity.signIn(RC_SIGN_IN))
                     .show();
         }
     };
@@ -165,15 +165,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      */
     private View.OnClickListener onClickListenerFavorite = v -> {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG)
-                    .setAction("Se connecter", v1 -> signInActivity.signIn(RC_SIGN_IN))
+            Snackbar.make(recyclerView, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.sign_in), v1 -> signInActivity.signIn(RC_SIGN_IN))
                     .show();
         } else {
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
             if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
-                Toast.makeText(appCompatActivity, "Cette annonce vous appartient", Toast.LENGTH_LONG).show();
+                Toast.makeText(appCompatActivity, "Action impossible\nCette annonce vous appartient", Toast.LENGTH_LONG).show();
             } else {
                 if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
                     // Suppression des favoris
@@ -190,7 +190,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     // Ajout dans les favoris
                     viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnSuccess(annonceEntity -> Snackbar.make(constraintLayout, "Annonce bien ajoutée aux favoris", Snackbar.LENGTH_LONG)
+                            .doOnSuccess(annonceEntity -> Snackbar.make(constraintLayout, "Annonce ajoutée aux favoris", Snackbar.LENGTH_LONG)
                                     .setAction("Mes favoris", v12 ->
                                             appCompatActivity.getSupportFragmentManager()
                                                     .beginTransaction()
@@ -422,8 +422,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private ValueEventListener valueEventListener = new ValueEventListener() {
         @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            if (dataSnapshot.getValue() != null) {
                 // Lancement d'une tache pour aller vérifier les annonces déjà reçues
                 LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
                 loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sortSelected, directionSelected));
@@ -431,7 +431,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
 
         @Override
-        public void onCancelled(DatabaseError databaseError) {
+        public void onCancelled(@NonNull DatabaseError databaseError) {
             // Do nothing
         }
     };

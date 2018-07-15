@@ -167,7 +167,7 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @param uidAnnonce
      * @return
      */
-    public Maybe<AnnoncePhotos> saveToFavorite(String uidUser, String uidAnnonce) {
+    public Maybe<AnnoncePhotos> getFromFirebaseAndSaveToFavorite(String uidUser, String uidAnnonce) {
         return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnoncePhotos)
@@ -175,4 +175,9 @@ public class MainActivityViewModel extends AndroidViewModel {
                 .flatMapMaybe(annonceEntity -> annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce));
     }
 
+    public Maybe<AnnoncePhotos> getFromFirebaseByUidAnnonce(String uidAnnonce) {
+        return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .map(AnnonceConverter::convertDtoToAnnoncePhotos);
+    }
 }

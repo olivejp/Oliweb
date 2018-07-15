@@ -116,7 +116,7 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annoncePhotos.getAnnonceEntity().getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
+        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf"));
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setBackground(null);

@@ -364,21 +364,16 @@ public class MainActivity extends AppCompatActivity
         viewModel.updateSort(sort);
     }
 
-    // TODO : Finir l'intégration de Dynamic Links
-    // Pour le moment je boucle sans cesse car getDynamicLink ne clear pas les datas de l'intent.
     private void catchDynamicLink() {
         mFirebaseDynamicLinks.getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {
-                    Uri deepLink = null;
                     if (data != null && data.getLink() != null && !dynamicLinkProcessed) {
-                        deepLink = data.getLink();
+                        Uri deepLink = data.getLink();
                         String uidAnnonce = deepLink.getLastPathSegment();
                         String from = deepLink.getQueryParameter("from");
-                        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-                        if (uidUser != null && uidAnnonce != null) {
-                            // On enregistre l'annonce dans nos favoris.
+                        if (uidAnnonce != null) {
                             dynamicLinkProcessed = true;
-                            viewModel.saveToFavorite(uidUser, uidAnnonce)
+                            viewModel.getFromFirebaseByUidAnnonce(uidAnnonce)
                                     .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                                     .doOnComplete(() -> Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show())
                                     .doOnSuccess(this::callAnnonceDetailActivity)
