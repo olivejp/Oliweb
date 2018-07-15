@@ -9,7 +9,6 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 
 /**
@@ -24,7 +23,6 @@ public class AnnonceFirebaseSender {
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private PhotoFirebaseSender photoFirebaseSender;
     private AnnonceFullRepository annonceFullRepository;
 
@@ -35,7 +33,6 @@ public class AnnonceFirebaseSender {
         if (instance == null) {
             instance = new AnnonceFirebaseSender();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.photoRepository = PhotoRepository.getInstance(context);
             instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
             instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
             instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);

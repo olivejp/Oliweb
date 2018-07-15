@@ -103,6 +103,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private ActionBar actionBar;
     private SignInActivity signInActivity;
     private LoadingDialogFragment loadingDialogFragment;
+    private EndlessRecyclerOnScrollListener scrollListener;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -218,8 +219,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return listAnnonceFragment;
     }
 
-    EndlessRecyclerOnScrollListener scrollListener;
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -276,6 +275,29 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return view;
     }
 
+    @Override
+    public void onDestroyView() {
+        GlideApp.get(appCompatActivity).clearMemory();
+        recyclerView.setAdapter(null);
+        recyclerView.removeOnScrollListener(scrollListener);
+        annoncesReference.removeEventListener(valueEventListener);
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
+        outState.putInt(SAVE_SORT, sortSelected);
+        outState.putInt(SAVE_DIRECTION, directionSelected);
+    }
+
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+    }
+
     private void initAccordingToAction() {
         switch (action) {
             case ACTION_FAVORITE:
@@ -313,15 +335,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             default:
                 break;
         }
-    }
-
-    @Override
-    public void onDestroyView() {
-        GlideApp.get(appCompatActivity).clearMemory();
-        recyclerView.setAdapter(null);
-        recyclerView.removeOnScrollListener(scrollListener);
-        annoncesReference.removeEventListener(valueEventListener);
-        super.onDestroyView();
     }
 
     private void changeSortAndUpdateList(Integer newSort) {
@@ -441,20 +454,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(valueEventListener);
     };
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
-        outState.putInt(SAVE_SORT, sortSelected);
-        outState.putInt(SAVE_DIRECTION, directionSelected);
-    }
-
-    @Override
-    public void onRefresh() {
-        swipeRefreshLayout.setRefreshing(true);
-        changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
-    }
 
     public interface SignInActivity {
         void signIn(int requestCode);

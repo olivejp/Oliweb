@@ -126,6 +126,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         Log.d(TAG, "Starting savePhotos annonce : " + annonce);
         for (PhotoEntity photo : currentListPhoto) {
             photo.setIdAnnonce(annonce.getId());
+            if (photo.getStatut().equals(StatusRemote.NOT_TO_SEND)) {
+                photo.setStatut(StatusRemote.TO_SEND);
+            }
         }
         return Single.create(emitter -> {
                     ArrayList<PhotoEntity> list = new ArrayList<>();

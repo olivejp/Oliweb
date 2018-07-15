@@ -57,6 +57,7 @@ import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -517,22 +518,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void displayPhotos(List<PhotoEntity> photoEntities) {
         clearImageViews();
-        if (photoEntities == null || photoEntities.isEmpty()) {
-            return;
-        }
-        viewModel.setCurrentListPhoto(photoEntities);
-        for (PhotoEntity photo : photoEntities) {
-            if (!photo.getStatut().equals(StatusRemote.TO_DELETE)) {
-                boolean insertion = false;
-                int i = 0;
-                while (!insertion && i < arrayImageViews.size()) {
-                    insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
-                    i++;
+        if (photoEntities != null && !photoEntities.isEmpty()) {
+            viewModel.setCurrentListPhoto(photoEntities);
+            for (PhotoEntity photo : photoEntities) {
+                if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
+                    boolean insertion = false;
+                    int i = 0;
+                    while (!insertion && i < arrayImageViews.size()) {
+                        insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
+                        i++;
+                    }
                 }
             }
         }
     }
 
+    // TODO revoir la stratégie de cache
     private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
         ImageView imageView = pair.first;
         FrameLayout frameLayout = pair.second;

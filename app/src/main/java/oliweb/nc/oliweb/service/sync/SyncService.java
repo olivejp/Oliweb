@@ -87,7 +87,7 @@ public class SyncService extends IntentService {
                             break;
                         case ARG_ACTION_SYNC_USER:
                             Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
-                            CoreSync.getInstance(this).synchronizeUser();
+                            CoreSync.getInstance(this).synchronize();
                             break;
                         default:
                             break;

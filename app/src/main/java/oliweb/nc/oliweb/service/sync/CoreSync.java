@@ -35,24 +35,8 @@ public class CoreSync {
         return instance;
     }
 
-    public void synchronize() {
+    void synchronize() {
         Log.d(TAG, "Launch synchronyse");
-        syncToSend();
-        // syncToDelete();
-    }
-
-    public void synchronizeUser() {
-        startSendingUser();
-    }
-
-    /**
-     * Liste toutes les annonces et photos à envoyer
-     */
-    private void syncToSend() {
-        startSendingUser();
-    }
-
-    private void startSendingUser() {
         Log.d(TAG, "Starting startSendingUser");
         utilisateurRepository
                 .getAllUtilisateursByStatus(Utility.allStatusToSend())
@@ -75,5 +59,4 @@ public class CoreSync {
                 )
                 .subscribe();
     }
-
 }

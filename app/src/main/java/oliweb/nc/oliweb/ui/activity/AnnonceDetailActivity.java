@@ -229,7 +229,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-
     @OnClick(R.id.fab_action_message)
     public void actionMessage() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {

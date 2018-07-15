@@ -10,9 +10,9 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
+import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
@@ -26,8 +26,6 @@ public class PhotoFirebaseSender {
 
     private FirebasePhotoStorage firebasePhotoStorage;
     private PhotoRepository photoRepository;
-    private AnnonceRepository annonceRepository;
-    private AnnonceFirebaseSender annonceFirebaseSender;
 
     private PhotoFirebaseSender() {
     }
@@ -37,17 +35,16 @@ public class PhotoFirebaseSender {
             instance = new PhotoFirebaseSender();
             instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
             instance.photoRepository = PhotoRepository.getInstance(context);
-            instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.annonceFirebaseSender = AnnonceFirebaseSender.getInstance(context);
         }
         return instance;
     }
 
-    public Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
+    Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
         Log.d(TAG, "sendPhotosToRemote listPhoto : " + listPhoto);
         return Single.create(emitter ->
                 Observable.fromIterable(listPhoto)
                         .doOnError(emitter::onError)
+                        .filter(photoEntity -> Utility.allStatusToSend().contains(photoEntity.getStatut().getValue()))
                         .concatMap(this::sendPhotoToRemote)
                         .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
                         .subscribe()
@@ -66,10 +63,6 @@ public class PhotoFirebaseSender {
 
     /**
      * Photo bien envoyée, on la passe au statut SEND
-     *
-     * @param photoEntity
-     * @param downloadUrl
-     * @return
      */
     private Observable<PhotoEntity> markPhotoAsSend(final PhotoEntity photoEntity, String downloadUrl) {
         Log.d(TAG, "Mark photo has been Send photo : " + photoEntity + " downloadUrl : " + downloadUrl);
@@ -82,8 +75,6 @@ public class PhotoFirebaseSender {
 
     /**
      * Cas d'une erreur dans l'envoi, on passe la photo en statut Failed To Send.
-     *
-     * @param photoEntity
      */
     private void markPhotoAsFailedToSend(final PhotoEntity photoEntity) {
         Log.d(TAG, "Mark photo Failed To Send message : " + photoEntity);
