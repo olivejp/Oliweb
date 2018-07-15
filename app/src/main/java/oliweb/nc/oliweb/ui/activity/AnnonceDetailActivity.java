@@ -49,7 +49,6 @@ import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 public class AnnonceDetailActivity extends AppCompatActivity {
 
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
-    public static final String ARG_UID_ANNONCE = "ARG_UID_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
     public static final int REQUEST_CALL_PHONE_CODE = 100;
     public static final int RESULT_PHONE_CALL = 101;
@@ -140,14 +139,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                     if (seller != null) {
                         initActions(annoncePhotos.getAnnonceEntity());
                         if (seller.getPhotoUrl() != null) {
-                            imageProfilSeller.setOnClickListener(v -> {
-                                ProfilFragment fragment = ProfilFragment.getInstance(annoncePhotos.getAnnonceEntity().getUidUser(), false);
-                                getSupportFragmentManager()
-                                        .beginTransaction()
-                                        .add(R.id.frame_annonce_detail, fragment)
-                                        .addToBackStack(null)
-                                        .commit();
-                            });
                             GlideApp.with(imageProfilSeller)
                                     .load(seller.getPhotoUrl())
                                     .circleCrop()
