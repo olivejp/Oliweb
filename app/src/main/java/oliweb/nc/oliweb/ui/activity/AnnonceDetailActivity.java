@@ -55,7 +55,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     public static final int RESULT_PHONE_CALL = 101;
 
     private static final int REQUEST_CODE_LOGIN = 100;
-    private static final int CALL_POST_ANNONCE = 200;
+    private static final int REQUEST_CALL_POST_ANNONCE = 200;
 
     @BindView(R.id.collapsing_toolbar_detail)
     CollapsingToolbarLayout collapsingToolbarLayout;
@@ -180,6 +180,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_LOGIN && resultCode == RESULT_OK) {
             callListMessageFragment();
         }
+
+        if (requestCode == REQUEST_CALL_POST_ANNONCE && resultCode == RESULT_OK) {
+            finish();
+        }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -278,7 +282,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUid());
         intent.putExtras(bundle);
-        startActivityForResult(intent, CALL_POST_ANNONCE);
+        startActivityForResult(intent, REQUEST_CALL_POST_ANNONCE);
     }
 
     /**
