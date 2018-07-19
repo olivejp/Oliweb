@@ -212,11 +212,10 @@ public class MainActivity extends AppCompatActivity
 
         // On attache la searchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        if (searchManager != null) {
-            searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        if (searchManager != null && searchView != null) {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         }
-
         return true;
     }
 
