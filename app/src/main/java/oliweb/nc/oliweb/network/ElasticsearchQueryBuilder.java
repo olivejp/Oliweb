@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * Created by orlanth23 on 10/03/2018.
  */
-
 public class ElasticsearchQueryBuilder {
     private JsonObject jsonRequest;
 

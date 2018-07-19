@@ -142,7 +142,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         // Ensuite on va écouter les changements pour cette nouvelle requête
         newRequestRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("no_results").exists()) {
                     liveListAnnonce.postValue(listAnnonce);
                     newRequestRef.removeEventListener(this);
@@ -167,7 +167,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 updateLoadingStatus(false);
             }
         });

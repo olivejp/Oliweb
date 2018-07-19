@@ -202,7 +202,7 @@ public class SearchActivity extends AppCompatActivity {
             int from = currentPage * Constants.PER_PAGE_REQUEST;
             searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
         } else {
-            Toast.makeText(this, "Une connexion est requise pour rechercher", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
         }
     }
 
