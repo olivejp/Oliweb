@@ -242,7 +242,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 makePhoneCall();
             }
         } else {
-            Toast.makeText(AnnonceDetailActivity.this, "Impossible de récupérer les informations du vendeur", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AnnonceDetailActivity.this, R.string.error_cant_retrieve_phone_number, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -257,10 +257,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             try {
                 startActivity(Intent.createChooser(intent, "Envoi d'email..."));
             } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(AnnonceDetailActivity.this, "Pas de client mail installé", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AnnonceDetailActivity.this, R.string.error_no_mail_client_found, Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(AnnonceDetailActivity.this, "Impossible de récupérer les informations du vendeur", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AnnonceDetailActivity.this, R.string.error_cant_retrieve_email, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -282,7 +282,11 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private void makePhoneCall() {
         Intent phoneIntent = new Intent(Intent.ACTION_CALL);
         phoneIntent.setData(Uri.parse("tel:" + seller.getTelephone()));
-        startActivityForResult(phoneIntent, RESULT_PHONE_CALL);
+        try {
+            startActivityForResult(phoneIntent, RESULT_PHONE_CALL);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(AnnonceDetailActivity.this, R.string.error_cant_make_phone_call, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void callListMessageFragment() {
