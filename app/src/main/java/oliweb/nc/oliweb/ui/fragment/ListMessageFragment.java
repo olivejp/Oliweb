@@ -42,6 +42,7 @@ public class ListMessageFragment extends Fragment {
     private MyChatsActivityViewModel viewModel;
     private boolean initializeAdapterLater = false;
     private String uidUser;
+    private LinearLayoutManager linearLayoutManager;
 
     private AnnonceEntity annonce;
 
@@ -86,10 +87,16 @@ public class ListMessageFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         // Init recyclerView
-        LinearLayoutManager linearLayout = new LinearLayoutManager(appCompatActivity);
-        linearLayout.setStackFromEnd(true);
-        recyclerView.setLayoutManager(linearLayout);
+        linearLayoutManager = new LinearLayoutManager(appCompatActivity);
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter();
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
+            }
+        });
         recyclerView.setAdapter(adapter);
 
         // Sur l'action du message, on tente d'envoyer le texte
@@ -125,6 +132,7 @@ public class ListMessageFragment extends Fragment {
                 adapter.setMessageEntities(listMessages);
                 textViewEmpty.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);
+                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
             } else {
                 textViewEmpty.setVisibility(View.VISIBLE);
                 recyclerView.setVisibility(View.GONE);
