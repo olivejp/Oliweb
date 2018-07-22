@@ -1,4 +1,4 @@
- ____________________________________________
+﻿ ____________________________________________
 |                                            |
 |             Service de Messagerie          |
 |____________________________________________|
@@ -17,8 +17,6 @@ Comportement en mode Connecté
 
 Comportement en mode Hors Connexion
 -----------------------------------
-
-
 
 Je veux pouvoir avoir un historique des conversations concernant une annonce en particulier et par auteur.
 Pour chaque conversation je voudrai avoir la photo de l'auteur à côté de la conversation.
@@ -48,3 +46,11 @@ Le service d'alerte permettra de créer des alertes pour prévenir une personne 
 
 Exemple : Si je recherche un téléphone de marque Samsung pour un prix compris entre 0 et 50 000 xpf.
 Je créé donc une alerte pour la catégorie "Technologique" + avec le mot clé : "Samsung" et dont le prix est dans la fourchette 0 - 50 000.
+
+ ____________________________________________
+|                                            |
+|               Service ML Kit               |
+|____________________________________________|
+
+Le service de Machine Learning aurait pu servir à identifier des labels sur les photos prises par les utilisateurs.
+Cependant les labels générés par le ML Kit sont en anglais et ne sont pas toujours pertinents.

@@ -25,6 +25,12 @@ public class ElasticsearchQueryBuilder {
         }
     }
 
+    public ElasticsearchQueryBuilder setTimestamp(Long timestamp) {
+        checkJsonObject();
+        jsonRequest.addProperty("timestamp", timestamp);
+        return this;
+    }
+
     public ElasticsearchQueryBuilder setFrom(int from) {
         checkJsonObject();
         jsonRequest.addProperty("from", from);
