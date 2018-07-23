@@ -45,10 +45,13 @@
             <meta-data
                 android:name="android.app.default_searchable"
                 android:value="oliweb.nc.oliweb.ui.activity.SearchActivity" />
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="oliweb-ec245.firebaseapp.com"
                     android:scheme="http" />
@@ -204,6 +207,8 @@
             android:name=".service.sync.listener.DatabaseSyncListenerService"
             android:enabled="true"
             android:exported="false" />
+
+        <activity android:name=".ui.activity.AdvancedSearchActivity"></activity>
     </application>
 
 </manifest>

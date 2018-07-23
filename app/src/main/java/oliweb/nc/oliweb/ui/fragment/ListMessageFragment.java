@@ -63,7 +63,7 @@ public class ListMessageFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        Utility.hideKeyboard(appCompatActivity);
+        Utility.hideKeyboard(appCompatActivity.getApplicationContext());
         recyclerView.setAdapter(null);
         super.onDestroyView();
     }

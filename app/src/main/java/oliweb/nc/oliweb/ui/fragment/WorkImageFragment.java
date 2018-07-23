@@ -71,7 +71,7 @@ public class WorkImageFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_work_image, container, false);
         ButterKnife.bind(this, rootView);
-        pBitmap = MediaUtility.getBitmapFromUri(getContext(), Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
+        pBitmap = MediaUtility.getBitmapFromUri(this.activity, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
         photo.setImageBitmap(pBitmap);
         Utility.hideKeyboard(this.activity);
         return rootView;
@@ -93,9 +93,6 @@ public class WorkImageFragment extends Fragment {
         if (hasBeenUpdated) {
             if (MediaUtility.saveBitmapToFileProviderUri(activity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
                 viewModel.getUpdatedPhoto().setStatut(StatusRemote.TO_SEND);
-                Toast.makeText(this.activity, "Image mise à jour", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this.activity, "Mise à jour échouée", Toast.LENGTH_LONG).show();
             }
             this.viewModel.updatePhotos();
         }

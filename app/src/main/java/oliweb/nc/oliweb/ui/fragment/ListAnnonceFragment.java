@@ -34,6 +34,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
@@ -41,6 +42,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
+import oliweb.nc.oliweb.ui.activity.AdvancedSearchActivity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -296,6 +298,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+    }
+
+    @OnClick(R.id.fab_advanced_search)
+    public void onClickAdvancedSearch(View v) {
+        Intent intent = new Intent(appCompatActivity, AdvancedSearchActivity.class);
+        startActivity(intent);
     }
 
     private void initAccordingToAction() {

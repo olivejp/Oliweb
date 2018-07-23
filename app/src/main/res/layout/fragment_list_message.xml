@@ -35,7 +35,7 @@
         android:maxLines="3"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/button_send_message" />
+        app:layout_constraintRight_toLeftOf="@+id/button_send_message"/>
 
     <ImageView
         android:id="@+id/button_send_message"
