@@ -190,6 +190,14 @@
                 android:value=".ui.activity.AnnonceDetailActivity" />
         </activity>
         <activity
+            android:name=".ui.activity.AdvancedSearchActivity"
+            android:label="@string/activity_name_advanced_search"
+            android:parentActivityName=".ui.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activity.MainActivity" />
+        </activity>
+        <activity
             android:name=".ui.activity.ProfilActivity"
             android:parentActivityName=".ui.activity.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
@@ -208,7 +216,7 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".ui.activity.AdvancedSearchActivity"></activity>
+
     </application>
 
 </manifest>

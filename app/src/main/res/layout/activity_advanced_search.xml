@@ -1,27 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="10dp"
     tools:context=".ui.activity.AdvancedSearchActivity">
 
+    <TextView
+        android:id="@+id/text_categorie"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="Catégorie"
+        android:textColor="@color/colorAccent"
+        android:textSize="18sp" />
+
     <android.support.v7.widget.AppCompatSpinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:id="@+id/categorie_spinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:elevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_categorie" />
 
-    <Switch
+    <TextView
+        android:id="@+id/with_photos"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="Avec photos"
+        android:textColor="@color/colorAccent"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/text_layout_keywords"
+        app:layout_constraintTop_toBottomOf="@+id/categorie_spinner" />
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/photo_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/categorie_spinner" />
+
+    <android.support.design.widget.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Avec photos" />
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:srcCompat="@drawable/ic_zoom_in_white_48dp" />
 
     <android.support.v7.widget.AppCompatButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Rechercher20" />
+        android:layout_marginBottom="8dp"
+        android:text="Créer une alerte"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-    <android.support.v7.widget.AppCompatButton
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/text_layout_keywords"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColorHint="@color/colorAccent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/photo_switch">
+
+        <android.support.design.widget.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Mots clés" />
+    </android.support.design.widget.TextInputLayout>
+
+    <TextView
+        android:id="@+id/text_price_between"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Créer une alerte" />
+        android:text="Prix"
+        android:textColor="@color/colorAccent"
+        android:textSize="18sp"
+        app:layout_constraintTop_toBottomOf="@id/text_layout_keywords" />
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/text_layout_minimum"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        app:layout_constraintEnd_toStartOf="@id/text_and"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_price_between">
+
+        <android.support.design.widget.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Minimum"
+            android:inputType="number"
+            android:maxLength="12" />
+    </android.support.design.widget.TextInputLayout>
+
+    <TextView
+        android:id="@+id/text_and"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="et"
+        app:layout_constraintBottom_toBottomOf="@id/text_layout_minimum"
+        app:layout_constraintEnd_toStartOf="@id/text_layout_maximum"
+        app:layout_constraintStart_toEndOf="@id/text_layout_minimum"
+        app:layout_constraintTop_toBottomOf="@id/text_price_between" />
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/text_layout_maximum"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/text_and"
+        app:layout_constraintTop_toBottomOf="@id/text_price_between">
+
+        <android.support.design.widget.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Maximum"
+            android:inputType="number"
+            android:maxLength="12" />
+    </android.support.design.widget.TextInputLayout>
+
 
 </android.support.constraint.ConstraintLayout>

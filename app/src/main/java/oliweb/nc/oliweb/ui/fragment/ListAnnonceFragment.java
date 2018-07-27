@@ -304,6 +304,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onClickAdvancedSearch(View v) {
         Intent intent = new Intent(appCompatActivity, AdvancedSearchActivity.class);
         startActivity(intent);
+        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
     private void initAccordingToAction() {

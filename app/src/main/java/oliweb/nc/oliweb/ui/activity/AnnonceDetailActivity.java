@@ -40,7 +40,6 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
-import oliweb.nc.oliweb.ui.fragment.ProfilFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 

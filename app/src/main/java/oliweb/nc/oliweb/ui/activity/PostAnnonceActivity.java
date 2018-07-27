@@ -16,6 +16,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
@@ -89,7 +90,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String mode;
 
     @BindView(R.id.spinner_categorie)
-    Spinner spinnerCategorie;
+    AppCompatSpinner spinnerCategorie;
 
     @BindView(R.id.edit_titre_annonce)
     EditText textViewTitre;
