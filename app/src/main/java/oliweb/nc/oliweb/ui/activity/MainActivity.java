@@ -27,7 +27,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -42,7 +41,6 @@ import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -65,7 +63,7 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener, ListAnnonceFragment.SignInActivity {
+        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -237,9 +235,9 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_connect) {
             if (mFirebaseUser == null) {
-                signIn(RC_SIGN_IN);
+                Utility.signIn(this, RC_SIGN_IN);
             } else {
-                signOut();
+                Utility.signOut(getApplicationContext());
             }
         } else if (id == R.id.nav_settings) {
             Intent intent = new Intent();
@@ -266,29 +264,6 @@ public class MainActivity extends AppCompatActivity
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    /**
-     * Remise à blanc des champs spécifiques à la connexion
-     */
-    @Override
-    public void signOut() {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(task -> {
-                    SharedPreferencesHelper.getInstance(MainActivity.this).setUidFirebaseUser(null);
-                    Toast.makeText(this, "Vous êtes déconnecté", Toast.LENGTH_SHORT).show();
-                });
-
-    }
-
-    @Override
-    public void signIn(int requestCode) {
-        if (NetworkReceiver.checkConnection(this)) {
-            Utility.callLoginUi(this, requestCode);
-        } else {
-            Toast.makeText(this, "Une connexion est requise pour se connecter", Toast.LENGTH_LONG).show();
-        }
     }
 
     @Override

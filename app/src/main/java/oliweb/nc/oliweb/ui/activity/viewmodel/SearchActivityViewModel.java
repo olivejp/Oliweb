@@ -20,18 +20,27 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUtility;
 import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.ElasticsearchResult;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
+import static oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel.AddRemoveFromFavorite.ADD_SUCCESSFUL;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel.AddRemoveFromFavorite.ONE_OF_YOURS;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel.AddRemoveFromFavorite.REMOVE_FAILED;
+import static oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel.AddRemoveFromFavorite.REMOVE_SUCCESSFUL;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
@@ -45,6 +54,13 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = SearchActivityViewModel.class.getName();
 
+    public enum AddRemoveFromFavorite {
+        ONE_OF_YOURS,
+        REMOVE_SUCCESSFUL,
+        REMOVE_FAILED,
+        ADD_SUCCESSFUL
+    }
+
     private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
 
     private ArrayList<AnnoncePhotos> listAnnonce;
@@ -52,6 +68,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
     private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
+    private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private Gson gson = new Gson();
     private DatabaseReference requestReference;
     private ValueEventListener requestValueListener = new ValueEventListener() {
@@ -89,6 +107,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
+        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
+        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
         genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {
@@ -96,7 +116,33 @@ public class SearchActivityViewModel extends AndroidViewModel {
     }
 
     public Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting saveToFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
+    }
+
+    public Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+        Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
+        return Single.create(emitter ->
+                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
+                        .doOnError(emitter::onError)
+                        .doOnSuccess(annoncePhotos1 -> {
+                                    if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+                                        // Suppression de toutes les photos
+                                        for (PhotoEntity photo : annoncePhotos1.getPhotos()) {
+                                            // Suppression du device
+                                            MediaUtility.deletePhotoFromDevice(getApplication().getContentResolver(), photo);
+
+                                            // Suppression de la DB
+                                            photoRepository.delete(photo);
+                                        }
+                                    }
+                                    Log.d(TAG, "Starting removeFromFavorite with uidUser : " + uidUser + " annoncePhotos1 : " + annoncePhotos1);
+                                    annonceRepository.removeFromFavorite(uidUser, annoncePhotos1);
+                                    emitter.onSuccess(new AtomicBoolean(true));
+                                }
+                        )
+                        .subscribe()
+        );
     }
 
     public LiveData<ArrayList<AnnoncePhotos>> getLiveListAnnonce() {
@@ -116,8 +162,29 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return loading;
     }
 
-    public Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce) {
-        return annonceRepository.isAnnonceFavorite(uidUser, uidAnnonce);
+    public Single<AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidCurrentUser, AnnoncePhotos annoncePhotos) {
+        return new Single<AddRemoveFromFavorite>() {
+            @Override
+            protected void subscribeActual(SingleObserver<? super AddRemoveFromFavorite> observer) {
+                if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
+                    observer.onSuccess(ONE_OF_YOURS);
+                } else {
+                    if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
+                        removeFromFavorite(uidCurrentUser, annoncePhotos)
+                                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                                .doOnError(observer::onError)
+                                .doOnSuccess(atomicBoolean -> observer.onSuccess(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
+                                .subscribe();
+                    } else {
+                        saveToFavorite(uidCurrentUser, annoncePhotos)
+                                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                                .doOnError(observer::onError)
+                                .doOnSuccess(annonceEntity -> observer.onSuccess(ADD_SUCCESSFUL))
+                                .subscribe();
+                    }
+                }
+            }
+        };
     }
 
     private void updateLoadingStatus(boolean status) {

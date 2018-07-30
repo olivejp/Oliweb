@@ -40,6 +40,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.DESC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
@@ -52,6 +53,8 @@ public class SearchActivity extends AppCompatActivity {
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
+
+    private static final String ACTION_FAVORITE = "ACTION_FAVORITE";
     private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
 
     @BindView(R.id.recycler_search_annonce)
@@ -276,11 +279,34 @@ public class SearchActivity extends AppCompatActivity {
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-        searchActivityViewModel.saveToFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(annonceEntity -> Snackbar.make(recyclerView, "Annonce bien ajoutée au favoris", Snackbar.LENGTH_LONG).show())
-                .subscribe();
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Snackbar.make(recyclerView, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
+                    .show();
+        } else {
+            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            searchActivityViewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                    .doOnError(e -> Log.e(TAG, e.getMessage(), e))
+                    .doOnSuccess(codeResult -> {
+                        switch (codeResult) {
+                            case ONE_OF_YOURS:
+                                Toast.makeText(this, "Action impossible\nCette annonce vous appartient", Toast.LENGTH_LONG).show();
+                                break;
+                            case ADD_SUCCESSFUL:
+                                Snackbar.make(recyclerView, "Annonce bien ajoutée aux favoris", Snackbar.LENGTH_LONG).show();
+                                break;
+                            case REMOVE_SUCCESSFUL:
+                                Snackbar.make(recyclerView, "Annonce retirée des favoris", Snackbar.LENGTH_LONG).show();
+                                break;
+                            case REMOVE_FAILED:
+                                Toast.makeText(this, "Suppression des favoris a échouée", Toast.LENGTH_LONG).show();
+                                break;
+                            default:
+                                break;
+                        }
+                    })
+                    .subscribe();
+        }
     };
 }
