@@ -26,7 +26,6 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
@@ -43,7 +42,6 @@ public class MainActivityViewModel extends AndroidViewModel {
     private AnnonceRepository annonceRepository;
     private ChatRepository chatRepository;
     private PhotoRepository photoRepository;
-    private FirebasePhotoStorage firebasePhotoStorage;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
 
@@ -53,7 +51,6 @@ public class MainActivityViewModel extends AndroidViewModel {
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
-        firebasePhotoStorage = FirebasePhotoStorage.getInstance(application.getApplicationContext());
         chatRepository = ChatRepository.getInstance(application.getApplicationContext());
         firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
     }

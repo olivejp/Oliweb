@@ -101,7 +101,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int sortSelected = SORT_DATE;
     private int directionSelected;
     private ActionBar actionBar;
-    private SignInActivity signInActivity;
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
 
@@ -152,7 +151,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             });
         } else {
             Snackbar.make(recyclerView, R.string.sign_in_required, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.sign_in, v1 -> signInActivity.signIn(RC_SIGN_IN))
+                    .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         }
     };
@@ -167,7 +166,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerFavorite = v -> {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Snackbar.make(recyclerView, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.sign_in), v1 -> signInActivity.signIn(RC_SIGN_IN))
+                    .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         } else {
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
@@ -224,7 +223,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         super.onAttach(context);
         try {
             appCompatActivity = (AppCompatActivity) context;
-            signInActivity = (SignInActivity) context;
         } catch (ClassCastException e) {
             Log.e(TAG, "Context should be an AppCompatActivity and implements SignInActivity", e);
         }
@@ -454,10 +452,4 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(valueEventListener);
     };
-
-    public interface SignInActivity {
-        void signIn(int requestCode);
-
-        void signOut();
-    }
 }
