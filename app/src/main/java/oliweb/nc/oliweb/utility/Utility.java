@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 
@@ -22,12 +23,14 @@ import java.util.Date;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
@@ -39,6 +42,26 @@ public class Utility {
 
     private static final String TAG = Utility.class.getName();
     public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
+
+    private Utility() {
+    }
+
+    public static void signOut(Context context) {
+        AuthUI.getInstance()
+                .signOut(context)
+                .addOnCompleteListener(task -> {
+                    SharedPreferencesHelper.getInstance(context).setUidFirebaseUser(null);
+                    Toast.makeText(context, "Vous êtes déconnecté", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    public static void signIn(AppCompatActivity appCompatActivity, int requestCode) {
+        if (NetworkReceiver.checkConnection(appCompatActivity)) {
+            Utility.callLoginUi(appCompatActivity, requestCode);
+        } else {
+            Toast.makeText(appCompatActivity, "Une connexion est requise pour se connecter", Toast.LENGTH_LONG).show();
+        }
+    }
 
     public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
