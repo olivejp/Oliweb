@@ -116,6 +116,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return listChats.size();
     }
 
+    // TODO , ce n'est pas à l'adapter de faire la recherche de la photo, il faut effectuer le dl des photos en arrière plan et ne fournir que l'url à l'adapter
     private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
         String uidUser = firebaseUser.getUid();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
