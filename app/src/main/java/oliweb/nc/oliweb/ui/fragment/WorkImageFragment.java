@@ -14,7 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,7 +34,7 @@ public class WorkImageFragment extends Fragment {
     ImageView photo;
 
     private Bitmap pBitmap;
-    private AppCompatActivity activity;
+    private AppCompatActivity appCompatActivity;
     private PostAnnonceActivityViewModel viewModel;
     private boolean hasBeenUpdated = false;
     private Matrix matrix;
@@ -43,26 +42,26 @@ public class WorkImageFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        this.activity = (AppCompatActivity) context;
+        this.appCompatActivity = (AppCompatActivity) context;
         matrix = new Matrix();
         matrix.postRotate(-90);
-        if (this.activity.getSupportActionBar() != null) {
-            this.activity.getSupportActionBar().hide();
+        if (this.appCompatActivity.getSupportActionBar() != null) {
+            this.appCompatActivity.getSupportActionBar().hide();
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        if (this.activity.getSupportActionBar() != null) {
-            this.activity.getSupportActionBar().show();
+        if (this.appCompatActivity.getSupportActionBar() != null) {
+            this.appCompatActivity.getSupportActionBar().show();
         }
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel = ViewModelProviders.of(this.activity).get(PostAnnonceActivityViewModel.class);
+        viewModel = ViewModelProviders.of(this.appCompatActivity).get(PostAnnonceActivityViewModel.class);
     }
 
     @Nullable
@@ -71,9 +70,9 @@ public class WorkImageFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_work_image, container, false);
         ButterKnife.bind(this, rootView);
-        pBitmap = MediaUtility.getBitmapFromUri(this.activity, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
+        pBitmap = MediaUtility.getBitmapFromUri(this.appCompatActivity, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
         photo.setImageBitmap(pBitmap);
-        Utility.hideKeyboard(this.activity);
+        Utility.hideKeyboard(this.appCompatActivity);
         return rootView;
     }
 
@@ -91,17 +90,17 @@ public class WorkImageFragment extends Fragment {
     @OnClick(R.id.frag_work_image_button_valid_photo)
     public void onValid(View v) {
         if (hasBeenUpdated) {
-            if (MediaUtility.saveBitmapToFileProviderUri(activity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
+            if (MediaUtility.saveBitmapToFileProviderUri(appCompatActivity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
                 viewModel.getUpdatedPhoto().setStatut(StatusRemote.TO_SEND);
             }
             this.viewModel.updatePhotos();
         }
-        this.activity.getSupportFragmentManager().popBackStackImmediate();
+        this.appCompatActivity.getSupportFragmentManager().popBackStackImmediate();
     }
 
     @OnClick(R.id.frag_work_image_button_delete_photo)
     public void onDelete(View v) {
         viewModel.removePhotoToCurrentList(viewModel.getUpdatedPhoto());
-        this.activity.getSupportFragmentManager().popBackStackImmediate();
+        this.appCompatActivity.getSupportFragmentManager().popBackStackImmediate();
     }
 }

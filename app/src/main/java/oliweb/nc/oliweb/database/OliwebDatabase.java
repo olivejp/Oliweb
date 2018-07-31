@@ -35,7 +35,7 @@ public abstract class OliwebDatabase extends RoomDatabase {
 
     public static synchronized OliwebDatabase getInstance(Context context) {
         if (instance == null) {
-            instance = buildDatabase(context.getApplicationContext());
+            instance = buildDatabase(context);
         }
         return instance;
     }

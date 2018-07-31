@@ -63,7 +63,7 @@ public class ListMessageFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        Utility.hideKeyboard(appCompatActivity.getApplicationContext());
+        Utility.hideKeyboard(appCompatActivity);
         recyclerView.setAdapter(null);
         super.onDestroyView();
     }
@@ -88,15 +88,9 @@ public class ListMessageFragment extends Fragment {
 
         // Init recyclerView
         linearLayoutManager = new LinearLayoutManager(appCompatActivity);
-        linearLayoutManager.setStackFromEnd(true);
+        linearLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter();
-        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
-            }
-        });
         recyclerView.setAdapter(adapter);
 
         // Sur l'action du message, on tente d'envoyer le texte
@@ -127,37 +121,27 @@ public class ListMessageFragment extends Fragment {
     }
 
     private void initializeAdapterByIdChat(Long idChat) {
-        viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
-            if (listMessages != null && !listMessages.isEmpty()) {
-                adapter.setMessageEntities(listMessages);
-                textViewEmpty.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
-                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
-            } else {
-                textViewEmpty.setVisibility(View.VISIBLE);
-                recyclerView.setVisibility(View.GONE);
-            }
-        });
         initializeAdapterLater = false;
+        viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
+            boolean emptyList = listMessages == null || listMessages.isEmpty();
+            textViewEmpty.setVisibility(emptyList ? View.VISIBLE : View.GONE);
+            recyclerView.setVisibility(emptyList ? View.GONE : View.VISIBLE);
+            if (!emptyList) adapter.setMessageEntities(listMessages);
+        });
     }
 
     @OnClick(R.id.button_send_message)
     public void clickOnSendButton(View v) {
         final String messageToSend = textToSend.getText().toString();
         textToSend.setText("");
-        if (messageToSend.isEmpty()) {
-            return;
-        }
+        if (messageToSend.isEmpty()) return;
 
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_CHAT:
                 viewModel.saveMessage(messageToSend)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(atomicBoolean -> {
-                            Log.d(TAG, "Message correctement sauvegardé");
-                            recyclerView.smoothScrollToPosition(adapter.getItemCount());
-                        })
+                        .doOnSuccess(atomicBoolean -> Log.d(TAG, "Message correctement sauvegardé"))
                         .subscribe();
                 break;
             case PAR_ANNONCE:
@@ -172,9 +156,9 @@ public class ListMessageFragment extends Fragment {
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                             .doOnSuccess(atomicBoolean -> {
                                                 Log.d(TAG, "Message correctement sauvegardé");
-                                                if (initializeAdapterLater) {
+                                                if (initializeAdapterLater)
                                                     initializeAdapterByIdChat(chatEntity.getIdChat());
-                                                }
+
                                             })
                                             .subscribe()
                             )
