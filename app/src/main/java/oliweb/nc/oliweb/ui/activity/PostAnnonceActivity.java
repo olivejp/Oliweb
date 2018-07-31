@@ -27,7 +27,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,7 +49,6 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;

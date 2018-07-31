@@ -13,8 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-
 import java.util.List;
 
 import oliweb.nc.oliweb.R;

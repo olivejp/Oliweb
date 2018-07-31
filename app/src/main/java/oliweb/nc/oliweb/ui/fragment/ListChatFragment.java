@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -50,7 +51,7 @@ public class ListChatFragment extends Fragment {
 
     private MyChatsActivityViewModel viewModel;
 
-    private ChatAdapter chatAdapter;
+    private FirebaseUser firebaseUser;
 
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
@@ -93,8 +94,14 @@ public class ListChatFragment extends Fragment {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
 
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null) {
+            Log.e(TAG, "ListChatFragment ne doit pas pouvoir être ouvert sans un utilisateur connecté");
+            return;
+        }
+
         if (viewModel.getTypeRechercheChat() == null) {
-            viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            viewModel.rechercheChatByUidUtilisateur(firebaseUser.getUid());
         }
     }
 
@@ -113,7 +120,7 @@ public class ListChatFragment extends Fragment {
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        chatAdapter = new ChatAdapter(onClickListener, onPopupClickListener);
+        ChatAdapter chatAdapter = new ChatAdapter(firebaseUser, onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);

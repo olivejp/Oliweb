@@ -106,4 +106,19 @@ public class ChatFirebase {
     public void setTitreAnnonce(String titreAnnonce) {
         this.titreAnnonce = titreAnnonce;
     }
+
+    @Override
+    public String toString() {
+        return "ChatFirebase{" +
+                "uid='" + uid + '\'' +
+                ", uidBuyer='" + uidBuyer + '\'' +
+                ", uidSeller='" + uidSeller + '\'' +
+                ", uidAnnonce='" + uidAnnonce + '\'' +
+                ", lastMessage='" + lastMessage + '\'' +
+                ", titreAnnonce='" + titreAnnonce + '\'' +
+                ", creationTimestamp=" + creationTimestamp +
+                ", updateTimestamp=" + updateTimestamp +
+                ", members=" + members +
+                '}';
+    }
 }

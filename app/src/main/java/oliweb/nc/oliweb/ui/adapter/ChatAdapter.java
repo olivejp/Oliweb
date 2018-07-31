@@ -10,7 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,19 +35,18 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 /**
  * Created by 2761oli on 23/03/2018.
  */
-
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-    private static final String TAG = ChatAdapter.class.getName();
 
     private View.OnClickListener clickListener;
     private View.OnClickListener popupClickListener;
     private List<ChatEntity> listChats;
+    private FirebaseUser firebaseUser;
 
-    public ChatAdapter(View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
+    public ChatAdapter(@NonNull FirebaseUser firebaseUser, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
         this.popupClickListener = popupClickListener;
         this.listChats = new ArrayList<>();
+        this.firebaseUser = firebaseUser;
     }
 
     @NonNull
@@ -102,7 +102,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     ChatEntity newChat = newListChats.get(newItemPosition);
                     ChatEntity oldChat = listChats.get(oldItemPosition);
                     return newChat.getUidChat().equals(oldChat.getUidChat())
-                            && ((newChat.getLastMessage() != null && oldChat.getLastMessage() != null && (newChat.getLastMessage().equals(oldChat.getLastMessage()))))
+                            && (newChat.getLastMessage() != null && oldChat.getLastMessage() != null && (newChat.getLastMessage().equals(oldChat.getLastMessage())))
                             && ((newChat.getUpdateTimestamp() != null && oldChat.getUpdateTimestamp() != null) && (newChat.getUpdateTimestamp().equals(oldChat.getUpdateTimestamp())));
                 }
             });
@@ -117,38 +117,37 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            String uidUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-            if (model.getUidBuyer().equals(uidUser)) {
-                ref = ref.child(model.getUidSeller());
-            } else {
-                ref = ref.child(model.getUidBuyer());
-            }
-            ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
-                    if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
-                        if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
-                            GlideApp.with(holder.imagePhotoAuthor)
-                                    .load(user.getPhotoUrl())
-                                    .circleCrop()
-                                    .placeholder(R.drawable.ic_person_grey_900_48dp)
-                                    .error(R.drawable.ic_error_grey_900_48dp)
-                                    .into(holder.imagePhotoAuthor);
-                        } else {
-                            GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
-                        }
+        String uidUser = firebaseUser.getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
+        if (model.getUidBuyer().equals(uidUser)) {
+            ref = ref.child(model.getUidSeller());
+        } else {
+            ref = ref.child(model.getUidBuyer());
+        }
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
+                if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                    if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                        GlideApp.with(holder.imagePhotoAuthor)
+                                .load(user.getPhotoUrl())
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_person_grey_900_48dp)
+                                .error(R.drawable.ic_error_grey_900_48dp)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .into(holder.imagePhotoAuthor);
+                    } else {
+                        GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
                     }
                 }
+            }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    // Do nothing
-                }
-            });
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Do nothing
+            }
+        });
     }
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder {
