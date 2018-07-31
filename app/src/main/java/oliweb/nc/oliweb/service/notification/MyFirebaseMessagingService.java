@@ -25,7 +25,6 @@ import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
 /**
  * Created by 2761oli on 22/03/2018.
  */
-
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String KEY_ORIGIN_CHAT = "KEY_CHAT_ORIGIN";
@@ -46,11 +45,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID)) {
             createChatDirectReplyNotification(datas.get(KEY_CHAT_UID));
         } else {
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
-            builder.setContentTitle(remoteMessage.getNotification().getTitle());
-            builder.setContentText(remoteMessage.getNotification().getBody());
-            builder.setSmallIcon(R.drawable.ic_person_white_48dp);
-            NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
+            if (remoteMessage.getNotification() != null) {
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
+                builder.setContentTitle(remoteMessage.getNotification().getTitle());
+                builder.setContentText(remoteMessage.getNotification().getBody());
+                builder.setSmallIcon(R.drawable.ic_person_white_48dp);
+                NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
+            }
         }
         super.onMessageReceived(remoteMessage);
     }
@@ -77,27 +78,25 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Lecture du chat et de ses messages
         chatRepository.findByUid(chatUid)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnSuccess(chatEntity -> {
-                    messageRepository.getSingleByIdChat(chatEntity.getIdChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnSuccess(messageEntities -> {
+                .doOnSuccess(chatEntity ->
+                        messageRepository.getSingleByIdChat(chatEntity.getIdChat())
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnSuccess(messageEntities -> {
 
-                                // Création du style de notification
-                                NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle("Moi")
-                                        .setConversationTitle(chatEntity.getTitreAnnonce());
+                                    // Création du style de notification
+                                    NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle("Moi")
+                                            .setConversationTitle(chatEntity.getTitreAnnonce());
 
-                                // TODO limiter aux 4 derniers messages + aller récupérer le nom de l'auteur du message dans Firebase
-                                // Récupération de tous les messages du chat
-                                if (!messageEntities.isEmpty()) {
-                                    for (MessageEntity message : messageEntities) {
-                                        messagingStyle.addMessage(message.getMessage(), message.getTimestamp(), message.getUidAuthor());
+                                    // Récupération de tous les messages du chat
+                                    if (!messageEntities.isEmpty()) {
+                                        for (MessageEntity message : messageEntities) {
+                                            messagingStyle.addMessage(message.getMessage(), message.getTimestamp(), message.getUidAuthor());
+                                        }
                                     }
-                                }
-
-                                builder.setStyle(messagingStyle);
-                            })
-                            .subscribe();
-                })
+                                    builder.setStyle(messagingStyle);
+                                })
+                                .subscribe()
+                )
                 .subscribe();
 
         builder.addAction(action);
