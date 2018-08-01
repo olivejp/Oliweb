@@ -19,8 +19,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.request.FutureTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,6 +42,7 @@ import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
 
+import static com.bumptech.glide.request.target.Target.SIZE_ORIGINAL;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_COME_FROM_CHAT_FRAGMENT;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
@@ -52,6 +61,8 @@ public class ListChatFragment extends Fragment {
     private MyChatsActivityViewModel viewModel;
 
     private FirebaseUser firebaseUser;
+
+    private Map<String, String> mapUrlPhotoUidUser;
 
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
@@ -92,6 +103,9 @@ public class ListChatFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mapUrlPhotoUidUser = new HashMap<>();
+
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
 
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -130,6 +144,12 @@ public class ListChatFragment extends Fragment {
             viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {
                 if (listChats != null) {
                     Log.d(TAG, "get new list chats listChats : " + listChats);
+
+                    // Pour tous les chats, je vais rechercher l'url du correspondant
+                    for (ChatEntity chatEntity : listChats) {
+                        rechercheUrlPhoto(chatEntity);
+                    }
+
                     chatAdapter.setListChats(listChats);
                 }
             });
@@ -142,6 +162,43 @@ public class ListChatFragment extends Fragment {
             });
         }
         return view;
+    }
+
+    private boolean urlAlreadyLoaded(String uidUser) {
+        for (Map.Entry<String, String> entry : mapUrlPhotoUidUser.entrySet()) {
+            if (entry.getKey().equals(uidUser) && entry.getValue() != null && !entry.getValue().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void rechercheUrlPhoto(ChatEntity chatEntity) {
+        String uidUser;
+        if (chatEntity.getUidBuyer().equals(firebaseUser.getUid())) {
+            uidUser = chatEntity.getUidSeller();
+        } else {
+            uidUser = chatEntity.getUidBuyer();
+        }
+        if (!urlAlreadyLoaded(uidUser)) {
+            viewModel.findFirebaseUserByUid(uidUser)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(user -> {
+                        if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                            mapUrlPhotoUidUser.put(uidUser, user.getPhotoUrl());
+                            try {
+                                RequestManager rc = Glide.with(ListChatFragment.this);
+                                FutureTarget<File> future = rc.load(user.getPhotoUrl()).downloadOnly(SIZE_ORIGINAL, SIZE_ORIGINAL);
+                                future.get();
+
+                            } catch (InterruptedException | ExecutionException e) {
+                                Log.e(TAG, e.getMessage(), e);
+                            }
+                        }
+                    })
+                    .doOnError(exception -> Log.e(TAG, exception.getMessage(), exception))
+                    .subscribe();
+        }
     }
 
     private void openAnnonceDetail(ChatEntity chatchatEntity) {

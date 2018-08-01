@@ -18,9 +18,11 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -46,6 +48,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private FirebaseUserRepository firebaseUserRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private ChatEntity currentChat;
 
@@ -54,6 +57,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.chatRepository = ChatRepository.getInstance(application);
         this.messageRepository = MessageRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
+        this.firebaseUserRepository = FirebaseUserRepository.getInstance();
     }
 
     public LiveData<List<ChatEntity>> getChatsByUidUser() {
@@ -206,5 +210,9 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                         })
                         .subscribe()
         );
+    }
+
+    public Single<UtilisateurEntity> findFirebaseUserByUid(String uidUser) {
+        return this.firebaseUserRepository.getUtilisateurByUid(uidUser);
     }
 }
