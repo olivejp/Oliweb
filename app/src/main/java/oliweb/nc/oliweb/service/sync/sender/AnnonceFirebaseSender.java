@@ -29,7 +29,7 @@ public class AnnonceFirebaseSender {
     private AnnonceFirebaseSender() {
     }
 
-    public static AnnonceFirebaseSender getInstance(Context context) {
+    public static  synchronized AnnonceFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new AnnonceFirebaseSender();
             instance.annonceRepository = AnnonceRepository.getInstance(context);

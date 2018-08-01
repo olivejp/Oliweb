@@ -29,7 +29,7 @@ public class ChatFirebaseSender {
     private ChatFirebaseSender() {
     }
 
-    public static ChatFirebaseSender getInstance(Context context) {
+    public static synchronized ChatFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new ChatFirebaseSender();
             instance.chatRepository = ChatRepository.getInstance(context);

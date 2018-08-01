@@ -35,8 +35,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private ChatRepository chatRepository;
 
     public MyFirebaseMessagingService() {
-        messageRepository = MessageRepository.getInstance(this);
-        chatRepository = ChatRepository.getInstance(this);
+        messageRepository = MessageRepository.getInstance(getBaseContext());
+        chatRepository = ChatRepository.getInstance(getBaseContext());
     }
 
     @Override

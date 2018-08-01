@@ -30,7 +30,7 @@ public class MessageFirebaseSender {
     private MessageFirebaseSender() {
     }
 
-    public static MessageFirebaseSender getInstance(Context context) {
+    public static  synchronized MessageFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new MessageFirebaseSender();
             instance.messageRepository = MessageRepository.getInstance(context);

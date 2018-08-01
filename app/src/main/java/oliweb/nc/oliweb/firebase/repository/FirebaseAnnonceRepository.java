@@ -44,7 +44,7 @@ public class FirebaseAnnonceRepository {
     private FirebaseAnnonceRepository() {
     }
 
-    public static FirebaseAnnonceRepository getInstance(Context context) {
+    public static synchronized FirebaseAnnonceRepository getInstance(Context context) {
         if (instance == null) {
             instance = new FirebaseAnnonceRepository();
         }

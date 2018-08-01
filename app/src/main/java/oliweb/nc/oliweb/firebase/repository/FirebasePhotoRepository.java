@@ -19,7 +19,7 @@ public class FirebasePhotoRepository {
     private FirebasePhotoRepository() {
     }
 
-    public static FirebasePhotoRepository getInstance(Context context) {
+    public static synchronized  FirebasePhotoRepository getInstance(Context context) {
         if (instance == null) {
             instance = new FirebasePhotoRepository();
         }

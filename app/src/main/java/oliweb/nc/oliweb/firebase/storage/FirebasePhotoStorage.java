@@ -32,7 +32,7 @@ public class FirebasePhotoStorage {
     private FirebasePhotoStorage() {
     }
 
-    public static FirebasePhotoStorage getInstance(Context context) {
+    public static synchronized FirebasePhotoStorage getInstance(Context context) {
         if (instance == null) {
             instance = new FirebasePhotoStorage();
             instance.fireStorage = FirebaseStorage.getInstance().getReference();

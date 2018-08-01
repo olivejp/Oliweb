@@ -26,7 +26,7 @@ public class FirebaseUserRepository {
     private FirebaseUserRepository() {
     }
 
-    public static FirebaseUserRepository getInstance() {
+    public static  synchronized FirebaseUserRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseUserRepository();
         }

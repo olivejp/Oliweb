@@ -211,7 +211,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         // Empty constructor
     }
 
-    public static ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
+    public static  synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
         ListAnnonceFragment listAnnonceFragment = new ListAnnonceFragment();
         Bundle bundle = new Bundle();
         bundle.putString(ARG_UID_USER, uidUtilisateur);

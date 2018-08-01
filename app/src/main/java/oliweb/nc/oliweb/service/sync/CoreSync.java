@@ -25,7 +25,7 @@ public class CoreSync {
     private CoreSync() {
     }
 
-    public static CoreSync getInstance(Context context) {
+    public static  synchronized CoreSync getInstance(Context context) {
         if (instance == null) {
             instance = new CoreSync();
             instance.utilisateurRepository = UtilisateurRepository.getInstance(context);

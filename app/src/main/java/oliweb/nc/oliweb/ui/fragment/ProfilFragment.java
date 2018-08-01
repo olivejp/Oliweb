@@ -77,7 +77,7 @@ public class ProfilFragment extends Fragment {
         // Empty constructor
     }
 
-    public static ProfilFragment getInstance(String uidUtilisateur, boolean availableUpdate) {
+    public static synchronized ProfilFragment getInstance(String uidUtilisateur, boolean availableUpdate) {
         ProfilFragment listAnnonceFragment = new ProfilFragment();
         Bundle bundle = new Bundle();
         bundle.putString(UID_USER, uidUtilisateur);

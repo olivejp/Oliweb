@@ -32,7 +32,7 @@ public class FirebaseChatRepository {
     private FirebaseChatRepository() {
     }
 
-    public static FirebaseChatRepository getInstance() {
+    public static synchronized  FirebaseChatRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseChatRepository();
             instance.fbMessageRepository = FirebaseMessageRepository.getInstance();

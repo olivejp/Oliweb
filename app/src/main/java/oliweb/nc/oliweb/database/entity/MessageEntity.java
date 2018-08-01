@@ -16,7 +16,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
  * Created by orlanth23 on 19/04/2018.
  */
 
-@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = @Index("idChat"))
+@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = {@Index("idChat"), @Index(value = "uidMessage", unique = true)})
 public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
