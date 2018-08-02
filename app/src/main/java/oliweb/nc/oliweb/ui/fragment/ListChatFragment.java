@@ -60,8 +60,6 @@ public class ListChatFragment extends Fragment {
 
     private MyChatsActivityViewModel viewModel;
 
-    private FirebaseUser firebaseUser;
-
     private Map<String, String> mapUrlPhotoUidUser;
 
     @BindView(R.id.recycler_list_chats)
@@ -103,19 +101,10 @@ public class ListChatFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         mapUrlPhotoUidUser = new HashMap<>();
-
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (firebaseUser == null) {
-            Log.e(TAG, "ListChatFragment ne doit pas pouvoir être ouvert sans un utilisateur connecté");
-            return;
-        }
-
         if (viewModel.getTypeRechercheChat() == null) {
-            viewModel.rechercheChatByUidUtilisateur(firebaseUser.getUid());
+            viewModel.setTypeRechercheChat(PAR_UTILISATEUR);
         }
     }
 
@@ -126,15 +115,10 @@ public class ListChatFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        // Conditions de garde
-        if (viewModel.getTypeRechercheChat() != PAR_ANNONCE && viewModel.getTypeRechercheChat() != PAR_UTILISATEUR) {
-            return view;
-        }
-
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        ChatAdapter chatAdapter = new ChatAdapter(firebaseUser, onClickListener, onPopupClickListener);
+        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUser(), onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -175,13 +159,13 @@ public class ListChatFragment extends Fragment {
 
     private void rechercheUrlPhoto(ChatEntity chatEntity) {
         String uidUser;
-        if (chatEntity.getUidBuyer().equals(firebaseUser.getUid())) {
+        if (chatEntity.getUidBuyer().equals(viewModel.getFirebaseUser().getUid())) {
             uidUser = chatEntity.getUidSeller();
         } else {
             uidUser = chatEntity.getUidBuyer();
         }
         if (!urlAlreadyLoaded(uidUser)) {
-            viewModel.findFirebaseUserByUid(uidUser)
+            viewModel.findFirebaseUserByUid()
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnSuccess(user -> {
                         if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {

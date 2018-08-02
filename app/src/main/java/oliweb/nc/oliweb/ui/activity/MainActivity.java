@@ -53,6 +53,7 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
@@ -249,12 +250,11 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_favorites) {
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
-
             // On lance l'activité des conversations.
             Intent intent = new Intent(this, MyChatsActivity.class);
+            intent.putExtra(DATA_FIREBASE_USER, mFirebaseUser);
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);

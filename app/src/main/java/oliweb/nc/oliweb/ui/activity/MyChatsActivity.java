@@ -16,6 +16,8 @@ public class MyChatsActivity extends AppCompatActivity {
     public static final String TAG_MASTER_FRAGMENT = "TAG_MASTER_FRAGMENT";
     public static final String TAG_DETAIL_FRAGMENT = "TAG_DETAIL_FRAGMENT";
 
+    public static final String DATA_FIREBASE_USER = "DATA_FIREBASE_USER";
+
     private MyChatsActivityViewModel viewModel;
 
     @Override
@@ -24,6 +26,7 @@ public class MyChatsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_my_chats);
         viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
         viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
+        viewModel.setFirebaseUser(getIntent().getParcelableExtra(DATA_FIREBASE_USER));
         initFragments();
     }
 

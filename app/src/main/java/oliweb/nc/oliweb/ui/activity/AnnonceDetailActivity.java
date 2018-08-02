@@ -293,5 +293,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, AnnonceMessageActivity.class);
         intent.putExtra(ARG_ANNONCE, annoncePhotos.getAnnonceEntity());
         startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 }

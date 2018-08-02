@@ -17,16 +17,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageAdapter;
 import oliweb.nc.oliweb.utility.Utility;
@@ -41,9 +37,6 @@ public class ListMessageFragment extends Fragment {
     private MessageAdapter adapter;
     private MyChatsActivityViewModel viewModel;
     private boolean initializeAdapterLater = false;
-
-    private AnnonceEntity annonce;
-    private FirebaseUser firebaseUser;
 
     @BindView(R.id.recycler_list_message)
     RecyclerView recyclerView;
@@ -71,11 +64,6 @@ public class ListMessageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (firebaseUser == null) {
-            Log.e(TAG, "ListMessageFragment ne doit pas pouvoir être ouvert sans un utilisateur connecté");
-        }
     }
 
     @Override
@@ -89,7 +77,7 @@ public class ListMessageFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         linearLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(linearLayoutManager);
-        adapter = new MessageAdapter(firebaseUser);
+        adapter = new MessageAdapter(viewModel.getFirebaseUser());
         recyclerView.setAdapter(adapter);
 
         // Sur l'action du message, on tente d'envoyer le texte
@@ -103,8 +91,7 @@ public class ListMessageFragment extends Fragment {
 
         switch (viewModel.getTypeRechercheMessage()) {
             case PAR_ANNONCE:
-                annonce = viewModel.getSelectedAnnonce();
-                viewModel.findChatByUidUserAndUidAnnonce(firebaseUser.getUid(), annonce)
+                viewModel.findChatByUidUserAndUidAnnonce()
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(chatEntity -> initializeAdapterByIdChat(chatEntity.getIdChat()))
@@ -144,10 +131,10 @@ public class ListMessageFragment extends Fragment {
                         .subscribe();
                 break;
             case PAR_ANNONCE:
-                if (adapter == null && annonce.getUidUser().equals(firebaseUser.getUid())) {
+                if (adapter == null && viewModel.getAnnonce().getUidUser().equals(viewModel.getFirebaseUser().getUid())) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
-                    viewModel.findOrCreateNewChat(firebaseUser.getUid(), annonce)
+                    viewModel.findOrCreateNewChat()
                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .doOnSuccess(chatEntity ->
