@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.firebase.repository;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -32,7 +33,7 @@ public class FirebaseChatRepository {
     private FirebaseChatRepository() {
     }
 
-    public static synchronized  FirebaseChatRepository getInstance() {
+    public static synchronized FirebaseChatRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseChatRepository();
             instance.fbMessageRepository = FirebaseMessageRepository.getInstance();
@@ -57,7 +58,7 @@ public class FirebaseChatRepository {
                         .equalTo(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 ArrayList<ChatFirebase> listResult = new ArrayList<>();
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     ChatFirebase chat = data.getValue(ChatFirebase.class);
@@ -67,7 +68,7 @@ public class FirebaseChatRepository {
                             }
 
                             @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
                                 emitter.onError(new RuntimeException(databaseError.getMessage()));
                             }
                         })
@@ -135,15 +136,13 @@ public class FirebaseChatRepository {
         return Single.create(emitter ->
                 chatRef.child(uidChat).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
-                            emitter.onSuccess(chatFirebase);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
+                        emitter.onSuccess(chatFirebase);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         emitter.onError(new RuntimeException(databaseError.getMessage()));
                     }
                 })

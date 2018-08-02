@@ -195,19 +195,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return Single.create(emitter ->
                 messageRepository.singleSave(messageEntity)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(messageEntitySaved -> emitter.onSuccess(new AtomicBoolean(true)))
                         .doOnError(emitter::onError)
-                        .doOnSuccess(entity -> {
-                            // Update the last message in the chat
-                            chatRepository.findById(selectedIdChat)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(chatEntity -> {
-                                        chatEntity.setLastMessage(message);
-                                        chatRepository.update(chatEntity);
-                                        emitter.onSuccess(new AtomicBoolean(true));
-                                    })
-                                    .subscribe();
-
-                        })
                         .subscribe()
         );
     }

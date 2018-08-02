@@ -34,13 +34,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private MessageRepository messageRepository;
     private ChatRepository chatRepository;
 
-    public MyFirebaseMessagingService() {
-        messageRepository = MessageRepository.getInstance(getBaseContext());
-        chatRepository = ChatRepository.getInstance(getBaseContext());
-    }
-
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
+        messageRepository = MessageRepository.getInstance(getApplicationContext());
+        chatRepository = ChatRepository.getInstance(getApplicationContext());
+
         Map<String, String> datas = remoteMessage.getData();
         if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID)) {
             createChatDirectReplyNotification(datas.get(KEY_CHAT_UID));
