@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
+import android.support.v4.app.TaskStackBuilder;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -17,6 +18,7 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE;
@@ -40,21 +42,28 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         chatRepository = ChatRepository.getInstance(getApplicationContext());
 
         Map<String, String> datas = remoteMessage.getData();
-        if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID)) {
-            createChatDirectReplyNotification(datas.get(KEY_CHAT_UID));
+        if (remoteMessage.getNotification() != null && datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID)) {
+            createChatDirectReplyNotification(datas.get(KEY_CHAT_UID), remoteMessage.getNotification().getTitle());
         } else {
             if (remoteMessage.getNotification() != null) {
+
+                Intent resultIntent = new Intent(this, MainActivity.class);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addNextIntentWithParentStack(resultIntent);
+                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
                 builder.setContentTitle(remoteMessage.getNotification().getTitle());
                 builder.setContentText(remoteMessage.getNotification().getBody());
-                builder.setSmallIcon(R.drawable.ic_person_white_48dp);
+                builder.setSmallIcon(R.drawable.ic_launcher_round_splash);
+                builder.setContentIntent(resultPendingIntent);
                 NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
             }
         }
         super.onMessageReceived(remoteMessage);
     }
 
-    private void createChatDirectReplyNotification(String chatUid) {
+    private void createChatDirectReplyNotification(String chatUid, String annonceTitre) {
 
         // On va appeler un service pour enregistrer le message en DB et l'envoyer ensuite sur Firebase
         Intent intent = new Intent(this, SyncService.class);
@@ -72,6 +81,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Récupération d'un builder de notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
+        builder.addAction(action);
+        builder.setSmallIcon(R.drawable.ic_message_white_48dp);
+
+        // Création du style de notification
+        NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle("Moi").setConversationTitle(annonceTitre);
 
         // Lecture du chat et de ses messages
         chatRepository.findByUid(chatUid)
@@ -80,24 +94,22 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         messageRepository.getSingleByIdChat(chatEntity.getIdChat())
                                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                 .doOnSuccess(messageEntities -> {
-
-                                    // Création du style de notification
-                                    NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle("Moi")
-                                            .setConversationTitle(chatEntity.getTitreAnnonce());
-
                                     // Récupération de tous les messages du chat
                                     if (!messageEntities.isEmpty()) {
                                         for (MessageEntity message : messageEntities) {
                                             messagingStyle.addMessage(message.getMessage(), message.getTimestamp(), message.getUidAuthor());
                                         }
                                     }
-                                    builder.setStyle(messagingStyle);
+                                    sendNotification(builder, messagingStyle);
                                 })
                                 .subscribe()
                 )
+                .doOnComplete(() -> sendNotification(builder, messagingStyle))
                 .subscribe();
+    }
 
-        builder.addAction(action);
+    private void sendNotification(NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle) {
+        builder.setStyle(messagingStyle);
         NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
     }
 }
