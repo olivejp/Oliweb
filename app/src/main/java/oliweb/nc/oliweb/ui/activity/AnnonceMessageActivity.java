@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
@@ -24,6 +26,7 @@ public class AnnonceMessageActivity extends AppCompatActivity {
             AnnonceEntity annonce = getIntent().getExtras().getParcelable(ARG_ANNONCE);
             setTitle(annonce.getTitre());
             viewModel.rechercheMessageByAnnonce(annonce);
+            viewModel.setFirebaseUserUid(FirebaseAuth.getInstance().getUid());
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_annonce_message, new ListMessageFragment()).commit();
         }
     }

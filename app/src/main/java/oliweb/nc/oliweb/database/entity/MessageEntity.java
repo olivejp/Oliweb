@@ -24,9 +24,11 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
     private String uidMessage;
     private String message;
     private String read;
+    @NonNull
     private String uidAuthor;
     private String uidChat;
     private Long timestamp;
+    @NonNull
     private Long idChat;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statusRemote;
@@ -93,6 +95,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
         this.read = read;
     }
 
+    @NonNull
     public String getUidAuthor() {
         return uidAuthor;
     }
