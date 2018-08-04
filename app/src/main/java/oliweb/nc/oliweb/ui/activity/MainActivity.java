@@ -54,11 +54,11 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_profile) {
             callProfilActivity();
         } else if (id == R.id.nav_favorites) {
-            callFavoriteFragment();
+            callFavoriteActivity();
         } else if (id == R.id.nav_chats) {
             // On lance l'activité des conversations.
             String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
@@ -498,13 +498,13 @@ public class MainActivity extends AppCompatActivity
         overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
-    private void callFavoriteFragment() {
-        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(mFirebaseUser.getUid(), ACTION_FAVORITE);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.main_frame, listAnnonceFragment)
-                .addToBackStack(null)
-                .commit();
+    private void callFavoriteActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        Intent intent = new Intent();
+        intent.setClass(this, FavoriteAnnonceActivity.class);
+        intent.putExtra(ARG_USER_UID, uidUser);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
 }

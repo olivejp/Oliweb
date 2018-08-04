@@ -44,6 +44,7 @@ import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AdvancedSearchActivity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
+import oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -56,6 +57,7 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
@@ -193,12 +195,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnSuccess(annonceEntity -> Snackbar.make(constraintLayout, "Annonce ajoutée aux favoris", Snackbar.LENGTH_LONG)
-                                    .setAction("Mes favoris", v12 ->
-                                            appCompatActivity.getSupportFragmentManager()
-                                                    .beginTransaction()
-                                                    .replace(R.id.main_frame, ListAnnonceFragment.getInstance(uidCurrentUser, ACTION_FAVORITE))
-                                                    .addToBackStack(null)
-                                                    .commit()
+                                    .setAction("Mes favoris", v12 -> {
+                                                Intent intent = new Intent();
+                                                intent.setClass(appCompatActivity, FavoriteAnnonceActivity.class);
+                                                intent.putExtra(ARG_USER_UID, uidUser);
+                                                startActivity(intent);
+                                                appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+                                            }
+
                                     )
                                     .show())
                             .subscribe();
@@ -211,7 +215,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         // Empty constructor
     }
 
-    public static  synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
+    public static synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
         ListAnnonceFragment listAnnonceFragment = new ListAnnonceFragment();
         Bundle bundle = new Bundle();
         bundle.putString(ARG_UID_USER, uidUtilisateur);
