@@ -6,8 +6,6 @@ import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -189,7 +187,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
         messageEntity.setIdChat(selectedIdChat);
         messageEntity.setUidChat(currentChat.getUidChat());
-        messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
+        messageEntity.setUidAuthor(firebaseUserUid);
 
         return Single.create(emitter ->
                 messageRepository.singleSave(messageEntity)
