@@ -11,7 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -40,13 +39,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private View.OnClickListener clickListener;
     private View.OnClickListener popupClickListener;
     private List<ChatEntity> listChats;
-    private FirebaseUser firebaseUser;
+    private String firebaseUserUid;
 
-    public ChatAdapter(@NonNull FirebaseUser firebaseUser, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
+    public ChatAdapter(@NonNull String firebaseUserUid, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
         this.popupClickListener = popupClickListener;
         this.listChats = new ArrayList<>();
-        this.firebaseUser = firebaseUser;
+        this.firebaseUserUid = firebaseUserUid;
     }
 
     @NonNull
@@ -118,7 +117,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     // TODO , ce n'est pas à l'adapter de faire la recherche de la photo, il faut effectuer le dl des photos en arrière plan et ne fournir que l'url à l'adapter
     private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
-        String uidUser = firebaseUser.getUid();
+        String uidUser = firebaseUserUid;
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
         if (model.getUidBuyer().equals(uidUser)) {
             ref = ref.child(model.getUidSeller());

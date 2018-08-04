@@ -22,8 +22,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.request.FutureTarget;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
 import java.util.HashMap;
@@ -118,7 +116,7 @@ public class ListChatFragment extends Fragment {
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUser(), onClickListener, onPopupClickListener);
+        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUserUid(), onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -159,7 +157,7 @@ public class ListChatFragment extends Fragment {
 
     private void rechercheUrlPhoto(ChatEntity chatEntity) {
         String uidUser;
-        if (chatEntity.getUidBuyer().equals(viewModel.getFirebaseUser().getUid())) {
+        if (chatEntity.getUidBuyer().equals(viewModel.getFirebaseUserUid())) {
             uidUser = chatEntity.getUidSeller();
         } else {
             uidUser = chatEntity.getUidBuyer();

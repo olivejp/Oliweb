@@ -77,7 +77,7 @@ public class ListMessageFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         linearLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(linearLayoutManager);
-        adapter = new MessageAdapter(viewModel.getFirebaseUser());
+        adapter = new MessageAdapter(viewModel.getFirebaseUserUid());
         recyclerView.setAdapter(adapter);
 
         // Sur l'action du message, on tente d'envoyer le texte
@@ -95,7 +95,10 @@ public class ListMessageFragment extends Fragment {
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(chatEntity -> initializeAdapterByIdChat(chatEntity.getIdChat()))
-                        .doOnComplete(() -> initializeAdapterLater = true)
+                        .doOnComplete(() -> {
+                            initializeList(true);
+                            initializeAdapterLater = true;
+                        })
                         .subscribe();
                 break;
             case PAR_CHAT:
@@ -106,12 +109,16 @@ public class ListMessageFragment extends Fragment {
         return view;
     }
 
+    private void initializeList(boolean listIsEmpty) {
+        textViewEmpty.setVisibility(listIsEmpty ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(listIsEmpty ? View.GONE : View.VISIBLE);
+    }
+
     private void initializeAdapterByIdChat(Long idChat) {
         initializeAdapterLater = false;
         viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
             boolean emptyList = listMessages == null || listMessages.isEmpty();
-            textViewEmpty.setVisibility(emptyList ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(emptyList ? View.GONE : View.VISIBLE);
+            initializeList(emptyList);
             if (!emptyList) adapter.setMessageEntities(listMessages);
         });
     }
@@ -131,7 +138,7 @@ public class ListMessageFragment extends Fragment {
                         .subscribe();
                 break;
             case PAR_ANNONCE:
-                if (adapter == null && viewModel.getAnnonce().getUidUser().equals(viewModel.getFirebaseUser().getUid())) {
+                if (adapter == null && viewModel.getAnnonce().getUidUser().equals(viewModel.getFirebaseUserUid())) {
                     Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
                 } else {
                     viewModel.findOrCreateNewChat()

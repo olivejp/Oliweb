@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 
 import oliweb.nc.oliweb.R;
@@ -13,10 +14,12 @@ import oliweb.nc.oliweb.ui.fragment.ListMessageFragment;
 
 public class MyChatsActivity extends AppCompatActivity {
 
+    private static final String TAG = MyChatsActivity.class.getName();
+
     public static final String TAG_MASTER_FRAGMENT = "TAG_MASTER_FRAGMENT";
     public static final String TAG_DETAIL_FRAGMENT = "TAG_DETAIL_FRAGMENT";
 
-    public static final String DATA_FIREBASE_USER = "DATA_FIREBASE_USER";
+    public static final String DATA_FIREBASE_USER_UID = "DATA_FIREBASE_USER_UID";
 
     private MyChatsActivityViewModel viewModel;
 
@@ -26,7 +29,12 @@ public class MyChatsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_my_chats);
         viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
         viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
-        viewModel.setFirebaseUser(getIntent().getParcelableExtra(DATA_FIREBASE_USER));
+        String argUidUser = getIntent().getStringExtra(DATA_FIREBASE_USER_UID);
+        if (argUidUser == null) {
+            Log.e(TAG, "Can't open without connected user", new RuntimeException());
+            finish();
+        }
+        viewModel.setFirebaseUserUid(argUidUser);
         initFragments();
     }
 

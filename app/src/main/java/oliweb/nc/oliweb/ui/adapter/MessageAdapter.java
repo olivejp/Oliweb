@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -45,11 +44,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int TYPE_CLIENT = 200;
 
     private List<MessageEntity> messageEntities;
-    private FirebaseUser firebaseUser;
+    private String firebaseUserUid;
 
-    public MessageAdapter(FirebaseUser fbUser) {
+    public MessageAdapter(String firebaseUserUid) {
         this.messageEntities = new ArrayList<>();
-        this.firebaseUser = fbUser;
+        this.firebaseUserUid = firebaseUserUid;
     }
 
     @NonNull
@@ -117,7 +116,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public int getItemViewType(int position) {
         MessageEntity messageEntity = messageEntities.get(position);
-        return (messageEntity.getUidAuthor().equals(firebaseUser.getUid())) ? TYPE_OWNER : TYPE_CLIENT;
+        return (messageEntity.getUidAuthor().equals(firebaseUserUid)) ? TYPE_OWNER : TYPE_CLIENT;
     }
 
     @Override
