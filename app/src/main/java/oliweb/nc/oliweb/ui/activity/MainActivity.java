@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -251,10 +252,14 @@ public class MainActivity extends AppCompatActivity
             callFavoriteFragment();
         } else if (id == R.id.nav_chats) {
             // On lance l'activité des conversations.
-            Intent intent = new Intent(this, MyChatsActivity.class);
-            intent.putExtra(DATA_FIREBASE_USER, mFirebaseUser);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            if (mFirebaseUser != null) {
+                Intent intent = new Intent(this, MyChatsActivity.class);
+                intent.putExtra(DATA_FIREBASE_USER, mFirebaseUser);
+                startActivity(intent);
+                overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            } else {
+                Toast.makeText(this, "Vous devez être connecté pour accéder à vos annonces", Toast.LENGTH_LONG).show();
+            }
         } else if (id == R.id.nav_annonces) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
@@ -377,6 +382,7 @@ public class MainActivity extends AppCompatActivity
             GlideApp.with(profileImage)
                     .load(user.getPhotoUrl())
                     .circleCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.ic_person_white_48dp)
                     .into(profileImage);
         }
@@ -436,7 +442,7 @@ public class MainActivity extends AppCompatActivity
                 // Sauvegarde de l'utilisateur
                 viewModel.saveUser(mFirebaseUser)
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .doOnError(e -> Toast.makeText(this, "Utilisateur non sauvegardé", Toast.LENGTH_LONG).show())
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(atomicBoolean -> {
                             if (atomicBoolean.get()) {
                                 Snackbar.make(navigationView, "Bienvenue sur Oliweb", Snackbar.LENGTH_LONG).setAction("Voir mon profil", v -> callProfilActivity()).show();

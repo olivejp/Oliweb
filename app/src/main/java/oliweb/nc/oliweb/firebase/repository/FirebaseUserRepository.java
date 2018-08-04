@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,7 +27,7 @@ public class FirebaseUserRepository {
     private FirebaseUserRepository() {
     }
 
-    public static  synchronized FirebaseUserRepository getInstance() {
+    public static synchronized FirebaseUserRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseUserRepository();
         }
@@ -63,6 +64,17 @@ public class FirebaseUserRepository {
                         emitter.onError(new RuntimeException(databaseError.getMessage()));
                     }
                 })
+        );
+    }
+
+    public Single<String> getToken() {
+        Log.d(TAG, "Starting getToken");
+        return Single.create(emitter ->
+                FirebaseInstanceId.getInstance().getInstanceId()
+                        .addOnSuccessListener(instanceIdResult -> {
+                            emitter.onSuccess(instanceIdResult.getToken());
+                        })
+                        .addOnFailureListener(emitter::onError)
         );
     }
 }

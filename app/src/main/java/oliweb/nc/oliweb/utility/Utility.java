@@ -59,7 +59,7 @@ public class Utility {
         if (NetworkReceiver.checkConnection(appCompatActivity)) {
             Utility.callLoginUi(appCompatActivity, requestCode);
         } else {
-            Toast.makeText(appCompatActivity, "Une connexion est requise pour se connecter", Toast.LENGTH_LONG).show();
+            Toast.makeText(appCompatActivity, "Une connexion réseau est requise", Toast.LENGTH_LONG).show();
         }
     }
 
