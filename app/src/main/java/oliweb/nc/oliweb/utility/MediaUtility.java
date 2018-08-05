@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -187,6 +189,20 @@ public class MediaUtility {
         return bitmap;
     }
 
+    public static Bitmap getBitmapFromURL(String strURL) {
+        try {
+            URL url = new URL(strURL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            return BitmapFactory.decodeStream(input);
+        } catch (IOException e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+            return null;
+        }
+    }
+
     /**
      * Créer un URI pour stocker l'image/la video
      *
@@ -327,16 +343,16 @@ public class MediaUtility {
     }
 
     public static void saveInputStreamToContentProvider(InputStream inputStream, File file) throws IOException {
-        OutputStream outStream = new FileOutputStream(file.getAbsoluteFile());
+            OutputStream outStream = new FileOutputStream(file.getAbsoluteFile());
 
-        byte[] buffer = new byte[8 * 1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, bytesRead);
-        }
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
 
-        IOUtils.closeQuietly(inputStream);
-        IOUtils.closeQuietly(outStream);
+            IOUtils.closeQuietly(inputStream);
+            IOUtils.closeQuietly(outStream);
     }
 
     @NonNull

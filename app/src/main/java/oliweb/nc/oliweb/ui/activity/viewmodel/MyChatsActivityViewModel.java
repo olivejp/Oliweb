@@ -116,6 +116,18 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .subscribe();
     }
 
+    public void rechercheMessageByUidChat(String uidChat) {
+        typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
+        chatRepository.findByUid(uidChat)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatEntity -> {
+                    currentChat = chatEntity;
+                    selectedIdChat = chatEntity.getIdChat();
+                })
+                .subscribe();
+    }
+
     public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {
         typeRechercheMessage = TypeRechercheMessage.PAR_ANNONCE;
         annonce = annonceEntity;
@@ -189,13 +201,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setUidChat(currentChat.getUidChat());
         messageEntity.setUidAuthor(firebaseUserUid);
 
-        return Single.create(emitter ->
-                messageRepository.singleSave(messageEntity)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(messageEntitySaved -> emitter.onSuccess(new AtomicBoolean(true)))
-                        .doOnError(emitter::onError)
-                        .subscribe()
-        );
+        return messageRepository.singleSave(messageEntity)
+                .map(messageEntity1 -> new AtomicBoolean(true));
     }
 
     public Single<UtilisateurEntity> findFirebaseUserByUid() {
