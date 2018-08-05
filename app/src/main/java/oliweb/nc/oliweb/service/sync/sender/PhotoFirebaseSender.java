@@ -30,7 +30,7 @@ public class PhotoFirebaseSender {
     private PhotoFirebaseSender() {
     }
 
-    public static PhotoFirebaseSender getInstance(Context context) {
+    public static synchronized PhotoFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new PhotoFirebaseSender();
             instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);

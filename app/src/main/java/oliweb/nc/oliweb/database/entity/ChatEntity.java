@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 import android.os.Parcel;
@@ -12,7 +13,7 @@ import android.support.annotation.NonNull;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Entity(tableName = "chat")
+@Entity(tableName = "chat", indices = {@Index(value = {"uidChat", "uidBuyer"}, unique = true)})
 public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)

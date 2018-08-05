@@ -40,7 +40,6 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
-import oliweb.nc.oliweb.ui.fragment.ProfilFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -294,5 +293,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, AnnonceMessageActivity.class);
         intent.putExtra(ARG_ANNONCE, annoncePhotos.getAnnonceEntity());
         startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 }

@@ -16,6 +16,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
@@ -26,7 +27,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,7 +49,6 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
@@ -89,7 +88,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String mode;
 
     @BindView(R.id.spinner_categorie)
-    Spinner spinnerCategorie;
+    AppCompatSpinner spinnerCategorie;
 
     @BindView(R.id.edit_titre_annonce)
     EditText textViewTitre;

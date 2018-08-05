@@ -21,6 +21,8 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -75,7 +77,7 @@ public class ProfilFragment extends Fragment {
         // Empty constructor
     }
 
-    public static ProfilFragment getInstance(String uidUtilisateur, boolean availableUpdate) {
+    public static synchronized ProfilFragment getInstance(String uidUtilisateur, boolean availableUpdate) {
         ProfilFragment listAnnonceFragment = new ProfilFragment();
         Bundle bundle = new Bundle();
         bundle.putString(UID_USER, uidUtilisateur);
@@ -114,7 +116,12 @@ public class ProfilFragment extends Fragment {
                         textName.setText(utilisateurFirebase.getProfileName());
                         textEmail.setText(utilisateurFirebase.getEmail());
                         textTelephone.setText(utilisateurFirebase.getTelephone());
-                        GlideApp.with(imageProfil).load(utilisateurFirebase.getPhotoPath()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
+                        GlideApp.with(imageProfil)
+                                .load(utilisateurFirebase.getPhotoPath())
+                                .placeholder(R.drawable.ic_person_grey_900_48dp)
+                                .circleCrop()
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .into(imageProfil);
                     }
                 }
             });

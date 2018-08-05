@@ -59,7 +59,7 @@ public class Utility {
         if (NetworkReceiver.checkConnection(appCompatActivity)) {
             Utility.callLoginUi(appCompatActivity, requestCode);
         } else {
-            Toast.makeText(appCompatActivity, "Une connexion est requise pour se connecter", Toast.LENGTH_LONG).show();
+            Toast.makeText(appCompatActivity, "Une connexion réseau est requise", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -78,11 +78,11 @@ public class Utility {
                 requestCode);
     }
 
-    public static void hideKeyboard(Context ctx) {
-        InputMethodManager inputManager = (InputMethodManager) ctx
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager inputManager = (InputMethodManager) activity
                 .getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        View v = ((Activity) ctx).getCurrentFocus();
+        View v = activity.getCurrentFocus();
         if (v == null)
             return;
 

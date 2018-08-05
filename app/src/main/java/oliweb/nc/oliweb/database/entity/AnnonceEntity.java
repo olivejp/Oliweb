@@ -190,59 +190,7 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
         this.uidUserFavorite = uidUserFavorite;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeValue(this.idAnnonce);
-        dest.writeString(this.uid);
-        dest.writeString(this.titre);
-        dest.writeString(this.description);
-        dest.writeValue(this.datePublication);
-        dest.writeValue(this.prix);
-        dest.writeString(this.contactByTel);
-        dest.writeString(this.contactByEmail);
-        dest.writeString(this.contactByMsg);
-        dest.writeInt(this.statut == null ? -1 : this.statut.ordinal());
-        dest.writeString(this.uidUser);
-        dest.writeLong(this.idCategorie);
-        dest.writeString(this.debattre);
-        dest.writeValue(this.favorite);
-    }
-
-
-    protected AnnonceEntity(Parcel in) {
-        this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
-        this.uid = in.readString();
-        this.titre = in.readString();
-        this.description = in.readString();
-        this.datePublication = (Long) in.readValue(Long.class.getClassLoader());
-        this.prix = (Integer) in.readValue(Integer.class.getClassLoader());
-        this.contactByTel = in.readString();
-        this.contactByEmail = in.readString();
-        this.contactByMsg = in.readString();
-        int tmpStatut = in.readInt();
-        this.statut = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
-        this.uidUser = in.readString();
-        this.idCategorie = in.readLong();
-        this.debattre = in.readString();
-        this.favorite = (Integer) in.readValue(Integer.class.getClassLoader());
-    }
-
-    public static final Creator<AnnonceEntity> CREATOR = new Creator<AnnonceEntity>() {
-        @Override
-        public AnnonceEntity createFromParcel(Parcel source) {
-            return new AnnonceEntity(source);
-        }
-
-        @Override
-        public AnnonceEntity[] newArray(int size) {
-            return new AnnonceEntity[size];
-        }
-    };
 
     @Override
     public String toString() {
@@ -264,4 +212,59 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
                 ", uidUserFavorite='" + uidUserFavorite + '\'' +
                 '}';
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idAnnonce);
+        dest.writeString(this.uid);
+        dest.writeString(this.titre);
+        dest.writeString(this.description);
+        dest.writeValue(this.datePublication);
+        dest.writeValue(this.prix);
+        dest.writeString(this.contactByTel);
+        dest.writeString(this.contactByEmail);
+        dest.writeString(this.contactByMsg);
+        dest.writeInt(this.statut == null ? -1 : this.statut.ordinal());
+        dest.writeString(this.uidUser);
+        dest.writeLong(this.idCategorie);
+        dest.writeString(this.debattre);
+        dest.writeValue(this.favorite);
+        dest.writeString(this.uidUserFavorite);
+    }
+
+    protected AnnonceEntity(Parcel in) {
+        this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
+        this.uid = in.readString();
+        this.titre = in.readString();
+        this.description = in.readString();
+        this.datePublication = (Long) in.readValue(Long.class.getClassLoader());
+        this.prix = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.contactByTel = in.readString();
+        this.contactByEmail = in.readString();
+        this.contactByMsg = in.readString();
+        int tmpStatut = in.readInt();
+        this.statut = tmpStatut == -1 ? null : StatusRemote.values()[tmpStatut];
+        this.uidUser = in.readString();
+        this.idCategorie = in.readLong();
+        this.debattre = in.readString();
+        this.favorite = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.uidUserFavorite = in.readString();
+    }
+
+    public static final Creator<AnnonceEntity> CREATOR = new Creator<AnnonceEntity>() {
+        @Override
+        public AnnonceEntity createFromParcel(Parcel source) {
+            return new AnnonceEntity(source);
+        }
+
+        @Override
+        public AnnonceEntity[] newArray(int size) {
+            return new AnnonceEntity[size];
+        }
+    };
 }

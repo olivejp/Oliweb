@@ -16,7 +16,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
  * Created by orlanth23 on 19/04/2018.
  */
 
-@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = @Index("idChat"))
+@Entity(tableName = "message", foreignKeys = @ForeignKey(entity = ChatEntity.class, parentColumns = "idChat", childColumns = "idChat", onDelete = CASCADE), indices = {@Index("idChat"), @Index(value = "uidMessage", unique = true)})
 public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
@@ -24,9 +24,11 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
     private String uidMessage;
     private String message;
     private String read;
+    @NonNull
     private String uidAuthor;
     private String uidChat;
     private Long timestamp;
+    @NonNull
     private Long idChat;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statusRemote;
@@ -93,6 +95,7 @@ public class MessageEntity extends AbstractEntity<Long> implements Parcelable {
         this.read = read;
     }
 
+    @NonNull
     public String getUidAuthor() {
         return uidAuthor;
     }

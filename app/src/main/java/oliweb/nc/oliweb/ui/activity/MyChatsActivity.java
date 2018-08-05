@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 
 import oliweb.nc.oliweb.R;
@@ -11,20 +12,62 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.fragment.ListMessageFragment;
 
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT;
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_UID_USER;
+
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyChatsActivity extends AppCompatActivity {
+
+    private static final String TAG = MyChatsActivity.class.getName();
 
     public static final String TAG_MASTER_FRAGMENT = "TAG_MASTER_FRAGMENT";
     public static final String TAG_DETAIL_FRAGMENT = "TAG_DETAIL_FRAGMENT";
+
+    public static final String ARG_ACTION_OPEN_CHATS = "ARG_ACTION_OPEN_CHATS";
+    public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
+
+    public static final String DATA_FIREBASE_USER_UID = "DATA_FIREBASE_USER_UID";
 
     private MyChatsActivityViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_chats);
-        viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
-        viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
-        initFragments();
+
+        if (getIntent() == null || getIntent().getAction() == null || getIntent().getAction().isEmpty()) {
+            Log.e(TAG, "No intent or no action to open MyChatsActivity", new RuntimeException());
+            finish();
+        }
+
+        String s = getIntent().getAction();
+        if (ARG_ACTION_OPEN_CHATS.equals(s)) {
+            setContentView(R.layout.activity_my_chats);
+            viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
+            viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
+            String argUidUser = getIntent().getStringExtra(DATA_FIREBASE_USER_UID);
+            if (argUidUser == null) {
+                Log.e(TAG, "Can't open without connected user", new RuntimeException());
+                finish();
+            }
+            viewModel.setFirebaseUserUid(argUidUser);
+            initFragments();
+        } else if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(s)) {
+            setContentView(R.layout.activity_my_chats);
+            viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
+            viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
+            String argUidUser = getIntent().getStringExtra(ARG_ACTION_SEND_DIRECT_UID_USER);
+            String argUidChat = getIntent().getStringExtra(ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT);
+            if (argUidUser == null) {
+                Log.e(TAG, "Can't open without connected user", new RuntimeException());
+                finish();
+            }
+            viewModel.setFirebaseUserUid(argUidUser);
+            viewModel.rechercheMessageByUidChat(argUidChat);
+            initFragments();
+        } else {
+            Log.e(TAG,  String.format("%s is not an available actions", getIntent().getAction()), new RuntimeException());
+            finish();
+        }
     }
 
     @Override

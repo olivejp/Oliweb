@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -29,7 +30,7 @@ public class ChatFirebaseSender {
     private ChatFirebaseSender() {
     }
 
-    public static ChatFirebaseSender getInstance(Context context) {
+    public static synchronized ChatFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new ChatFirebaseSender();
             instance.chatRepository = ChatRepository.getInstance(context);
@@ -48,8 +49,8 @@ public class ChatFirebaseSender {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
         if (chatEntity.getUidChat() == null) {
             firebaseChatRepository.getUidAndTimestampFromFirebase(chatEntity)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .toObservable()
-                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .switchMap(this::markChatAsSending)
                     .switchMap(this::sendChatToFirebase)
                     .switchMap(this::markChatAsSend)

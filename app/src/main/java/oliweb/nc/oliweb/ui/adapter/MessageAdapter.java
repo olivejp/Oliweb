@@ -10,8 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,9 +44,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int TYPE_CLIENT = 200;
 
     private List<MessageEntity> messageEntities;
+    private String firebaseUserUid;
 
-    public MessageAdapter() {
+    public MessageAdapter(String firebaseUserUid) {
         this.messageEntities = new ArrayList<>();
+        this.firebaseUserUid = firebaseUserUid;
     }
 
     @NonNull
@@ -114,7 +116,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public int getItemViewType(int position) {
         MessageEntity messageEntity = messageEntities.get(position);
-        return (messageEntity.getUidAuthor().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) ? TYPE_OWNER : TYPE_CLIENT;
+        return (messageEntity.getUidAuthor().equals(firebaseUserUid)) ? TYPE_OWNER : TYPE_CLIENT;
     }
 
     @Override
@@ -126,7 +128,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
         ref.child(model.getUidAuthor()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 UtilisateurEntity utilisateurFirebase = dataSnapshot.getValue(UtilisateurEntity.class);
                 if (utilisateurFirebase != null) {
                     GlideApp.with(holder.imageAuthor)
@@ -134,12 +136,13 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                             .apply(RequestOptions.circleCropTransform())
                             .placeholder(R.drawable.ic_person_grey_900_48dp)
                             .error(R.drawable.ic_error_grey_900_48dp)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(holder.imageAuthor);
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 // Do nothing
             }
         });

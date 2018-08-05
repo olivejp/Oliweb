@@ -1,12 +1,15 @@
 package oliweb.nc.oliweb.service.sync;
 
 import android.app.IntentService;
+import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
 /**
  * This class is called by SyncTask or by SyncJobCreator
@@ -20,6 +23,10 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_ALL_FROM_SCHEDULER = "ARG_ACTION_SYNC_ALL_FROM_SCHEDULER";
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
     public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
+
+    public static final String ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT = "ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT";
+    public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
+    public static final String ARG_ACTION_SEND_DIRECT_UID_USER = "ARG_ACTION_SEND_DIRECT_UID_USER";
 
     public SyncService() {
         super("SyncService");
@@ -72,7 +79,17 @@ public class SyncService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent != null) {
             Bundle bundle = intent.getExtras();
-            if (bundle != null && bundle.containsKey(ARG_ACTION)) {
+            if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
+                    Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
+                    if (remoteInput != null && remoteInput.getCharSequence(KEY_TEXT_TO_SEND) != null) {
+                        String messageToSend = remoteInput.getCharSequence(KEY_TEXT_TO_SEND).toString();
+
+                        // TODO enregistrer le message en base et l'envoyer sur Firebase
+
+                    }
+                }
+            } else if (bundle != null && bundle.containsKey(ARG_ACTION)) {
                 String action = bundle.getString(ARG_ACTION);
                 if (action != null) {
                     switch (action) {

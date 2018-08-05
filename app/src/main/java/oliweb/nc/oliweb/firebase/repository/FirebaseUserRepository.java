@@ -1,9 +1,14 @@
 package oliweb.nc.oliweb.firebase.repository;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -22,7 +27,7 @@ public class FirebaseUserRepository {
     private FirebaseUserRepository() {
     }
 
-    public static FirebaseUserRepository getInstance() {
+    public static synchronized FirebaseUserRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseUserRepository();
         }
@@ -41,6 +46,35 @@ public class FirebaseUserRepository {
                             Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase " + utilisateurEntity.toString());
                             emitter.onError(exception);
                         })
+        );
+    }
+
+    public Single<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
+        Log.d(TAG, "Starting getUtilisateurByUid");
+        return Single.create(emitter ->
+                USER_REF.child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
+                        emitter.onSuccess(user);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        emitter.onError(new RuntimeException(databaseError.getMessage()));
+                    }
+                })
+        );
+    }
+
+    public Single<String> getToken() {
+        Log.d(TAG, "Starting getToken");
+        return Single.create(emitter ->
+                FirebaseInstanceId.getInstance().getInstanceId()
+                        .addOnSuccessListener(instanceIdResult -> {
+                            emitter.onSuccess(instanceIdResult.getToken());
+                        })
+                        .addOnFailureListener(emitter::onError)
         );
     }
 }

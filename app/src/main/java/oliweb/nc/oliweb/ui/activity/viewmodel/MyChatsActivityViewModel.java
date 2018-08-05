@@ -6,8 +6,6 @@ import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,9 +16,11 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -40,28 +40,38 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     private boolean twoPane;
     private Long selectedIdChat;
-    private String selectedUidUtilisateur;
-    private AnnonceEntity selectedAnnonce;
+    private AnnonceEntity annonce;
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private FirebaseUserRepository firebaseUserRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private ChatEntity currentChat;
+    private String firebaseUserUid;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         this.chatRepository = ChatRepository.getInstance(application);
         this.messageRepository = MessageRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
+        this.firebaseUserRepository = FirebaseUserRepository.getInstance();
+    }
+
+    public String getFirebaseUserUid() {
+        return firebaseUserUid;
+    }
+
+    public void setFirebaseUserUid(String firebaseUserUid) {
+        this.firebaseUserUid = firebaseUserUid;
     }
 
     public LiveData<List<ChatEntity>> getChatsByUidUser() {
-        return chatRepository.findByUidUserAndStatusNotIn(selectedUidUtilisateur, Utility.allStatusToAvoid());
+        return chatRepository.findByUidUserAndStatusNotIn(firebaseUserUid, Utility.allStatusToAvoid());
     }
 
     public LiveData<List<ChatEntity>> getChatsByUidAnnonce() {
-        return chatRepository.findByUidAnnonceAndStatusNotIn(selectedAnnonce.getUid(), Utility.allStatusToAvoid());
+        return chatRepository.findByUidAnnonceAndStatusNotIn(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
     public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
@@ -80,8 +90,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return selectedIdChat;
     }
 
-    public AnnonceEntity getSelectedAnnonce() {
-        return selectedAnnonce;
+    public AnnonceEntity getAnnonce() {
+        return annonce;
     }
 
     public TypeRechercheChat getTypeRechercheChat() {
@@ -92,9 +102,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return typeRechercheMessage;
     }
 
-    public void rechercheChatByUidUtilisateur(String uidUtilisateur) {
-        typeRechercheChat = TypeRechercheChat.PAR_UTILISATEUR;
-        selectedUidUtilisateur = uidUtilisateur;
+    public void setTypeRechercheChat(TypeRechercheChat typeRechercheChat) {
+        this.typeRechercheChat = typeRechercheChat;
     }
 
     public void rechercheMessageByIdChat(Long idChat) {
@@ -107,42 +116,46 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .subscribe();
     }
 
-    public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {
-        typeRechercheMessage = TypeRechercheMessage.PAR_ANNONCE;
-        selectedAnnonce = annonceEntity;
+    public void rechercheMessageByUidChat(String uidChat) {
+        typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
+        chatRepository.findByUid(uidChat)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatEntity -> {
+                    currentChat = chatEntity;
+                    selectedIdChat = chatEntity.getIdChat();
+                })
+                .subscribe();
     }
 
-    private ChatEntity createChatEntity(String uidBuyer, AnnonceEntity annonce) {
+    public void rechercheMessageByAnnonce(AnnonceEntity annonceEntity) {
+        typeRechercheMessage = TypeRechercheMessage.PAR_ANNONCE;
+        annonce = annonceEntity;
+    }
+
+    private ChatEntity initializeChatEntity() {
         ChatEntity chatEntity = new ChatEntity();
         chatEntity.setStatusRemote(StatusRemote.TO_SEND);
-        chatEntity.setUidBuyer(uidBuyer);
+        chatEntity.setUidBuyer(firebaseUserUid);
         chatEntity.setUidAnnonce(annonce.getUid());
         chatEntity.setUidSeller(annonce.getUidUser());
         chatEntity.setTitreAnnonce(annonce.getTitre());
         return chatEntity;
     }
 
-    /**
-     * @param uidUser
-     * @param annonce
-     * @return
-     */
-    public Maybe<ChatEntity> findChatByUidUserAndUidAnnonce(String uidUser, AnnonceEntity annonce) {
-        Log.d(TAG, "Starting findChatByUidUserAndUidAnnonce uidUser : " + uidUser + " annonce : " + annonce);
-        return chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid());
+    public Maybe<ChatEntity> findChatByUidUserAndUidAnnonce() {
+        return chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid());
     }
 
     /**
      * Search in the local DB if ChatEntity for this uidUser and this uidAnnonce exist otherwise create a new one
      *
-     * @param uidUser
-     * @param annonce
      * @return
      */
-    public Single<ChatEntity> findOrCreateNewChat(String uidUser, AnnonceEntity annonce) {
-        Log.d(TAG, "Starting findOrCreateNewChat uidUser : " + uidUser + " annonce : " + annonce);
+    public Single<ChatEntity> findOrCreateNewChat() {
+        Log.d(TAG, "Starting findOrCreateNewChat uidUser : " + firebaseUserUid + " annonce : " + annonce);
         return Single.create(emitter ->
-                chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
+                chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(chatFound -> {
@@ -153,7 +166,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                         })
                         .doOnComplete(() -> {
                                     Log.d(TAG, "findOrCreateNewChat.doOnComplete");
-                                    chatRepository.singleSave(createChatEntity(uidUser, annonce))
+                                    chatRepository.singleSave(initializeChatEntity())
                                             .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                             .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                             .doOnSuccess(chatCreated -> {
@@ -186,25 +199,13 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
         messageEntity.setIdChat(selectedIdChat);
         messageEntity.setUidChat(currentChat.getUidChat());
-        messageEntity.setUidAuthor(FirebaseAuth.getInstance().getUid());
+        messageEntity.setUidAuthor(firebaseUserUid);
 
-        return Single.create(emitter ->
-                messageRepository.singleSave(messageEntity)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(entity -> {
-                            // Update the last message in the chat
-                            chatRepository.findById(selectedIdChat)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(chatEntity -> {
-                                        chatEntity.setLastMessage(message);
-                                        chatRepository.update(chatEntity);
-                                        emitter.onSuccess(new AtomicBoolean(true));
-                                    })
-                                    .subscribe();
+        return messageRepository.singleSave(messageEntity)
+                .map(messageEntity1 -> new AtomicBoolean(true));
+    }
 
-                        })
-                        .subscribe()
-        );
+    public Single<UtilisateurEntity> findFirebaseUserByUid() {
+        return this.firebaseUserRepository.getUtilisateurByUid(firebaseUserUid);
     }
 }

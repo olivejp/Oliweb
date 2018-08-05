@@ -22,7 +22,7 @@ public class SharedPreferencesHelper {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
 
-    public static SharedPreferencesHelper getInstance(Context context) {
+    public static synchronized SharedPreferencesHelper getInstance(Context context) {
         if (INSTANCE == null) {
             INSTANCE = new SharedPreferencesHelper(context);
         }

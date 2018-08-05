@@ -61,18 +61,22 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         messageDao.findSingleByUid(messageFirebase.getUidMessage())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnComplete(() -> chatRepository.findByUid(messageFirebase.getUidChat())
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
-                        .flatMapSingle(this::singleSave)
-                        .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
-                        .flatMapSingle(chatEntity1 -> {
-                            chatEntity1.setLastMessage(messageFirebase.getMessage());
-                            chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
-                            return chatRepository.singleSave(chatEntity1);
-                        })
-                        .subscribe())
+                .doOnSuccess(messageEntity -> Log.d(TAG, "Message trouvé, inutile de le recréer"))
+                .doOnComplete(() -> {
+                    Log.d(TAG, "Message non trouvé, tentative d'insertion");
+                    chatRepository.findByUid(messageFirebase.getUidChat())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
+                            .flatMapSingle(this::singleSave)
+                            .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
+                            .flatMapSingle(chatEntity1 -> {
+                                chatEntity1.setLastMessage(messageFirebase.getMessage());
+                                chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
+                                return chatRepository.singleSave(chatEntity1);
+                            })
+                            .subscribe();
+                })
                 .subscribe();
     }
 }

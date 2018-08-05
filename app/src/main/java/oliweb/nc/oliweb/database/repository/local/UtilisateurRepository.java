@@ -5,7 +5,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,6 +17,7 @@ import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -28,11 +28,13 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
     private static final String TAG = UtilisateurRepository.class.getName();
     private static UtilisateurRepository instance;
     private UtilisateurDao utilisateurDao;
+    private FirebaseUserRepository firebaseUserRepository;
 
     private UtilisateurRepository(Context context) {
         super(context);
         this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
+        this.firebaseUserRepository = FirebaseUserRepository.getInstance();
     }
 
     public static synchronized UtilisateurRepository getInstance(Context context) {
@@ -75,25 +77,35 @@ public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity,
         return Single.create(emitter ->
                 findSingleByUid(firebaseUser.getUid())
                         .doOnError(emitter::onError)
-                        .doOnSuccess(utilisateurEntity -> {
-                            // Mise à jour de la date de dernière connexion et du dernier token de device utilisé
-                            utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
-                            utilisateurEntity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
-                            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-                            singleSave(utilisateurEntity)
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(false)))
-                                    .subscribe();
-                        })
+                        .doOnSuccess(utilisateurEntity ->
+                                // Mise à jour de la date de dernière connexion et du dernier token de device utilisé
+                                this.firebaseUserRepository.getToken()
+                                        .doOnSuccess(token -> {
+                                            utilisateurEntity.setTokenDevice(token);
+                                            utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
+                                            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
+                                            singleSave(utilisateurEntity)
+                                                    .doOnError(emitter::onError)
+                                                    .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(false)))
+                                                    .subscribe();
+                                        })
+                                        .doOnError(emitter::onError)
+                                        .subscribe()
+                        )
                         .doOnComplete(() -> {
                             // Création de l'utilisateur
                             UtilisateurEntity utilisateurEntity = UtilisateurConverter.convertFbToEntity(firebaseUser);
-                            utilisateurEntity.setTokenDevice(FirebaseInstanceId.getInstance().getToken());
-                            utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
-                            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-                            singleSave(utilisateurEntity)
+                            this.firebaseUserRepository.getToken()
+                                    .doOnSuccess(token -> {
+                                        utilisateurEntity.setTokenDevice(token);
+                                        utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
+                                        utilisateurEntity.setStatut(StatusRemote.TO_SEND);
+                                        singleSave(utilisateurEntity)
+                                                .doOnError(emitter::onError)
+                                                .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(true)))
+                                                .subscribe();
+                                    })
                                     .doOnError(emitter::onError)
-                                    .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(true)))
                                     .subscribe();
                         })
                         .subscribe()

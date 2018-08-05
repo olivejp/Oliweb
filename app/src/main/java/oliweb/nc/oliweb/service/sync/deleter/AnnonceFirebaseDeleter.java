@@ -39,7 +39,7 @@ public class AnnonceFirebaseDeleter {
     private AnnonceFirebaseDeleter() {
     }
 
-    public static AnnonceFirebaseDeleter getInstance(Context context) {
+    public static synchronized  AnnonceFirebaseDeleter getInstance(Context context) {
         if (instance == null) {
             instance = new AnnonceFirebaseDeleter();
             instance.annonceRepository = AnnonceRepository.getInstance(context);

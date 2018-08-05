@@ -123,7 +123,7 @@
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp" />
 
-            <Spinner
+            <android.support.v7.widget.AppCompatSpinner
                 android:id="@+id/spinner_categorie"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

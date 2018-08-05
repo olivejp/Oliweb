@@ -8,20 +8,22 @@
         android:id="@+id/recycler_list_message"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/text_to_send"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/text_empty_list"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="50dp"
         android:gravity="center"
         android:text="Commencez à discuter avec le vendeur de ce bien en lui envoyant un message"
-        android:visibility="gone"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText

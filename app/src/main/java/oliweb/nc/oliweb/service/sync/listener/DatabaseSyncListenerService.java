@@ -63,6 +63,7 @@ public class DatabaseSyncListenerService extends Service {
             // SENDERS
             // Envoi toutes les annonces
             disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+                    .distinct()
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
@@ -79,6 +80,7 @@ public class DatabaseSyncListenerService extends Service {
 
             // Envoi tous les chats
             disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+                    .distinct()
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .doOnNext(chatFirebaseSender::sendNewChat)
@@ -86,6 +88,7 @@ public class DatabaseSyncListenerService extends Service {
 
             // Envoi tous les messages
             disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
+                    .distinct()
                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                     .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                     .toObservable()

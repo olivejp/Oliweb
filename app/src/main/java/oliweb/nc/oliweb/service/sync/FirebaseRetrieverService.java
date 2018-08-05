@@ -20,7 +20,7 @@ public class FirebaseRetrieverService {
     private FirebaseRetrieverService() {
     }
 
-    public static FirebaseRetrieverService getInstance(Context context) {
+    public static synchronized  FirebaseRetrieverService getInstance(Context context) {
         if (instance == null) {
             instance = new FirebaseRetrieverService();
         }

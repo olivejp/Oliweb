@@ -19,7 +19,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.request.FutureTarget;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,6 +40,7 @@ import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ChatAdapter;
 
+import static com.bumptech.glide.request.target.Target.SIZE_ORIGINAL;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_COME_FROM_CHAT_FRAGMENT;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.TAG_DETAIL_FRAGMENT;
@@ -50,7 +58,7 @@ public class ListChatFragment extends Fragment {
 
     private MyChatsActivityViewModel viewModel;
 
-    private ChatAdapter chatAdapter;
+    private Map<String, String> mapUrlPhotoUidUser;
 
     @BindView(R.id.recycler_list_chats)
     RecyclerView recyclerView;
@@ -91,10 +99,10 @@ public class ListChatFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mapUrlPhotoUidUser = new HashMap<>();
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
-
         if (viewModel.getTypeRechercheChat() == null) {
-            viewModel.rechercheChatByUidUtilisateur(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            viewModel.setTypeRechercheChat(PAR_UTILISATEUR);
         }
     }
 
@@ -105,15 +113,10 @@ public class ListChatFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        // Conditions de garde
-        if (viewModel.getTypeRechercheChat() != PAR_ANNONCE && viewModel.getTypeRechercheChat() != PAR_UTILISATEUR) {
-            return view;
-        }
-
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        chatAdapter = new ChatAdapter(onClickListener, onPopupClickListener);
+        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUserUid(), onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -123,6 +126,12 @@ public class ListChatFragment extends Fragment {
             viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {
                 if (listChats != null) {
                     Log.d(TAG, "get new list chats listChats : " + listChats);
+
+                    // Pour tous les chats, je vais rechercher l'url du correspondant
+                    for (ChatEntity chatEntity : listChats) {
+                        rechercheUrlPhoto(chatEntity);
+                    }
+
                     chatAdapter.setListChats(listChats);
                 }
             });
@@ -135,6 +144,43 @@ public class ListChatFragment extends Fragment {
             });
         }
         return view;
+    }
+
+    private boolean urlAlreadyLoaded(String uidUser) {
+        for (Map.Entry<String, String> entry : mapUrlPhotoUidUser.entrySet()) {
+            if (entry.getKey().equals(uidUser) && entry.getValue() != null && !entry.getValue().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void rechercheUrlPhoto(ChatEntity chatEntity) {
+        String uidUser;
+        if (chatEntity.getUidBuyer().equals(viewModel.getFirebaseUserUid())) {
+            uidUser = chatEntity.getUidSeller();
+        } else {
+            uidUser = chatEntity.getUidBuyer();
+        }
+        if (!urlAlreadyLoaded(uidUser)) {
+            viewModel.findFirebaseUserByUid()
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(user -> {
+                        if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                            mapUrlPhotoUidUser.put(uidUser, user.getPhotoUrl());
+                            try {
+                                RequestManager rc = Glide.with(ListChatFragment.this);
+                                FutureTarget<File> future = rc.load(user.getPhotoUrl()).downloadOnly(SIZE_ORIGINAL, SIZE_ORIGINAL);
+                                future.get();
+
+                            } catch (InterruptedException | ExecutionException e) {
+                                Log.e(TAG, e.getMessage(), e);
+                            }
+                        }
+                    })
+                    .doOnError(exception -> Log.e(TAG, exception.getMessage(), exception))
+                    .subscribe();
+        }
     }
 
     private void openAnnonceDetail(ChatEntity chatchatEntity) {

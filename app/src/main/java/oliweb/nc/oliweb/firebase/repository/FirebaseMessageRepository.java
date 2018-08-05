@@ -30,7 +30,7 @@ public class FirebaseMessageRepository {
     private FirebaseMessageRepository() {
     }
 
-    public static FirebaseMessageRepository getInstance() {
+    public static  synchronized FirebaseMessageRepository getInstance() {
         if (instance == null) {
             instance = new FirebaseMessageRepository();
         }

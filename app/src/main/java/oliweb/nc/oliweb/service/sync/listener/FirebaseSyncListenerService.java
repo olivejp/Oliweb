@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.service.sync.listener;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.ChildEventListener;
@@ -12,8 +13,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
@@ -42,23 +43,21 @@ public class FirebaseSyncListenerService extends Service {
     private MessageRepository messageRepository;
 
     private Query queryChat;
-    private List<Query> listChatQueryListener;
+    private Map<String, Query> listChatQueryListener;
     private ValueEventListener chatListener = new ValueEventListener() {
         @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             try {
-                if (dataSnapshot != null) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
-                        if (chatFirebase != null) {
-                            ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
-                            chatRepository.saveIfNotExist(chatEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                    .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
-                                    .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
-                                    .subscribe();
-                        }
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
+                    if (chatFirebase != null) {
+                        ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
+                        chatRepository.saveIfNotExist(chatEntity)
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
+                                .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
+                                .subscribe();
                     }
                 }
             } catch (Exception e1) {
@@ -74,42 +73,40 @@ public class FirebaseSyncListenerService extends Service {
 
     private ChildEventListener chatChildListener = new ChildEventListener() {
         @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
 
         }
 
         @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, String s) {
 
         }
 
         @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-            if (dataSnapshot != null) {
-                ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
-                if (chatFirebase != null) {
-                    chatRepository.deleteByUid(chatFirebase.getUid())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                            .doOnSuccess(atomicBoolean -> {
-                                if (atomicBoolean.get()) {
-                                    Log.d(TAG, "Successfuly delete chat in the local DB");
-                                } else {
-                                    Log.d(TAG, "Fail to delete chat in the local DB");
-                                }
-                            })
-                            .subscribe();
-                }
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
+            if (chatFirebase != null) {
+                chatRepository.deleteByUid(chatFirebase.getUid())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                        .doOnSuccess(atomicBoolean -> {
+                            if (atomicBoolean.get()) {
+                                Log.d(TAG, "Successfuly delete chat in the local DB");
+                            } else {
+                                Log.d(TAG, "Fail to delete chat in the local DB");
+                            }
+                        })
+                        .subscribe();
             }
         }
 
         @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
 
         }
 
         @Override
-        public void onCancelled(DatabaseError databaseError) {
+        public void onCancelled(@NonNull DatabaseError databaseError) {
 
         }
     };
@@ -167,12 +164,12 @@ public class FirebaseSyncListenerService extends Service {
         }
 
         @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
 
         }
 
         @Override
-        public void onCancelled(DatabaseError databaseError) {
+        public void onCancelled(@NonNull DatabaseError databaseError) {
 
         }
     };
@@ -198,7 +195,7 @@ public class FirebaseSyncListenerService extends Service {
         } else {
             chatRepository = ChatRepository.getInstance(this);
             messageRepository = MessageRepository.getInstance(this);
-            listChatQueryListener = new ArrayList<>();
+            listChatQueryListener = new HashMap<>();
 
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
@@ -253,9 +250,8 @@ public class FirebaseSyncListenerService extends Service {
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .onBackpressureBuffer()
                 .doOnNext(listChat -> {
-                    clearMessageListener();
                     for (ChatEntity chat : listChat) {
-                        if (chat.getUidChat() != null) {
+                        if (chat.getUidChat() != null && !chatAlreadyObserved(chat.getUidChat())) {
                             Log.d(TAG, "Nouveau chat a écouté " + chat.getUidChat());
 
                             // Création de listener pour chacun de ces chats
@@ -263,15 +259,26 @@ public class FirebaseSyncListenerService extends Service {
                             query.addChildEventListener(messageChildListener);
 
                             // Ajout de la query et du listener à notre liste
-                            listChatQueryListener.add(query);
+                            listChatQueryListener.put(chat.getUidChat(), query);
                         }
                     }
                 })
                 .subscribe();
     }
 
+    private boolean chatAlreadyObserved(String chatUid) {
+        for (Map.Entry<String, Query> entry : listChatQueryListener.entrySet()) {
+            String uidChat = entry.getKey();
+            if (uidChat.equals(chatUid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void clearMessageListener() {
-        for (Query query : listChatQueryListener) {
+        for (Map.Entry<String, Query> entry : listChatQueryListener.entrySet()) {
+            Query query = entry.getValue();
             if (query != null) {
                 query.removeEventListener(messageChildListener);
             }

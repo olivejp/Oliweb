@@ -19,7 +19,6 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 /**
  * Created by 2761oli on 29/01/2018.
  */
-
 public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     private static final String TAG = ChatRepository.class.getName();
     private static ChatRepository instance;
@@ -74,21 +73,21 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
 
     public Single<AtomicBoolean> deleteByUid(String uid) {
         Log.d(TAG, "Starting deleteByUid uid : " + uid);
-        return Single.create(emitter -> {
-            this.chatDao.findByUid(uid)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(chatEntity ->
-                            delete(dataReturn -> {
-                                if (dataReturn.isSuccessful()) {
-                                    emitter.onSuccess(new AtomicBoolean(true));
-                                } else {
-                                    emitter.onSuccess(new AtomicBoolean(false));
-                                }
-                            }, chatEntity)
-                    )
-                    .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
-                    .subscribe();
-        });
+        return Single.create(emitter ->
+                this.chatDao.findByUid(uid)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(chatEntity ->
+                                delete(dataReturn -> {
+                                    if (dataReturn.isSuccessful()) {
+                                        emitter.onSuccess(new AtomicBoolean(true));
+                                    } else {
+                                        emitter.onSuccess(new AtomicBoolean(false));
+                                    }
+                                }, chatEntity)
+                        )
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .subscribe()
+        );
     }
 
     public Maybe<ChatEntity> saveIfNotExist(ChatEntity chatEntity) {
@@ -98,9 +97,10 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(chatRead -> emitter.onComplete())
-                        .switchIfEmpty(singleSave(chatEntity)
+                        .doOnComplete(() -> singleSave(chatEntity)
                                 .doOnSuccess(emitter::onSuccess)
-                                .doOnError(emitter::onError))
+                                .doOnError(emitter::onError)
+                                .subscribe())
                         .subscribe()
         );
     }

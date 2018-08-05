@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -53,10 +54,12 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
+import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_OPEN_CHATS;
+import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_FAVORITE;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
@@ -247,19 +250,25 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_profile) {
             callProfilActivity();
         } else if (id == R.id.nav_favorites) {
-            callFavoriteFragment();
+            callFavoriteActivity();
         } else if (id == R.id.nav_chats) {
-
             // On lance l'activité des conversations.
-            Intent intent = new Intent(this, MyChatsActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-
+            String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+            if (uidUser != null) {
+                Intent intent = new Intent(this, MyChatsActivity.class);
+                intent.setAction(ARG_ACTION_OPEN_CHATS);
+                intent.putExtra(DATA_FIREBASE_USER_UID, uidUser);
+                startActivity(intent);
+                overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            }
         } else if (id == R.id.nav_annonces) {
-            Intent intent = new Intent();
-            intent.setClass(this, MyAnnoncesActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+            if (uidUser != null) {
+                Intent intent = new Intent();
+                intent.setClass(this, MyAnnoncesActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            }
         }
 
         drawer.closeDrawer(GravityCompat.START);
@@ -377,6 +386,7 @@ public class MainActivity extends AppCompatActivity
             GlideApp.with(profileImage)
                     .load(user.getPhotoUrl())
                     .circleCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.ic_person_white_48dp)
                     .into(profileImage);
         }
@@ -436,7 +446,7 @@ public class MainActivity extends AppCompatActivity
                 // Sauvegarde de l'utilisateur
                 viewModel.saveUser(mFirebaseUser)
                         .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .doOnError(e -> Toast.makeText(this, "Utilisateur non sauvegardé", Toast.LENGTH_LONG).show())
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .doOnSuccess(atomicBoolean -> {
                             if (atomicBoolean.get()) {
                                 Snackbar.make(navigationView, "Bienvenue sur Oliweb", Snackbar.LENGTH_LONG).setAction("Voir mon profil", v -> callProfilActivity()).show();
@@ -490,13 +500,13 @@ public class MainActivity extends AppCompatActivity
         overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
-    private void callFavoriteFragment() {
-        ListAnnonceFragment listAnnonceFragment = ListAnnonceFragment.getInstance(mFirebaseUser.getUid(), ACTION_FAVORITE);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.main_frame, listAnnonceFragment)
-                .addToBackStack(null)
-                .commit();
+    private void callFavoriteActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        Intent intent = new Intent();
+        intent.setClass(this, FavoriteAnnonceActivity.class);
+        intent.putExtra(ARG_USER_UID, uidUser);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
 }
