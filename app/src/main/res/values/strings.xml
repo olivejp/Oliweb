@@ -121,5 +121,7 @@
     <string name="error_no_mail_client_found">Pas de client mail installé</string>
     <string name="error_cant_make_phone_call">Impossible de téléphoner</string>
     <string name="activity_name_advanced_search">Recherche avancée</string>
+    <string name="begin">Commencer</string>
+    <string name="next">Suivant</string>
 
 </resources>

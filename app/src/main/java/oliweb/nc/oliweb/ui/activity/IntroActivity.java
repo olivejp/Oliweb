@@ -24,6 +24,9 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static junit.framework.Assert.assertNotNull;
+
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class IntroActivity extends AppCompatActivity {
 
     private int[] layouts;
@@ -127,11 +130,11 @@ public class IntroActivity extends AppCompatActivity {
             // changing the next button text 'NEXT' / 'GOT IT'
             if (position == layouts.length - 1) {
                 // last page. make button text to GOT IT
-                btnNext.setText("Commencer");
+                btnNext.setText(R.string.begin);
                 btnSkip.setVisibility(View.GONE);
             } else {
                 // still pages are left
-                btnNext.setText("Suivant");
+                btnNext.setText(R.string.next);
                 btnSkip.setVisibility(View.VISIBLE);
             }
         }
@@ -170,6 +173,7 @@ public class IntroActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            assertNotNull("LayoutInflater can't be null",layoutInflater);
             View view = layoutInflater.inflate(layouts[position], container, false);
             container.addView(view);
             return view;
