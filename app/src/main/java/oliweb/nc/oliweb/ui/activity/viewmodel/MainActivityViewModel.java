@@ -26,6 +26,8 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
@@ -44,6 +46,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private PhotoRepository photoRepository;
     private MutableLiveData<AtomicBoolean> shouldAskQuestion;
     private MutableLiveData<Integer> sorting;
+    private MutableLiveData<FirebaseUser> liveDataFirebaseUser;
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
@@ -59,14 +62,14 @@ public class MainActivityViewModel extends AndroidViewModel {
         return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
-    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
-        Log.d(TAG, "Starting shouldIAskQuestionToRetreiveData uidUtilisateur : " + uidUtilisateur);
+    public LiveData<AtomicBoolean> shouldIAskQuestionToRetrieveData(@Nullable String uidUser) {
+        Log.d(TAG, "Starting shouldIAskQuestionToRetrieveData uidUser : " + uidUser);
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new MutableLiveData<>();
         }
         shouldAskQuestion.setValue(new AtomicBoolean(false));
-        if (uidUtilisateur != null) {
-            firebaseAnnonceRespository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+        if (uidUser != null) {
+            firebaseAnnonceRespository.checkFirebaseRepository(uidUser, shouldAskQuestion);
         }
 
         return shouldAskQuestion;
@@ -118,7 +121,17 @@ public class MainActivityViewModel extends AndroidViewModel {
         return this.chatRepository.countAllChatsByUser(uidUser, status);
     }
 
-    public Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    public LiveDataOnce<AtomicBoolean> removeFromFavoriteLive(String uidUser, AnnoncePhotos annoncePhotos) {
+        CustomLiveData<AtomicBoolean> liveDataRemoveFavorite = new CustomLiveData<>();
+        removeFromFavorite(uidUser, annoncePhotos)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(liveDataRemoveFavorite::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return liveDataRemoveFavorite;
+    }
+
+    private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return Single.create(emitter ->
                 annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
@@ -151,30 +164,30 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @param annoncePhotos
      * @return
      */
-    public Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    public LiveDataOnce<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
         Log.d(TAG, "Starting saveToFavorite called with annoncePhotos = " + annoncePhotos.toString());
-        return annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos);
-    }
-
-    /**
-     * Vérification que l'annonce n'existe pas deja dans la DB
-     * avec le statut Favorite et que je ne suis pas l'auteur de cette annonce.
-     *
-     * @param uidUser
-     * @param uidAnnonce
-     * @return
-     */
-    public Maybe<AnnoncePhotos> getFromFirebaseAndSaveToFavorite(String uidUser, String uidAnnonce) {
-        return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
-                .flatMapSingle(annoncePhotos -> annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos))
-                .flatMapMaybe(annonceEntity -> annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce));
+        CustomLiveData<AnnonceEntity> liveDataSaveFavorite = new CustomLiveData<>();
+        annonceRepository.saveToFavorite(getApplication().getApplicationContext(), uidUser, annoncePhotos)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(liveDataSaveFavorite::postValue)
+                .subscribe();
+        return liveDataSaveFavorite;
     }
 
     public Maybe<AnnoncePhotos> getFromFirebaseByUidAnnonce(String uidAnnonce) {
         return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnoncePhotos);
+    }
+
+    public LiveData<FirebaseUser> getLiveDataFirebaseUser(){
+        if (liveDataFirebaseUser == null) {
+            liveDataFirebaseUser = new MutableLiveData<>();
+        }
+        return liveDataFirebaseUser;
+    }
+
+    public void setFirebaseUser(FirebaseUser firebaseUser) {
+        liveDataFirebaseUser.postValue(firebaseUser);
     }
 }

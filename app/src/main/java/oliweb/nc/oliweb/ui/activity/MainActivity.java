@@ -442,6 +442,7 @@ public class MainActivity extends AppCompatActivity
 
                 // Sauvegarde de l'uid de l'utilisateur dans les préférences, dans le cas d'une déconnexion
                 SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(mFirebaseUser.getUid());
+                viewModel.setFirebaseUser(mFirebaseUser);
 
                 // Sauvegarde de l'utilisateur
                 viewModel.saveUser(mFirebaseUser)
@@ -459,10 +460,10 @@ public class MainActivity extends AppCompatActivity
                 initViewsForThisUser(mFirebaseUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
-                    viewModel.shouldIAskQuestionToRetreiveData(mFirebaseUser.getUid()).observe(this, atomicBoolean -> {
+                    viewModel.shouldIAskQuestionToRetrieveData(mFirebaseUser.getUid()).observe(this, atomicBoolean -> {
                         if (atomicBoolean != null && atomicBoolean.get() && !questionHasBeenAsked) {
                             questionHasBeenAsked = true;
-                            viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
+                            viewModel.shouldIAskQuestionToRetrieveData(null).removeObservers(this);
                             sendNotificationToRetreiveData(getSupportFragmentManager(), this);
                         }
                     });
@@ -476,7 +477,7 @@ public class MainActivity extends AppCompatActivity
                 mFirebaseUser = null;
                 profileImage.setImageResource(R.drawable.ic_person_white_48dp);
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
-                viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
+                viewModel.shouldIAskQuestionToRetrieveData(null).removeObservers(this);
             }
         };
     }

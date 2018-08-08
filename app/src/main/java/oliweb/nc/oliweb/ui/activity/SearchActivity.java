@@ -51,11 +51,8 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 public class SearchActivity extends AppCompatActivity {
     private static final String TAG = SearchActivity.class.getName();
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
-
-    private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
-
-    private static final String ACTION_FAVORITE = "ACTION_FAVORITE";
     private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
+    private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
 
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
@@ -63,10 +60,10 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
-    SearchView searchView;
-
     @BindView(R.id.toolbar_activity_search)
     Toolbar toolbar;
+
+    SearchView searchView;
 
     private String query;
     private ArrayList<AnnoncePhotos> listAnnonce;
@@ -241,7 +238,7 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
-    private View.OnClickListener onClickListener = v -> {
+    private View.OnClickListener onClickListener = (View v) -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, viewHolder.getAnnoncePhotos());

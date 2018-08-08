@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
@@ -35,8 +36,6 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -56,6 +55,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static android.support.v4.app.ActivityOptionsCompat.*;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
@@ -95,6 +95,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @BindView(R.id.constraint_list_annonce)
     ConstraintLayout constraintLayout;
 
+    @BindView(R.id.coordinator_layout_list_annonce)
+    CoordinatorLayout coordinatorLayout;
+
     private String uidUser;
     private String action;
     private AppCompatActivity appCompatActivity;
@@ -111,12 +114,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     /**
      * OnClickListener that should open AnnonceDetailActivity
      */
-    private View.OnClickListener onClickListener = v -> {
+    private View.OnClickListener onClickListener = (View v) -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
         Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(appCompatActivity, pairImage);
+        ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage);
         startActivity(intent, options.toBundle());
     };
 
@@ -150,11 +153,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 @Override
                 public void getLinkError() {
                     loadingDialogFragment.dismiss();
-                    Snackbar.make(recyclerView, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(coordinatorLayout, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
                 }
             });
         } else {
-            Snackbar.make(recyclerView, R.string.sign_in_required, Snackbar.LENGTH_LONG)
+            Snackbar.make(coordinatorLayout, R.string.sign_in_required, Snackbar.LENGTH_LONG)
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         }
@@ -167,55 +170,50 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      * delete all the photos from the database,
      * delete the annonce from the database.
      */
-    private View.OnClickListener onClickListenerFavorite = v -> {
+    private View.OnClickListener onClickListenerFavorite = (View v) -> {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            Snackbar.make(recyclerView, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+            Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         } else {
-            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidCurrentUser)) {
-                Toast.makeText(appCompatActivity, "Action impossible\nCette annonce vous appartient", Toast.LENGTH_LONG).show();
+            if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidUser)) {
+                Toast.makeText(appCompatActivity, R.string.IMPOSSIBLE_YOU_OWN_THIS_AD, Toast.LENGTH_LONG).show();
             } else {
                 if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
                     // Suppression des favoris
-                    viewModel.removeFromFavorite(uidCurrentUser, annoncePhotos)
-                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnSuccess(atomicBoolean -> {
-                                if (atomicBoolean.get()) {
-                                    Snackbar.make(constraintLayout, "Annonce retirée des favoris", Snackbar.LENGTH_LONG).show();
+                    viewModel.removeFromFavoriteLive(uidUser, annoncePhotos)
+                            .observeOnce(atomicBoolean -> {
+                                if (atomicBoolean != null && atomicBoolean.get()) {
+                                    Snackbar.make(coordinatorLayout, R.string.AD_REMOVE_FROM_FAVORITE, Snackbar.LENGTH_LONG).show();
                                 }
-                            })
-                            .subscribe();
+                            });
                 } else {
-                    // Ajout dans les favoris
-                    viewModel.saveToFavorite(uidCurrentUser, annoncePhotos)
-                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnSuccess(annonceEntity -> Snackbar.make(constraintLayout, "Annonce ajoutée aux favoris", Snackbar.LENGTH_LONG)
-                                    .setAction("Mes favoris", v12 -> {
-                                                Intent intent = new Intent();
-                                                intent.setClass(appCompatActivity, FavoriteAnnonceActivity.class);
-                                                intent.putExtra(ARG_USER_UID, uidUser);
-                                                startActivity(intent);
-                                                appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-                                            }
-
-                                    )
-                                    .show())
-                            .subscribe();
+                    viewModel.saveToFavorite(uidUser, annoncePhotos).observeOnce(annonceEntity ->
+                            Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                    .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                    .show()
+                    );
                 }
             }
         }
     };
 
+    private void callFavoriteAnnonceActivity() {
+        Intent intent = new Intent();
+        intent.setClass(appCompatActivity, FavoriteAnnonceActivity.class);
+        intent.putExtra(ARG_USER_UID, uidUser);
+        startActivity(intent);
+        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
     public ListAnnonceFragment() {
         // Empty constructor
     }
 
-    public static synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String action) {
+    public static synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String
+            action) {
         ListAnnonceFragment listAnnonceFragment = new ListAnnonceFragment();
         Bundle bundle = new Bundle();
         bundle.putString(ARG_UID_USER, uidUtilisateur);
@@ -242,6 +240,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             action = getArguments().getString(ARG_ACTION);
         }
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
+        viewModel.getLiveDataFirebaseUser().observe(appCompatActivity, firebaseUser ->
+                uidUser = (firebaseUser != null) ? firebaseUser.getUid() : null
+        );
     }
 
     @Override
@@ -255,7 +256,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 onClickListener,
                 onClickListenerShare,
                 onClickListenerFavorite);
-
 
         recyclerView.setAdapter(annonceBeautyAdapter);
 
@@ -284,7 +284,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         GlideApp.get(appCompatActivity).clearMemory();
         recyclerView.setAdapter(null);
         recyclerView.removeOnScrollListener(scrollListener);
-        annoncesReference.removeEventListener(valueEventListener);
+        annoncesReference.removeEventListener(loadSortListener);
         super.onDestroyView();
     }
 
@@ -314,7 +314,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             case ACTION_FAVORITE:
                 if (uidUser != null) {
                     if (actionBar != null) {
-                        actionBar.setTitle("Vos favoris");
+                        actionBar.setTitle(R.string.MY_FAVORITE);
                     }
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
@@ -332,7 +332,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 break;
             case ACTION_MOST_RECENT:
                 if (actionBar != null) {
-                    actionBar.setTitle("Dernières annonces");
+                    actionBar.setTitle(R.string.RECENT_ADS);
                 }
                 RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
                 scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -390,10 +390,10 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private void loadMoreDatas() {
         switch (sortSelected) {
             case SORT_DATE:
-                loadSortDate().addListenerForSingleValueEvent(valueEventListener);
+                loadSortDate().addListenerForSingleValueEvent(loadSortListener);
                 break;
             case SORT_PRICE:
-                loadSortPrice().addListenerForSingleValueEvent(valueEventListener);
+                loadSortPrice().addListenerForSingleValueEvent(loadSortListener);
                 break;
             default:
                 break;
@@ -444,11 +444,10 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return query;
     }
 
-    private ValueEventListener valueEventListener = new ValueEventListener() {
+    private ValueEventListener loadSortListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             if (dataSnapshot.getValue() != null) {
-                // Lancement d'une tache pour aller vérifier les annonces déjà reçues
                 LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
                 loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sortSelected, directionSelected));
             }
@@ -463,6 +462,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private TaskListener<ArrayList<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
         annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
-        annoncesReference.removeEventListener(valueEventListener);
+        annoncesReference.removeEventListener(loadSortListener);
     };
 }

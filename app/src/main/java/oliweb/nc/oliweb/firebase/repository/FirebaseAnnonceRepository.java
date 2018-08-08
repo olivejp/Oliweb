@@ -59,19 +59,19 @@ public class FirebaseAnnonceRepository {
     }
 
     /**
-     * Retreive all the annonces on the Fb database for the specified User.
+     * Retrieve all the annonces on the Fb database for the specified User.
      * Then we try to find them in the local DB.
      * If not present the MutableLiveData shouldAskQuestion will receive True.
      *
-     * @param uidUtilisateur
+     * @param uidUser
      * @param shouldAskQuestion
      */
-    public void checkFirebaseRepository(final String uidUtilisateur, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
-        Log.d(TAG, "Starting checkFirebaseRepository called with uidUtilisateur = " + uidUtilisateur);
-        observeAllAnnonceByUidUser(uidUtilisateur)
+    public void checkFirebaseRepository(final String uidUser, @NonNull MutableLiveData<AtomicBoolean> shouldAskQuestion) {
+        Log.d(TAG, "Starting checkFirebaseRepository called with uidUser = " + uidUser);
+        observeAllAnnonceByUidUser(uidUser)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .switchMapSingle(annonceDto -> annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUtilisateur, annonceDto.getUuid()))
+                .switchMapSingle(annonceDto -> annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid()))
                 .doOnNext(integer -> {
                     if (integer != null && integer == 0) {
                         shouldAskQuestion.postValue(new AtomicBoolean(true));
@@ -89,8 +89,8 @@ public class FirebaseAnnonceRepository {
     public void saveAnnoncesByUidUser(Context context, String uidUser) {
         queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null && dataSnapshot.getValue() != null) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
                     HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                     if (mapAnnonceSearchDto != null && !mapAnnonceSearchDto.isEmpty()) {
                         for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
@@ -101,7 +101,7 @@ public class FirebaseAnnonceRepository {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.d(TAG, "onCancelled");
             }
         });
@@ -144,11 +144,11 @@ public class FirebaseAnnonceRepository {
      * @return Observable<AnnonceDto> wich will emit AnnonceDto
      */
     private Observable<AnnonceDto> observeAllAnnonceByUidUser(String uidUser) {
-        Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUtilisateur : " + uidUser);
+        Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUser : " + uidUser);
         return Observable.create(emitter -> queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot == null || dataSnapshot.getValue() == null) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() == null) {
                     emitter.onComplete();
                     return;
                 }
@@ -166,7 +166,7 @@ public class FirebaseAnnonceRepository {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.d(TAG, "onCancelled DatabaseError : " + databaseError.getMessage());
                 emitter.onError(new RuntimeException(databaseError.getMessage()));
             }
@@ -185,7 +185,7 @@ public class FirebaseAnnonceRepository {
                 annonceRef.child(uidAnnonce)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
                                 if (annonceDto != null) {
                                     e.onSuccess(annonceDto);
@@ -195,7 +195,7 @@ public class FirebaseAnnonceRepository {
                             }
 
                             @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
                                 e.onError(new RuntimeException(databaseError.getMessage()));
                             }
                         })
