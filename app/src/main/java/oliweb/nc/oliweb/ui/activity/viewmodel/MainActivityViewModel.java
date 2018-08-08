@@ -175,7 +175,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public Maybe<AnnoncePhotos> getFromFirebaseByUidAnnonce(String uidAnnonce) {
-        return firebaseAnnonceRespository.maybeFindByUidAnnonce(uidAnnonce)
+        return firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnoncePhotos);
     }

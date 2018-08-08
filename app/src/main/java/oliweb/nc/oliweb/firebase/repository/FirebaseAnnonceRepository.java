@@ -179,34 +179,32 @@ public class FirebaseAnnonceRepository {
      * @param uidAnnonce to retrieve
      * @return AnnonceDto
      */
-    public Maybe<AnnonceDto> maybeFindByUidAnnonce(String uidAnnonce) {
-        Log.d(TAG, "Starting maybeFindByUidAnnonce uidAnnonce : " + uidAnnonce);
-        return Maybe.create(e ->
-                annonceRef.child(uidAnnonce)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                                if (annonceDto != null) {
-                                    e.onSuccess(annonceDto);
-                                } else {
-                                    e.onComplete();
-                                }
-                            }
+    public Maybe<AnnonceDto> findMaybeByUidAnnonce(String uidAnnonce) {
+        Log.d(TAG, "Starting findMaybeByUidAnnonce uidAnnonce : " + uidAnnonce);
+        return Maybe.create(e -> annonceRef.child(uidAnnonce).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
+                        if (annonceDto != null) {
+                            e.onSuccess(annonceDto);
+                        } else {
+                            e.onComplete();
+                        }
+                    }
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-                                e.onError(new RuntimeException(databaseError.getMessage()));
-                            }
-                        })
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        e.onError(new RuntimeException(databaseError.getMessage()));
+                    }
+                })
         );
     }
 
     /**
      * Va récupérer un uid et le timestamp du serveur pour une annonceDto
      *
-     * @param annonceEntity
-     * @return
+     * @param annonceEntity qui nécessite un timestamp et un uid
+     * @return annonceEntity avec les attributs datePublication et uid renseigné avec des valeurs issues de Firebase.
      */
     public Single<AnnonceEntity> getUidAndTimestampFromFirebase(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting getUidAndTimestampFromFirebase annonceEntity : " + annonceEntity);
@@ -248,7 +246,7 @@ public class FirebaseAnnonceRepository {
                 annonceRef.child(annonceDto.getUuid()).setValue(annonceDto)
                         .addOnFailureListener(emitter::onError)
                         .addOnSuccessListener(o ->
-                                maybeFindByUidAnnonce(annonceDto.getUuid())
+                                findMaybeByUidAnnonce(annonceDto.getUuid())
                                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                         .doOnError(emitter::onError)
                                         .doOnSuccess(annonceDto1 -> emitter.onSuccess(annonceDto1.getUuid()))

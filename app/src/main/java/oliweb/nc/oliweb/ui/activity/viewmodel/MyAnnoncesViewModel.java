@@ -3,7 +3,6 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -16,6 +15,8 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -27,7 +28,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
-    private MutableLiveData<AtomicBoolean> shouldAskQuestion;
+    private CustomLiveData<AtomicBoolean> shouldAskQuestion;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
@@ -41,12 +42,11 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
-    public LiveData<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
+    public LiveDataOnce<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
         Log.d(TAG, "Starting shouldIAskQuestionToRetrieveData uidUtilisateur : " + uidUtilisateur);
         if (shouldAskQuestion == null) {
-            shouldAskQuestion = new MutableLiveData<>();
+            shouldAskQuestion = new CustomLiveData<>();
         }
-        shouldAskQuestion.setValue(new AtomicBoolean(false));
 
         if (uidUtilisateur != null) {
             firebaseAnnonceRepository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);

@@ -75,7 +75,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
-        return this.firebaseAnnonceRepository.maybeFindByUidAnnonce(uidAnnonce);
+        return this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce);
     }
 
     public boolean isTwoPane() {

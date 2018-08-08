@@ -20,7 +20,7 @@ import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
- * Cette classe découpe toutes les étapes nécessaires pour l'envoi d'une annonce sur Firebase
+ * Cette classe découpe toutes les étapes nécessaires pour la suppression d'une annonce sur Firebase
  */
 public class AnnonceFirebaseDeleter {
 
@@ -39,7 +39,7 @@ public class AnnonceFirebaseDeleter {
     private AnnonceFirebaseDeleter() {
     }
 
-    public static synchronized  AnnonceFirebaseDeleter getInstance(Context context) {
+    public static synchronized AnnonceFirebaseDeleter getInstance(Context context) {
         if (instance == null) {
             instance = new AnnonceFirebaseDeleter();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
@@ -75,10 +75,7 @@ public class AnnonceFirebaseDeleter {
     private Observable<AtomicBoolean> deleteAnnonceAllService(AnnonceFull annonceFull) {
         Log.d(TAG, "Starting deleteAnnonceAllService annonceFull : " + annonceFull);
         return firebaseAnnonceRepository.delete(annonceFull.getAnnonce().getUid())
-                .doOnError(exception -> {
-                    Log.e(TAG, "Failed to delete from the Firebase Database => " + exception.getLocalizedMessage(), exception);
-                    annonceRepository.markAsFailedToDelete(annonceFull.getAnnonce()).subscribe();
-                })
+                .doOnError(exception -> annonceRepository.markAsFailedToDelete(annonceFull.getAnnonce()).subscribe())
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         annonceRepository.delete(dataReturn -> {

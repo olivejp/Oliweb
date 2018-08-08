@@ -202,9 +202,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             return true;
         }
         if (idItem == R.id.menu_synchronyze) {
-            viewModel.shouldIAskQuestionToRetreiveData(uidUser).observe(this, atomicBoolean -> {
+            viewModel.shouldIAskQuestionToRetreiveData(uidUser).observeOnce(atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
-                    viewModel.shouldIAskQuestionToRetreiveData(null).removeObservers(this);
                     sendNotificationToRetreiveData(getSupportFragmentManager(), this);
                 }
             });
