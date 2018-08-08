@@ -36,14 +36,13 @@ import oliweb.nc.oliweb.utility.Utility;
 public class FirebaseSyncListenerService extends Service {
 
     private static final String TAG = FirebaseSyncListenerService.class.getName();
-
     public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-
     private Query queryChat;
     private Map<String, Query> listChatQueryListener;
+
     private ValueEventListener chatListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -251,7 +250,7 @@ public class FirebaseSyncListenerService extends Service {
                 .onBackpressureBuffer()
                 .doOnNext(listChat -> {
                     for (ChatEntity chat : listChat) {
-                        if (chat.getUidChat() != null && !chatAlreadyObserved(chat.getUidChat())) {
+                        if (chat.getUidChat() != null && !isChatAlreadyObserved(chat.getUidChat())) {
                             Log.d(TAG, "Nouveau chat a écouté " + chat.getUidChat());
 
                             // Création de listener pour chacun de ces chats
@@ -266,7 +265,7 @@ public class FirebaseSyncListenerService extends Service {
                 .subscribe();
     }
 
-    private boolean chatAlreadyObserved(String chatUid) {
+    private boolean isChatAlreadyObserved(String chatUid) {
         for (Map.Entry<String, Query> entry : listChatQueryListener.entrySet()) {
             String uidChat = entry.getKey();
             if (uidChat.equals(chatUid)) {

@@ -71,9 +71,7 @@ public class FirebaseUserRepository {
         Log.d(TAG, "Starting getToken");
         return Single.create(emitter ->
                 FirebaseInstanceId.getInstance().getInstanceId()
-                        .addOnSuccessListener(instanceIdResult -> {
-                            emitter.onSuccess(instanceIdResult.getToken());
-                        })
+                        .addOnSuccessListener(instanceIdResult -> emitter.onSuccess(instanceIdResult.getToken()))
                         .addOnFailureListener(emitter::onError)
         );
     }
