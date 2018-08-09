@@ -67,7 +67,8 @@ public class IntroActivity extends AppCompatActivity {
         // add few more layouts if you want
         layouts = new int[]{
                 R.layout.intro_slide_1,
-                R.layout.intro_slide_2};
+                R.layout.intro_slide_2,
+                R.layout.intro_slide_3};
 
         // adding bottom dots
         addBottomDots(0);
@@ -173,7 +174,7 @@ public class IntroActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            assertNotNull("LayoutInflater can't be null",layoutInflater);
+            assertNotNull("LayoutInflater can't be null", layoutInflater);
             View view = layoutInflater.inflate(layouts[position], container, false);
             container.addView(view);
             return view;

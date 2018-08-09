@@ -11,53 +11,62 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/slide_title"
         android:layout_marginTop="30dp"
-        android:text="Vendez vos biens facilement"
+        android:text="Garder le contact"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_title"
         android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/img_mail"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/img_aftership"
-        android:layout_width="@dimen/img_width_height"
-        android:layout_height="@dimen/img_width_height"
+        android:id="@+id/img_telephone"
+        android:layout_width="@dimen/img_width_height_mini"
+        android:layout_height="@dimen/img_width_height_mini"
         app:layout_constraintBottom_toTopOf="@id/text_slide_2"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/img_mail"
+        app:layout_constraintTop_toTopOf="@id/img_mail"
+        app:srcCompat="@drawable/ic_phone_white_48dp" />
+
+    <ImageView
+        android:id="@+id/img_mail"
+        android:layout_width="@dimen/img_width_height_mini"
+        android:layout_height="@dimen/img_width_height_mini"
+        app:layout_constraintBottom_toTopOf="@id/text_slide_1"
+        app:layout_constraintLeft_toRightOf="@id/img_telephone"
+        app:layout_constraintRight_toLeftOf="@id/img_chat"
         app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
-        app:srcCompat="@drawable/ic_add_a_photo_white_48dp" />
+        app:srcCompat="@drawable/fui_ic_mail_white_24dp" />
 
-    <TextView
-        android:id="@+id/text_slide_2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/desc_padding"
-        android:paddingRight="@dimen/desc_padding"
-        android:text="@string/description_slide_2"
-        android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/slide_desc"
-        app:layout_constraintBottom_toTopOf="@id/text_slide_3"
-        app:layout_constraintLeft_toLeftOf="parent"
+    <ImageView
+        android:id="@+id/img_chat"
+        android:layout_width="@dimen/img_width_height_mini"
+        android:layout_height="@dimen/img_width_height_mini"
+        app:layout_constraintBottom_toTopOf="@id/text_slide_2"
+        app:layout_constraintLeft_toRightOf="@id/img_mail"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img_aftership" />
+        app:layout_constraintTop_toTopOf="@id/img_mail"
+        app:srcCompat="@drawable/ic_message_white_48dp" />
 
     <TextView
-        android:id="@+id/text_slide_3"
+        android:id="@+id/text_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="30dp"
+        android:layout_marginTop="8dp"
         android:paddingLeft="@dimen/desc_padding"
         android:paddingRight="@dimen/desc_padding"
-        android:text="@string/description_slide_3"
+        android:text="Oliweb dispose de trois moyens de communication, dont une messagerie interne. Celle ci vous permettra de rentrez en contact avec le vendeur ou de répondre à des acheteurs potentiels."
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="@dimen/slide_desc"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_slide_2" />
+        app:layout_constraintTop_toBottomOf="@+id/img_mail" />
+
+
 </android.support.constraint.ConstraintLayout>
