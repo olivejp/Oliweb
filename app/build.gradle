@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
-def Properties props = new Properties()
 def propFile = file('signing.properties')
+Properties props = new Properties()
 props.load(new FileInputStream(propFile))
 
 android {
