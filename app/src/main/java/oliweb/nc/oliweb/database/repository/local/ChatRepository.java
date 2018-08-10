@@ -42,37 +42,34 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     }
 
     public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotIn(String uidAnnonce, List<String> status) {
-        Log.d(TAG, "Starting findByUidAnnonceAndStatusNotIn uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidAnnonce(uidAnnonce, status);
     }
 
     public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
-        Log.d(TAG, "Starting findByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
         return this.chatDao.findByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
     }
 
     public Flowable<List<ChatEntity>> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
-        Log.d(TAG, "Starting findFlowableByUidUserAndStatusNotIn uidBuyerOrSeller : " + uidBuyerOrSeller);
         return this.chatDao.findFlowableByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
     }
 
     public Flowable<ChatEntity> findFlowableByUidUserAndStatusIn(String uidBuyerOrSeller, List<String> status) {
-        Log.d(TAG, "Starting findFlowableByUidUserAndStatusIn uidBuyerOrSeller : " + uidBuyerOrSeller);
         return this.chatDao.findFlowableByUidUserAndStatusIn(uidBuyerOrSeller, status);
     }
 
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
-        Log.d(TAG, "Starting findByUidUserAndUidAnnonce uidUser : " + uidUser + " uidAnnonce : " + uidAnnonce);
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
+    public Observable<ChatEntity> findByStatusIn(List<String> status) {
+        return this.chatDao.getAllChatByStatus(status).flattenAsObservable(chatEntities -> chatEntities);
+    }
+
     public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
-        Log.d(TAG, "Starting countAllChatsByUser uidUser : " + uidUser + " status : " + status);
         return this.chatDao.countAllFavoritesByUser(uidUser, status);
     }
 
     public Single<AtomicBoolean> deleteByUid(String uid) {
-        Log.d(TAG, "Starting deleteByUid uid : " + uid);
         return Single.create(emitter ->
                 this.chatDao.findByUid(uid)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -91,7 +88,6 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     }
 
     public Maybe<ChatEntity> saveIfNotExist(ChatEntity chatEntity) {
-        Log.d(TAG, "Starting saveIfNotExist chatEntity : " + chatEntity);
         return Maybe.create(emitter ->
                 findByUid(chatEntity.getUidChat())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -106,7 +102,6 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     }
 
     public Observable<ChatEntity> markToDeleteByUidAnnonceAndUidUser(String uidAnnonce, String uidUser) {
-        Log.d(TAG, "markToDeleteByUidAnnonceAndUidUser uidAnnonce : " + uidAnnonce + " uidUser = " + uidUser);
         return chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

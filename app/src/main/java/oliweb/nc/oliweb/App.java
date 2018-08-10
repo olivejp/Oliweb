@@ -3,13 +3,15 @@ package oliweb.nc.oliweb;
 import android.app.Application;
 import android.content.Intent;
 
-
+import com.evernote.android.job.JobManager;
 import com.facebook.stetho.Stetho;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.leakcanary.LeakCanary;
 
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.service.job.SyncJob;
+import oliweb.nc.oliweb.service.job.SyncJobCreator;
 import oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService;
 
@@ -62,10 +64,9 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
         //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
 
-        // TODO Réactiver la plannif du job
         // Plannification d'un job
-        // JobManager.create(this).addJobCreator(new SyncJobCreator());
-        // SyncJob.scheduleJob();
+        JobManager.create(this).addJobCreator(new SyncJobCreator());
+        SyncJob.scheduleJob();
     }
 
     /**

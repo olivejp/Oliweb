@@ -68,7 +68,7 @@ public class SyncService extends IntentService {
     }
 
     private void handleActionSyncAll() {
-        CoreSync.getInstance(this.getApplicationContext()).synchronize();
+        ScheduleSync.getInstance(this.getApplicationContext()).synchronize();
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
@@ -104,7 +104,7 @@ public class SyncService extends IntentService {
                             break;
                         case ARG_ACTION_SYNC_USER:
                             Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
-                            CoreSync.getInstance(this).synchronize();
+                            ScheduleSync.getInstance(this).synchronize();
                             break;
                         default:
                             break;

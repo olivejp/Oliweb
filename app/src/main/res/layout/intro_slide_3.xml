@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="124dp"
-        android:fontFamily="@font/Sinisuka"
+        android:fontFamily="@font/sinisuka"
         android:text="Garder le contact"
         android:textAlignment="center"
         android:textColor="@color/colorPrimary"
