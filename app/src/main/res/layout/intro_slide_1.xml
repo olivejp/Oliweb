@@ -3,58 +3,37 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
-
-    <TextView
-        android:id="@+id/title_slide_1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Bienvenue sur"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/slide_title"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/title_application"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    android:background="@android:color/white">
 
     <TextView
         android:id="@+id/title_application"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/slide_title"
-        android:fontFamily="@font/dancing_font_family"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/Sinisuka"
         android:text="Oliweb"
-        android:textColor="@android:color/white"
+        android:textAlignment="center"
+        android:textColor="@color/colorPrimary"
         android:textSize="72sp"
-        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_slide_1" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.37" />
 
-    <ImageView
-        android:id="@+id/img_heart"
-        android:layout_width="@dimen/img_width_height"
-        android:layout_height="@dimen/img_width_height"
-        android:contentDescription=""
-        android:elevation="0dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_application"
-        app:srcCompat="@drawable/ic_favorite_border_grey_900_48dp" />
 
     <TextView
         android:id="@+id/text_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
         android:paddingLeft="@dimen/desc_padding"
         android:paddingRight="@dimen/desc_padding"
-        android:text="Gérer vos petites annonces depuis votre smartphone."
+        android:text="L'application Android qui gére vos petites annonces"
         android:textAlignment="center"
-        android:textColor="@android:color/white"
+        android:textColor="@color/colorPrimary"
         android:textSize="@dimen/slide_desc"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/img_heart" />
+        app:layout_constraintTop_toBottomOf="@+id/title_application"
+        app:layout_constraintVertical_bias="0.0" />
 </android.support.constraint.ConstraintLayout>

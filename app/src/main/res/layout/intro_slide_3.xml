@@ -1,72 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@android:color/white">
 
     <TextView
         android:id="@+id/title_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/slide_title"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="124dp"
+        android:fontFamily="@font/Sinisuka"
         android:text="Garder le contact"
         android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/slide_title"
+        android:textColor="@color/colorPrimary"
+        android:textSize="40sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/img_mail"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/img_telephone"
-        android:layout_width="@dimen/img_width_height_mini"
-        android:layout_height="@dimen/img_width_height_mini"
-        app:layout_constraintBottom_toTopOf="@id/text_slide_2"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/img_mail"
-        app:layout_constraintTop_toTopOf="@id/img_mail"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:layout_constraintBottom_toTopOf="@+id/text_slide_1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
         app:srcCompat="@drawable/ic_phone_white_48dp" />
 
-    <ImageView
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/img_mail"
-        android:layout_width="@dimen/img_width_height_mini"
-        android:layout_height="@dimen/img_width_height_mini"
-        app:layout_constraintBottom_toTopOf="@id/text_slide_1"
-        app:layout_constraintLeft_toRightOf="@id/img_telephone"
-        app:layout_constraintRight_toLeftOf="@id/img_chat"
-        app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:layout_constraintEnd_toStartOf="@+id/img_telephone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/img_telephone"
         app:srcCompat="@drawable/fui_ic_mail_white_24dp" />
 
-    <ImageView
+
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/img_chat"
-        android:layout_width="@dimen/img_width_height_mini"
-        android:layout_height="@dimen/img_width_height_mini"
-        app:layout_constraintBottom_toTopOf="@id/text_slide_2"
-        app:layout_constraintLeft_toRightOf="@id/img_mail"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@id/img_mail"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/img_telephone"
+        app:layout_constraintTop_toTopOf="@+id/img_telephone"
         app:srcCompat="@drawable/ic_message_white_48dp" />
+
 
     <TextView
         android:id="@+id/text_slide_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="128dp"
         android:layout_marginTop="8dp"
         android:paddingLeft="@dimen/desc_padding"
         android:paddingRight="@dimen/desc_padding"
-        android:text="Oliweb dispose de trois moyens de communication, dont une messagerie interne. Celle ci vous permettra de rentrez en contact avec le vendeur ou de répondre à des acheteurs potentiels."
+        android:text="Mail, Téléphone, Messagerie\n\nC'est vous qui choisissez le moyen de communication pour vous contacter"
         android:textAlignment="center"
-        android:textColor="@android:color/white"
+        android:textColor="@color/colorPrimary"
         android:textSize="@dimen/slide_desc"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img_mail" />
+        app:layout_constraintTop_toBottomOf="@+id/img_telephone" />
 
 
 </android.support.constraint.ConstraintLayout>
