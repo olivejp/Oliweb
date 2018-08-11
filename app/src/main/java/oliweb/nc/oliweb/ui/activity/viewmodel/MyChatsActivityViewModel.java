@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -221,7 +220,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     public void getPhotoUrlsByUidUser() {
 
         HashMap<String, UtilisateurEntity> map = new HashMap<>();
-        HashSet<UtilisateurEntity> setUtilisateur = new HashSet<>();
 
         this.firebaseChatRepository.getByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -230,11 +228,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .map(chatFirebase -> chatFirebase.getMembers().keySet())
                 .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
                 .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
-                .map(utilisateurEntity -> {
-                    setUtilisateur.add(utilisateurEntity);
-                    return setUtilisateur;
-                })
-                .flatMapIterable(utilisateurEntities -> utilisateurEntities)
+                .distinct()
                 .map(utilisateurEntity -> {
                     map.put(utilisateurEntity.getUid(), utilisateurEntity);
                     return map;
