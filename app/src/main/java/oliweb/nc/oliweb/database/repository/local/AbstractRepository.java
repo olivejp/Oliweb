@@ -76,7 +76,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
         return this.dao.findById(id);
     }
 
-    private Maybe<T> insertSingle(T entity) {
+    public Maybe<T> singleInsert(T entity) {
         U id = dao.insert(entity);
         if (id != null) {
             return findById(id);
@@ -85,7 +85,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
         }
     }
 
-    private Maybe<T> updateSingle(T entity) {
+    public Maybe<T> singleUpdate(T entity) {
         int updatedCount = dao.update(entity);
         if (updatedCount == 1) {
             return findById(entity.getId());
@@ -99,14 +99,14 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(emitter::onError)
                 .doOnSuccess(entityRead ->
-                        updateSingle(entity)
+                        singleUpdate(entity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
                                 .doOnComplete(() -> Log.e(TAG, "Failed to update"))
                                 .subscribe()
                 )
                 .doOnComplete(() ->
-                        insertSingle(entity)
+                        singleInsert(entity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
                                 .doOnComplete(() -> Log.e(TAG, "Failed to insert"))

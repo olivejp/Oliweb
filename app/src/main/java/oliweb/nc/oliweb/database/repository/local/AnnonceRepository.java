@@ -100,19 +100,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
-        Log.d(TAG, "Starting getAllAnnonceByStatus " + status);
-        return Observable.create(emitter ->
-                this.annonceDao.getAllAnnonceByStatus(status)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(listAnnonceStatus -> {
-                            for (AnnonceEntity annonce : listAnnonceStatus) {
-                                emitter.onNext(annonce);
-                            }
-                            emitter.onComplete();
-                        })
-                        .subscribe()
-        );
+        return this.annonceDao.getAllAnnonceByStatus(status).flattenAsObservable(annonceEntities -> annonceEntities);
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {

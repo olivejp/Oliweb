@@ -51,7 +51,7 @@ public class FirebaseSyncListenerService extends Service {
                     ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
                     if (chatFirebase != null) {
                         ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
-                        chatRepository.saveIfNotExist(chatEntity)
+                        chatRepository.insertIfNotExist(chatEntity)
                                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
@@ -73,12 +73,12 @@ public class FirebaseSyncListenerService extends Service {
     private ChildEventListener chatChildListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
-
+            // do nothing
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, String s) {
-
+            // do nothing
         }
 
         @Override
@@ -101,12 +101,12 @@ public class FirebaseSyncListenerService extends Service {
 
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
-
+// do nothing
         }
 
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
-
+// do nothing
         }
     };
 
@@ -164,12 +164,12 @@ public class FirebaseSyncListenerService extends Service {
 
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
-
+            // do nothing
         }
 
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
-
+            // do nothing
         }
     };
 

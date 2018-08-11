@@ -57,7 +57,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     /**
      * Update annonce and photo status to TO_DELETE
-     * CoreSync will do the trick.
+     * ScheduleSync will do the trick.
      *
      * @param idAnnonce
      */
