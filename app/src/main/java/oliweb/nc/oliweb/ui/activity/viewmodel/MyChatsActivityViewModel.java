@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
@@ -19,9 +20,13 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.Utility;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
@@ -47,6 +52,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private MessageRepository messageRepository;
     private FirebaseUserRepository firebaseUserRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
 
@@ -56,6 +62,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.messageRepository = MessageRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
+        this.firebaseChatRepository = FirebaseChatRepository.getInstance();
     }
 
     public String getFirebaseUserUid() {
@@ -207,5 +214,41 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public Single<UtilisateurEntity> findFirebaseUserByUid() {
         return this.firebaseUserRepository.getUtilisateurByUid(firebaseUserUid);
+    }
+
+    public LiveDataOnce<List<ChatFirebase>> findFirebaseChatByUidUser(String uidUser) {
+        CustomLiveData<List<ChatFirebase>> liveDataChats = new CustomLiveData<>();
+        this.firebaseChatRepository.getByUidUser(uidUser)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(liveDataChats::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return liveDataChats;
+    }
+
+    public LiveDataOnce<UtilisateurEntity> getFirebaseUserByUid(String uidUser) {
+        CustomLiveData<UtilisateurEntity> liveDataUser = new CustomLiveData<>();
+        this.firebaseUserRepository.getUtilisateurByUid(uidUser)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnSuccess(liveDataUser::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return liveDataUser;
+    }
+
+    public LiveDataOnce<Map<String, UtilisateurEntity>> getPhotoUrlsByUidUser() {
+        CustomLiveData<Map<String, UtilisateurEntity>> liveDataPhotoUrlUsers = new CustomLiveData<>();
+        this.firebaseChatRepository.getByUidUser(firebaseUserUid)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(chatFirebases -> chatFirebases)
+                .map(chatFirebase -> chatFirebase.getMembers().keySet())
+                .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
+                .filter(uidUserFromChat -> !uidUserFromChat.equals(firebaseUserUid))
+                .switchMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
+                .toMap(UtilisateurEntity::getPhotoUrl)
+                .doOnSuccess(liveDataPhotoUrlUsers::postValue)
+                .subscribe();
+        return liveDataPhotoUrlUsers;
     }
 }

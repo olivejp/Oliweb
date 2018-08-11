@@ -75,6 +75,26 @@ public class FirebaseChatRepository {
         );
     }
 
+    public Single<List<ChatFirebase>> getByUidUser(String uidUser) {
+        return Single.create(emitter -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        ArrayList<ChatFirebase> listResult = new ArrayList<>();
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+                            ChatFirebase chat = data.getValue(ChatFirebase.class);
+                            listResult.add(chat);
+                        }
+                        emitter.onSuccess(listResult);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        emitter.onError(new RuntimeException(databaseError.getMessage()));
+                    }
+                }));
+    }
+
     /**
      * Va récupérer un uid d'un message et le timestamp du serveur
      *

@@ -121,6 +121,12 @@ public class ListChatFragment extends Fragment {
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
 
+        // Récupération d'une map avec tous les UID des personnes qui correspondent avec moi.
+        viewModel.getPhotoUrlsByUidUser().observeOnce(mapPhotoUrlByUser -> {
+            chatAdapter.setMapUrlByUtilisateur(mapPhotoUrlByUser);
+            chatAdapter.notifyDataSetChanged();
+        });
+
         // Selon les types de recherche
         if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
             viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {

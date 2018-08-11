@@ -11,15 +11,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,8 +24,6 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -40,6 +34,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private View.OnClickListener popupClickListener;
     private List<ChatEntity> listChats;
     private String firebaseUserUid;
+    private Map<String, UtilisateurEntity> mapUrlByUtilisateur;
 
     public ChatAdapter(@NonNull String firebaseUserUid, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
@@ -115,39 +110,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return listChats.size();
     }
 
-    // TODO , ce n'est pas à l'adapter de faire la recherche de la photo, il faut effectuer le dl des photos en arrière plan et ne fournir que l'url à l'adapter
     private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
-        String uidUser = firebaseUserUid;
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-        if (model.getUidBuyer().equals(uidUser)) {
-            ref = ref.child(model.getUidSeller());
-        } else {
-            ref = ref.child(model.getUidBuyer());
-        }
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
-                if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
-                    if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
-                        GlideApp.with(holder.imagePhotoAuthor)
-                                .load(user.getPhotoUrl())
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_person_grey_900_48dp)
-                                .error(R.drawable.ic_error_grey_900_48dp)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .into(holder.imagePhotoAuthor);
-                    } else {
-                        GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
-                    }
-                }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
+        if (mapUrlByUtilisateur == null || mapUrlByUtilisateur.isEmpty()) {
+            holder.imagePhotoAuthor.setImageResource(R.drawable.ic_person_grey_900_48dp);
+            return;
+        }
+
+        String uidUser = firebaseUserUid;
+        String urlPhoto = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer()).getPhotoUrl();
+        if (urlPhoto != null && !urlPhoto.isEmpty()) {
+            GlideApp.with(holder.imagePhotoAuthor)
+                    .load(urlPhoto)
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_person_grey_900_48dp)
+                    .error(R.drawable.ic_person_grey_900_48dp)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.imagePhotoAuthor);
+        } else {
+            GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
+        }
+    }
+
+    public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {
+        this.mapUrlByUtilisateur = mapUrlByUtilisateur;
     }
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder {
