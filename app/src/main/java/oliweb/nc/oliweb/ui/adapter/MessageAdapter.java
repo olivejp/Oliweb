@@ -11,16 +11,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -29,8 +24,6 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -45,6 +38,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private List<MessageEntity> messageEntities;
     private String firebaseUserUid;
+    private Map<String, UtilisateurEntity> mapUrlByUtilisateur;
 
     public MessageAdapter(String firebaseUserUid) {
         this.messageEntities = new ArrayList<>();
@@ -73,7 +67,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Timestamp timestamp = new Timestamp(model.getTimestamp());
             holder.timestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new java.sql.Date(timestamp.getTime())));
         } else {
-            holder.timestamp.setText("Non envoyé");
+            holder.timestamp.setText(R.string.not_send);
         }
         retreivePhoto(holder, model);
     }
@@ -125,29 +119,31 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     private void retreivePhoto(@NonNull MessageViewHolder holder, @NonNull MessageEntity model) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-        ref.child(model.getUidAuthor()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                UtilisateurEntity utilisateurFirebase = dataSnapshot.getValue(UtilisateurEntity.class);
-                if (utilisateurFirebase != null) {
-                    GlideApp.with(holder.imageAuthor)
-                            .load(utilisateurFirebase.getPhotoUrl())
-                            .apply(RequestOptions.circleCropTransform())
-                            .placeholder(R.drawable.ic_person_grey_900_48dp)
-                            .error(R.drawable.ic_error_grey_900_48dp)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .into(holder.imageAuthor);
-                }
-            }
+        if (mapUrlByUtilisateur == null || mapUrlByUtilisateur.isEmpty()) {
+            holder.imageAuthor.setImageResource(R.drawable.ic_person_grey_900_48dp);
+            return;
+        }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Do nothing
+        UtilisateurEntity utilisateurEntity = mapUrlByUtilisateur.get(model.getUidAuthor());
+        if (utilisateurEntity != null) {
+            String urlPhoto = utilisateurEntity.getPhotoUrl();
+            if (urlPhoto != null && !urlPhoto.isEmpty()) {
+                GlideApp.with(holder.imageAuthor)
+                        .load(urlPhoto)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_person_grey_900_48dp)
+                        .error(R.drawable.ic_person_grey_900_48dp)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(holder.imageAuthor);
+            } else {
+                GlideApp.with(holder.imageAuthor).clear(holder.imageAuthor);
             }
-        });
+        }
     }
 
+    public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {
+        this.mapUrlByUtilisateur = mapUrlByUtilisateur;
+    }
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.message_author_photo)

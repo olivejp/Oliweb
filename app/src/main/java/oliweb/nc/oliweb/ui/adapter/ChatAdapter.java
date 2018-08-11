@@ -118,18 +118,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         String uidUser = firebaseUserUid;
-        String urlPhoto = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer()).getPhotoUrl();
-        if (urlPhoto != null && !urlPhoto.isEmpty()) {
-            GlideApp.with(holder.imagePhotoAuthor)
-                    .load(urlPhoto)
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_person_grey_900_48dp)
-                    .error(R.drawable.ic_person_grey_900_48dp)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(holder.imagePhotoAuthor);
-        } else {
-            GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
+        UtilisateurEntity utilisateurEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
+        if (utilisateurEntity != null) {
+            String urlPhoto = utilisateurEntity.getPhotoUrl();
+            if (urlPhoto != null && !urlPhoto.isEmpty()) {
+                GlideApp.with(holder.imagePhotoAuthor)
+                        .load(urlPhoto)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_person_grey_900_48dp)
+                        .error(R.drawable.ic_person_grey_900_48dp)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(holder.imagePhotoAuthor);
+            } else {
+                GlideApp.with(holder.imagePhotoAuthor).clear(holder.imagePhotoAuthor);
+            }
         }
+
     }
 
     public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {

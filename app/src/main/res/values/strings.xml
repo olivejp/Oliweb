@@ -131,5 +131,6 @@
     <string name="RECENT_ADS">Dernières annonces</string>
     <string name="sell_easily">Vendez\nFacilement</string>
     <string name="skip">Passer</string>
+    <string name="not_send">Non envoyé</string>
 
 </resources>

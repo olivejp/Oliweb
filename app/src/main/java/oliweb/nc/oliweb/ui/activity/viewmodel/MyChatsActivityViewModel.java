@@ -3,9 +3,12 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,13 +23,10 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.utility.CustomLiveData;
-import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.Utility;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
@@ -55,6 +55,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
+    private MutableLiveData<Map<String, UtilisateurEntity>> liveDataPhotoUrlUsers;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
@@ -63,6 +64,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
         this.firebaseChatRepository = FirebaseChatRepository.getInstance();
+        this.liveDataPhotoUrlUsers = new MutableLiveData<>();
     }
 
     public String getFirebaseUserUid() {
@@ -212,43 +214,32 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .map(messageEntity1 -> new AtomicBoolean(true));
     }
 
-    public Single<UtilisateurEntity> findFirebaseUserByUid() {
-        return this.firebaseUserRepository.getUtilisateurByUid(firebaseUserUid);
+    public LiveData<Map<String, UtilisateurEntity>> getLiveDataPhotoUrlUsers() {
+        return liveDataPhotoUrlUsers;
     }
 
-    public LiveDataOnce<List<ChatFirebase>> findFirebaseChatByUidUser(String uidUser) {
-        CustomLiveData<List<ChatFirebase>> liveDataChats = new CustomLiveData<>();
-        this.firebaseChatRepository.getByUidUser(uidUser)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnSuccess(liveDataChats::postValue)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
-        return liveDataChats;
-    }
+    public void getPhotoUrlsByUidUser() {
 
-    public LiveDataOnce<UtilisateurEntity> getFirebaseUserByUid(String uidUser) {
-        CustomLiveData<UtilisateurEntity> liveDataUser = new CustomLiveData<>();
-        this.firebaseUserRepository.getUtilisateurByUid(uidUser)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnSuccess(liveDataUser::postValue)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
-        return liveDataUser;
-    }
+        HashMap<String, UtilisateurEntity> map = new HashMap<>();
+        HashSet<UtilisateurEntity> setUtilisateur = new HashSet<>();
 
-    public LiveDataOnce<Map<String, UtilisateurEntity>> getPhotoUrlsByUidUser() {
-        CustomLiveData<Map<String, UtilisateurEntity>> liveDataPhotoUrlUsers = new CustomLiveData<>();
         this.firebaseChatRepository.getByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(chatFirebase -> chatFirebase.getMembers().keySet())
                 .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
-                .filter(uidUserFromChat -> !uidUserFromChat.equals(firebaseUserUid))
-                .switchMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
-                .toMap(UtilisateurEntity::getPhotoUrl)
-                .doOnSuccess(liveDataPhotoUrlUsers::postValue)
+                .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
+                .map(utilisateurEntity -> {
+                    setUtilisateur.add(utilisateurEntity);
+                    return setUtilisateur;
+                })
+                .flatMapIterable(utilisateurEntities -> utilisateurEntities)
+                .map(utilisateurEntity -> {
+                    map.put(utilisateurEntity.getUid(), utilisateurEntity);
+                    return map;
+                })
+                .doOnComplete(() -> liveDataPhotoUrlUsers.postValue(map))
                 .subscribe();
-        return liveDataPhotoUrlUsers;
     }
 }

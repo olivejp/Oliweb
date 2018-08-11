@@ -65,9 +65,12 @@ public class MyChatsActivity extends AppCompatActivity {
             viewModel.rechercheMessageByUidChat(argUidChat);
             initFragments();
         } else {
-            Log.e(TAG,  String.format("%s is not an available actions", getIntent().getAction()), new RuntimeException());
+            Log.e(TAG, String.format("%s is not an available actions", getIntent().getAction()), new RuntimeException());
             finish();
         }
+
+        // Récupération d'une map avec tous les UID des personnes qui correspondent avec moi.
+        viewModel.getPhotoUrlsByUidUser();
     }
 
     @Override
