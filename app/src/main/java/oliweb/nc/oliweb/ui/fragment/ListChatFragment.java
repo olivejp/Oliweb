@@ -12,7 +12,6 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
@@ -21,8 +20,6 @@ import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -133,24 +130,20 @@ public class ListChatFragment extends Fragment {
     }
 
     private void openAnnonceDetail(ChatEntity chatchatEntity) {
-        viewModel.findFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce())
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
-                .doOnSuccess(annonceDto -> {
-                    if (annonceDto != null) {
-                        AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
-                        Intent intent = new Intent();
-                        intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
-                        Bundle bundle = new Bundle();
-                        bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
-                        bundle.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, true);
-                        intent.putExtras(bundle);
-                        startActivity(intent);
-                    } else {
-                        Toast.makeText(appCompatActivity, "Oups... cette annonce n'est plus disponible", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .subscribe();
+        viewModel.findLiveFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
+            if (annonceDto != null) {
+                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                Intent intent = new Intent();
+                intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                bundle.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, true);
+                intent.putExtras(bundle);
+                startActivity(intent);
+            } else {
+                Toast.makeText(appCompatActivity, "Oups... cette annonce n'est plus disponible", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void callListMessage(Long idChat) {
@@ -164,7 +157,8 @@ public class ListChatFragment extends Fragment {
                         .commit();
             } else {
                 FragmentTransaction ft = appCompatActivity.getSupportFragmentManager().beginTransaction();
-                ft.setCustomAnimations(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
+                // TODO les animations de sortie ne fonctionnent pas
+                ft.setCustomAnimations(R.anim.slide_in_from_right, android.R.anim.fade_out, R.anim.slide_in_from_left, android.R.anim.fade_out);
                 ft.replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT);
                 ft.addToBackStack(null);
                 ft.commit();

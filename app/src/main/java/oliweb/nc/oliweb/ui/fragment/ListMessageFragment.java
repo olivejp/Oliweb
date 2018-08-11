@@ -20,12 +20,12 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageAdapter;
 import oliweb.nc.oliweb.utility.Utility;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -64,6 +64,7 @@ public class ListMessageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MyChatsActivityViewModel.class);
+        viewModel.getPhotoUrlsByUidUser();
     }
 
     @Override
@@ -90,16 +91,14 @@ public class ListMessageFragment extends Fragment {
         });
 
         if (viewModel.getTypeRechercheMessage() == MyChatsActivityViewModel.TypeRechercheMessage.PAR_ANNONCE) {
-            viewModel.findChatByUidUserAndUidAnnonce()
-                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnSuccess(chatEntity -> initializeAdapterByIdChat(chatEntity.getIdChat()))
-                    .doOnComplete(() -> {
-                        initializeList(true);
-                        initializeAdapterLater = true;
-                    })
-                    .subscribe();
-
+            viewModel.findLiveChatByUidUserAndUidAnnonce().observeOnce(chatEntity -> {
+                if (chatEntity != null) {
+                    initializeAdapterByIdChat(chatEntity.getIdChat());
+                } else {
+                    initializeList(true);
+                    initializeAdapterLater = true;
+                }
+            });
         } else if (viewModel.getTypeRechercheMessage() == MyChatsActivityViewModel.TypeRechercheMessage.PAR_CHAT) {
             initializeAdapterByIdChat(viewModel.getSearchedIdChat());
         }
@@ -133,33 +132,24 @@ public class ListMessageFragment extends Fragment {
         if (messageToSend.isEmpty()) return;
 
         if (viewModel.getTypeRechercheMessage() == MyChatsActivityViewModel.TypeRechercheMessage.PAR_CHAT) {
-            viewModel.saveMessage(messageToSend)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                    .doOnSuccess(atomicBoolean -> Log.d(TAG, "Message correctement sauvegardé"))
-                    .subscribe();
+            viewModel.saveLiveMessage(messageToSend).observeOnce(atomicBoolean -> Log.d(TAG, "Message correctement sauvegardé"));
+        }
 
-        } else if (viewModel.getTypeRechercheMessage() == MyChatsActivityViewModel.TypeRechercheMessage.PAR_ANNONCE) {
+        if (viewModel.getTypeRechercheMessage() == MyChatsActivityViewModel.TypeRechercheMessage.PAR_ANNONCE) {
             if (adapter == null && viewModel.getAnnonce().getUidUser().equals(viewModel.getFirebaseUserUid())) {
                 Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
             } else {
-                viewModel.findOrCreateNewChat()
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(chatEntity ->
-                                viewModel.saveMessage(messageToSend)
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(atomicBoolean -> {
-                                            Log.d(TAG, "Message correctement sauvegardé");
-                                            if (initializeAdapterLater)
-                                                initializeAdapterByIdChat(chatEntity.getIdChat());
-
-                                        })
-                                        .subscribe()
-                        )
-                        .subscribe();
+                viewModel.findOrCreateLiveNewChat().observeOnce(chatEntity -> {
+                            assertNotNull(TAG + " : Le chatEntity est null", chatEntity);
+                            viewModel.saveLiveMessage(messageToSend).observeOnce(atomicBoolean -> {
+                                Log.d(TAG, "Message correctement sauvegardé");
+                                if (initializeAdapterLater) {
+                                    initializeAdapterByIdChat(chatEntity.getIdChat());
+                                }
+                            });
+                        }
+                );
             }
-
         }
     }
 }

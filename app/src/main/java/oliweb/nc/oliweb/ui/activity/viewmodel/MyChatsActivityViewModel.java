@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
-import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -26,6 +25,8 @@ import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.Utility;
 
 public class MyChatsActivityViewModel extends AndroidViewModel {
@@ -82,8 +83,14 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatRepository.findByUidAnnonceAndStatusNotIn(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
-    public Maybe<AnnonceDto> findFirebaseByUidAnnonce(String uidAnnonce) {
-        return this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce);
+    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
+        this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .doOnSuccess(customLiveData::postValue)
+                .subscribe();
+        return customLiveData;
     }
 
     public boolean isTwoPane() {
@@ -151,8 +158,15 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatEntity;
     }
 
-    public Maybe<ChatEntity> findChatByUidUserAndUidAnnonce() {
-        return chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid());
+    public LiveDataOnce<ChatEntity> findLiveChatByUidUserAndUidAnnonce() {
+        CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
+        chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatEntityCustomLiveData::postValue)
+                .doOnComplete(() -> chatEntityCustomLiveData.postValue(null))
+                .subscribe();
+        return chatEntityCustomLiveData;
     }
 
     /**
@@ -160,34 +174,33 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      *
      * @return
      */
-    public Single<ChatEntity> findOrCreateNewChat() {
-        Log.d(TAG, "Starting findOrCreateNewChat uidUser : " + firebaseUserUid + " annonce : " + annonce);
-        return Single.create(emitter ->
-                chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(chatFound -> {
-                            Log.d(TAG, "findOrCreateNewChat.doOnSuccess chatFound :" + chatFound);
-                            currentChat = chatFound;
-                            selectedIdChat = chatFound.getIdChat();
-                            emitter.onSuccess(currentChat);
-                        })
-                        .doOnComplete(() -> {
-                                    Log.d(TAG, "findOrCreateNewChat.doOnComplete");
-                                    chatRepository.singleSave(initializeChatEntity())
-                                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .doOnSuccess(chatCreated -> {
-                                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
-                                                currentChat = chatCreated;
-                                                selectedIdChat = chatCreated.getIdChat();
-                                                emitter.onSuccess(currentChat);
-                                            })
-                                            .subscribe();
-                                }
-                        )
-                        .subscribe()
-        );
+    public LiveDataOnce<ChatEntity> findOrCreateLiveNewChat() {
+        CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
+        chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(chatFound -> {
+                    Log.d(TAG, "findOrCreateNewChat.doOnSuccess chatFound :" + chatFound);
+                    currentChat = chatFound;
+                    selectedIdChat = chatFound.getIdChat();
+                    chatEntityCustomLiveData.postValue(currentChat);
+                })
+                .doOnComplete(() -> {
+                            Log.d(TAG, "findOrCreateNewChat.doOnComplete");
+                            chatRepository.singleSave(initializeChatEntity())
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                    .doOnSuccess(chatCreated -> {
+                                        Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
+                                        currentChat = chatCreated;
+                                        selectedIdChat = chatCreated.getIdChat();
+                                        chatEntityCustomLiveData.postValue(currentChat);
+                                    })
+                                    .subscribe();
+                        }
+                )
+                .subscribe();
+        return chatEntityCustomLiveData;
     }
 
     public LiveData<List<MessageEntity>> findAllMessageByIdChat(Long idChat) {
@@ -200,17 +213,25 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      * @param message String to insert as a new message in the loca DB
      * @return True if insertion is successful, false otherwise
      */
-    public Single<AtomicBoolean> saveMessage(String message) {
-        Log.d(TAG, "saveMessage message : " + message);
+    public LiveDataOnce<AtomicBoolean> saveLiveMessage(String message) {
+        CustomLiveData<AtomicBoolean> atomicBooleanCustomLiveData = new CustomLiveData<>();
+
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setMessage(message);
         messageEntity.setStatusRemote(StatusRemote.TO_SEND);
         messageEntity.setIdChat(selectedIdChat);
         messageEntity.setUidChat(currentChat.getUidChat());
         messageEntity.setUidAuthor(firebaseUserUid);
+        messageEntity.setTimestamp(Long.MAX_VALUE);
 
-        return messageRepository.singleSave(messageEntity)
-                .map(messageEntity1 -> new AtomicBoolean(true));
+        messageRepository.singleSave(messageEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .map(messageEntity1 -> new AtomicBoolean(true))
+                .doOnSuccess(atomicBooleanCustomLiveData::postValue)
+                .subscribe();
+
+        return atomicBooleanCustomLiveData;
     }
 
     public LiveData<Map<String, UtilisateurEntity>> getLiveDataPhotoUrlUsers() {

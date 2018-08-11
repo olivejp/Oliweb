@@ -43,6 +43,8 @@ import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
+import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
 public class AnnonceDetailActivity extends AppCompatActivity {
@@ -290,8 +292,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private void callListMessageFragment() {
         Intent intent = new Intent();
-        intent.setClass(this, AnnonceMessageActivity.class);
+        intent.setClass(this, MyChatsActivity.class);
+        intent.setAction(ARG_ACTION_FRAGMENT_MESSAGE);
         intent.putExtra(ARG_ANNONCE, annoncePhotos.getAnnonceEntity());
+        intent.putExtra(DATA_FIREBASE_USER_UID, FirebaseAuth.getInstance().getUid());
         startActivity(intent);
         overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }

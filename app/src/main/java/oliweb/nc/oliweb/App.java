@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Intent;
 
@@ -58,12 +59,6 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
             });
         }
 
-        // Active la persistence des données pour Firebase database
-        //        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).keepSynced(true);
-        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).keepSynced(true);
-        //        FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_USER_REF).keepSynced(true);
-
         // Plannification d'un job
         JobManager.create(this).addJobCreator(new SyncJobCreator());
         SyncJob.scheduleJob();
@@ -89,6 +84,9 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
      * @param uidUser de l'utilisateur à connecter
      */
     private void launchServices(String uidUser) {
+
+        stopServicesIfRunning();
+
         // Lancement du service pour écouter la DB en local
         intentLocalDbService.putExtra(DatabaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
         startService(intentLocalDbService);
@@ -96,6 +94,16 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
         // Lancement du service pour écouter Firebase
         intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
         startService(intentFirebaseDbService);
+    }
+
+    private void stopServicesIfRunning() {
+        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService")) {
+            stopService(intentFirebaseDbService);
+        }
+
+        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService")) {
+            stopService(intentFirebaseDbService);
+        }
     }
 
     /**
@@ -107,6 +115,17 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
 
         // Stop the Firebase sync service
         stopService(intentFirebaseDbService);
+    }
+
+    private boolean isServiceRunning(String packageNameService) {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        assert manager != null;
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (packageNameService.equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

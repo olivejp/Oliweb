@@ -42,7 +42,7 @@ public class DeletingFileTest {
         Assert.assertNotNull(pair.second);
 
         // Sauvegarde d'une image dans le Content Provider
-        InputStream inputStream = context.getApplicationContext().getResources().openRawResource(R.drawable.beast);
+        InputStream inputStream = context.getApplicationContext().getResources().openRawResource(R.drawable.ic_access_time_grey_900_48dp);
         MediaUtility.saveInputStreamToContentProvider(inputStream, pair.second);
 
         int delete = context.getContentResolver().delete(pair.first, null, null);
