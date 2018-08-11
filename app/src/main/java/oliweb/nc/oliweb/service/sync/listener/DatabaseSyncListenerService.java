@@ -80,11 +80,11 @@ public class DatabaseSyncListenerService extends Service {
 
         // Envoi tous les messages
         disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
-                .distinct()
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable()
                 .flatMapIterable(list -> list)
+                .distinct()
                 .switchMap(messageFirebaseSender::sendMessage)
                 .subscribe());
 

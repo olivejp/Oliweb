@@ -142,8 +142,8 @@ public class FirebaseChatRepository {
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .toObservable()
                 .zipWith(FirebaseUtility.getServerTimestamp().toObservable(), ChatFirebase::setUpdateTimestamp)
-                .map(chatFirebase -> chatFirebase.setLastMessage(messageFirebase.getMessage()))
-                .switchMap(chatFirebase -> this.saveChat(chatFirebase).toObservable());
+                .map(chatFirebaseTimed -> chatFirebaseTimed.setLastMessage(messageFirebase.getMessage()))
+                .switchMap(chatFirebaseToSave -> this.saveChat(chatFirebaseToSave).toObservable());
     }
 
     /**

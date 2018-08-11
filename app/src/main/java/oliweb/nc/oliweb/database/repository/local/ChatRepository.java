@@ -87,13 +87,13 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         );
     }
 
-    public Maybe<ChatEntity> saveIfNotExist(ChatEntity chatEntity) {
+    public Maybe<ChatEntity> insertIfNotExist(ChatEntity chatEntity) {
         return Maybe.create(emitter ->
                 findByUid(chatEntity.getUidChat())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(chatRead -> emitter.onComplete())
-                        .doOnComplete(() -> singleSave(chatEntity)
+                        .doOnComplete(() -> singleInsert(chatEntity)
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
                                 .subscribe())

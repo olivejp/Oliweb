@@ -30,7 +30,7 @@ public class MessageFirebaseSender {
     private MessageFirebaseSender() {
     }
 
-    public static  synchronized MessageFirebaseSender getInstance(Context context) {
+    public static synchronized MessageFirebaseSender getInstance(Context context) {
         if (instance == null) {
             instance = new MessageFirebaseSender();
             instance.messageRepository = MessageRepository.getInstance(context);
@@ -41,7 +41,7 @@ public class MessageFirebaseSender {
     }
 
     /**
-     * 1ere étape : Récupération dans Firebase d'un UID et du Timestamp de création
+     * Envoi d'un message sur Firebase Database
      *
      * @param messageEntity
      */
@@ -66,20 +66,6 @@ public class MessageFirebaseSender {
     }
 
     /**
-     * 2nd étape : On enregistre en local le message avec l'UID et le Timestamp récupéré dans la 1ère étape
-     * On passe également le statut à SENDING pour gar
-     *
-     * @param messageSaved
-     */
-    private Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
-        Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
-        messageSaved.setStatusRemote(StatusRemote.SENDING);
-        return messageRepository.singleSave(messageSaved)
-                .doOnError(e -> markMessageAsFailedToSend(messageSaved))
-                .toObservable();
-    }
-
-    /**
      * 3eme étape : On tente d'envoyer le message sur Firebase
      *
      * @param messageRead
@@ -87,13 +73,30 @@ public class MessageFirebaseSender {
     private Observable<MessageFirebase> sendMessageToFirebase(final MessageEntity messageRead) {
         Log.d(TAG, "Send message to Firebase message to send : " + messageRead);
         return firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> markMessageAsFailedToSend(messageRead))
                 .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageRead))
                 .toObservable();
     }
 
     /**
-     * 4eme étape : Le message a bien été envoyé sur Firebase, je change son statut à SEND
+     * On enregistre en local le message avec l'UID et le Timestamp récupéré dans la 1ère étape
+     * On passe également le statut à SENDING pour gar
+     *
+     * @param messageSaved
+     */
+    private Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
+        Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
+        messageSaved.setStatusRemote(StatusRemote.SENDING);
+        return messageRepository.singleUpdate(messageSaved)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnError(e -> markMessageAsFailedToSend(messageSaved))
+                .doOnComplete(() -> markMessageAsFailedToSend(messageSaved))
+                .toObservable();
+    }
+
+    /**
+     * Le message a bien été envoyé sur Firebase, je change son statut à SEND
      * dans la DB locale pour ne pas le renvoyer.
      *
      * @param messageEntity
@@ -101,7 +104,8 @@ public class MessageFirebaseSender {
     private Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
         Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
-        return messageRepository.singleSave(messageEntity)
+        return messageRepository.singleUpdate(messageEntity)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -114,7 +118,8 @@ public class MessageFirebaseSender {
     private void markMessageAsFailedToSend(final MessageEntity messageFailedToSend) {
         Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
         messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        messageRepository.singleSave(messageFailedToSend)
+        messageRepository.singleUpdate(messageFailedToSend)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }

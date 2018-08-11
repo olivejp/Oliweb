@@ -51,7 +51,7 @@ public class FirebaseSyncListenerService extends Service {
                     ChatFirebase chatFirebase = data.getValue(ChatFirebase.class);
                     if (chatFirebase != null) {
                         ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
-                        chatRepository.saveIfNotExist(chatEntity)
+                        chatRepository.insertIfNotExist(chatEntity)
                                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
