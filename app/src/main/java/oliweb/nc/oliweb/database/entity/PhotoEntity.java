@@ -101,7 +101,7 @@ public class PhotoEntity extends AbstractEntity<Long> implements Parcelable {
         this.idAnnonce = (Long) in.readValue(Long.class.getClassLoader());
     }
 
-    public static final Parcelable.Creator<PhotoEntity> CREATOR = new Parcelable.Creator<PhotoEntity>() {
+    public static final Creator<PhotoEntity> CREATOR = new Creator<PhotoEntity>() {
         @Override
         public PhotoEntity createFromParcel(Parcel source) {
             return new PhotoEntity(source);
@@ -112,15 +112,4 @@ public class PhotoEntity extends AbstractEntity<Long> implements Parcelable {
             return new PhotoEntity[size];
         }
     };
-
-    @Override
-    public String toString() {
-        return "PhotoEntity{" +
-                "idPhoto=" + idPhoto +
-                ", uriLocal='" + uriLocal + '\'' +
-                ", firebasePath='" + firebasePath + '\'' +
-                ", statut=" + statut +
-                ", idAnnonce=" + idAnnonce +
-                '}';
-    }
 }

@@ -69,12 +69,9 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
      * avant de lancer les services de synchro.
      */
     private void authUpdate() {
-        if (mFirebaseUser != null) {
-            if (NetworkReceiver.checkConnection(this)) {
-                launchServices(mFirebaseUser.getUid());
-            }
-        } else {
-            removeServices();
+        stopAllServices();
+        if (mFirebaseUser != null && NetworkReceiver.checkConnection(this)) {
+            launchServices(mFirebaseUser.getUid());
         }
     }
 
@@ -109,7 +106,7 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
     /**
      * Stoppe les services de synchronisation
      */
-    private void removeServices() {
+    private void stopAllServices() {
         // Stop the Local DB sync service
         stopService(intentLocalDbService);
 
@@ -135,6 +132,6 @@ public class App extends Application implements NetworkReceiver.NetworkChangeLis
 
     @Override
     public void onNetworkDisable() {
-        removeServices();
+        stopAllServices();
     }
 }

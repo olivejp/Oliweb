@@ -117,7 +117,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListener = (View v) -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
-        intent.putExtra(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
+        intent.putExtras(bundle);
         Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
         ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage);
         startActivity(intent, options.toBundle());

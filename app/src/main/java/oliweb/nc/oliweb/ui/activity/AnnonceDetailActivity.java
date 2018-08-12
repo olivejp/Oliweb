@@ -50,6 +50,8 @@ import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
 public class AnnonceDetailActivity extends AppCompatActivity {
 
+    public static final String TAG = AnnonceDetailActivity.class.getCanonicalName();
+
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
     public static final int REQUEST_CALL_PHONE_CODE = 100;
