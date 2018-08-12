@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -250,16 +251,13 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @OnClick(R.id.fab_action_email)
     public void actionEmail() {
         if (seller != null && seller.getEmail() != null && !seller.getEmail().isEmpty()) {
-            Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setDataAndType(Uri.parse("mailto:"), "message/rfc822");
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{seller.getEmail()});
-            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre());
-            intent.putExtra(Intent.EXTRA_TEXT, "Bonjour, votre annonce m'intéresse...");
-            try {
-                startActivity(Intent.createChooser(intent, "Envoi d'email..."));
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(AnnonceDetailActivity.this, R.string.error_no_mail_client_found, Toast.LENGTH_SHORT).show();
-            }
+            ShareCompat.IntentBuilder.from(this)
+                    .setType("message/rfc822")
+                    .addEmailTo(seller.getEmail())
+                    .setSubject(getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre())
+                    .setText("Bonjour, votre annonce m'intéresse...")
+                    .setChooserTitle("Envoi d'email...")
+                    .startChooser();
         } else {
             Toast.makeText(AnnonceDetailActivity.this, R.string.error_cant_retrieve_email, Toast.LENGTH_SHORT).show();
         }
