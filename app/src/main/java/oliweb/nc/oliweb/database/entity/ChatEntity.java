@@ -9,6 +9,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import java.util.Objects;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
@@ -133,6 +135,28 @@ public class ChatEntity extends AbstractEntity<Long> implements Parcelable {
         this.titreAnnonce = titreAnnonce;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ChatEntity)) return false;
+        ChatEntity that = (ChatEntity) o;
+        return Objects.equals(idChat, that.idChat) &&
+                Objects.equals(uidChat, that.uidChat) &&
+                Objects.equals(uidBuyer, that.uidBuyer) &&
+                Objects.equals(uidSeller, that.uidSeller) &&
+                Objects.equals(uidAnnonce, that.uidAnnonce) &&
+                Objects.equals(titreAnnonce, that.titreAnnonce) &&
+                Objects.equals(lastMessage, that.lastMessage) &&
+                Objects.equals(creationTimestamp, that.creationTimestamp) &&
+                Objects.equals(updateTimestamp, that.updateTimestamp) &&
+                statusRemote == that.statusRemote;
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(idChat, uidChat, uidBuyer, uidSeller, uidAnnonce, titreAnnonce, lastMessage, creationTimestamp, updateTimestamp, statusRemote);
+    }
 
     @Override
     public String toString() {
