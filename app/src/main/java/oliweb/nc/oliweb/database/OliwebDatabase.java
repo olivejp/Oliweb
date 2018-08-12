@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
+import oliweb.nc.oliweb.database.dao.AnnonceWithChatsDao;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.dao.ChatDao;
@@ -105,4 +106,6 @@ public abstract class OliwebDatabase extends RoomDatabase {
     public abstract ChatDao getChatDao();
 
     public abstract MessageDao getMessageDao();
+
+    public abstract AnnonceWithChatsDao getAnnonceWithChatsDao();
 }

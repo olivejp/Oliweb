@@ -21,6 +21,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
+import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -163,5 +164,35 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             super(itemView);
             ButterKnife.bind(this, itemView);
         }
+    }
+
+    public abstract class ListItem {
+
+        public static final int TYPE_HEADER = 0;
+        public static final int TYPE_EVENT = 1;
+
+        abstract public int getType();
+    }
+
+    public class HeaderItem extends ListItem {
+
+        private AnnonceEntity annonceEntity;
+
+        @Override
+        public int getType() {
+            return TYPE_HEADER;
+        }
+
+    }
+
+    public class EventItem extends ListItem {
+
+        private ChatEntity chatEntity;
+
+        @Override
+        public int getType() {
+            return TYPE_EVENT;
+        }
+
     }
 }
