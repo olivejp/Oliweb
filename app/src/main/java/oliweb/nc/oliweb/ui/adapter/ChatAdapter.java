@@ -110,12 +110,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return false;
                     if (TYPE_EVENT == listChats.get(oldItemPosition).getType()) {
                         ChatEntity chatOld = ((EventItem) listChats.get(oldItemPosition)).getChatEntity();
-                        ChatEntity chatNew = ((EventItem) listChats.get(newItemPosition)).getChatEntity();
+                        ChatEntity chatNew = ((EventItem) newListChats.get(newItemPosition)).getChatEntity();
                         return chatOld.getUidChat().equals(chatNew.getUidChat());
                     }
                     if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
                         String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
-                        String titreNew = ((HeaderItem) listChats.get(newItemPosition)).getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
                         return titreOld.equals(titreNew);
                     }
                     return false;
@@ -127,12 +127,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return false;
                     if (TYPE_EVENT == listChats.get(oldItemPosition).getType()) {
                         ChatEntity chatOld = ((EventItem) listChats.get(oldItemPosition)).getChatEntity();
-                        ChatEntity chatNew = ((EventItem) listChats.get(newItemPosition)).getChatEntity();
+                        ChatEntity chatNew = ((EventItem) newListChats.get(newItemPosition)).getChatEntity();
                         return chatOld.equals(chatNew);
                     }
                     if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
                         String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
-                        String titreNew = ((HeaderItem) listChats.get(newItemPosition)).getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
                         return titreOld.equals(titreNew);
                     }
                     return false;
