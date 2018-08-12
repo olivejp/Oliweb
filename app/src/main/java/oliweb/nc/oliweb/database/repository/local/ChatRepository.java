@@ -41,12 +41,12 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return chatDao.findByUid(uidChat);
     }
 
-    public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotIn(String uidAnnonce, List<String> status) {
-        return this.chatDao.findByUidAnnonce(uidAnnonce, status);
+    public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(String uidAnnonce, List<String> status) {
+        return this.chatDao.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(uidAnnonce, status);
     }
 
-    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
-        return this.chatDao.findByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
+    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotInWithOrderByTitreAnnonce(String uidBuyerOrSeller, List<String> status) {
+        return this.chatDao.findByUidUserAndStatusNotInWithOrderByTitreAnnonce(uidBuyerOrSeller, status);
     }
 
     public Flowable<List<ChatEntity>> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {

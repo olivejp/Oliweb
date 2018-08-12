@@ -15,12 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnonceWithChats;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.local.AnnonceWithChatRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
@@ -51,7 +49,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheChat typeRechercheChat;
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
-    private AnnonceWithChatRepository annonceWithChatRepository;
     private MessageRepository messageRepository;
     private FirebaseUserRepository firebaseUserRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
@@ -64,7 +61,6 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         super(application);
         this.chatRepository = ChatRepository.getInstance(application);
         this.messageRepository = MessageRepository.getInstance(application);
-        this.annonceWithChatRepository = AnnonceWithChatRepository.getInstance(application);
         this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
         this.firebaseChatRepository = FirebaseChatRepository.getInstance();
@@ -79,16 +75,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.firebaseUserUid = firebaseUserUid;
     }
 
-    public LiveData<List<ChatEntity>> getChatsByUidUser() {
-        return chatRepository.findByUidUserAndStatusNotIn(firebaseUserUid, Utility.allStatusToAvoid());
+    public LiveData<List<ChatEntity>> getChatsByUidUserWithOrderByTitreAnnonce() {
+        return chatRepository.findByUidUserAndStatusNotInWithOrderByTitreAnnonce(firebaseUserUid, Utility.allStatusToAvoid());
     }
 
-    public LiveData<List<ChatEntity>> getChatsByUidAnnonce() {
-        return chatRepository.findByUidAnnonceAndStatusNotIn(annonce.getUid(), Utility.allStatusToAvoid());
-    }
-
-    public LiveData<List<AnnonceWithChats>> getMapChatsByUidAnnonce(String uidUser) {
-        return annonceWithChatRepository.findByUidUser(uidUser);
+    public LiveData<List<ChatEntity>> getChatsByUidAnnonceWithOrderByTitreAnnonce() {
+        return chatRepository.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
     public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
