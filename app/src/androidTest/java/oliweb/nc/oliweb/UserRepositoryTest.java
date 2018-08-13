@@ -1,28 +1,34 @@
 package oliweb.nc.oliweb;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+
+import com.google.firebase.auth.FirebaseUser;
 
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 
-import static oliweb.nc.oliweb.UtilityTest.UID_USER;
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static org.mockito.Mockito.when;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -32,15 +38,31 @@ import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 @RunWith(AndroidJUnit4.class)
 public class UserRepositoryTest {
 
+    private static final String USER_UID = "123456";
+    private static final String USER_PROFILE = "OLIVE JP";
+    private static final String USER_EMAIL = "orlanth23@hotmail.com";
     private static final String UPDATED_PROFILE = "Updated Profile";
     private static final String EMAIL_UPDATED = "updated_orlanth23@hotmail.com";
     private UtilisateurRepository userRepository;
 
+    @Mock
+    private FirebaseUser mockUser;
+
     @Before
     public void init() {
+        FirebaseUserRepository firebaseUserRepository = FirebaseUserRepository.getInstance();
+
         Context appContext = InstrumentationRegistry.getTargetContext();
         userRepository = UtilisateurRepository.getInstance(appContext);
         UtilityTest.cleanBase(appContext);
+
+        when(mockUser.getUid()).thenReturn(USER_UID);
+        when(mockUser.getDisplayName()).thenReturn("OLIVE JP");
+        when(mockUser.getEmail()).thenReturn("orlanth23@gmail.com");
+        when(mockUser.getPhotoUrl()).thenReturn(Uri.parse("https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwi8sfHXmuncAhWId94KHQ_uCz0QjRx6BAgBEAU&url=https%3A%2F%2Ffr.linkedin.com%2Fin%2Fjean-paul-olive-8619215b&psig=AOvVaw34Rki_yMeRmOYLDNZJzRmO&ust=1534221518501011"));
+        when(mockUser.getPhoneNumber()).thenReturn("790723");
+
+        when(firebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess("TOKEN")));
     }
 
     private void deleteAll() {
@@ -70,13 +92,36 @@ public class UserRepositoryTest {
         subscriberExist.assertValueAt(0, atomicBoolean -> atomicBoolean.get() == expectedResult);
     }
 
+    @Test
+    public void insertUserFromFirebase() {
+        deleteAll();
+        TestObserver<AtomicBoolean> subscribeSave = new TestObserver<>();
+        userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeSave);
+        waitTerminalEvent(subscribeSave, 5);
+        subscribeSave.assertNoErrors();
+        subscribeSave.assertValueCount(1);
+        subscribeSave.assertValueAt(0, AtomicBoolean::get);
+    }
+
+    @Test
+    public void updateUserFromFirebase() {
+        deleteAll();
+        saveUser(USER_UID, USER_PROFILE, USER_EMAIL);
+        TestObserver<AtomicBoolean> subscribeSave = new TestObserver<>();
+        userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeSave);
+        waitTerminalEvent(subscribeSave, 5);
+        subscribeSave.assertNoErrors();
+        subscribeSave.assertValueCount(1);
+        subscribeSave.assertValueAt(0, AtomicBoolean::get);
+    }
+
     /**
      * Delete All users when the table is empty should not throw a exception
      */
     @Test
     public void deleteThenQuery() {
         deleteAll();
-        existByUid(UID_USER, false);
+        existByUid(USER_UID, false);
         checkCount(0, userRepository.count());
     }
 
@@ -84,7 +129,7 @@ public class UserRepositoryTest {
     public void deleteThenFind() {
         deleteAll();
         TestObserver<UtilisateurEntity> testObserver = new TestObserver<>();
-        userRepository.findSingleByUid(UID_USER).subscribe(testObserver);
+        userRepository.findSingleByUid(USER_UID).subscribe(testObserver);
         waitTerminalEvent(testObserver, 5);
         testObserver.assertNoErrors();
     }

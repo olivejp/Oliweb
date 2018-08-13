@@ -74,11 +74,6 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
 
-    private LiveData<Integer> liveCountAllActiveAnnonce;
-    private LiveData<Integer> liveCountAllFavorite;
-    private LiveData<Integer> liveCountAllChat;
-
-
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
@@ -94,6 +89,10 @@ public class MainActivity extends AppCompatActivity
     private TextView profileName;
     private TextView profileEmail;
     private Menu navigationViewMenu;
+
+    private LiveData<Integer> liveCountAllActiveAnnonce;
+    private LiveData<Integer> liveCountAllFavorite;
+    private LiveData<Integer> liveCountAllChat;
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseDynamicLinks mFirebaseDynamicLinks;
@@ -150,6 +149,15 @@ public class MainActivity extends AppCompatActivity
         initFragments(savedInstanceState);
     }
 
+    private void initConfigDefaultValues() {
+        HashMap<String, Object> defaults = new HashMap<>();
+        defaults.put("column_number_portrait", 2);
+        defaults.put("column_number_landscape", 3);
+        mFirebaseConfig.setDefaults(defaults);
+        final Task<Void> fetch = mFirebaseConfig.fetch(0);
+        fetch.addOnSuccessListener(aVoid -> mFirebaseConfig.activateFetched());
+    }
+
     private void initViews() {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
@@ -170,7 +178,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initFragments(Bundle savedInstanceState) {
-        // Init most recent annonce fragment
         ListAnnonceFragment listAnnonceFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
@@ -184,21 +191,11 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
         transaction.commit();
 
-        // Init Chat Fragment
         ListChatFragment listChatFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CHAT)) {
             listChatFragment = (ListChatFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CHAT);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
         }
-    }
-
-    private void initConfigDefaultValues() {
-        HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put("column_number_portrait", 2);
-        defaults.put("column_number_landscape", 3);
-        mFirebaseConfig.setDefaults(defaults);
-        final Task<Void> fetch = mFirebaseConfig.fetch(0);
-        fetch.addOnSuccessListener(aVoid -> mFirebaseConfig.activateFetched());
     }
 
     @Override
@@ -414,12 +411,12 @@ public class MainActivity extends AppCompatActivity
         activeBadges(user.getUid(), true);
     }
 
-    private void activeBadges(String uid, boolean active) {
+    private void activeBadges(String uidUser, boolean active) {
         if (active) {
             // On lance les observers pour récupérer les badges
-            liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uid, Utility.allStatusToAvoid());
-            liveCountAllFavorite = viewModel.countAllFavoritesByUser(uid);
-            liveCountAllChat = viewModel.countAllChatsByUser(uid, Utility.allStatusToAvoid());
+            liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uidUser, Utility.allStatusToAvoid());
+            liveCountAllFavorite = viewModel.countAllFavoritesByUser(uidUser);
+            liveCountAllChat = viewModel.countAllChatsByUser(uidUser, Utility.allStatusToAvoid());
 
             liveCountAllActiveAnnonce.removeObservers(this);
             liveCountAllFavorite.removeObservers(this);
@@ -500,7 +497,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(mFirebaseUser != null);
         navigationView.getMenu().findItem(R.id.nav_chats).setEnabled(mFirebaseUser != null);
-        navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? "Se déconnecter" : "Se connecter");
+        navigationViewMenu.findItem(R.id.nav_connect).setTitle((mFirebaseUser != null) ? getString(R.string.sign_out) : getString(R.string.sign_in));
     }
 
     private void callProfilActivity() {

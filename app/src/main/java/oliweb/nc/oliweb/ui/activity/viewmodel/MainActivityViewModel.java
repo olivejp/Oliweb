@@ -131,22 +131,16 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return Single.create(emitter ->
                 annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annoncePhotos1 -> {
                                     if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-                                        // Suppression de toutes les photos
                                         for (PhotoEntity photo : annoncePhotos1.getPhotos()) {
-                                            // Suppression du device
                                             MediaUtility.deletePhotoFromDevice(getApplication().getContentResolver(), photo);
-
-                                            // Suppression de la DB
                                             photoRepository.delete(photo);
                                         }
                                     }
-                                    Log.d(TAG, "Starting removeFromFavorite with uidUser : " + uidUser + " annoncePhotos1 : " + annoncePhotos1);
                                     annonceRepository.removeFromFavorite(uidUser, annoncePhotos1);
                                     emitter.onSuccess(new AtomicBoolean(true));
                                 }
