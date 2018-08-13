@@ -43,16 +43,18 @@ public class UserRepositoryTest {
     private static final String USER_PROFILE = "OLIVE JP";
     private static final String USER_EMAIL = "orlanth23@hotmail.com";
     private static final String UPDATED_PROFILE = "Updated Profile";
-    private static final String EMAIL_UPDATED = "updated_orlanth23@hotmail.com";
+    private static final String UPDATED_EMAIL = "updated_orlanth23@hotmail.com";
+    private static final String USER_PHOTO_URL = "https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwi8sfHXmuncAhWId94KHQ_uCz0QjRx6BAgBEAU&url=https%3A%2F%2Ffr.linkedin.com%2Fin%2Fjean-paul-olive-8619215b&psig=AOvVaw34Rki_yMeRmOYLDNZJzRmO&ust=1534221518501011";
+    private static final String USER_TELEPHONE = "790723";
+    public static final String TOKEN = "TOKEN";
 
-    private FirebaseUserRepository mockFirebaseUserRepository;
     private FirebaseUser mockUser;
     private UserRepository userRepository;
 
     @Before
     public void init() {
         mockUser = mock(FirebaseUser.class);
-        mockFirebaseUserRepository = mock(FirebaseUserRepository.class);
+        FirebaseUserRepository mockFirebaseUserRepository = mock(FirebaseUserRepository.class);
 
         Context appContext = InstrumentationRegistry.getTargetContext();
         userRepository = UserRepository.getInstance(appContext);
@@ -60,16 +62,17 @@ public class UserRepositoryTest {
         UtilityTest.cleanBase(appContext);
 
         when(mockUser.getUid()).thenReturn(USER_UID);
-        when(mockUser.getDisplayName()).thenReturn("OLIVE JP");
-        when(mockUser.getEmail()).thenReturn("orlanth23@gmail.com");
-        when(mockUser.getPhotoUrl()).thenReturn(Uri.parse("https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwi8sfHXmuncAhWId94KHQ_uCz0QjRx6BAgBEAU&url=https%3A%2F%2Ffr.linkedin.com%2Fin%2Fjean-paul-olive-8619215b&psig=AOvVaw34Rki_yMeRmOYLDNZJzRmO&ust=1534221518501011"));
-        when(mockUser.getPhoneNumber()).thenReturn("790723");
+        when(mockUser.getDisplayName()).thenReturn(USER_PROFILE);
+        when(mockUser.getEmail()).thenReturn(USER_EMAIL);
+        when(mockUser.getPhotoUrl()).thenReturn(Uri.parse(USER_PHOTO_URL));
+        when(mockUser.getPhoneNumber()).thenReturn(USER_TELEPHONE);
 
-        when(mockFirebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess("TOKEN")));
+        when(mockFirebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess(TOKEN)));
+        userRepository.setOnlyForTestFirebaseUserRepository(mockFirebaseUserRepository);
     }
 
     @After
-    public void deleteDatabase(){
+    public void deleteDatabase() {
         deleteAll();
     }
 
@@ -101,26 +104,49 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void insertUserFromFirebase() {
+    public void test_saveUserFromFirebase_insert() {
         deleteAll();
+
         TestObserver<AtomicBoolean> subscribeSave = new TestObserver<>();
         userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeSave);
         waitTerminalEvent(subscribeSave, 5);
         subscribeSave.assertNoErrors();
         subscribeSave.assertValueCount(1);
         subscribeSave.assertValueAt(0, AtomicBoolean::get);
+
+        TestObserver<UtilisateurEntity> subscribeFind = new TestObserver<>();
+        userRepository.findSingleByUid(USER_UID).subscribe(subscribeFind);
+        waitTerminalEvent(subscribeFind, 5);
+        subscribeFind.assertNoErrors();
+        subscribeFind.assertValueCount(1);
+        subscribeFind.assertValueAt(0, user -> USER_UID.equals(user.getUid())
+                && USER_PROFILE.equals(user.getProfile())
+                && USER_EMAIL.equals(user.getEmail())
+                && USER_PHOTO_URL.equals(user.getPhotoUrl())
+                && USER_TELEPHONE.equals(user.getTelephone()));
     }
 
     @Test
-    public void updateUserFromFirebase() {
+    public void test_saveUserFromFirebase_update() {
         deleteAll();
+
         saveUser(USER_UID, USER_PROFILE, USER_EMAIL);
-        TestObserver<AtomicBoolean> subscribeSave = new TestObserver<>();
-        userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeSave);
-        waitTerminalEvent(subscribeSave, 5);
-        subscribeSave.assertNoErrors();
-        subscribeSave.assertValueCount(1);
-        subscribeSave.assertValueAt(0, AtomicBoolean::get);
+
+        TestObserver<AtomicBoolean> subscribeUpdate = new TestObserver<>();
+        userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeUpdate);
+        waitTerminalEvent(subscribeUpdate, 5);
+        subscribeUpdate.assertNoErrors();
+        subscribeUpdate.assertValueCount(1);
+        subscribeUpdate.assertValueAt(0, isACreation -> !isACreation.get());
+
+        TestObserver<UtilisateurEntity> subscribeFind = new TestObserver<>();
+        userRepository.findSingleByUid(USER_UID).subscribe(subscribeFind);
+        waitTerminalEvent(subscribeFind, 5);
+        subscribeFind.assertNoErrors();
+        subscribeFind.assertValueCount(1);
+        subscribeFind.assertValueAt(0, user -> USER_UID.equals(user.getUid())
+                && USER_PROFILE.equals(user.getProfile())
+                && USER_EMAIL.equals(user.getEmail()));
     }
 
     /**
@@ -257,14 +283,14 @@ public class UserRepositoryTest {
 
         // Updated the user
         userInserted.setProfile(UPDATED_PROFILE);
-        userInserted.setEmail(EMAIL_UPDATED);
+        userInserted.setEmail(UPDATED_EMAIL);
 
         // Save (update) the updated user
         TestObserver<UtilisateurEntity> subscriberSave1 = new TestObserver<>();
         userRepository.singleSave(userInserted).subscribe(subscriberSave1);
         waitTerminalEvent(subscriberSave1, 5);
         subscriberSave1.assertNoErrors();
-        subscriberSave1.assertValueAt(0, entity -> entity.getProfile().equals(UPDATED_PROFILE) && entity.getEmail().equals(EMAIL_UPDATED));
+        subscriberSave1.assertValueAt(0, entity -> entity.getProfile().equals(UPDATED_PROFILE) && entity.getEmail().equals(UPDATED_EMAIL));
 
         checkCount(1, userRepository.count());
 
@@ -276,7 +302,7 @@ public class UserRepositoryTest {
         subscriberFindByUidSaved.assertValue(utilisateurEntityUpdated -> {
             boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), "123");
             boolean updatedProfile = utilisateurEntityUpdated.getProfile().equals(UPDATED_PROFILE);
-            boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(EMAIL_UPDATED);
+            boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(UPDATED_EMAIL);
             return sameUid && updatedProfile && updatedEmail;
         });
     }

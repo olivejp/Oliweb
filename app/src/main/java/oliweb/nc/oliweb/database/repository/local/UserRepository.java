@@ -44,6 +44,10 @@ public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> 
         return instance;
     }
 
+    public void setOnlyForTestFirebaseUserRepository(FirebaseUserRepository firebaseUserRepository) {
+        this.firebaseUserRepository = firebaseUserRepository;
+    }
+
     public LiveData<UtilisateurEntity> findByUid(String uuidUtilisateur) {
         return this.utilisateurDao.findByUuid(uuidUtilisateur);
     }
