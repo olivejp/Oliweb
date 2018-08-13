@@ -46,7 +46,7 @@ public class UserRepositoryTest {
     private static final String UPDATED_EMAIL = "updated_orlanth23@hotmail.com";
     private static final String USER_PHOTO_URL = "https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwi8sfHXmuncAhWId94KHQ_uCz0QjRx6BAgBEAU&url=https%3A%2F%2Ffr.linkedin.com%2Fin%2Fjean-paul-olive-8619215b&psig=AOvVaw34Rki_yMeRmOYLDNZJzRmO&ust=1534221518501011";
     private static final String USER_TELEPHONE = "790723";
-    public static final String TOKEN = "TOKEN";
+    private static final String TOKEN = "TOKEN";
 
     private FirebaseUser mockUser;
     private UserRepository userRepository;
