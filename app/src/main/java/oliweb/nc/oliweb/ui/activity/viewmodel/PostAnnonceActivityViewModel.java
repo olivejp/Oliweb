@@ -21,7 +21,7 @@ import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -33,7 +33,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private CategorieRepository categorieRepository;
 
     private AnnonceEntity currentAnnonce;
@@ -48,11 +48,11 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         categorieRepository = CategorieRepository.getInstance(application);
         photoRepository = PhotoRepository.getInstance(application);
         annonceRepository = AnnonceRepository.getInstance(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application);
+        userRepository = UserRepository.getInstance(application);
     }
 
     public LiveData<UtilisateurEntity> getConnectedUser(String uid) {
-        return this.utilisateurRepository.findByUid(uid);
+        return this.userRepository.findByUid(uid);
     }
 
     public LiveData<List<PhotoEntity>> getLiveListPhoto() {

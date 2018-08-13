@@ -20,7 +20,7 @@ import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 
 class UtilityTest {
 
@@ -74,13 +74,13 @@ class UtilityTest {
         CategorieRepository categorieRepository = CategorieRepository.getInstance(context);
         ChatRepository chatRepository = ChatRepository.getInstance(context);
         MessageRepository messageRepository = MessageRepository.getInstance(context);
-        UtilisateurRepository utilisateurRepository = UtilisateurRepository.getInstance(context);
+        UserRepository userRepository = UserRepository.getInstance(context);
         PhotoRepository photoRepository = PhotoRepository.getInstance(context);
 
         TestObserver testAnnonce = annonceRepository.deleteAll().test();
         TestObserver testCategorie = categorieRepository.deleteAll().test();
         TestObserver testChat = chatRepository.deleteAll().test();
-        TestObserver testUtilisateur = utilisateurRepository.deleteAll().test();
+        TestObserver testUtilisateur = userRepository.deleteAll().test();
         TestObserver testMessage = messageRepository.deleteAll().test();
         TestObserver testPhoto = photoRepository.deleteAll().test();
 
@@ -93,7 +93,7 @@ class UtilityTest {
 
         // Remplissage par défaut
         initCategories(categorieRepository);
-        initUsers(utilisateurRepository);
+        initUsers(userRepository);
     }
 
     private static void initCategories(CategorieRepository categorieRepository) {
@@ -108,12 +108,12 @@ class UtilityTest {
         subscriberInsertCategorie.dispose();
     }
 
-    private static void initUsers(UtilisateurRepository utilisateurRepository) {
+    private static void initUsers(UserRepository userRepository) {
         UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
         utilisateurEntity.setUid(UID_USER);
 
         TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
-        utilisateurRepository.singleSave(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
+        userRepository.singleSave(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
         waitTerminalEvent(subscriberInsertUtilisateur, 5);
 
         subscriberInsertUtilisateur.dispose();

@@ -10,10 +10,10 @@ import com.google.firebase.auth.FirebaseUser;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 
 import java.util.List;
 import java.util.Objects;
@@ -22,12 +22,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -43,17 +44,19 @@ public class UserRepositoryTest {
     private static final String USER_EMAIL = "orlanth23@hotmail.com";
     private static final String UPDATED_PROFILE = "Updated Profile";
     private static final String EMAIL_UPDATED = "updated_orlanth23@hotmail.com";
-    private UtilisateurRepository userRepository;
 
-    @Mock
+    private FirebaseUserRepository mockFirebaseUserRepository;
     private FirebaseUser mockUser;
+    private UserRepository userRepository;
 
     @Before
     public void init() {
-        FirebaseUserRepository firebaseUserRepository = FirebaseUserRepository.getInstance();
+        mockUser = mock(FirebaseUser.class);
+        mockFirebaseUserRepository = mock(FirebaseUserRepository.class);
 
         Context appContext = InstrumentationRegistry.getTargetContext();
-        userRepository = UtilisateurRepository.getInstance(appContext);
+        userRepository = UserRepository.getInstance(appContext);
+
         UtilityTest.cleanBase(appContext);
 
         when(mockUser.getUid()).thenReturn(USER_UID);
@@ -62,7 +65,12 @@ public class UserRepositoryTest {
         when(mockUser.getPhotoUrl()).thenReturn(Uri.parse("https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwi8sfHXmuncAhWId94KHQ_uCz0QjRx6BAgBEAU&url=https%3A%2F%2Ffr.linkedin.com%2Fin%2Fjean-paul-olive-8619215b&psig=AOvVaw34Rki_yMeRmOYLDNZJzRmO&ust=1534221518501011"));
         when(mockUser.getPhoneNumber()).thenReturn("790723");
 
-        when(firebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess("TOKEN")));
+        when(mockFirebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess("TOKEN")));
+    }
+
+    @After
+    public void deleteDatabase(){
+        deleteAll();
     }
 
     private void deleteAll() {

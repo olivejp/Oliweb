@@ -24,7 +24,7 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -38,7 +38,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = MainActivityViewModel.class.getName();
 
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private AnnonceRepository annonceRepository;
@@ -50,7 +50,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
+        userRepository = UserRepository.getInstance(application.getApplicationContext());
         annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
         annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
         photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
@@ -100,7 +100,7 @@ public class MainActivityViewModel extends AndroidViewModel {
      */
     public LiveDataOnce<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
         CustomLiveData<AtomicBoolean> customLiveData = new CustomLiveData<>();
-        utilisateurRepository.saveUserFromFirebase(firebaseUser)
+        userRepository.saveUserFromFirebase(firebaseUser)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(customLiveData::postValue)

@@ -13,7 +13,7 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.deleter.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
@@ -53,7 +53,7 @@ public class DatabaseSyncListenerService extends Service {
         ChatRepository chatRepository = ChatRepository.getInstance(this);
         MessageRepository messageRepository = MessageRepository.getInstance(this);
         AnnonceRepository annonceRepository = AnnonceRepository.getInstance(this);
-        UtilisateurRepository utilisateurRepository = UtilisateurRepository.getInstance(this);
+        UserRepository userRepository = UserRepository.getInstance(this);
         PhotoRepository photoRepository = PhotoRepository.getInstance(this);
         AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
         AnnonceFirebaseDeleter annonceFirebaseDeleter = AnnonceFirebaseDeleter.getInstance(this);
@@ -89,7 +89,7 @@ public class DatabaseSyncListenerService extends Service {
                 .subscribe());
 
         // Envoi tous les utilisateurs
-        disposables.add(utilisateurRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
+        disposables.add(userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
@@ -98,7 +98,7 @@ public class DatabaseSyncListenerService extends Service {
                             if (success.get()) {
                                 Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
                                 utilisateur.setStatut(StatusRemote.SEND);
-                                utilisateurRepository.singleSave(utilisateur)
+                                userRepository.singleSave(utilisateur)
                                         .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                                         .subscribe();
                             }

@@ -20,7 +20,7 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -34,12 +34,12 @@ public class ProfilViewModel extends AndroidViewModel {
     private MutableLiveData<Long> nbAnnoncesByUser;
     private MutableLiveData<Long> nbChatsByUser;
     private MutableLiveData<Long> nbMessagesByUser;
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private FirebaseUserRepository firebaseUserRepository;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application);
+        userRepository = UserRepository.getInstance(application);
         firebaseUserRepository = FirebaseUserRepository.getInstance();
 
     }
@@ -125,13 +125,13 @@ public class ProfilViewModel extends AndroidViewModel {
     }
 
     public LiveData<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
-        return this.utilisateurRepository.findByUid(uidUser);
+        return this.userRepository.findByUid(uidUser);
     }
 
     public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
         return Single.create(emitter -> {
             utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-            this.utilisateurRepository.singleSave(utilisateurEntity)
+            this.userRepository.singleSave(utilisateurEntity)
                     .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                     .doOnError(emitter::onError)
                     .doOnSuccess(utilisateurEntity1 -> {

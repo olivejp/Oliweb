@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.activity;
 
+import android.app.ActivityManager;
 import android.app.SearchManager;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
@@ -40,8 +41,11 @@ import java.util.HashMap;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
@@ -64,7 +68,7 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
+        implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
     public static final int RC_SIGN_IN = 1001;
 
@@ -105,6 +109,9 @@ public class MainActivity extends AppCompatActivity
     private MainActivityViewModel viewModel;
     private boolean dynamicLinkProcessed = false;
 
+    private Intent intentLocalDbService;
+    private Intent intentFirebaseDbService;
+
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
         TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
         numberAnnoncesBadge.setGravity(Gravity.CENTER_VERTICAL);
@@ -142,12 +149,25 @@ public class MainActivity extends AppCompatActivity
                 .setDeveloperModeEnabled(true)
                 .build());
 
+        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le
+        // cas où il y a du réseau.
+        NetworkReceiver.getInstance().listen(this);
+
+        initServicesIntents();
+
         initConfigDefaultValues();
 
         initViews();
 
         initFragments(savedInstanceState);
     }
+
+    private void initServicesIntents() {
+        // Création des intents pour les services de synchronisation
+        intentLocalDbService = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
+        intentFirebaseDbService = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
+    }
+
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
@@ -448,6 +468,7 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseAuth.AuthStateListener defineAuthListener() {
         return firebaseAuth -> {
+
             if (mFirebaseUser != null && mFirebaseUser == firebaseAuth.getCurrentUser()) return;
 
             mFirebaseUser = firebaseAuth.getCurrentUser();
@@ -489,6 +510,8 @@ public class MainActivity extends AppCompatActivity
                 SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
                 viewModel.shouldIAskQuestionToRetrieveData(null).removeObservers(this);
             }
+
+            startStopServices();
         };
     }
 
@@ -525,4 +548,70 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void startStopServices() {
+        stopAllServices();
+        if (mFirebaseUser != null && NetworkReceiver.checkConnection(this)) {
+            launchServices(mFirebaseUser.getUid());
+        }
+    }
+
+    /**
+     * Lancement des services de synchronisation
+     *
+     * @param uidUser de l'utilisateur à connecter
+     */
+    private void launchServices(String uidUser) {
+
+        stopServicesIfRunning();
+
+        // Lancement du service pour écouter la DB en local
+        intentLocalDbService.putExtra(DatabaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
+        startService(intentLocalDbService);
+
+        // Lancement du service pour écouter Firebase
+        intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
+        startService(intentFirebaseDbService);
+    }
+
+    private void stopServicesIfRunning() {
+        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService")) {
+            stopService(intentLocalDbService);
+        }
+
+        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService")) {
+            stopService(intentFirebaseDbService);
+        }
+    }
+
+    private boolean isServiceRunning(String packageNameService) {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        assert manager != null;
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (packageNameService.equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stoppe les services de synchronisation
+     */
+    private void stopAllServices() {
+        // Stop the Local DB sync service
+        stopService(intentLocalDbService);
+
+        // Stop the Firebase sync service
+        stopService(intentFirebaseDbService);
+    }
+
+    @Override
+    public void onNetworkEnable() {
+        startStopServices();
+    }
+
+    @Override
+    public void onNetworkDisable() {
+        stopAllServices();
+    }
 }

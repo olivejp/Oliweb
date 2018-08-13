@@ -8,7 +8,7 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
@@ -26,7 +26,7 @@ public class ScheduleSync {
     private static ScheduleSync instance;
 
     private FirebaseUserRepository firebaseUserRepository;
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private AnnonceRepository annonceRepository;
     private AnnonceFirebaseSender annonceFirebaseSender;
     private ChatRepository chatRepository;
@@ -40,7 +40,7 @@ public class ScheduleSync {
     public static synchronized ScheduleSync getInstance(Context context) {
         if (instance == null) {
             instance = new ScheduleSync();
-            instance.utilisateurRepository = UtilisateurRepository.getInstance(context);
+            instance.userRepository = UserRepository.getInstance(context);
             instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
             instance.annonceRepository = AnnonceRepository.getInstance(context);
             instance.annonceFirebaseSender = AnnonceFirebaseSender.getInstance(context);
@@ -90,7 +90,7 @@ public class ScheduleSync {
     }
 
     private void sendUtilisateurs() {
-        utilisateurRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
+        userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
@@ -98,7 +98,7 @@ public class ScheduleSync {
                         .doOnSuccess(success -> {
                             if (success.get()) {
                                 utilisateur.setStatut(StatusRemote.SEND);
-                                utilisateurRepository.singleSave(utilisateur)
+                                userRepository.singleSave(utilisateur)
                                         .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                                         .subscribe();
                             }

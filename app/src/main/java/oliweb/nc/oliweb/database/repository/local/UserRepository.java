@@ -24,22 +24,22 @@ import oliweb.nc.oliweb.utility.Utility;
  * Created by 2761oli on 29/01/2018.
  */
 
-public class UtilisateurRepository extends AbstractRepository<UtilisateurEntity, Long> {
-    private static final String TAG = UtilisateurRepository.class.getName();
-    private static UtilisateurRepository instance;
+public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> {
+    private static final String TAG = UserRepository.class.getName();
+    private static UserRepository instance;
     private UtilisateurDao utilisateurDao;
     private FirebaseUserRepository firebaseUserRepository;
 
-    private UtilisateurRepository(Context context) {
+    private UserRepository(Context context) {
         super(context);
         this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
     }
 
-    public static synchronized UtilisateurRepository getInstance(Context context) {
+    public static synchronized UserRepository getInstance(Context context) {
         if (instance == null) {
-            instance = new UtilisateurRepository(context);
+            instance = new UserRepository(context);
         }
         return instance;
     }
