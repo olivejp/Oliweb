@@ -13,8 +13,8 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -98,15 +98,14 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @param firebaseUser
      * @return
      */
-    public Single<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
-        Log.d(TAG, "Starting saveUser firebaseUser : " + firebaseUser);
-        return Single.create(emitter ->
-                utilisateurRepository.saveUserFromFirebase(firebaseUser)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(emitter::onSuccess)
-                        .subscribe()
-        );
+    public LiveDataOnce<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
+        CustomLiveData<AtomicBoolean> customLiveData = new CustomLiveData<>();
+        utilisateurRepository.saveUserFromFirebase(firebaseUser)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(customLiveData::postValue)
+                .subscribe();
+        return customLiveData;
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {
@@ -174,13 +173,19 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveDataSaveFavorite;
     }
 
-    public Maybe<AnnoncePhotos> getFromFirebaseByUidAnnonce(String uidAnnonce) {
-        return firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
+    public LiveDataOnce<AnnoncePhotos> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnoncePhotos> customLiveData = new CustomLiveData<>();
+        firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .map(AnnonceConverter::convertDtoToAnnoncePhotos);
+                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
+                .doOnSuccess(customLiveData::postValue)
+                .doOnComplete(() -> customLiveData.postValue(null))
+                .subscribe();
+        return customLiveData;
     }
 
-    public LiveData<FirebaseUser> getLiveDataFirebaseUser(){
+    public LiveData<FirebaseUser> getLiveDataFirebaseUser() {
         if (liveDataFirebaseUser == null) {
             liveDataFirebaseUser = new MutableLiveData<>();
         }

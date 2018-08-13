@@ -39,8 +39,6 @@ import java.util.HashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -135,16 +133,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
 
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
-
-        View viewHeader = navigationView.getHeaderView(0);
-        profileImage = viewHeader.findViewById(R.id.profileImage);
-        profileName = viewHeader.findViewById(R.id.profileName);
-        profileEmail = viewHeader.findViewById(R.id.profileEmail);
-        navigationViewMenu = navigationView.getMenu();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseDynamicLinks = FirebaseDynamicLinks.getInstance();
@@ -155,6 +145,21 @@ public class MainActivity extends AppCompatActivity
 
         initConfigDefaultValues();
 
+        initViews();
+
+        initFragments(savedInstanceState);
+    }
+
+    private void initViews() {
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        View viewHeader = navigationView.getHeaderView(0);
+        profileImage = viewHeader.findViewById(R.id.profileImage);
+        profileName = viewHeader.findViewById(R.id.profileName);
+        profileEmail = viewHeader.findViewById(R.id.profileEmail);
+        navigationViewMenu = navigationView.getMenu();
+
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -162,7 +167,9 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
+    }
 
+    private void initFragments(Bundle savedInstanceState) {
         // Init most recent annonce fragment
         ListAnnonceFragment listAnnonceFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
@@ -233,57 +240,67 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.nav_connect) {
-            if (mFirebaseUser == null) {
-                Utility.signIn(this, RC_SIGN_IN);
-            } else {
-                Utility.signOut(getApplicationContext());
-            }
+            signInSignOut();
         } else if (id == R.id.nav_settings) {
-            Intent intent = new Intent();
-            intent.setClass(this, SettingsActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+            callSettingActivity();
         } else if (id == R.id.nav_profile) {
             callProfilActivity();
         } else if (id == R.id.nav_favorites) {
             callFavoriteActivity();
         } else if (id == R.id.nav_chats) {
-            // On lance l'activité des conversations.
-            String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-            if (uidUser != null) {
-                Intent intent = new Intent(this, MyChatsActivity.class);
-                intent.setAction(ARG_ACTION_OPEN_CHATS);
-                intent.putExtra(DATA_FIREBASE_USER_UID, uidUser);
-                startActivity(intent);
-                overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-            }
+            callChatsActivity();
         } else if (id == R.id.nav_annonces) {
-            String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-            if (uidUser != null) {
-                Intent intent = new Intent();
-                intent.setClass(this, MyAnnoncesActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-            }
+            callMyAnnoncesActivity();
         }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
+    private void signInSignOut() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser == null) {
+            Utility.signIn(this, RC_SIGN_IN);
+        } else {
+            Utility.signOut(getApplicationContext());
+        }
+    }
+
+    private void callMyAnnoncesActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, MyAnnoncesActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
+    }
+
+    private void callChatsActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent(this, MyChatsActivity.class);
+            intent.setAction(ARG_ACTION_OPEN_CHATS);
+            intent.putExtra(DATA_FIREBASE_USER_UID, uidUser);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
+    }
+
+    private void callSettingActivity() {
+        Intent intent = new Intent();
+        intent.setClass(this, SettingsActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Authentification simple
         if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
             Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
         }
-
-        // On vient de créer une nouvelle annonce.
-        // On envoie un snackbar pour avertir l'utilisateur que cela s'est bien déroulé.
         if (requestCode == RC_POST_ANNONCE && resultCode == RESULT_OK) {
             Snackbar.make(toolbar, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
         }
@@ -356,11 +373,13 @@ public class MainActivity extends AppCompatActivity
                         String from = deepLink.getQueryParameter("from");
                         if (uidAnnonce != null) {
                             dynamicLinkProcessed = true;
-                            viewModel.getFromFirebaseByUidAnnonce(uidAnnonce)
-                                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                                    .doOnComplete(() -> Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show())
-                                    .doOnSuccess(this::callAnnonceDetailActivity)
-                                    .subscribe();
+                            viewModel.getLiveFromFirebaseByUidAnnonce(uidAnnonce).observeOnce(annoncePhotos -> {
+                                if (annoncePhotos != null) {
+                                    callAnnonceDetailActivity(annoncePhotos);
+                                } else {
+                                    Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show();
+                                }
+                            });
                         }
                     }
                 })
@@ -432,9 +451,7 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseAuth.AuthStateListener defineAuthListener() {
         return firebaseAuth -> {
-            if ((mFirebaseUser != null && mFirebaseUser == firebaseAuth.getCurrentUser())) {
-                return;
-            }
+            if (mFirebaseUser != null && mFirebaseUser == firebaseAuth.getCurrentUser()) return;
 
             mFirebaseUser = firebaseAuth.getCurrentUser();
             prepareNavigationMenu();
@@ -445,17 +462,13 @@ public class MainActivity extends AppCompatActivity
                 viewModel.setFirebaseUser(mFirebaseUser);
 
                 // Sauvegarde de l'utilisateur
-                viewModel.saveUser(mFirebaseUser)
-                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .doOnSuccess(atomicBoolean -> {
-                            if (atomicBoolean.get()) {
-                                Snackbar.make(navigationView, "Bienvenue sur Oliweb", Snackbar.LENGTH_LONG).setAction("Voir mon profil", v -> callProfilActivity()).show();
-                            } else {
-                                Toast.makeText(this, String.format("Content de vous revoir %s", mFirebaseUser.getDisplayName()), Toast.LENGTH_LONG).show();
-                            }
-                        })
-                        .subscribe();
+                viewModel.saveUser(mFirebaseUser).observeOnce(atomicBoolean -> {
+                    if (atomicBoolean != null && atomicBoolean.get()) {
+                        Snackbar.make(navigationView, "Bienvenue sur Oliweb", Snackbar.LENGTH_LONG).setAction("Voir mon profil", v -> callProfilActivity()).show();
+                    } else {
+                        Toast.makeText(this, String.format("Content de vous revoir %s", mFirebaseUser.getDisplayName()), Toast.LENGTH_LONG).show();
+                    }
+                });
 
                 initViewsForThisUser(mFirebaseUser);
 
@@ -491,23 +504,28 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void callProfilActivity() {
-        Intent intent = new Intent();
-        intent.setClass(this, ProfilActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(PROFIL_ACTIVITY_UID_USER, mFirebaseUser.getUid());
-        bundle.putBoolean(UPDATE, true);
-        intent.putExtras(bundle);
-        startActivity(intent);
-        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, ProfilActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString(PROFIL_ACTIVITY_UID_USER, uidUser);
+            bundle.putBoolean(UPDATE, true);
+            intent.putExtras(bundle);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
     }
 
     private void callFavoriteActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-        Intent intent = new Intent();
-        intent.setClass(this, FavoriteAnnonceActivity.class);
-        intent.putExtra(ARG_USER_UID, uidUser);
-        startActivity(intent);
-        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, FavoriteAnnonceActivity.class);
+            intent.putExtra(ARG_USER_UID, uidUser);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
     }
 
 }
