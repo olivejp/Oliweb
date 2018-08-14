@@ -26,32 +26,32 @@ import oliweb.nc.oliweb.utility.Utility;
 public class ScheduleSync {
     private static final String TAG = ScheduleSync.class.getName();
 
-    @Inject
-    FirebaseUserRepository firebaseUserRepository;
+    private FirebaseUserRepository firebaseUserRepository;
+    private UserRepository userRepository;
+    private AnnonceRepository annonceRepository;
+    private AnnonceFirebaseSender annonceFirebaseSender;
+    private ChatRepository chatRepository;
+    private MessageRepository messageRepository;
+    private MessageFirebaseSender messageFirebaseSender;
+    private ChatFirebaseSender chatFirebaseSender;
 
     @Inject
-    UserRepository userRepository;
-
-    @Inject
-    AnnonceRepository annonceRepository;
-
-    @Inject
-    AnnonceFirebaseSender annonceFirebaseSender;
-
-    @Inject
-    ChatRepository chatRepository;
-
-    @Inject
-    MessageRepository messageRepository;
-
-    @Inject
-    MessageFirebaseSender messageFirebaseSender;
-
-    @Inject
-    ChatFirebaseSender chatFirebaseSender;
-
-    @Inject
-    public ScheduleSync() {
+    public ScheduleSync(FirebaseUserRepository firebaseUserRepository,
+                        UserRepository userRepository,
+                        AnnonceRepository annonceRepository,
+                        AnnonceFirebaseSender annonceFirebaseSender,
+                        ChatRepository chatRepository,
+                        MessageRepository messageRepository,
+                        MessageFirebaseSender messageFirebaseSender,
+                        ChatFirebaseSender chatFirebaseSender) {
+        this.firebaseUserRepository = firebaseUserRepository;
+        this.annonceFirebaseSender = annonceFirebaseSender;
+        this.userRepository = userRepository;
+        this.annonceRepository = annonceRepository;
+        this.chatRepository = chatRepository;
+        this.messageRepository = messageRepository;
+        this.chatFirebaseSender = chatFirebaseSender;
+        this.messageFirebaseSender = messageFirebaseSender;
     }
 
     public void synchronize() {

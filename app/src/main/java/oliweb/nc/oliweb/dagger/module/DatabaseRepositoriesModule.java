@@ -14,21 +14,26 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
+import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
+import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
 
-@Module(includes = ContextModule.class)
+@Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
 public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public UserRepository userRepository(Context context) {
-        return new UserRepository(context);
+    public UserRepository userRepository(Context context, FirebaseUserRepository firebaseUserRepository) {
+        return new UserRepository(context, firebaseUserRepository);
     }
 
     @Provides
     @Singleton
-    public AnnonceRepository annonceRepository(Context context) {
-        return new AnnonceRepository(context);
+    public AnnonceRepository annonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, FirebasePhotoStorage firebasePhotoStorage) {
+        return new AnnonceRepository(context, photoRepository, chatRepository, firebasePhotoStorage);
     }
 
     @Provides
@@ -39,8 +44,8 @@ public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public MessageRepository messageRepository(Context context) {
-        return new MessageRepository(context);
+    public MessageRepository messageRepository(Context context, ChatRepository chatRepository) {
+        return new MessageRepository(context, chatRepository);
     }
 
     @Provides
@@ -69,7 +74,18 @@ public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public ScheduleSync scheduleSync() {
-        return new ScheduleSync();
+    public ScheduleSync scheduleSync(FirebaseUserRepository firebaseUserRepository,
+                                     UserRepository userRepository,
+                                     AnnonceRepository annonceRepository,
+                                     AnnonceFirebaseSender annonceFirebaseSender,
+                                     ChatRepository chatRepository,
+                                     MessageRepository messageRepository,
+                                     MessageFirebaseSender messageFirebaseSender,
+                                     ChatFirebaseSender chatFirebaseSender) {
+        return new ScheduleSync(firebaseUserRepository,
+                userRepository, annonceRepository,
+                annonceFirebaseSender, chatRepository,
+                messageRepository, messageFirebaseSender,
+                chatFirebaseSender);
     }
 }

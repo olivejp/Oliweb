@@ -19,8 +19,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 @Singleton
 public class AnnonceWithPhotosRepository {
 
-    @Inject
-    public AnnonceWithPhotosDao annonceWithPhotosDao;
+    private AnnonceWithPhotosDao annonceWithPhotosDao;
 
     @Inject
     public AnnonceWithPhotosRepository(Context context) {

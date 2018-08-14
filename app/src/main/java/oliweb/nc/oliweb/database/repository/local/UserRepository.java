@@ -30,15 +30,14 @@ import oliweb.nc.oliweb.utility.Utility;
 public class UserRepository extends AbstractRepository<UserEntity, Long> {
     private static final String TAG = UserRepository.class.getName();
     private UtilisateurDao utilisateurDao;
+    private FirebaseUserRepository firebaseUserRepository;
 
     @Inject
-    FirebaseUserRepository firebaseUserRepository;
-
-    @Inject
-    public UserRepository(Context context) {
+    public UserRepository(Context context, FirebaseUserRepository firebaseUserRepository) {
         super(context);
         this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
+        this.firebaseUserRepository = firebaseUserRepository;
     }
 
     public LiveData<UserEntity> findByUid(String uuidUtilisateur) {

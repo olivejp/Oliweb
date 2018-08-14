@@ -18,7 +18,7 @@ import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
 import oliweb.nc.oliweb.service.sync.sender.PhotoFirebaseSender;
 
-@Module(includes = ContextModule.class)
+@Module(includes = {ContextModule.class})
 public class FirebaseRepositoriesModule {
 
     @Provides
@@ -56,7 +56,6 @@ public class FirebaseRepositoriesModule {
     public AnnonceFirebaseDeleter annonceFirebaseDeleter(Context context) {
         return new AnnonceFirebaseDeleter(context);
     }
-
 
     @Provides
     @Singleton

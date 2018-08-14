@@ -29,22 +29,21 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private static final String TAG = AnnonceRepository.class.getName();
 
-    @Inject
-    PhotoRepository photoRepository;
 
-    @Inject
-    ChatRepository chatRepository;
-
-    @Inject
-    FirebasePhotoStorage fbPhotoStorage;
+    private PhotoRepository photoRepository;
+    private ChatRepository chatRepository;
+    private FirebasePhotoStorage fbPhotoStorage;
 
     private AnnonceDao annonceDao;
 
     @Inject
-    public AnnonceRepository(Context context) {
+    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, FirebasePhotoStorage fbPhotoStorage) {
         super(context);
         this.dao = this.db.getAnnonceDao();
         this.annonceDao = (AnnonceDao) this.dao;
+        this.photoRepository = photoRepository;
+        this.chatRepository = chatRepository;
+        this.fbPhotoStorage = fbPhotoStorage;
     }
 
     public LiveData<AnnonceEntity> findLiveById(long idAnnonce) {

@@ -26,14 +26,14 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     private static final String TAG = MessageRepository.class.getName();
     private MessageDao messageDao;
 
-    @Inject
-    public ChatRepository chatRepository;
+    private ChatRepository chatRepository;
 
     @Inject
-    public MessageRepository(Context context) {
+    public MessageRepository(Context context, ChatRepository chatRepository) {
         super(context);
         this.dao = this.db.getMessageDao();
         this.messageDao = (MessageDao) this.dao;
+        this.chatRepository = chatRepository;
     }
 
     public Maybe<MessageEntity> findSingleByUid(String uidMessage) {
