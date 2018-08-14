@@ -7,6 +7,9 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -22,34 +25,31 @@ import oliweb.nc.oliweb.utility.MediaUtility;
 /**
  * Cette classe découpe toutes les étapes nécessaires pour la suppression d'une annonce sur Firebase
  */
+@Singleton
 public class AnnonceFirebaseDeleter {
 
     private static final String TAG = AnnonceFirebaseDeleter.class.getName();
 
-    private static AnnonceFirebaseDeleter instance;
+    @Inject
+    FirebaseAnnonceRepository firebaseAnnonceRepository;
 
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    @Inject
+    AnnonceRepository annonceRepository;
 
-    private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
-    private AnnonceFullRepository annonceFullRepository;
-    private FirebasePhotoStorage firebasePhotoStorage;
+    @Inject
+    PhotoRepository photoRepository;
+
+    @Inject
+    AnnonceFullRepository annonceFullRepository;
+
+    @Inject
+    FirebasePhotoStorage firebasePhotoStorage;
+
     private ContentResolver contentResolver;
 
-    private AnnonceFirebaseDeleter() {
-    }
-
-    public static synchronized AnnonceFirebaseDeleter getInstance(Context context) {
-        if (instance == null) {
-            instance = new AnnonceFirebaseDeleter();
-            instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.photoRepository = PhotoRepository.getInstance(context);
-            instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
-            instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-            instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
-            instance.contentResolver = context.getContentResolver();
-        }
-        return instance;
+    @Inject
+    public AnnonceFirebaseDeleter(Context context) {
+        this.contentResolver = context.getContentResolver();
     }
 
     /**

@@ -16,6 +16,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -50,12 +54,14 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
-        userRepository = UserRepository.getInstance(application.getApplicationContext());
-        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
-        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
-        chatRepository = ChatRepository.getInstance(application.getApplicationContext());
-        firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        userRepository = component.getUserRepository();
+        annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
+        annonceRepository = component.getAnnonceRepository();
+        photoRepository = component.getPhotoRepository();
+        chatRepository = component.getChatRepository();
+        firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {

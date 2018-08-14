@@ -13,6 +13,9 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -21,24 +24,19 @@ import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import static oliweb.nc.oliweb.database.converter.PhotoConverter.createPhotoEntityFromUrl;
 import static oliweb.nc.oliweb.utility.MediaUtility.createNewImagePairUriFile;
 
+@Singleton
 public class FirebasePhotoStorage {
 
     private static final String TAG = FirebasePhotoStorage.class.getName();
 
-    private static FirebasePhotoStorage instance;
     private StorageReference fireStorage;
-    private PhotoRepository photoRepository;
 
-    private FirebasePhotoStorage() {
-    }
+    @Inject
+    PhotoRepository photoRepository;
 
-    public static synchronized FirebasePhotoStorage getInstance(Context context) {
-        if (instance == null) {
-            instance = new FirebasePhotoStorage();
-            instance.fireStorage = FirebaseStorage.getInstance().getReference();
-            instance.photoRepository = PhotoRepository.getInstance(context);
-        }
-        return instance;
+    @Inject
+    public FirebasePhotoStorage(Context context) {
+        this.fireStorage = FirebaseStorage.getInstance().getReference();
     }
 
     /**

@@ -16,6 +16,8 @@ import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -47,8 +49,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        messageRepository = MessageRepository.getInstance(getApplicationContext());
-        chatRepository = ChatRepository.getInstance(getApplicationContext());
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        messageRepository = component.getMessageRepository();
+        chatRepository = component.getChatRepository();
 
         Map<String, String> datas = remoteMessage.getData();
         if (remoteMessage.getNotification() != null && datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {

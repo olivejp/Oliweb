@@ -20,35 +20,25 @@ import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.firebase.repository.DaggerFirebaseRepositoryComponent;
-import oliweb.nc.oliweb.firebase.repository.FirebaseRepositoryComponent;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by 2761oli on 29/01/2018.
  */
-
+@Singleton
 public class UserRepository extends AbstractRepository<UserEntity, Long> {
     private static final String TAG = UserRepository.class.getName();
-    private static UserRepository instance;
     private UtilisateurDao utilisateurDao;
-    private FirebaseUserRepository firebaseUserRepository;
 
-    private UserRepository(Context context) {
+    @Inject
+    FirebaseUserRepository firebaseUserRepository;
+
+    @Inject
+    public UserRepository(Context context) {
         super(context);
         this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
-
-        FirebaseRepositoryComponent component = DaggerFirebaseRepositoryComponent.create();
-        this.firebaseUserRepository = component.getFirebaseUserRepository();
-    }
-
-    public static synchronized UserRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new UserRepository(context);
-        }
-        return instance;
     }
 
     public LiveData<UserEntity> findByUid(String uuidUtilisateur) {

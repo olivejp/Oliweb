@@ -13,12 +13,14 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
+@Singleton
 public class FirebaseUserRepository {
 
     private static final String TAG = FirebaseUserRepository.class.getName();

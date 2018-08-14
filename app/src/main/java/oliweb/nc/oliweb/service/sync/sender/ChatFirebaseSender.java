@@ -1,7 +1,9 @@
 package oliweb.nc.oliweb.service.sync.sender;
 
-import android.content.Context;
 import android.util.Log;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -17,27 +19,22 @@ import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
  * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
  * sur Firebase.
  */
+@Singleton
 public class ChatFirebaseSender {
 
     private static final String TAG = ChatFirebaseSender.class.getName();
 
-    private static ChatFirebaseSender instance;
+    @Inject
+    public FirebaseChatRepository firebaseChatRepository;
 
-    private FirebaseChatRepository firebaseChatRepository;
-    private ChatRepository chatRepository;
-    private MessageRepository messageRepository;
+    @Inject
+    public ChatRepository chatRepository;
 
-    private ChatFirebaseSender() {
-    }
+    @Inject
+    public MessageRepository messageRepository;
 
-    public static synchronized ChatFirebaseSender getInstance(Context context) {
-        if (instance == null) {
-            instance = new ChatFirebaseSender();
-            instance.chatRepository = ChatRepository.getInstance(context);
-            instance.messageRepository = MessageRepository.getInstance(context);
-            instance.firebaseChatRepository = FirebaseChatRepository.getInstance();
-        }
-        return instance;
+    @Inject
+    public ChatFirebaseSender() {
     }
 
     /**

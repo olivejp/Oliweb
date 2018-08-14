@@ -13,6 +13,8 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -45,10 +47,11 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
-        categorieRepository = CategorieRepository.getInstance(application);
-        photoRepository = PhotoRepository.getInstance(application);
-        annonceRepository = AnnonceRepository.getInstance(application);
-        userRepository = UserRepository.getInstance(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        categorieRepository = component.getCategorieRepository();
+        photoRepository = component.getPhotoRepository();
+        annonceRepository = component.getAnnonceRepository();
+        userRepository = component.getUserRepository();
     }
 
     public LiveData<UserEntity> getConnectedUser(String uid) {

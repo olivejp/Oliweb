@@ -8,6 +8,10 @@ import android.util.Log;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -50,16 +54,19 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        ChatRepository chatRepository = ChatRepository.getInstance(this);
-        MessageRepository messageRepository = MessageRepository.getInstance(this);
-        AnnonceRepository annonceRepository = AnnonceRepository.getInstance(this);
-        UserRepository userRepository = UserRepository.getInstance(this);
-        PhotoRepository photoRepository = PhotoRepository.getInstance(this);
-        AnnonceFirebaseSender annonceFirebaseSender = AnnonceFirebaseSender.getInstance(this);
-        AnnonceFirebaseDeleter annonceFirebaseDeleter = AnnonceFirebaseDeleter.getInstance(this);
-        MessageFirebaseSender messageFirebaseSender = MessageFirebaseSender.getInstance(this);
-        ChatFirebaseSender chatFirebaseSender = ChatFirebaseSender.getInstance(this);
-        FirebaseUserRepository firebaseUserRepository = FirebaseUserRepository.getInstance();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+
+        ChatRepository chatRepository = component.getChatRepository();
+        MessageRepository messageRepository = component.getMessageRepository();
+        AnnonceRepository annonceRepository = component.getAnnonceRepository();
+        UserRepository userRepository = component.getUserRepository();
+        PhotoRepository photoRepository = component.getPhotoRepository();
+        AnnonceFirebaseSender annonceFirebaseSender = componentFb.getAnnonceFirebaseSender();
+        AnnonceFirebaseDeleter annonceFirebaseDeleter = componentFb.getAnnonceFirebaseDeleter();
+        MessageFirebaseSender messageFirebaseSender = componentFb.getMessageFirebaseSender();
+        ChatFirebaseSender chatFirebaseSender = componentFb.getChatFirebaseSender();
+        FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
 
         // SENDERS
         // Envoi toutes les annonces

@@ -6,6 +6,9 @@ import android.util.Log;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -18,25 +21,19 @@ import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 /**
  * Created by 2761oli on 19/04/2018.
  */
-
+@Singleton
 public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     private static final String TAG = MessageRepository.class.getName();
-    private static MessageRepository instance;
     private MessageDao messageDao;
-    private ChatRepository chatRepository;
 
-    private MessageRepository(Context context) {
+    @Inject
+    public ChatRepository chatRepository;
+
+    @Inject
+    public MessageRepository(Context context) {
         super(context);
         this.dao = this.db.getMessageDao();
         this.messageDao = (MessageDao) this.dao;
-        this.chatRepository = ChatRepository.getInstance(context);
-    }
-
-    public static synchronized MessageRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new MessageRepository(context);
-        }
-        return instance;
     }
 
     public Maybe<MessageEntity> findSingleByUid(String uidMessage) {

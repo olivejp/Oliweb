@@ -18,6 +18,10 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
@@ -35,12 +39,13 @@ public class ProfilViewModel extends AndroidViewModel {
     private MutableLiveData<Long> nbChatsByUser;
     private MutableLiveData<Long> nbMessagesByUser;
     private UserRepository userRepository;
-    private FirebaseUserRepository firebaseUserRepository;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-        userRepository = UserRepository.getInstance(application);
-        firebaseUserRepository = FirebaseUserRepository.getInstance();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        userRepository = component.getUserRepository();
+        FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
 
     }
 
@@ -52,15 +57,13 @@ public class ProfilViewModel extends AndroidViewModel {
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).orderByChild("uidAuthor").equalTo(uidUser)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbMessagesByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbMessagesByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });
@@ -76,15 +79,13 @@ public class ProfilViewModel extends AndroidViewModel {
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbChatsByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbChatsByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });
@@ -101,15 +102,13 @@ public class ProfilViewModel extends AndroidViewModel {
                 .orderByChild("utilisateur/uuid").equalTo(uidUser)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbAnnoncesByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbAnnoncesByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });

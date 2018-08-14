@@ -24,6 +24,10 @@ import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -106,9 +110,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
-        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
-        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        annonceRepository = component.getAnnonceRepository();
+        photoRepository = component.getPhotoRepository();
+        annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
         genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {

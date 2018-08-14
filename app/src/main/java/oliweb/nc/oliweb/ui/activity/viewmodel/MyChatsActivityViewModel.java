@@ -14,6 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -59,9 +63,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
-        this.chatRepository = ChatRepository.getInstance(application);
-        this.messageRepository = MessageRepository.getInstance(application);
-        this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+
+        this.chatRepository = component.getChatRepository();
+        this.messageRepository = component.getMessageRepository();
+        this.firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
         this.firebaseChatRepository = FirebaseChatRepository.getInstance();
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();

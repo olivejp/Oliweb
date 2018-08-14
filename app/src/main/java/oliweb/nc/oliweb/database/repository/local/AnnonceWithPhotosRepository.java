@@ -5,6 +5,9 @@ import android.content.Context;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Maybe;
 import oliweb.nc.oliweb.database.OliwebDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
@@ -13,21 +16,16 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 /**
  * Created by 2761oli on 29/01/2018.
  */
-
+@Singleton
 public class AnnonceWithPhotosRepository {
-    private static AnnonceWithPhotosRepository instance;
-    private AnnonceWithPhotosDao annonceWithPhotosDao;
 
-    private AnnonceWithPhotosRepository(Context context) {
+    @Inject
+    public AnnonceWithPhotosDao annonceWithPhotosDao;
+
+    @Inject
+    public AnnonceWithPhotosRepository(Context context) {
         OliwebDatabase db = OliwebDatabase.getInstance(context);
         this.annonceWithPhotosDao = db.getAnnonceWithPhotosDao();
-    }
-
-    public static synchronized AnnonceWithPhotosRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new AnnonceWithPhotosRepository(context);
-        }
-        return instance;
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUser(String uuidUtilisateur) {

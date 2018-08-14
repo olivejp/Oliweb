@@ -2,6 +2,9 @@ package oliweb.nc.oliweb.service.sync;
 
 import android.content.Context;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
@@ -9,23 +12,16 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
  * Created by orlanth23 on 03/03/2018.
  * This class allows to retrieve {@link AnnonceDto} from Firebase corresponding to the given UID User.
  */
+@Singleton
 public class FirebaseRetrieverService {
 
     private static final String TAG = FirebaseRetrieverService.class.getName();
 
-    private static FirebaseRetrieverService instance;
+    @Inject
+    FirebaseAnnonceRepository firebaseAnnonceRepository;
 
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
-
-    private FirebaseRetrieverService() {
-    }
-
-    public static synchronized  FirebaseRetrieverService getInstance(Context context) {
-        if (instance == null) {
-            instance = new FirebaseRetrieverService();
-        }
-        instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-        return instance;
+    @Inject
+    public FirebaseRetrieverService() {
     }
 
     /**

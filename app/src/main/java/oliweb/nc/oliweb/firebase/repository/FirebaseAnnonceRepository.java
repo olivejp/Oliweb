@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -31,30 +32,25 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
+@Singleton
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
+
+    @Inject
+    AnnonceRepository annonceRepository;
+
+    @Inject
+    FirebasePhotoStorage firebasePhotoStorage;
+
     private DatabaseReference annonceRef;
 
-    private static FirebaseAnnonceRepository instance;
-
-    private AnnonceRepository annonceRepository;
-    private FirebasePhotoStorage firebasePhotoStorage;
     private GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass;
 
     @Inject
     public FirebaseAnnonceRepository() {
         annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>(){};
-    }
-
-    public static synchronized FirebaseAnnonceRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new FirebaseAnnonceRepository();
-        }
-        instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
-        return instance;
     }
 
     private Query queryByUidUser(String uidUser) {

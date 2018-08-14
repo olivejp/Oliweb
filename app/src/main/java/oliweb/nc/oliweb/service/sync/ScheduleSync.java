@@ -1,7 +1,9 @@
 package oliweb.nc.oliweb.service.sync;
 
-import android.content.Context;
 import android.util.Log;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -20,39 +22,39 @@ import oliweb.nc.oliweb.utility.Utility;
  * <p>
  * This class contains the series of network calls to make to sync local db with firebase
  */
+@Singleton
 public class ScheduleSync {
     private static final String TAG = ScheduleSync.class.getName();
 
-    private static ScheduleSync instance;
+    @Inject
+    FirebaseUserRepository firebaseUserRepository;
 
-    private FirebaseUserRepository firebaseUserRepository;
-    private UserRepository userRepository;
-    private AnnonceRepository annonceRepository;
-    private AnnonceFirebaseSender annonceFirebaseSender;
-    private ChatRepository chatRepository;
-    private MessageRepository messageRepository;
-    private MessageFirebaseSender messageFirebaseSender;
-    private ChatFirebaseSender chatFirebaseSender;
+    @Inject
+    UserRepository userRepository;
 
-    private ScheduleSync() {
+    @Inject
+    AnnonceRepository annonceRepository;
+
+    @Inject
+    AnnonceFirebaseSender annonceFirebaseSender;
+
+    @Inject
+    ChatRepository chatRepository;
+
+    @Inject
+    MessageRepository messageRepository;
+
+    @Inject
+    MessageFirebaseSender messageFirebaseSender;
+
+    @Inject
+    ChatFirebaseSender chatFirebaseSender;
+
+    @Inject
+    public ScheduleSync() {
     }
 
-    public static synchronized ScheduleSync getInstance(Context context) {
-        if (instance == null) {
-            instance = new ScheduleSync();
-            instance.userRepository = UserRepository.getInstance(context);
-            instance.firebaseUserRepository = FirebaseUserRepository.getInstance();
-            instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.annonceFirebaseSender = AnnonceFirebaseSender.getInstance(context);
-            instance.messageRepository = MessageRepository.getInstance(context);
-            instance.chatRepository = ChatRepository.getInstance(context);
-            instance.messageFirebaseSender = MessageFirebaseSender.getInstance(context);
-            instance.chatFirebaseSender = ChatFirebaseSender.getInstance(context);
-        }
-        return instance;
-    }
-
-    void synchronize() {
+    public void synchronize() {
         sendAnnonces();
         sendMessages();
         sendChats();

@@ -1,10 +1,12 @@
 package oliweb.nc.oliweb.service.sync.sender;
 
-import android.content.Context;
 import android.util.Log;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -18,25 +20,19 @@ import oliweb.nc.oliweb.utility.Utility;
  * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
  * sur Firebase.
  */
+@Singleton
 public class PhotoFirebaseSender {
 
     private static final String TAG = PhotoFirebaseSender.class.getName();
 
-    private static PhotoFirebaseSender instance;
+    @Inject
+    public FirebasePhotoStorage firebasePhotoStorage;
 
-    private FirebasePhotoStorage firebasePhotoStorage;
-    private PhotoRepository photoRepository;
+    @Inject
+    public PhotoRepository photoRepository;
 
-    private PhotoFirebaseSender() {
-    }
-
-    public static synchronized PhotoFirebaseSender getInstance(Context context) {
-        if (instance == null) {
-            instance = new PhotoFirebaseSender();
-            instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
-            instance.photoRepository = PhotoRepository.getInstance(context);
-        }
-        return instance;
+    @Inject
+    public PhotoFirebaseSender() {
     }
 
     Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
