@@ -21,10 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 
+import static oliweb.nc.oliweb.UtilityTest.UID_USER;
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
@@ -68,35 +69,33 @@ public class UserRepositoryTest {
         when(mockUser.getPhoneNumber()).thenReturn(USER_TELEPHONE);
 
         when(mockFirebaseUserRepository.getToken()).thenReturn(Single.create(emitter -> emitter.onSuccess(TOKEN)));
-        userRepository.setOnlyForTestFirebaseUserRepository(mockFirebaseUserRepository);
     }
 
     @After
     public void deleteDatabase() {
-        deleteAll();
+        test_deleteAll();
     }
 
-    private void deleteAll() {
+    private void test_deleteAll() {
         TestObserver<Integer> subscriber = new TestObserver<>();
         userRepository.deleteAll().subscribe(subscriber);
         waitTerminalEvent(subscriber, 5);
         subscriber.assertNoErrors();
     }
 
-    private UtilisateurEntity saveUser(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
-        UtilisateurEntity utilisateurEntity = initUtilisateur(uidUser, profile, email);
-        TestObserver<UtilisateurEntity> subscriberInsert = new TestObserver<>();
-        userRepository.singleSave(utilisateurEntity).subscribe(subscriberInsert);
+    private void test_singleSave(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
+        UserEntity userEntity = initUtilisateur(uidUser, profile, email);
+        TestObserver<UserEntity> subscriberInsert = new TestObserver<>();
+        userRepository.singleSave(userEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
         subscriberInsert.assertNoErrors();
         subscriberInsert.assertValueCount(1);
-        return subscriberInsert.values().get(0);
     }
 
-    private void existByUid(String uid, boolean expectedResult) {
+    private void test_existByUid(String userUid, boolean expectedResult) {
         // existById should return a single value with a AtomicBoolean == true
         TestObserver<AtomicBoolean> subscriberExist = new TestObserver<>();
-        userRepository.existByUid(uid).subscribe(subscriberExist);
+        userRepository.existByUid(userUid).subscribe(subscriberExist);
         waitTerminalEvent(subscriberExist, 5);
         subscriberExist.assertNoErrors();
         subscriberExist.assertValueCount(1);
@@ -105,7 +104,7 @@ public class UserRepositoryTest {
 
     @Test
     public void test_saveUserFromFirebase_insert() {
-        deleteAll();
+        test_deleteAll();
 
         TestObserver<AtomicBoolean> subscribeSave = new TestObserver<>();
         userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeSave);
@@ -114,7 +113,7 @@ public class UserRepositoryTest {
         subscribeSave.assertValueCount(1);
         subscribeSave.assertValueAt(0, AtomicBoolean::get);
 
-        TestObserver<UtilisateurEntity> subscribeFind = new TestObserver<>();
+        TestObserver<UserEntity> subscribeFind = new TestObserver<>();
         userRepository.findSingleByUid(USER_UID).subscribe(subscribeFind);
         waitTerminalEvent(subscribeFind, 5);
         subscribeFind.assertNoErrors();
@@ -128,9 +127,9 @@ public class UserRepositoryTest {
 
     @Test
     public void test_saveUserFromFirebase_update() {
-        deleteAll();
+        test_deleteAll();
 
-        saveUser(USER_UID, USER_PROFILE, USER_EMAIL);
+        test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
         TestObserver<AtomicBoolean> subscribeUpdate = new TestObserver<>();
         userRepository.saveUserFromFirebase(mockUser).subscribe(subscribeUpdate);
@@ -139,7 +138,7 @@ public class UserRepositoryTest {
         subscribeUpdate.assertValueCount(1);
         subscribeUpdate.assertValueAt(0, isACreation -> !isACreation.get());
 
-        TestObserver<UtilisateurEntity> subscribeFind = new TestObserver<>();
+        TestObserver<UserEntity> subscribeFind = new TestObserver<>();
         userRepository.findSingleByUid(USER_UID).subscribe(subscribeFind);
         waitTerminalEvent(subscribeFind, 5);
         subscribeFind.assertNoErrors();
@@ -149,158 +148,86 @@ public class UserRepositoryTest {
                 && USER_EMAIL.equals(user.getEmail()));
     }
 
-    /**
-     * Delete All users when the table is empty should not throw a exception
-     */
     @Test
-    public void deleteThenQuery() {
-        deleteAll();
-        existByUid(USER_UID, false);
+    public void test_delete() {
+        test_deleteAll();
+        test_existByUid(USER_UID, false);
         checkCount(0, userRepository.count());
     }
 
     @Test
-    public void deleteThenFind() {
-        deleteAll();
-        TestObserver<UtilisateurEntity> testObserver = new TestObserver<>();
-        userRepository.findSingleByUid(USER_UID).subscribe(testObserver);
-        waitTerminalEvent(testObserver, 5);
-        testObserver.assertNoErrors();
+    public void test_delete_twice() {
+        test_deleteAll();
+        test_deleteAll();
     }
 
-    /**
-     * Delete All users when the table is empty should not throw a exception
-     */
     @Test
-    public void deleteAllTwice() {
-        deleteAll();
-        deleteAll();
-    }
+    public void test_count() {
+        test_deleteAll();
 
-    /**
-     * Clean Utilisateur table
-     * then insert a user
-     * then ask to see if the user exist
-     */
-    @Test
-    public void insertAndExist() {
-        // Erase all the database
-        deleteAll();
+        test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
-        saveUser("123", "profile", "email");
-
-        // existById should return a single value with a AtomicBoolean == true
-        existByUid("123", true);
+        test_existByUid(USER_UID, true);
 
         checkCount(1, userRepository.count());
     }
 
     @Test
-    public void deleteAllThenCount() {
-        // Erase all the database
-        deleteAll();
+    public void test_delete_afterInsert() {
+        test_deleteAll();
 
-        saveUser("123", "profile", "email");
+        test_singleSave(UID_USER, USER_PROFILE, USER_EMAIL);
 
         checkCount(1, userRepository.count());
 
-        deleteAll();
+        test_deleteAll();
 
         checkCount(0, userRepository.count());
     }
 
     @Test
-    public void insertThenCountThenQuery() {
-        // Erase all the database
-        deleteAll();
+    public void test_findSingleByUid() {
+        test_deleteAll();
 
-        // Insert a new user
-        saveUser("123", "profile", "email");
+        test_singleSave(UID_USER, USER_PROFILE, USER_EMAIL);
 
-        // Count
         checkCount(1, userRepository.count());
 
-        // Query
-        TestObserver<UtilisateurEntity> subscriberFindByUid = new TestObserver<>();
-        userRepository.findSingleByUid("123").subscribe(subscriberFindByUid);
+        TestObserver<UserEntity> subscriberFindByUid = new TestObserver<>();
+        userRepository.findSingleByUid(UID_USER).subscribe(subscriberFindByUid);
         waitTerminalEvent(subscriberFindByUid, 5);
         subscriberFindByUid.assertNoErrors();
-        subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), "email") && Objects.equals(utilisateurEntity.getProfile(), "profile") && Objects.equals(utilisateurEntity.getUid(), "123"));
+        subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), USER_EMAIL)
+                && Objects.equals(utilisateurEntity.getProfile(), USER_PROFILE)
+                && Objects.equals(utilisateurEntity.getUid(), USER_UID));
     }
 
     @Test
-    public void insertThenUpdateThenQuery() {
-
-        String profileUpdated = "Updated Profile";
-        String emailUpdated = "updated_orlanth23@hotmail.com";
-
-        // Erase all the database
-        deleteAll();
-
-        // Insert a new user
-        UtilisateurEntity utilisateurEntity = saveUser("123", "profile", "email");
-
-        // Updated the user
-        utilisateurEntity.setProfile(profileUpdated);
-        utilisateurEntity.setEmail(emailUpdated);
-
-        // Try to send updated utilisateur to database
-        TestObserver<UtilisateurEntity> subscriberUpdate = new TestObserver<>();
-        userRepository.singleSave(utilisateurEntity).subscribe(subscriberUpdate);
-        waitTerminalEvent(subscriberUpdate, 5);
-        subscriberUpdate.assertNoErrors();
-        subscriberUpdate.assertValueAt(0, entity -> entity.getUid().equals("123") && entity.getProfile().equals(profileUpdated) && entity.getEmail().equals(emailUpdated));
-
-        // Query the updated values
-        TestObserver<UtilisateurEntity> subscriberFindByUidSaved = new TestObserver<>();
-        userRepository.findSingleByUid("123").subscribe(subscriberFindByUidSaved);
-        waitTerminalEvent(subscriberFindByUidSaved, 5);
-        subscriberFindByUidSaved.assertNoErrors();
-        subscriberFindByUidSaved.assertValueAt(0, utilisateurEntityUpdated -> {
-            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), "123");
-            boolean updatedProfile = utilisateurEntityUpdated.getProfile().equals(profileUpdated);
-            boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(emailUpdated);
-            return sameUid && updatedProfile && updatedEmail;
-        });
-    }
-
-    @Test
-    public void saveThenUpdateThenQuery() {
-        // Erase all the user table
-        deleteAll();
+    public void test_singleSave_update() {
+        test_deleteAll();
 
         // Create a new user
-        UtilisateurEntity utilisateurEntity = initUtilisateur("123", "profile", "email");
+        test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
-        // Save (insert) the new user
-        TestObserver<UtilisateurEntity> subscriberSave = new TestObserver<>();
-        userRepository.singleSave(utilisateurEntity).subscribe(subscriberSave);
-        waitTerminalEvent(subscriberSave, 5);
-        subscriberSave.assertNoErrors();
-        UtilisateurEntity userInserted = subscriberSave.values().get(0);
-
-        checkCount(1, userRepository.count());
+        // Retrieve user
+        TestObserver<UserEntity> subscribeFindSingle = new TestObserver<>();
+        userRepository.findSingleByUid(USER_UID).subscribe(subscribeFindSingle);
+        waitTerminalEvent(subscribeFindSingle, 5);
+        subscribeFindSingle.assertNoErrors();
 
         // Updated the user
-        userInserted.setProfile(UPDATED_PROFILE);
-        userInserted.setEmail(UPDATED_EMAIL);
+        test_singleSave(USER_UID, UPDATED_PROFILE, UPDATED_EMAIL);
 
-        // Save (update) the updated user
-        TestObserver<UtilisateurEntity> subscriberSave1 = new TestObserver<>();
-        userRepository.singleSave(userInserted).subscribe(subscriberSave1);
-        waitTerminalEvent(subscriberSave1, 5);
-        subscriberSave1.assertNoErrors();
-        subscriberSave1.assertValueAt(0, entity -> entity.getProfile().equals(UPDATED_PROFILE) && entity.getEmail().equals(UPDATED_EMAIL));
-
+        // Check that we don't create a second user
         checkCount(1, userRepository.count());
 
         // Query the updated values
-        TestObserver<UtilisateurEntity> subscriberFindByUidSaved = new TestObserver<>();
-        userRepository.findSingleByUid("123").subscribe(subscriberFindByUidSaved);
+        TestObserver<UserEntity> subscriberFindByUidSaved = new TestObserver<>();
+        userRepository.findSingleByUid(USER_UID).subscribe(subscriberFindByUidSaved);
         waitTerminalEvent(subscriberFindByUidSaved, 5);
         subscriberFindByUidSaved.assertNoErrors();
         subscriberFindByUidSaved.assertValue(utilisateurEntityUpdated -> {
-            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), "123");
+            boolean sameUid = Objects.equals(utilisateurEntityUpdated.getUid(), USER_UID);
             boolean updatedProfile = utilisateurEntityUpdated.getProfile().equals(UPDATED_PROFILE);
             boolean updatedEmail = utilisateurEntityUpdated.getEmail().equals(UPDATED_EMAIL);
             return sameUid && updatedProfile && updatedEmail;
@@ -308,27 +235,24 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void getAllTest() {
-        // Erase all the database
-        deleteAll();
-
-        checkCount(0, userRepository.count());
+    public void test_getAll() {
+        test_deleteAll();
 
         // Insert two new users
-        saveUser("UID_USER_1", "UTILISATEUR_1", "EMAIL1");
-        saveUser("UID_USER_2", "UTILISATEUR_2", "EMAIL2");
+        test_singleSave("UID_USER_1", "UTILISATEUR_1", "EMAIL1");
+        test_singleSave("UID_USER_2", "UTILISATEUR_2", "EMAIL2");
 
         checkCount(2, userRepository.count());
 
-        TestObserver<List<UtilisateurEntity>> subscriberGetAll = new TestObserver<>();
+        TestObserver<List<UserEntity>> subscriberGetAll = new TestObserver<>();
         userRepository.getAll().subscribe(subscriberGetAll);
         waitTerminalEvent(subscriberGetAll, 5);
         subscriberGetAll.assertNoErrors();
-        List<UtilisateurEntity> listRetour = subscriberGetAll.values().get(0);
+        List<UserEntity> listRetour = subscriberGetAll.values().get(0);
         Assert.assertEquals(2, listRetour.size());
         boolean isFirstTrue = false;
         boolean isSecondTrue = false;
-        for (UtilisateurEntity user : listRetour) {
+        for (UserEntity user : listRetour) {
             if (user.getProfile().equals("UTILISATEUR_1") && user.getEmail().equals("EMAIL1") && user.getUid().equals("UID_USER_1")) {
                 isFirstTrue = true;
             }

@@ -14,7 +14,7 @@ import io.reactivex.subscribers.TestSubscriber;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -22,10 +22,13 @@ import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
 
-class UtilityTest {
+public class UtilityTest {
 
     static final String UID_USER = "123456";
     static final String CATEGORIE_NAME = "CATEGORIE_NAME";
+    public static final String DEFAULT_PROFILE = "orlanth23";
+    public static final String DEFAULT_EMAIL = "orlanth23@hotmail.com";
+    public static final String DEFAULT_COLOR = "123456";
 
     static void waitTerminalEvent(TestObserver testObserver, int countDown) {
         if (!testObserver.awaitTerminalEvent(countDown, TimeUnit.SECONDS)) {
@@ -39,12 +42,12 @@ class UtilityTest {
         }
     }
 
-    static UtilisateurEntity initUtilisateur(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setProfile((profile.isEmpty()) ? "orlanth23" : profile);
-        utilisateurEntity.setUid((uidUser.isEmpty()) ? UID_USER : uidUser);
-        utilisateurEntity.setEmail((email.isEmpty()) ? "orlanth23@hotmail.com" : email);
-        return utilisateurEntity;
+    static UserEntity initUtilisateur(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setProfile((profile.isEmpty()) ? DEFAULT_PROFILE : profile);
+        userEntity.setUid((uidUser.isEmpty()) ? UID_USER : uidUser);
+        userEntity.setEmail((email.isEmpty()) ? DEFAULT_EMAIL : email);
+        return userEntity;
     }
 
     static AnnonceEntity initAnnonce(String UUID, String uidUser, StatusRemote statusRemote, String titre, String description, Long idCategorie) {
@@ -99,7 +102,7 @@ class UtilityTest {
     private static void initCategories(CategorieRepository categorieRepository) {
         CategorieEntity categorieEntity = new CategorieEntity();
         categorieEntity.setName(CATEGORIE_NAME);
-        categorieEntity.setCouleur("123456");
+        categorieEntity.setCouleur(DEFAULT_COLOR);
 
         TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
         categorieRepository.singleSave(categorieEntity).subscribe(subscriberInsertCategorie);
@@ -109,11 +112,11 @@ class UtilityTest {
     }
 
     private static void initUsers(UserRepository userRepository) {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUid(UID_USER);
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUid(UID_USER);
 
-        TestObserver<UtilisateurEntity> subscriberInsertUtilisateur = new TestObserver<>();
-        userRepository.singleSave(utilisateurEntity).subscribe(subscriberInsertUtilisateur);
+        TestObserver<UserEntity> subscriberInsertUtilisateur = new TestObserver<>();
+        userRepository.singleSave(userEntity).subscribe(subscriberInsertUtilisateur);
         waitTerminalEvent(subscriberInsertUtilisateur, 5);
 
         subscriberInsertUtilisateur.dispose();
