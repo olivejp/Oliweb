@@ -12,19 +12,23 @@ import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import io.reactivex.Single;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
 
 public class FirebaseUserRepository {
 
     private static final String TAG = FirebaseUserRepository.class.getName();
-    private DatabaseReference USER_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
+    private DatabaseReference userRef;
 
     private static FirebaseUserRepository instance;
 
-    private FirebaseUserRepository() {
+    @Inject
+    public FirebaseUserRepository() {
+        userRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
     }
 
     public static synchronized FirebaseUserRepository getInstance() {
@@ -34,28 +38,28 @@ public class FirebaseUserRepository {
         return instance;
     }
 
-    public Single<AtomicBoolean> insertUserIntoFirebase(UtilisateurEntity utilisateurEntity) {
+    public Single<AtomicBoolean> insertUserIntoFirebase(UserEntity userEntity) {
         Log.d(TAG, "Starting insertUserIntoFirebase");
         return Single.create(emitter ->
-                USER_REF.child(utilisateurEntity.getUid()).setValue(utilisateurEntity)
+                userRef.child(userEntity.getUid()).setValue(userEntity)
                         .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Utilisateur correctement créé dans Firebase " + utilisateurEntity.toString());
+                            Log.d(TAG, "Utilisateur correctement créé dans Firebase " + userEntity.toString());
                             emitter.onSuccess(new AtomicBoolean(true));
                         })
                         .addOnFailureListener(exception -> {
-                            Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase " + utilisateurEntity.toString());
+                            Log.d(TAG, "FAIL : L'utilisateur n'a pas pu être créé dans Firebase " + userEntity.toString());
                             emitter.onError(exception);
                         })
         );
     }
 
-    public Single<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
+    public Single<UserEntity> getUtilisateurByUid(String uidUser) {
         Log.d(TAG, "Starting getUtilisateurByUid");
         return Single.create(emitter ->
-                USER_REF.child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+                userRef.child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        UtilisateurEntity user = dataSnapshot.getValue(UtilisateurEntity.class);
+                        UserEntity user = dataSnapshot.getValue(UserEntity.class);
                         emitter.onSuccess(user);
                     }
 

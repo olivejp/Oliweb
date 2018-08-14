@@ -3,6 +3,8 @@ package oliweb.nc.oliweb.firebase.repository;
 import android.content.Context;
 import android.util.Log;
 
+import javax.inject.Inject;
+
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -16,7 +18,8 @@ public class FirebasePhotoRepository {
 
     private PhotoRepository photoRepository;
 
-    private FirebasePhotoRepository() {
+    @Inject
+    public FirebasePhotoRepository() {
     }
 
     public static synchronized  FirebasePhotoRepository getInstance(Context context) {

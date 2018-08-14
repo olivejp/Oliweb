@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -23,11 +25,13 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 public class FirebaseMessageRepository {
 
     private static final String TAG = FirebaseMessageRepository.class.getName();
-    private DatabaseReference MSG_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
+    private DatabaseReference msgRef;
 
     private static FirebaseMessageRepository instance;
 
-    private FirebaseMessageRepository() {
+    @Inject
+    public FirebaseMessageRepository() {
+        msgRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
     }
 
     public static  synchronized FirebaseMessageRepository getInstance() {
@@ -39,7 +43,7 @@ public class FirebaseMessageRepository {
 
     public Single<List<MessageFirebase>> getAllMessagesByUidChat(String uidChat) {
         Log.d(TAG, "Starting getAllMessagesByUidChat uidChat : " + uidChat);
-        return Single.create(e -> MSG_REF.child(uidChat)
+        return Single.create(e -> msgRef.child(uidChat)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     ArrayList<MessageFirebase> listMessages = new ArrayList<>();
 
@@ -79,7 +83,7 @@ public class FirebaseMessageRepository {
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .map(timestamp -> {
-                            DatabaseReference newMessageRef = MSG_REF.child(uidChat).push();
+                            DatabaseReference newMessageRef = msgRef.child(uidChat).push();
                             messageEntity.setTimestamp(timestamp);
                             messageEntity.setUidMessage(newMessageRef.getKey());
                             messageEntity.setUidChat(uidChat);
@@ -98,7 +102,7 @@ public class FirebaseMessageRepository {
     public Single<MessageFirebase> saveMessage(MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessage messageFirebase : " + messageFirebase);
         return Single.create(emitter ->
-                MSG_REF.child(messageFirebase.getUidChat()).child(messageFirebase.getUidMessage()).setValue(messageFirebase)
+                msgRef.child(messageFirebase.getUidChat()).child(messageFirebase.getUidMessage()).setValue(messageFirebase)
                         .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
                         .addOnFailureListener(emitter::onError)
         );
@@ -107,7 +111,7 @@ public class FirebaseMessageRepository {
     public Single<AtomicBoolean> deleteMessageByUidChat(String uidChat) {
         Log.d(TAG, "Starting deleteMessageByUidChat uidChat : " + uidChat);
         return Single.create(emitter ->
-                MSG_REF.child(uidChat)
+                msgRef.child(uidChat)
                         .removeValue()
                         .addOnSuccessListener(aVoid -> emitter.onSuccess(new AtomicBoolean(true)))
                         .addOnFailureListener(emitter::onError)
