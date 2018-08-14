@@ -38,7 +38,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -101,7 +101,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
-    private UtilisateurEntity seller;
+    private UserEntity seller;
     private FirebaseAuth auth;
     private boolean comeFromChatFragment;
 
@@ -152,7 +152,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 .observe(this, dataSnapshot -> {
                     if (dataSnapshot == null) return;
 
-                    seller = dataSnapshot.getValue(UtilisateurEntity.class);
+                    seller = dataSnapshot.getValue(UserEntity.class);
                     if (seller == null) return;
 
                     if (seller.getPhotoUrl() != null) {

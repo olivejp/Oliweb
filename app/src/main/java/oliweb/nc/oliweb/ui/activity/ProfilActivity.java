@@ -20,7 +20,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
@@ -71,7 +71,7 @@ public class ProfilActivity extends AppCompatActivity {
     private Menu mMenu;
     private ProfilViewModel viewModel;
 
-    private UtilisateurEntity utilisateurEntity;
+    private UserEntity userEntity;
 
     public ProfilActivity() {
         // Required empty public constructor
@@ -93,11 +93,11 @@ public class ProfilActivity extends AppCompatActivity {
             if (uidUser != null) {
                 viewModel.getUtilisateurByUid(uidUser).observe(this, userEntity -> {
                     if (userEntity != null) {
-                        utilisateurEntity = userEntity;
-                        textName.setText(utilisateurEntity.getProfile());
-                        textEmail.setText(utilisateurEntity.getEmail());
-                        textTelephone.setText(utilisateurEntity.getTelephone());
-                        GlideApp.with(imageProfil).load(utilisateurEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
+                        this.userEntity = userEntity;
+                        textName.setText(this.userEntity.getProfile());
+                        textEmail.setText(this.userEntity.getEmail());
+                        textTelephone.setText(this.userEntity.getTelephone());
+                        GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
                     }
                 });
 
@@ -148,9 +148,9 @@ public class ProfilActivity extends AppCompatActivity {
             mMenu.findItem(R.id.menu_profil_save).setVisible(false);
             mMenu.findItem(R.id.menu_profil_save).setShowAsAction(SHOW_AS_ACTION_NEVER);
 
-            utilisateurEntity.setTelephone(textTelephone.getText().toString());
+            userEntity.setTelephone(textTelephone.getText().toString());
 
-            viewModel.saveUtilisateur(utilisateurEntity)
+            viewModel.saveUtilisateur(userEntity)
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                     .doOnSuccess(atomicBoolean -> {
                         if (atomicBoolean.get()) {

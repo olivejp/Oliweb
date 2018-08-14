@@ -18,7 +18,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
@@ -55,7 +55,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
-    private MutableLiveData<Map<String, UtilisateurEntity>> liveDataPhotoUrlUsers;
+    private MutableLiveData<Map<String, UserEntity>> liveDataPhotoUrlUsers;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
@@ -234,13 +234,13 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return atomicBooleanCustomLiveData;
     }
 
-    public LiveData<Map<String, UtilisateurEntity>> getLiveDataPhotoUrlUsers() {
+    public LiveData<Map<String, UserEntity>> getLiveDataPhotoUrlUsers() {
         return liveDataPhotoUrlUsers;
     }
 
     public void getPhotoUrlsByUidUser() {
 
-        HashMap<String, UtilisateurEntity> map = new HashMap<>();
+        HashMap<String, UserEntity> map = new HashMap<>();
 
         this.firebaseChatRepository.getByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())

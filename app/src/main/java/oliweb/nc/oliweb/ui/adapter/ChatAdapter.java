@@ -22,7 +22,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 import static oliweb.nc.oliweb.ui.adapter.ChatAdapter.ListItem.TYPE_EVENT;
@@ -37,7 +37,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private View.OnClickListener popupClickListener;
     private List<ListItem> listChats;
     private String firebaseUserUid;
-    private Map<String, UtilisateurEntity> mapUrlByUtilisateur;
+    private Map<String, UserEntity> mapUrlByUtilisateur;
 
     public ChatAdapter(@NonNull String firebaseUserUid, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
@@ -156,9 +156,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         String uidUser = firebaseUserUid;
-        UtilisateurEntity utilisateurEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
-        if (utilisateurEntity != null) {
-            String urlPhoto = utilisateurEntity.getPhotoUrl();
+        UserEntity userEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
+        if (userEntity != null) {
+            String urlPhoto = userEntity.getPhotoUrl();
             if (urlPhoto != null && !urlPhoto.isEmpty()) {
                 GlideApp.with(holder.imagePhotoAuthor)
                         .load(urlPhoto)
@@ -174,7 +174,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     }
 
-    public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {
+    public void setMapUrlByUtilisateur(Map<String, UserEntity> mapUrlByUtilisateur) {
         this.mapUrlByUtilisateur = mapUrlByUtilisateur;
     }
 

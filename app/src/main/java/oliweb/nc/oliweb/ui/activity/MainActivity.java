@@ -163,7 +163,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initServicesIntents() {
-        // Création des intents pour les services de synchronisation
         intentLocalDbService = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
         intentFirebaseDbService = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
     }

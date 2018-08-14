@@ -19,7 +19,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
@@ -124,14 +124,14 @@ public class ProfilViewModel extends AndroidViewModel {
         return fbSellerLiveData;
     }
 
-    public LiveData<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
+    public LiveData<UserEntity> getUtilisateurByUid(String uidUser) {
         return this.userRepository.findByUid(uidUser);
     }
 
-    public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
+    public Single<AtomicBoolean> saveUtilisateur(UserEntity userEntity) {
         return Single.create(emitter -> {
-            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-            this.userRepository.singleSave(utilisateurEntity)
+            userEntity.setStatut(StatusRemote.TO_SEND);
+            this.userRepository.singleSave(userEntity)
                     .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                     .doOnError(emitter::onError)
                     .doOnSuccess(utilisateurEntity1 -> {

@@ -17,7 +17,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
@@ -51,7 +51,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         userRepository = UserRepository.getInstance(application);
     }
 
-    public LiveData<UtilisateurEntity> getConnectedUser(String uid) {
+    public LiveData<UserEntity> getConnectedUser(String uid) {
         return this.userRepository.findByUid(uid);
     }
 

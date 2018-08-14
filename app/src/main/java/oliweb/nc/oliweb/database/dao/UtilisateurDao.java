@@ -10,23 +10,23 @@ import java.util.List;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 @Dao
-public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, Long> {
+public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
 
     @Override
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE idUser = :idUtilisateur")
-    public abstract Maybe<UtilisateurEntity> findById(Long idUtilisateur);
+    public abstract Maybe<UserEntity> findById(Long idUtilisateur);
 
     @Override
     @Transaction
     @Query("SELECT * FROM utilisateur")
-    public abstract Single<List<UtilisateurEntity>> getAll();
+    public abstract Single<List<UserEntity>> getAll();
 
     @Override
     @Transaction
@@ -34,22 +34,22 @@ public abstract class UtilisateurDao implements AbstractDao<UtilisateurEntity, L
     public abstract Single<Integer> count();
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
-    public abstract Maybe<UtilisateurEntity> findById(String UuidUtilisateur);
+    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
+    public abstract Maybe<UserEntity> findById(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
-    public abstract LiveData<UtilisateurEntity> findByUuid(String UuidUtilisateur);
+    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
+    public abstract LiveData<UserEntity> findByUuid(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uid = :UuidUtilisateur")
-    public abstract Maybe<UtilisateurEntity> findSingleByUuid(String UuidUtilisateur);
+    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
+    public abstract Maybe<UserEntity> findSingleByUuid(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :UuidUtilisateur")
-    public abstract Single<Integer> countByUid(String UuidUtilisateur);
+    @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :uuidUtilisateur")
+    public abstract Single<Integer> countByUid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
-    public abstract Flowable<UtilisateurEntity> getAllUtilisateursByStatus(List<String> statutList);
+    public abstract Flowable<UserEntity> getAllUtilisateursByStatus(List<String> statutList);
 }

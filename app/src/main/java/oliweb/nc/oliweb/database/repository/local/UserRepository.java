@@ -9,6 +9,9 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -16,7 +19,9 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.firebase.repository.DaggerFirebaseRepositoryComponent;
+import oliweb.nc.oliweb.firebase.repository.FirebaseRepositoryComponent;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -24,7 +29,7 @@ import oliweb.nc.oliweb.utility.Utility;
  * Created by 2761oli on 29/01/2018.
  */
 
-public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> {
+public class UserRepository extends AbstractRepository<UserEntity, Long> {
     private static final String TAG = UserRepository.class.getName();
     private static UserRepository instance;
     private UtilisateurDao utilisateurDao;
@@ -34,7 +39,9 @@ public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> 
         super(context);
         this.utilisateurDao = this.db.getUtilisateurDao();
         this.dao = utilisateurDao;
-        this.firebaseUserRepository = FirebaseUserRepository.getInstance();
+
+        FirebaseRepositoryComponent component = DaggerFirebaseRepositoryComponent.create();
+        this.firebaseUserRepository = component.getFirebaseUserRepository();
     }
 
     public static synchronized UserRepository getInstance(Context context) {
@@ -44,15 +51,11 @@ public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> 
         return instance;
     }
 
-    public void setOnlyForTestFirebaseUserRepository(FirebaseUserRepository firebaseUserRepository) {
-        this.firebaseUserRepository = firebaseUserRepository;
-    }
-
-    public LiveData<UtilisateurEntity> findByUid(String uuidUtilisateur) {
+    public LiveData<UserEntity> findByUid(String uuidUtilisateur) {
         return this.utilisateurDao.findByUuid(uuidUtilisateur);
     }
 
-    public Maybe<UtilisateurEntity> findSingleByUid(String uuidUtilisateur) {
+    public Maybe<UserEntity> findSingleByUid(String uuidUtilisateur) {
         return this.utilisateurDao.findSingleByUuid(uuidUtilisateur);
     }
 
@@ -64,7 +67,7 @@ public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> 
                 .subscribe());
     }
 
-    public Flowable<UtilisateurEntity> getAllUtilisateursByStatus(List<String> status) {
+    public Flowable<UserEntity> getAllUtilisateursByStatus(List<String> status) {
         return utilisateurDao.getAllUtilisateursByStatus(status);
     }
 
@@ -98,13 +101,13 @@ public class UserRepository extends AbstractRepository<UtilisateurEntity, Long> 
                         )
                         .doOnComplete(() -> {
                             // Création de l'utilisateur
-                            UtilisateurEntity utilisateurEntity = UtilisateurConverter.convertFbToEntity(firebaseUser);
+                            UserEntity userEntity = UtilisateurConverter.convertFbToEntity(firebaseUser);
                             this.firebaseUserRepository.getToken()
                                     .doOnSuccess(token -> {
-                                        utilisateurEntity.setTokenDevice(token);
-                                        utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
-                                        utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-                                        singleSave(utilisateurEntity)
+                                        userEntity.setTokenDevice(token);
+                                        userEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
+                                        userEntity.setStatut(StatusRemote.TO_SEND);
+                                        singleSave(userEntity)
                                                 .doOnError(emitter::onError)
                                                 .doOnSuccess(utilisateurEntity1 -> emitter.onSuccess(new AtomicBoolean(true)))
                                                 .subscribe();

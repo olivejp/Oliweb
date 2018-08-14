@@ -20,7 +20,7 @@ public class AnnonceFull {
     public List<CategorieEntity> categorie;
 
     @Relation(parentColumn = "uidUser", entityColumn = "uid")
-    public List<UtilisateurEntity> utilisateur;
+    public List<UserEntity> utilisateur;
 
     public AnnonceEntity getAnnonce() {
         return annonce;
@@ -46,11 +46,11 @@ public class AnnonceFull {
         this.categorie = categorie;
     }
 
-    public List<UtilisateurEntity> getUtilisateur() {
+    public List<UserEntity> getUtilisateur() {
         return utilisateur;
     }
 
-    public void setUtilisateur(List<UtilisateurEntity> utilisateur) {
+    public void setUtilisateur(List<UserEntity> utilisateur) {
         this.utilisateur = utilisateur;
     }
 

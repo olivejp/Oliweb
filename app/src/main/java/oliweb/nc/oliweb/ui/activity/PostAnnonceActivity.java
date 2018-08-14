@@ -49,7 +49,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
@@ -447,16 +447,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
     }
 
-    private void changeUserContactMethod(UtilisateurEntity utilisateurEntity) {
-        if (utilisateurEntity == null) {
+    private void changeUserContactMethod(UserEntity userEntity) {
+        if (userEntity == null) {
             return;
         }
-        if (utilisateurEntity.getEmail() == null || utilisateurEntity.getEmail().isEmpty()) {
+        if (userEntity.getEmail() == null || userEntity.getEmail().isEmpty()) {
             textCheckboxEmail.setVisibility(View.GONE);
             checkBoxEmail.setVisibility(View.GONE);
             checkBoxEmail.setChecked(false);
         }
-        if (utilisateurEntity.getTelephone() == null || utilisateurEntity.getTelephone().isEmpty()) {
+        if (userEntity.getTelephone() == null || userEntity.getTelephone().isEmpty()) {
             textCheckboxTelephone.setVisibility(View.GONE);
             checkBoxTel.setVisibility(View.GONE);
             checkBoxTel.setChecked(false);
