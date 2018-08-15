@@ -63,8 +63,8 @@ public class FirebaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public FirebaseRetrieverService firebaseRetrieverService() {
-        return new FirebaseRetrieverService();
+    public FirebaseRetrieverService firebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository) {
+        return new FirebaseRetrieverService(firebaseAnnonceRepository);
     }
 
     @Provides

@@ -15,13 +15,11 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 @Singleton
 public class FirebaseRetrieverService {
 
-    private static final String TAG = FirebaseRetrieverService.class.getName();
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     @Inject
-    FirebaseAnnonceRepository firebaseAnnonceRepository;
-
-    @Inject
-    public FirebaseRetrieverService() {
+    public FirebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository) {
+        this.firebaseAnnonceRepository = firebaseAnnonceRepository;
     }
 
     /**
