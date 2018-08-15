@@ -30,13 +30,12 @@ public class FirebasePhotoStorage {
     private static final String TAG = FirebasePhotoStorage.class.getName();
 
     private StorageReference fireStorage;
+    private PhotoRepository photoRepository;
 
     @Inject
-    PhotoRepository photoRepository;
-
-    @Inject
-    public FirebasePhotoStorage(Context context) {
+    public FirebasePhotoStorage(PhotoRepository photoRepository) {
         this.fireStorage = FirebaseStorage.getInstance().getReference();
+        this.photoRepository = photoRepository;
     }
 
     /**

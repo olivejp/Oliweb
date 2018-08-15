@@ -18,6 +18,7 @@ import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -63,8 +64,9 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
         this.chatRepository = component.getChatRepository();
         this.messageRepository = component.getMessageRepository();

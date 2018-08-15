@@ -30,26 +30,25 @@ public class AnnonceFirebaseDeleter {
 
     private static final String TAG = AnnonceFirebaseDeleter.class.getName();
 
-    @Inject
-    FirebaseAnnonceRepository firebaseAnnonceRepository;
-
-    @Inject
-    AnnonceRepository annonceRepository;
-
-    @Inject
-    PhotoRepository photoRepository;
-
-    @Inject
-    AnnonceFullRepository annonceFullRepository;
-
-    @Inject
-    FirebasePhotoStorage firebasePhotoStorage;
-
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
+    private AnnonceFullRepository annonceFullRepository;
+    private FirebasePhotoStorage firebasePhotoStorage;
     private ContentResolver contentResolver;
 
     @Inject
-    public AnnonceFirebaseDeleter(Context context) {
+    public AnnonceFirebaseDeleter(Context context, FirebaseAnnonceRepository firebaseAnnonceRepository,
+                                  AnnonceRepository annonceRepository,
+                                  PhotoRepository photoRepository,
+                                  AnnonceFullRepository annonceFullRepository,
+                                  FirebasePhotoStorage firebasePhotoStorage) {
         this.contentResolver = context.getContentResolver();
+        this.firebaseAnnonceRepository = firebaseAnnonceRepository;
+        this.annonceRepository = annonceRepository;
+        this.photoRepository = photoRepository;
+        this.annonceFullRepository = annonceFullRepository;
+        this.firebasePhotoStorage = firebasePhotoStorage;
     }
 
     /**

@@ -12,6 +12,7 @@ import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -54,8 +55,9 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        ContextModule contextModule = new ContextModule(this);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
         ChatRepository chatRepository = component.getChatRepository();
         MessageRepository messageRepository = component.getMessageRepository();

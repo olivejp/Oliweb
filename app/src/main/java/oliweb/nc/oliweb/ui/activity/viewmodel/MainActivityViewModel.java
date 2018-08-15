@@ -20,6 +20,7 @@ import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -54,8 +55,11 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+
         userRepository = component.getUserRepository();
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         annonceRepository = component.getAnnonceRepository();

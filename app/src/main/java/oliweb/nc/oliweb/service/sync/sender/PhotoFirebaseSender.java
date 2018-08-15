@@ -25,14 +25,13 @@ public class PhotoFirebaseSender {
 
     private static final String TAG = PhotoFirebaseSender.class.getName();
 
-    @Inject
-    public FirebasePhotoStorage firebasePhotoStorage;
+    private FirebasePhotoStorage firebasePhotoStorage;
+    private PhotoRepository photoRepository;
 
     @Inject
-    public PhotoRepository photoRepository;
-
-    @Inject
-    public PhotoFirebaseSender() {
+    public PhotoFirebaseSender(FirebasePhotoStorage firebasePhotoStorage, PhotoRepository photoRepository) {
+        this.firebasePhotoStorage = firebasePhotoStorage;
+        this.photoRepository = photoRepository;
     }
 
     Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {

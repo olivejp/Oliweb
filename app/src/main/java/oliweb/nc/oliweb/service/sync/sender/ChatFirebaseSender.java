@@ -24,17 +24,15 @@ public class ChatFirebaseSender {
 
     private static final String TAG = ChatFirebaseSender.class.getName();
 
-    @Inject
-    public FirebaseChatRepository firebaseChatRepository;
+    private FirebaseChatRepository firebaseChatRepository;
+    private ChatRepository chatRepository;
+    private MessageRepository messageRepository;
 
     @Inject
-    public ChatRepository chatRepository;
-
-    @Inject
-    public MessageRepository messageRepository;
-
-    @Inject
-    public ChatFirebaseSender() {
+    public ChatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository) {
+        this.firebaseChatRepository = firebaseChatRepository;
+        this.chatRepository = chatRepository;
+        this.messageRepository = messageRepository;
     }
 
     /**

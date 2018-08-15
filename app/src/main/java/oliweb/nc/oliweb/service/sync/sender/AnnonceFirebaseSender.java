@@ -21,20 +21,17 @@ public class AnnonceFirebaseSender {
 
     private static final String TAG = AnnonceFirebaseSender.class.getName();
 
-    @Inject
-    public FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private AnnonceRepository annonceRepository;
+    private PhotoFirebaseSender photoFirebaseSender;
+    private AnnonceFullRepository annonceFullRepository;
 
     @Inject
-    public AnnonceRepository annonceRepository;
-
-    @Inject
-    public PhotoFirebaseSender photoFirebaseSender;
-
-    @Inject
-    public AnnonceFullRepository annonceFullRepository;
-
-    @Inject
-    public AnnonceFirebaseSender() {
+    public AnnonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository, AnnonceRepository annonceRepository, PhotoFirebaseSender photoFirebaseSender, AnnonceFullRepository annonceFullRepository) {
+        this.firebaseAnnonceRepository = firebaseAnnonceRepository;
+        this.annonceRepository = annonceRepository;
+        this.photoFirebaseSender = photoFirebaseSender;
+        this.annonceFullRepository = annonceFullRepository;
     }
 
     /**

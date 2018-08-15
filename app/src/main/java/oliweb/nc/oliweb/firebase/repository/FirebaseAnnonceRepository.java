@@ -37,18 +37,17 @@ public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
 
-    @Inject
-    AnnonceRepository annonceRepository;
-
-    @Inject
-    FirebasePhotoStorage firebasePhotoStorage;
+    private AnnonceRepository annonceRepository;
+    private FirebasePhotoStorage firebasePhotoStorage;
 
     private DatabaseReference annonceRef;
 
     private GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass;
 
     @Inject
-    public FirebaseAnnonceRepository() {
+    public FirebaseAnnonceRepository(AnnonceRepository annonceRepository, FirebasePhotoStorage firebasePhotoStorage) {
+        this.annonceRepository = annonceRepository;
+        this.firebasePhotoStorage = firebasePhotoStorage;
         annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>(){};
     }

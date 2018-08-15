@@ -25,9 +25,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -110,7 +109,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
+                .contextModule(new ContextModule(application))
+                .build();
         annonceRepository = component.getAnnonceRepository();
         photoRepository = component.getPhotoRepository();
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();

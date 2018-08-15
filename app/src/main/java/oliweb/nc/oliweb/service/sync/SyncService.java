@@ -13,6 +13,7 @@ import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
@@ -89,8 +90,9 @@ public class SyncService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent == null) return;
 
-        component = DaggerDatabaseRepositoriesComponent.builder().build();
-        componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        ContextModule contextModule = new ContextModule(this);
+        component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
         Bundle bundle = intent.getExtras();
         if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {

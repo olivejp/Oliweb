@@ -7,7 +7,6 @@ import oliweb.nc.oliweb.dagger.module.FirebaseRepositoriesModule;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseMessageRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebasePhotoRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
@@ -27,8 +26,6 @@ public interface FirebaseRepositoriesComponent {
     FirebaseAnnonceRepository getFirebaseAnnonceRepository();
 
     FirebaseMessageRepository getFirebaseMessageRepository();
-
-    FirebasePhotoRepository getFirebasePhotoRepository();
 
     // TODO les cinq méthodes ci dessous devraient être sorties dans un autre component FirebaseServicesComponent
     AnnonceFirebaseDeleter getAnnonceFirebaseDeleter();

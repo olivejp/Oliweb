@@ -18,6 +18,7 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -49,7 +50,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
         messageRepository = component.getMessageRepository();
         chatRepository = component.getChatRepository();
 

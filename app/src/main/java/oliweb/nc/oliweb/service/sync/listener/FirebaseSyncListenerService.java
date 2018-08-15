@@ -18,9 +18,8 @@ import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -217,8 +216,7 @@ public class FirebaseSyncListenerService extends Service {
         if (intent.getStringExtra(CHAT_SYNC_UID_USER) == null || intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
             stopSelf();
         } else {
-
-            DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+            DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
 
             chatRepository = component.getChatRepository();
             messageRepository = component.getMessageRepository();

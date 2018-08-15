@@ -15,6 +15,7 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -47,7 +48,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
+                .contextModule(new ContextModule(application))
+                .build();
         categorieRepository = component.getCategorieRepository();
         photoRepository = component.getPhotoRepository();
         annonceRepository = component.getAnnonceRepository();

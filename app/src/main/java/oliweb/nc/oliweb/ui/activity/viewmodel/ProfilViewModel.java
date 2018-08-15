@@ -19,14 +19,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.utility.Constants;
 
@@ -42,11 +40,10 @@ public class ProfilViewModel extends AndroidViewModel {
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
+                .contextModule(new ContextModule(application))
+                .build();
         userRepository = component.getUserRepository();
-        FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
-
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
