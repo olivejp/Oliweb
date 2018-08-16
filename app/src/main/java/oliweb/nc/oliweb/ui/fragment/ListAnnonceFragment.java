@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -55,7 +54,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static android.support.v4.app.ActivityOptionsCompat.*;
+import static android.support.v4.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
@@ -129,8 +128,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      * OnClickListener that share an annonce with a DynamicLink
      */
     private View.OnClickListener onClickListenerShare = v -> {
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            String uidCurrentUser = FirebaseAuth.getInstance().getUid();
+        if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
@@ -140,7 +138,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();
@@ -166,21 +164,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     /**
-     * OnClickListener that add an annonce and all of this photo into the favorite.
+     * OnClickListener that adds an annonce and all of this photo into the favorite.
      * This save all the photos of the annonce in the device and the annonce into the local database
      * If the annonce was already into the database it remove all the photo from the device,
      * delete all the photos from the database,
      * delete the annonce from the database.
      */
     private View.OnClickListener onClickListenerFavorite = (View v) -> {
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+        if (uidUser == null || uidUser.isEmpty()) {
             Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidUser)) {
+            if (uidUser.equals(annoncePhotos.getAnnonceEntity().getUidUser())) {
                 Toast.makeText(appCompatActivity, R.string.IMPOSSIBLE_YOU_OWN_THIS_AD, Toast.LENGTH_LONG).show();
             } else {
                 if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {

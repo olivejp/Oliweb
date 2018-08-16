@@ -144,9 +144,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         // Récupération de l'annonce
         initDisplay(annoncePhotos);
 
-        // Initialisation des actions possibles
-        initCommunicationActions();
-
         // Récupération des infos du vendeur
         viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser())
                 .observe(this, dataSnapshot -> {
@@ -164,6 +161,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                                 .into(imageProfilSeller);
 
                     }
+
+                    // Initialisation des actions possibles
+                    initCommunicationActions();
                 });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
