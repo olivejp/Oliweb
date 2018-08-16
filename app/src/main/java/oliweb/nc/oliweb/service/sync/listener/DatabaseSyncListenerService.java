@@ -10,8 +10,10 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
@@ -58,16 +60,17 @@ public class DatabaseSyncListenerService extends Service {
         ContextModule contextModule = new ContextModule(this);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
         FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbService = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
 
         ChatRepository chatRepository = component.getChatRepository();
         MessageRepository messageRepository = component.getMessageRepository();
         AnnonceRepository annonceRepository = component.getAnnonceRepository();
         UserRepository userRepository = component.getUserRepository();
         PhotoRepository photoRepository = component.getPhotoRepository();
-        AnnonceFirebaseSender annonceFirebaseSender = componentFb.getAnnonceFirebaseSender();
-        AnnonceFirebaseDeleter annonceFirebaseDeleter = componentFb.getAnnonceFirebaseDeleter();
-        MessageFirebaseSender messageFirebaseSender = componentFb.getMessageFirebaseSender();
-        ChatFirebaseSender chatFirebaseSender = componentFb.getChatFirebaseSender();
+        AnnonceFirebaseSender annonceFirebaseSender = componentFbService.getAnnonceFirebaseSender();
+        AnnonceFirebaseDeleter annonceFirebaseDeleter = componentFbService.getAnnonceFirebaseDeleter();
+        MessageFirebaseSender messageFirebaseSender = componentFbService.getMessageFirebaseSender();
+        ChatFirebaseSender chatFirebaseSender = componentFbService.getChatFirebaseSender();
         FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
 
         // SENDERS
