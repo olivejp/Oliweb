@@ -16,8 +16,11 @@ import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -47,18 +50,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        messageRepository = MessageRepository.getInstance(getApplicationContext());
-        chatRepository = ChatRepository.getInstance(getApplicationContext());
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
+        messageRepository = component.getMessageRepository();
+        chatRepository = component.getChatRepository();
 
         Map<String, String> datas = remoteMessage.getData();
         if (remoteMessage.getNotification() != null && datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
             Gson gson = new Gson();
-            UtilisateurEntity utilisateurEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UtilisateurEntity.class);
+            UserEntity userEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UserEntity.class);
             String message = remoteMessage.getNotification().getBody();
             String uidUser = datas.get(KEY_CHAT_RECEIVER);
             String uidChat = datas.get(KEY_CHAT_UID);
             String titreAnnonce = remoteMessage.getNotification().getTitle();
-            createChatDirectReplyNotification(uidChat, titreAnnonce, utilisateurEntity, message, uidUser);
+            createChatDirectReplyNotification(uidChat, titreAnnonce, userEntity, message, uidUser);
         } else {
             if (remoteMessage.getNotification() != null) {
                 Intent resultIntent = new Intent(this, MainActivity.class);
@@ -77,7 +81,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
     }
 
-    private void createChatDirectReplyNotification(String chatUid, String annonceTitre, UtilisateurEntity authorEntity, String message, String uidReceiver) {
+    private void createChatDirectReplyNotification(String chatUid, String annonceTitre, UserEntity authorEntity, String message, String uidReceiver) {
 
         // On va appeler un service pour enregistrer la réponse à la notification reçue
         PendingIntent pendingIntent;

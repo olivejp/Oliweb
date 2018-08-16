@@ -9,7 +9,7 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.CategorieDto;
 import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurDto;
@@ -50,8 +50,8 @@ public class AnnonceConverter {
      */
     public static AnnonceDto convertFullEntityToDto(AnnonceFull annonceFull) {
         AnnonceDto annonceDto = new AnnonceDto();
-        UtilisateurEntity utilisateurEntity = annonceFull.getUtilisateur().get(0);
-        UtilisateurDto utilisateurDto = new UtilisateurDto(utilisateurEntity.getProfile(), utilisateurEntity.getUid(), utilisateurEntity.getTelephone(), utilisateurEntity.getEmail());
+        UserEntity userEntity = annonceFull.getUtilisateur().get(0);
+        UtilisateurDto utilisateurDto = new UtilisateurDto(userEntity.getProfile(), userEntity.getUid(), userEntity.getTelephone(), userEntity.getEmail());
         annonceDto.setUtilisateur(utilisateurDto);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);

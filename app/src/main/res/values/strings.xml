@@ -113,7 +113,6 @@
     <string name="description_slide_2">Il vous suffit de donner une description du bien à vendre, prendre une photo et poster votre annonce.</string>
     <string name="description_slide_3">Et grace aux liens dynamiques vous pourrez la partager à travers les réseaux sociaux.</string>
     <string name="sign_in_required">Un compte est requis</string>
-    <string name="sign_in">Se connecter</string>
     <string name="dynamic_link_creation">Création d\'un lien de partage</string>
     <string name="link_share_error">Une erreur n\'a pas permis le partage</string>
     <string name="connection_required_to_search">Une connexion est requise pour rechercher</string>
@@ -132,5 +131,9 @@
     <string name="sell_easily">Vendez\nFacilement</string>
     <string name="skip">Passer</string>
     <string name="not_send">Non envoyé</string>
+    <string name="default_mail_message">Bonjour, votre annonce m\'intéresse...</string>
+    <string name="default_mail_chooser_title">Envoi d\'email...</string>
+    <string name="sign_out">Se déconnecter</string>
+    <string name="sign_in">Se connecter</string>
 
 </resources>

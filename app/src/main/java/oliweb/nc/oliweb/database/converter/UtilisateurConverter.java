@@ -2,7 +2,7 @@ package oliweb.nc.oliweb.database.converter;
 
 import com.google.firebase.auth.FirebaseUser;
 
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -12,25 +12,25 @@ public class UtilisateurConverter {
     private UtilisateurConverter() {
     }
 
-    public static UtilisateurFirebase convertEntityToFb(UtilisateurEntity utilisateurEntity) {
+    public static UtilisateurFirebase convertEntityToFb(UserEntity userEntity) {
         UtilisateurFirebase utilisateurFirebase = new UtilisateurFirebase();
-        utilisateurFirebase.setTelephone(utilisateurEntity.getTelephone());
-        utilisateurFirebase.setEmail(utilisateurEntity.getEmail());
-        utilisateurFirebase.setPhotoPath(utilisateurEntity.getPhotoUrl());
-        utilisateurFirebase.setProfileName(utilisateurEntity.getProfile());
-        utilisateurFirebase.setTokenDevice(utilisateurEntity.getTokenDevice());
+        utilisateurFirebase.setTelephone(userEntity.getTelephone());
+        utilisateurFirebase.setEmail(userEntity.getEmail());
+        utilisateurFirebase.setPhotoPath(userEntity.getPhotoUrl());
+        utilisateurFirebase.setProfileName(userEntity.getProfile());
+        utilisateurFirebase.setTokenDevice(userEntity.getTokenDevice());
         return utilisateurFirebase;
     }
 
-    public static UtilisateurEntity convertFbToEntity(FirebaseUser firebaseUser) {
-        UtilisateurEntity utilisateurEntity = new UtilisateurEntity();
-        utilisateurEntity.setUid(firebaseUser.getUid());
-        utilisateurEntity.setProfile(firebaseUser.getDisplayName());
-        utilisateurEntity.setDateCreation(Utility.getNowInEntityFormat());
-        utilisateurEntity.setEmail(firebaseUser.getEmail());
-        utilisateurEntity.setTelephone(firebaseUser.getPhoneNumber());
-        utilisateurEntity.setPhotoUrl((firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : null);
-        return utilisateurEntity;
+    public static UserEntity convertFbToEntity(FirebaseUser firebaseUser) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUid(firebaseUser.getUid());
+        userEntity.setProfile(firebaseUser.getDisplayName());
+        userEntity.setDateCreation(Utility.getNowInEntityFormat());
+        userEntity.setEmail(firebaseUser.getEmail());
+        userEntity.setTelephone(firebaseUser.getPhoneNumber());
+        userEntity.setPhotoUrl((firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : null);
+        return userEntity;
     }
 
     public static UtilisateurFirebase convertFbUserToUtilisateurFirebase(FirebaseUser firebaseUser, String userToken) {

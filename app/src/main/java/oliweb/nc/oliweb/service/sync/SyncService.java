@@ -9,6 +9,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
+
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
 /**
@@ -27,6 +33,9 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT = "ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT";
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
     public static final String ARG_ACTION_SEND_DIRECT_UID_USER = "ARG_ACTION_SEND_DIRECT_UID_USER";
+
+    private DatabaseRepositoriesComponent component;
+    private FirebaseRepositoriesComponent componentFb;
 
     public SyncService() {
         super("SyncService");
@@ -68,47 +77,53 @@ public class SyncService extends IntentService {
     }
 
     private void handleActionSyncAll() {
-        ScheduleSync.getInstance(this.getApplicationContext()).synchronize();
+        ScheduleSync scheduleSync = componentFb.getScheduleSync();
+        scheduleSync.synchronize();
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
-        FirebaseRetrieverService.getInstance(this).synchronize(this, uidUtilisateur);
+        FirebaseRetrieverService firebaseRetrieverService = componentFb.getFirebaseRetrieverService();
+        firebaseRetrieverService.synchronize(this, uidUtilisateur);
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        if (intent != null) {
-            Bundle bundle = intent.getExtras();
-            if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
-                    Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
-                    if (remoteInput != null && remoteInput.getCharSequence(KEY_TEXT_TO_SEND) != null) {
-                        String messageToSend = remoteInput.getCharSequence(KEY_TEXT_TO_SEND).toString();
+        if (intent == null) return;
 
-                        // TODO enregistrer le message en base et l'envoyer sur Firebase
+        ContextModule contextModule = new ContextModule(this);
+        component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
-                    }
+        Bundle bundle = intent.getExtras();
+        if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
+                Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
+                if (remoteInput != null && remoteInput.getCharSequence(KEY_TEXT_TO_SEND) != null) {
+                    String messageToSend = remoteInput.getCharSequence(KEY_TEXT_TO_SEND).toString();
+
+                    // TODO enregistrer le message en base et l'envoyer sur Firebase
+
                 }
-            } else if (bundle != null && bundle.containsKey(ARG_ACTION)) {
-                String action = bundle.getString(ARG_ACTION);
-                if (action != null) {
-                    switch (action) {
-                        case ARG_ACTION_SYNC_ALL_FROM_SCHEDULER:
-                            Log.d(TAG, "Lancement du batch par le Scheduler");
-                            handleActionSyncAll();
-                            break;
-                        case ARG_ACTION_SYNC_FROM_FIREBASE:
-                            Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local");
-                            String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
-                            handleActionSyncFromFirebase(uidUtilisateur);
-                            break;
-                        case ARG_ACTION_SYNC_USER:
-                            Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
-                            ScheduleSync.getInstance(this).synchronize();
-                            break;
-                        default:
-                            break;
-                    }
+            }
+        } else if (bundle != null && bundle.containsKey(ARG_ACTION)) {
+            String action = bundle.getString(ARG_ACTION);
+            if (action != null) {
+                switch (action) {
+                    case ARG_ACTION_SYNC_ALL_FROM_SCHEDULER:
+                        Log.d(TAG, "Lancement du batch par le Scheduler");
+                        handleActionSyncAll();
+                        break;
+                    case ARG_ACTION_SYNC_FROM_FIREBASE:
+                        Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local");
+                        String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
+                        handleActionSyncFromFirebase(uidUtilisateur);
+                        break;
+                    case ARG_ACTION_SYNC_USER:
+                        Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
+                        handleActionSyncAll();
+                        break;
+                    default:
+                        break;
                 }
             }
         }

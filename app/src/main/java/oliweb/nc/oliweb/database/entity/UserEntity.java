@@ -11,9 +11,8 @@ import com.google.firebase.database.Exclude;
 /**
  * Created by orlanth23 on 28/01/2018.
  */
-
 @Entity(tableName = "utilisateur", indices = {@Index(value = "uid", unique = true)})
-public class UtilisateurEntity extends AbstractEntity<Long> {
+public class UserEntity extends AbstractEntity<Long> {
     @Exclude
     @NonNull
     @PrimaryKey
@@ -120,7 +119,7 @@ public class UtilisateurEntity extends AbstractEntity<Long> {
 
     @Override
     public String toString() {
-        return "UtilisateurEntity{" +
+        return "UserEntity{" +
                 "idUser=" + idUser +
                 ", uid='" + uid + '\'' +
                 ", telephone='" + telephone + '\'' +

@@ -22,7 +22,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 /**
@@ -38,7 +38,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private List<MessageEntity> messageEntities;
     private String firebaseUserUid;
-    private Map<String, UtilisateurEntity> mapUrlByUtilisateur;
+    private Map<String, UserEntity> mapUrlByUtilisateur;
 
     public MessageAdapter(String firebaseUserUid) {
         this.messageEntities = new ArrayList<>();
@@ -124,9 +124,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        UtilisateurEntity utilisateurEntity = mapUrlByUtilisateur.get(model.getUidAuthor());
-        if (utilisateurEntity != null) {
-            String urlPhoto = utilisateurEntity.getPhotoUrl();
+        UserEntity userEntity = mapUrlByUtilisateur.get(model.getUidAuthor());
+        if (userEntity != null) {
+            String urlPhoto = userEntity.getPhotoUrl();
             if (urlPhoto != null && !urlPhoto.isEmpty()) {
                 GlideApp.with(holder.imageAuthor)
                         .load(urlPhoto)
@@ -141,7 +141,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {
+    public void setMapUrlByUtilisateur(Map<String, UserEntity> mapUrlByUtilisateur) {
         this.mapUrlByUtilisateur = mapUrlByUtilisateur;
     }
 

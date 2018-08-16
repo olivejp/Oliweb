@@ -7,6 +7,9 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -19,34 +22,28 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 /**
  * Created by 2761oli on 29/01/2018.
  */
+@Singleton
 public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
     private static final String TAG = ChatRepository.class.getName();
-    private static ChatRepository instance;
     private ChatDao chatDao;
 
-    private ChatRepository(Context context) {
+    @Inject
+    public ChatRepository(Context context) {
         super(context);
         this.dao = this.db.getChatDao();
         this.chatDao = (ChatDao) this.dao;
-    }
-
-    public static synchronized ChatRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new ChatRepository(context);
-        }
-        return instance;
     }
 
     public Maybe<ChatEntity> findByUid(String uidChat) {
         return chatDao.findByUid(uidChat);
     }
 
-    public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotIn(String uidAnnonce, List<String> status) {
-        return this.chatDao.findByUidAnnonce(uidAnnonce, status);
+    public LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(String uidAnnonce, List<String> status) {
+        return this.chatDao.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(uidAnnonce, status);
     }
 
-    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {
-        return this.chatDao.findByUidUserAndStatusNotIn(uidBuyerOrSeller, status);
+    public LiveData<List<ChatEntity>> findByUidUserAndStatusNotInWithOrderByTitreAnnonce(String uidBuyerOrSeller, List<String> status) {
+        return this.chatDao.findByUidUserAndStatusNotInWithOrderByTitreAnnonce(uidBuyerOrSeller, status);
     }
 
     public Flowable<List<ChatEntity>> findFlowableByUidUserAndStatusNotIn(String uidBuyerOrSeller, List<String> status) {

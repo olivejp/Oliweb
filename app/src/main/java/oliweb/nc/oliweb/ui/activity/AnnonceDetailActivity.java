@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -37,17 +38,22 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class AnnonceDetailActivity extends AppCompatActivity {
+
+    public static final String TAG = AnnonceDetailActivity.class.getCanonicalName();
 
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
@@ -56,6 +62,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_LOGIN = 100;
     private static final int REQUEST_CALL_POST_ANNONCE = 200;
+    private static final String MAIL_MESSAGE_TYPE = "message/rfc822";
 
     @BindView(R.id.collapsing_toolbar_detail)
     CollapsingToolbarLayout collapsingToolbarLayout;
@@ -94,7 +101,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
-    private UtilisateurEntity seller;
+    private UserEntity seller;
     private FirebaseAuth auth;
     private boolean comeFromChatFragment;
 
@@ -105,13 +112,25 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        auth = FirebaseAuth.getInstance();
+
+        // Vérification des arguments
+        Bundle arguments = getIntent().getExtras();
+        assertNotNull("No arguments found", arguments);
+        assertTrue(String.format("Argument named %s is mandatory", ARG_ANNONCE), arguments.containsKey(ARG_ANNONCE));
+        assertNotNull(String.format("Argument named %s should not be null", ARG_ANNONCE), arguments.get(ARG_ANNONCE));
+
+        // Récupération des arguments
+        annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
+        if (arguments.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
+            comeFromChatFragment = arguments.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
+        }
+
+        // Récupération du ViewModel
         AnnonceDetailViewModel viewModel = ViewModelProviders.of(this).get(AnnonceDetailViewModel.class);
 
+        // Création de la vue
         setContentView(R.layout.activity_annonce_detail);
         ButterKnife.bind(this);
-
-        Bundle arguments = getIntent().getExtras();
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -120,37 +139,32 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        if (arguments != null) {
-            if (arguments.containsKey(ARG_ANNONCE)) {
-                annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
-            }
-            if (arguments.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
-                comeFromChatFragment = arguments.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
-            }
-        }
+        auth = FirebaseAuth.getInstance();
 
-        if (annoncePhotos != null) {
-            // Récupération de l'annonce
-            initDisplay(annoncePhotos);
+        // Récupération de l'annonce
+        initDisplay(annoncePhotos);
 
-            // Récupération du vendeur
-            viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(AnnonceDetailActivity.this, dataSnapshot -> {
-                if (dataSnapshot != null) {
-                    seller = dataSnapshot.getValue(UtilisateurEntity.class);
-                    if (seller != null) {
-                        initActions(annoncePhotos.getAnnonceEntity());
-                        if (seller.getPhotoUrl() != null) {
-                            GlideApp.with(imageProfilSeller)
-                                    .load(seller.getPhotoUrl())
-                                    .circleCrop()
-                                    .placeholder(R.drawable.ic_person_white_48dp)
-                                    .error(R.drawable.ic_person_white_48dp)
-                                    .into(imageProfilSeller);
-                        }
+        // Récupération des infos du vendeur
+        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser())
+                .observe(this, dataSnapshot -> {
+                    if (dataSnapshot == null) return;
+
+                    seller = dataSnapshot.getValue(UserEntity.class);
+                    if (seller == null) return;
+
+                    if (seller.getPhotoUrl() != null) {
+                        GlideApp.with(imageProfilSeller)
+                                .load(seller.getPhotoUrl())
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_person_white_48dp)
+                                .error(R.drawable.ic_person_white_48dp)
+                                .into(imageProfilSeller);
+
                     }
-                }
-            });
-        }
+
+                    // Initialisation des actions possibles
+                    initCommunicationActions();
+                });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
@@ -206,7 +220,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void initActions(AnnonceEntity annonce) {
+    private void initCommunicationActions() {
+        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
         boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUidUser());
         if (amITheOwner) {
             fabActionUpdate.setVisibility(View.VISIBLE);
@@ -215,9 +230,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             fabActionMessage.setVisibility(View.GONE);
         } else {
             fabActionUpdate.setVisibility(View.GONE);
-            fabActionEmail.setVisibility((annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O") && seller.getEmail() != null) ? View.VISIBLE : View.GONE);
-            fabActionTelephone.setVisibility((annonce.getContactByTel() != null && annonce.getContactByTel().equals("O") && seller.getTelephone() != null) ? View.VISIBLE : View.GONE);
-            fabActionMessage.setVisibility((annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O") && !comeFromChatFragment) ? View.VISIBLE : View.GONE);
+            fabActionEmail.setVisibility((annonce.getContactByEmail() != null && "O".equals(annonce.getContactByEmail()) && seller.getEmail() != null) ? View.VISIBLE : View.GONE);
+            fabActionTelephone.setVisibility((annonce.getContactByTel() != null && "O".equals(annonce.getContactByTel()) && seller.getTelephone() != null) ? View.VISIBLE : View.GONE);
+            fabActionMessage.setVisibility((annonce.getContactByMsg() != null && "O".equals(annonce.getContactByMsg()) && !comeFromChatFragment) ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -250,16 +265,13 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @OnClick(R.id.fab_action_email)
     public void actionEmail() {
         if (seller != null && seller.getEmail() != null && !seller.getEmail().isEmpty()) {
-            Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setDataAndType(Uri.parse("mailto:"), "message/rfc822");
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{seller.getEmail()});
-            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre());
-            intent.putExtra(Intent.EXTRA_TEXT, "Bonjour, votre annonce m'intéresse...");
-            try {
-                startActivity(Intent.createChooser(intent, "Envoi d'email..."));
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(AnnonceDetailActivity.this, R.string.error_no_mail_client_found, Toast.LENGTH_SHORT).show();
-            }
+            ShareCompat.IntentBuilder.from(this)
+                    .setType(MAIL_MESSAGE_TYPE)
+                    .addEmailTo(seller.getEmail())
+                    .setSubject(getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre())
+                    .setText(getString(R.string.default_mail_message))
+                    .setChooserTitle(R.string.default_mail_chooser_title)
+                    .startChooser();
         } else {
             Toast.makeText(AnnonceDetailActivity.this, R.string.error_cant_retrieve_email, Toast.LENGTH_SHORT).show();
         }

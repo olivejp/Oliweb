@@ -7,6 +7,9 @@ import android.util.Log;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -20,23 +23,16 @@ import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 /**
  * Created by 2761oli on 29/01/2018.
  */
-
+@Singleton
 public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
     private static final String TAG = PhotoRepository.class.getName();
-    private static PhotoRepository instance;
     private PhotoDao photoDao;
 
-    private PhotoRepository(Context context) {
+    @Inject
+    public PhotoRepository(Context context) {
         super(context);
         this.photoDao = this.db.getPhotoDao();
         this.dao = this.photoDao;
-    }
-
-    public static synchronized PhotoRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new PhotoRepository(context);
-        }
-        return instance;
     }
 
     public void save(PhotoEntity photoEntity) {

@@ -1,7 +1,9 @@
 package oliweb.nc.oliweb.service.sync.sender;
 
-import android.content.Context;
 import android.util.Log;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -14,30 +16,22 @@ import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 /**
  * Cette classe découpe toutes les étapes nécessaires pour l'envoi d'une annonce sur Firebase
  */
+@Singleton
 public class AnnonceFirebaseSender {
 
     private static final String TAG = AnnonceFirebaseSender.class.getName();
 
-    private static AnnonceFirebaseSender instance;
-
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-
     private AnnonceRepository annonceRepository;
     private PhotoFirebaseSender photoFirebaseSender;
     private AnnonceFullRepository annonceFullRepository;
 
-    private AnnonceFirebaseSender() {
-    }
-
-    public static  synchronized AnnonceFirebaseSender getInstance(Context context) {
-        if (instance == null) {
-            instance = new AnnonceFirebaseSender();
-            instance.annonceRepository = AnnonceRepository.getInstance(context);
-            instance.photoFirebaseSender = PhotoFirebaseSender.getInstance(context);
-            instance.annonceFullRepository = AnnonceFullRepository.getInstance(context);
-            instance.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(context);
-        }
-        return instance;
+    @Inject
+    public AnnonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository, AnnonceRepository annonceRepository, PhotoFirebaseSender photoFirebaseSender, AnnonceFullRepository annonceFullRepository) {
+        this.firebaseAnnonceRepository = firebaseAnnonceRepository;
+        this.annonceRepository = annonceRepository;
+        this.photoFirebaseSender = photoFirebaseSender;
+        this.annonceFullRepository = annonceFullRepository;
     }
 
     /**

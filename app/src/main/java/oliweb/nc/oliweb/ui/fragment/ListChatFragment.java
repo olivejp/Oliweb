@@ -18,6 +18,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -90,6 +94,31 @@ public class ListChatFragment extends Fragment {
         }
     }
 
+    @NonNull
+    private List<ChatAdapter.ListItem> prepareListItems(List<ChatEntity> listChats) {
+        if (listChats == null || listChats.isEmpty())
+            return Collections.emptyList();
+
+        List<String> listTitreDejaTraite = new ArrayList<>();
+        List<ChatAdapter.ListItem> listItems = new ArrayList<>();
+
+        for (ChatEntity chatEntity : listChats) {
+            if (!listTitreDejaTraite.contains(chatEntity.getTitreAnnonce())) {
+                ChatAdapter.HeaderItem header = new ChatAdapter.HeaderItem();
+                header.setTitreAnnonce(chatEntity.getTitreAnnonce());
+                listItems.add(header);
+                listTitreDejaTraite.add(chatEntity.getTitreAnnonce());
+            }
+
+            ChatAdapter.EventItem eventItem = new ChatAdapter.EventItem();
+            eventItem.setChatEntity(chatEntity);
+            listItems.add(eventItem);
+
+        }
+
+        return listItems;
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -107,17 +136,13 @@ public class ListChatFragment extends Fragment {
 
         // Selon les types de recherche
         if (viewModel.getTypeRechercheChat() == PAR_ANNONCE) {
-            viewModel.getChatsByUidAnnonce().observe(appCompatActivity, listChats -> {
-                if (listChats != null) {
-                    chatAdapter.setListChats(listChats);
-                }
-            });
+            viewModel.getChatsByUidAnnonceWithOrderByTitreAnnonce().observe(appCompatActivity, listAnnoncesWithChats ->
+                    chatAdapter.setListChats(prepareListItems(listAnnoncesWithChats))
+            );
         } else {
-            viewModel.getChatsByUidUser().observe(appCompatActivity, listChats -> {
-                if (listChats != null) {
-                    chatAdapter.setListChats(listChats);
-                }
-            });
+            viewModel.getChatsByUidUserWithOrderByTitreAnnonce().observe(appCompatActivity, listAnnoncesWithChats ->
+                    chatAdapter.setListChats(prepareListItems(listAnnoncesWithChats))
+            );
         }
 
         // Récupération d'une map avec tous les UID des personnes qui correspondent avec moi.
@@ -125,7 +150,6 @@ public class ListChatFragment extends Fragment {
             chatAdapter.setMapUrlByUtilisateur(mapPhotoUrlByUser);
             chatAdapter.notifyDataSetChanged();
         });
-
         return view;
     }
 

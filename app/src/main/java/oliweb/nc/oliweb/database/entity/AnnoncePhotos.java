@@ -43,9 +43,6 @@ public class AnnoncePhotos implements Parcelable {
                 '}';
     }
 
-    public AnnoncePhotos() {
-    }
-
 
     @Override
     public int describeContents() {
@@ -56,6 +53,9 @@ public class AnnoncePhotos implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.annonceEntity, flags);
         dest.writeTypedList(this.photos);
+    }
+
+    public AnnoncePhotos() {
     }
 
     protected AnnoncePhotos(Parcel in) {

@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -25,12 +27,14 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 public class FirebaseChatRepository {
 
     private static final String TAG = FirebaseChatRepository.class.getName();
-    private DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
+    private DatabaseReference chatRef;
 
     private static FirebaseChatRepository instance;
     private FirebaseMessageRepository fbMessageRepository;
 
-    private FirebaseChatRepository() {
+    @Inject
+    public FirebaseChatRepository() {
+        chatRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
     }
 
     public static synchronized FirebaseChatRepository getInstance() {

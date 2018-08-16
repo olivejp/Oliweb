@@ -14,11 +14,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
@@ -55,13 +60,17 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
-    private MutableLiveData<Map<String, UtilisateurEntity>> liveDataPhotoUrlUsers;
+    private MutableLiveData<Map<String, UserEntity>> liveDataPhotoUrlUsers;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
-        this.chatRepository = ChatRepository.getInstance(application);
-        this.messageRepository = MessageRepository.getInstance(application);
-        this.firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application);
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+
+        this.chatRepository = component.getChatRepository();
+        this.messageRepository = component.getMessageRepository();
+        this.firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
         this.firebaseUserRepository = FirebaseUserRepository.getInstance();
         this.firebaseChatRepository = FirebaseChatRepository.getInstance();
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();
@@ -75,12 +84,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.firebaseUserUid = firebaseUserUid;
     }
 
-    public LiveData<List<ChatEntity>> getChatsByUidUser() {
-        return chatRepository.findByUidUserAndStatusNotIn(firebaseUserUid, Utility.allStatusToAvoid());
+    public LiveData<List<ChatEntity>> getChatsByUidUserWithOrderByTitreAnnonce() {
+        return chatRepository.findByUidUserAndStatusNotInWithOrderByTitreAnnonce(firebaseUserUid, Utility.allStatusToAvoid());
     }
 
-    public LiveData<List<ChatEntity>> getChatsByUidAnnonce() {
-        return chatRepository.findByUidAnnonceAndStatusNotIn(annonce.getUid(), Utility.allStatusToAvoid());
+    public LiveData<List<ChatEntity>> getChatsByUidAnnonceWithOrderByTitreAnnonce() {
+        return chatRepository.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
     public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
@@ -234,13 +243,13 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return atomicBooleanCustomLiveData;
     }
 
-    public LiveData<Map<String, UtilisateurEntity>> getLiveDataPhotoUrlUsers() {
+    public LiveData<Map<String, UserEntity>> getLiveDataPhotoUrlUsers() {
         return liveDataPhotoUrlUsers;
     }
 
     public void getPhotoUrlsByUidUser() {
 
-        HashMap<String, UtilisateurEntity> map = new HashMap<>();
+        HashMap<String, UserEntity> map = new HashMap<>();
 
         this.firebaseChatRepository.getByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())

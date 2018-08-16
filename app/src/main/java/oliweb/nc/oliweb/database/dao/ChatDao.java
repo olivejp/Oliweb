@@ -34,12 +34,12 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
     public abstract Single<Integer> count();
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce AND statusRemote NOT IN (:status)")
-    public abstract LiveData<List<ChatEntity>> findByUidAnnonce(String uidAnnonce, List<String> status);
+    @Query("SELECT * FROM chat WHERE uidAnnonce = :uidAnnonce AND statusRemote NOT IN (:status) ORDER BY titreAnnonce ASC, updateTimestamp DESC")
+    public abstract LiveData<List<ChatEntity>> findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(String uidAnnonce, List<String> status);
 
     @Transaction
-    @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND statusRemote NOT IN (:status)")
-    public abstract LiveData<List<ChatEntity>> findByUidUserAndStatusNotIn(String uidUser, List<String> status);
+    @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND statusRemote NOT IN (:status) ORDER BY titreAnnonce ASC, updateTimestamp DESC")
+    public abstract LiveData<List<ChatEntity>> findByUidUserAndStatusNotInWithOrderByTitreAnnonce(String uidUser, List<String> status);
 
     @Transaction
     @Query("SELECT * FROM chat WHERE (uidSeller = :uidUser OR uidBuyer = :uidUser) AND statusRemote NOT IN (:status)")

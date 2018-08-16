@@ -18,11 +18,13 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.utility.Constants;
 
@@ -34,14 +36,14 @@ public class ProfilViewModel extends AndroidViewModel {
     private MutableLiveData<Long> nbAnnoncesByUser;
     private MutableLiveData<Long> nbChatsByUser;
     private MutableLiveData<Long> nbMessagesByUser;
-    private UtilisateurRepository utilisateurRepository;
-    private FirebaseUserRepository firebaseUserRepository;
+    private UserRepository userRepository;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application);
-        firebaseUserRepository = FirebaseUserRepository.getInstance();
-
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
+                .contextModule(new ContextModule(application))
+                .build();
+        userRepository = component.getUserRepository();
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
@@ -52,15 +54,13 @@ public class ProfilViewModel extends AndroidViewModel {
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).orderByChild("uidAuthor").equalTo(uidUser)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbMessagesByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbMessagesByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });
@@ -76,15 +76,13 @@ public class ProfilViewModel extends AndroidViewModel {
         FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CHATS_REF).orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbChatsByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbChatsByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });
@@ -101,15 +99,13 @@ public class ProfilViewModel extends AndroidViewModel {
                 .orderByChild("utilisateur/uuid").equalTo(uidUser)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot != null) {
-                            long count = dataSnapshot.getChildrenCount();
-                            nbAnnoncesByUser.postValue(count);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        nbAnnoncesByUser.postValue(count);
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Do nothing
                     }
                 });
@@ -124,14 +120,14 @@ public class ProfilViewModel extends AndroidViewModel {
         return fbSellerLiveData;
     }
 
-    public LiveData<UtilisateurEntity> getUtilisateurByUid(String uidUser) {
-        return this.utilisateurRepository.findByUid(uidUser);
+    public LiveData<UserEntity> getUtilisateurByUid(String uidUser) {
+        return this.userRepository.findByUid(uidUser);
     }
 
-    public Single<AtomicBoolean> saveUtilisateur(UtilisateurEntity utilisateurEntity) {
+    public Single<AtomicBoolean> saveUtilisateur(UserEntity userEntity) {
         return Single.create(emitter -> {
-            utilisateurEntity.setStatut(StatusRemote.TO_SEND);
-            this.utilisateurRepository.singleSave(utilisateurEntity)
+            userEntity.setStatut(StatusRemote.TO_SEND);
+            this.userRepository.singleSave(userEntity)
                     .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                     .doOnError(emitter::onError)
                     .doOnSuccess(utilisateurEntity1 -> {

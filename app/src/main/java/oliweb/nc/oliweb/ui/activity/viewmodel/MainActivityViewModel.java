@@ -13,9 +13,14 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -24,7 +29,7 @@ import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -38,7 +43,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = MainActivityViewModel.class.getName();
 
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private AnnonceRepository annonceRepository;
@@ -50,12 +55,17 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application.getApplicationContext());
-        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
-        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        photoRepository = PhotoRepository.getInstance(application.getApplicationContext());
-        chatRepository = ChatRepository.getInstance(application.getApplicationContext());
-        firebaseAnnonceRespository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
+
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+
+        userRepository = component.getUserRepository();
+        annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
+        annonceRepository = component.getAnnonceRepository();
+        photoRepository = component.getPhotoRepository();
+        chatRepository = component.getChatRepository();
+        firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
@@ -98,15 +108,14 @@ public class MainActivityViewModel extends AndroidViewModel {
      * @param firebaseUser
      * @return
      */
-    public Single<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
-        Log.d(TAG, "Starting saveUser firebaseUser : " + firebaseUser);
-        return Single.create(emitter ->
-                utilisateurRepository.saveUserFromFirebase(firebaseUser)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(emitter::onSuccess)
-                        .subscribe()
-        );
+    public LiveDataOnce<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
+        CustomLiveData<AtomicBoolean> customLiveData = new CustomLiveData<>();
+        userRepository.saveUserFromFirebase(firebaseUser)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .doOnSuccess(customLiveData::postValue)
+                .subscribe();
+        return customLiveData;
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {
@@ -132,22 +141,16 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
-        Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return Single.create(emitter ->
                 annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annoncePhotos1 -> {
                                     if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-                                        // Suppression de toutes les photos
                                         for (PhotoEntity photo : annoncePhotos1.getPhotos()) {
-                                            // Suppression du device
                                             MediaUtility.deletePhotoFromDevice(getApplication().getContentResolver(), photo);
-
-                                            // Suppression de la DB
                                             photoRepository.delete(photo);
                                         }
                                     }
-                                    Log.d(TAG, "Starting removeFromFavorite with uidUser : " + uidUser + " annoncePhotos1 : " + annoncePhotos1);
                                     annonceRepository.removeFromFavorite(uidUser, annoncePhotos1);
                                     emitter.onSuccess(new AtomicBoolean(true));
                                 }
@@ -174,13 +177,19 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveDataSaveFavorite;
     }
 
-    public Maybe<AnnoncePhotos> getFromFirebaseByUidAnnonce(String uidAnnonce) {
-        return firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
+    public LiveDataOnce<AnnoncePhotos> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnoncePhotos> customLiveData = new CustomLiveData<>();
+        firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .map(AnnonceConverter::convertDtoToAnnoncePhotos);
+                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
+                .doOnSuccess(customLiveData::postValue)
+                .doOnComplete(() -> customLiveData.postValue(null))
+                .subscribe();
+        return customLiveData;
     }
 
-    public LiveData<FirebaseUser> getLiveDataFirebaseUser(){
+    public LiveData<FirebaseUser> getLiveDataFirebaseUser() {
         if (liveDataFirebaseUser == null) {
             liveDataFirebaseUser = new MutableLiveData<>();
         }

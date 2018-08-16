@@ -4,6 +4,9 @@ import android.content.Context;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -16,21 +19,14 @@ import oliweb.nc.oliweb.database.entity.AnnonceFull;
 /**
  * Created by 2761oli on 20/02/2018.
  */
-
+@Singleton
 public class AnnonceFullRepository {
-    private static AnnonceFullRepository instance;
     private AnnonceFullDao annonceFullDao;
 
-    private AnnonceFullRepository(Context context) {
+    @Inject
+    public AnnonceFullRepository(Context context) {
         OliwebDatabase db = OliwebDatabase.getInstance(context);
         this.annonceFullDao = db.getAnnonceFullDao();
-    }
-
-    public static synchronized AnnonceFullRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new AnnonceFullRepository(context);
-        }
-        return instance;
     }
 
     public Single<AnnonceFull> findAnnoncesByIdAnnonce(long idAnnonce) {

@@ -13,15 +13,18 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UtilisateurRepository;
+import oliweb.nc.oliweb.database.repository.local.UserRepository;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -33,7 +36,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
-    private UtilisateurRepository utilisateurRepository;
+    private UserRepository userRepository;
     private CategorieRepository categorieRepository;
 
     private AnnonceEntity currentAnnonce;
@@ -45,14 +48,17 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
-        categorieRepository = CategorieRepository.getInstance(application);
-        photoRepository = PhotoRepository.getInstance(application);
-        annonceRepository = AnnonceRepository.getInstance(application);
-        utilisateurRepository = UtilisateurRepository.getInstance(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
+                .contextModule(new ContextModule(application))
+                .build();
+        categorieRepository = component.getCategorieRepository();
+        photoRepository = component.getPhotoRepository();
+        annonceRepository = component.getAnnonceRepository();
+        userRepository = component.getUserRepository();
     }
 
-    public LiveData<UtilisateurEntity> getConnectedUser(String uid) {
-        return this.utilisateurRepository.findByUid(uid);
+    public LiveData<UserEntity> getConnectedUser(String uid) {
+        return this.userRepository.findByUid(uid);
     }
 
     public LiveData<List<PhotoEntity>> getLiveListPhoto() {

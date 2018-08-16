@@ -7,6 +7,9 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -21,31 +24,26 @@ import oliweb.nc.oliweb.firebase.storage.FirebasePhotoStorage;
 /**
  * Created by 2761oli on 29/01/2018.
  */
-
+@Singleton
 public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private static final String TAG = AnnonceRepository.class.getName();
 
-    private static AnnonceRepository instance;
+
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
     private FirebasePhotoStorage fbPhotoStorage;
+
     private AnnonceDao annonceDao;
 
-    private AnnonceRepository(Context context) {
+    @Inject
+    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, FirebasePhotoStorage fbPhotoStorage) {
         super(context);
         this.dao = this.db.getAnnonceDao();
         this.annonceDao = (AnnonceDao) this.dao;
-    }
-
-    public static synchronized AnnonceRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new AnnonceRepository(context);
-            instance.fbPhotoStorage = FirebasePhotoStorage.getInstance(context);
-            instance.photoRepository = PhotoRepository.getInstance(context);
-            instance.chatRepository = ChatRepository.getInstance(context);
-        }
-        return instance;
+        this.photoRepository = photoRepository;
+        this.chatRepository = chatRepository;
+        this.fbPhotoStorage = fbPhotoStorage;
     }
 
     public LiveData<AnnonceEntity> findLiveById(long idAnnonce) {

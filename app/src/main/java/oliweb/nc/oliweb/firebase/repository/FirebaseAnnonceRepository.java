@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -29,28 +32,24 @@ import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
+@Singleton
 public class FirebaseAnnonceRepository {
 
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
-    private DatabaseReference annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-
-    private static FirebaseAnnonceRepository instance;
 
     private AnnonceRepository annonceRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
-    private static final GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
-    };
 
-    private FirebaseAnnonceRepository() {
-    }
+    private DatabaseReference annonceRef;
 
-    public static synchronized FirebaseAnnonceRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new FirebaseAnnonceRepository();
-        }
-        instance.annonceRepository = AnnonceRepository.getInstance(context);
-        instance.firebasePhotoStorage = FirebasePhotoStorage.getInstance(context);
-        return instance;
+    private GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass;
+
+    @Inject
+    public FirebaseAnnonceRepository(AnnonceRepository annonceRepository, FirebasePhotoStorage firebasePhotoStorage) {
+        this.annonceRepository = annonceRepository;
+        this.firebasePhotoStorage = firebasePhotoStorage;
+        annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
+        genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>(){};
     }
 
     private Query queryByUidUser(String uidUser) {

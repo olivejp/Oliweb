@@ -22,8 +22,11 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.database.entity.UtilisateurEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+
+import static oliweb.nc.oliweb.ui.adapter.ChatAdapter.ListItem.TYPE_EVENT;
+import static oliweb.nc.oliweb.ui.adapter.ChatAdapter.ListItem.TYPE_HEADER;
 
 /**
  * Created by 2761oli on 23/03/2018.
@@ -32,9 +35,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private View.OnClickListener clickListener;
     private View.OnClickListener popupClickListener;
-    private List<ChatEntity> listChats;
+    private List<ListItem> listChats;
     private String firebaseUserUid;
-    private Map<String, UtilisateurEntity> mapUrlByUtilisateur;
+    private Map<String, UserEntity> mapUrlByUtilisateur;
 
     public ChatAdapter(@NonNull String firebaseUserUid, View.OnClickListener clickListener, View.OnClickListener popupClickListener) {
         this.clickListener = clickListener;
@@ -45,32 +48,47 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @NonNull
     @Override
-    public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View rootView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.adapter_chat_element, parent, false);
-        return new ChatViewHolder(rootView);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == ListItem.TYPE_HEADER) {
+            View rootView = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_header_element, parent, false);
+            return new HeaderViewHolder(rootView);
+        } else {
+            View rootView = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_chat_element, parent, false);
+            return new ChatViewHolder(rootView);
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return listChats.get(position).getType();
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
-        ChatViewHolder holder = (ChatViewHolder) viewHolder;
-        ChatEntity model = listChats.get(position);
+        int type = getItemViewType(position);
+        if (type == ListItem.TYPE_HEADER) {
+            HeaderViewHolder holder = (HeaderViewHolder) viewHolder;
+            String titreAnnonce = ((HeaderItem) listChats.get(position)).getTitreAnnonce();
+            holder.titre.setText(titreAnnonce);
+        } else {
+            ChatViewHolder holder = (ChatViewHolder) viewHolder;
+            ChatEntity model = ((EventItem) listChats.get(position)).getChatEntity();
 
-        holder.imagePopupMenu.setTag(model);
-        holder.constraintLayout.setTag(model.getIdChat());
-        holder.lastMessage.setText(model.getLastMessage());
-        holder.titreAnnonce.setText(model.getTitreAnnonce());
+            holder.imagePopupMenu.setTag(model);
+            holder.constraintLayout.setTag(model.getIdChat());
+            holder.lastMessage.setText(model.getLastMessage());
 
-        if (model.getUpdateTimestamp() != null) {
-            holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
+            if (model.getUpdateTimestamp() != null) {
+                holder.lastMessageTimestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(model.getUpdateTimestamp())));
+            }
+
+            holder.constraintLayout.setOnClickListener(clickListener);
+            holder.imagePopupMenu.setOnClickListener(popupClickListener);
+            retreivePhoto(holder, model);
         }
-
-        holder.constraintLayout.setOnClickListener(clickListener);
-        holder.imagePopupMenu.setOnClickListener(popupClickListener);
-        retreivePhoto(holder, model);
     }
 
-    public void setListChats(final List<ChatEntity> newListChats) {
+    public void setListChats(final List<ListItem> newListChats) {
         if (listChats == null) {
             listChats = newListChats;
             notifyItemRangeInserted(0, newListChats.size());
@@ -88,16 +106,36 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listChats.get(oldItemPosition).getUidChat().equals(newListChats.get(newItemPosition).getUidChat());
+                    if (listChats.get(oldItemPosition).getType() != newListChats.get(newItemPosition).getType())
+                        return false;
+                    if (TYPE_EVENT == listChats.get(oldItemPosition).getType()) {
+                        ChatEntity chatOld = ((EventItem) listChats.get(oldItemPosition)).getChatEntity();
+                        ChatEntity chatNew = ((EventItem) newListChats.get(newItemPosition)).getChatEntity();
+                        return chatOld.getUidChat().equals(chatNew.getUidChat());
+                    }
+                    if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
+                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
+                        return titreOld.equals(titreNew);
+                    }
+                    return false;
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                    ChatEntity newChat = newListChats.get(newItemPosition);
-                    ChatEntity oldChat = listChats.get(oldItemPosition);
-                    return newChat.getUidChat().equals(oldChat.getUidChat())
-                            && (newChat.getLastMessage() != null && oldChat.getLastMessage() != null && (newChat.getLastMessage().equals(oldChat.getLastMessage())))
-                            && ((newChat.getUpdateTimestamp() != null && oldChat.getUpdateTimestamp() != null) && (newChat.getUpdateTimestamp().equals(oldChat.getUpdateTimestamp())));
+                    if (listChats.get(oldItemPosition).getType() != newListChats.get(newItemPosition).getType())
+                        return false;
+                    if (TYPE_EVENT == listChats.get(oldItemPosition).getType()) {
+                        ChatEntity chatOld = ((EventItem) listChats.get(oldItemPosition)).getChatEntity();
+                        ChatEntity chatNew = ((EventItem) newListChats.get(newItemPosition)).getChatEntity();
+                        return chatOld.equals(chatNew);
+                    }
+                    if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
+                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
+                        return titreOld.equals(titreNew);
+                    }
+                    return false;
                 }
             });
             this.listChats = newListChats;
@@ -118,9 +156,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         String uidUser = firebaseUserUid;
-        UtilisateurEntity utilisateurEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
-        if (utilisateurEntity != null) {
-            String urlPhoto = utilisateurEntity.getPhotoUrl();
+        UserEntity userEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
+        if (userEntity != null) {
+            String urlPhoto = userEntity.getPhotoUrl();
             if (urlPhoto != null && !urlPhoto.isEmpty()) {
                 GlideApp.with(holder.imagePhotoAuthor)
                         .load(urlPhoto)
@@ -136,8 +174,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     }
 
-    public void setMapUrlByUtilisateur(Map<String, UtilisateurEntity> mapUrlByUtilisateur) {
+    public void setMapUrlByUtilisateur(Map<String, UserEntity> mapUrlByUtilisateur) {
         this.mapUrlByUtilisateur = mapUrlByUtilisateur;
+    }
+
+    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.annonce_titre)
+        TextView titre;
+
+        HeaderViewHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
     }
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder {
@@ -146,9 +194,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         @BindView(R.id.chat_last_message_timestamp)
         TextView lastMessageTimestamp;
-
-        @BindView(R.id.chat_titre_annonce)
-        TextView titreAnnonce;
 
         @BindView(R.id.chat_author_photo)
         ImageView imagePhotoAuthor;
@@ -162,6 +207,50 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ChatViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+        }
+    }
+
+    public static abstract class ListItem {
+
+        public static final int TYPE_HEADER = 0;
+        public static final int TYPE_EVENT = 1;
+
+        abstract public int getType();
+    }
+
+    public static class HeaderItem extends ListItem {
+
+        private String titreAnnonce;
+
+        @Override
+        public int getType() {
+            return TYPE_HEADER;
+        }
+
+        public String getTitreAnnonce() {
+            return titreAnnonce;
+        }
+
+        public void setTitreAnnonce(String titreAnnonce) {
+            this.titreAnnonce = titreAnnonce;
+        }
+    }
+
+    public static class EventItem extends ListItem {
+
+        private ChatEntity chatEntity;
+
+        @Override
+        public int getType() {
+            return TYPE_EVENT;
+        }
+
+        public ChatEntity getChatEntity() {
+            return chatEntity;
+        }
+
+        public void setChatEntity(ChatEntity chatEntity) {
+            this.chatEntity = chatEntity;
         }
     }
 }

@@ -11,6 +11,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
@@ -33,9 +38,12 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
-        annonceWithPhotosRepository = AnnonceWithPhotosRepository.getInstance(application.getApplicationContext());
-        annonceRepository = AnnonceRepository.getInstance(application.getApplicationContext());
-        firebaseAnnonceRepository = FirebaseAnnonceRepository.getInstance(application.getApplicationContext());
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
+        annonceRepository = component.getAnnonceRepository();
+        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
     }
 
     public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {

@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
@@ -78,7 +81,28 @@ public class FirebaseSyncListenerService extends Service {
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, String s) {
-            // do nothing
+            ChatFirebase chatFirebase = dataSnapshot.getValue(ChatFirebase.class);
+            if (chatFirebase != null) {
+                chatRepository.findByUid(chatFirebase.getUid())
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                        .doOnSuccess(chatEntity -> {
+
+                            chatEntity.setUidChat(chatFirebase.getUid());
+                            chatEntity.setLastMessage(chatFirebase.getLastMessage());
+                            chatEntity.setTitreAnnonce(chatFirebase.getTitreAnnonce());
+                            chatEntity.setUidSeller(chatFirebase.getUidSeller());
+                            chatEntity.setUidBuyer(chatFirebase.getUidBuyer());
+                            chatEntity.setUpdateTimestamp(chatFirebase.getUpdateTimestamp());
+                            chatEntity.setUidAnnonce(chatFirebase.getUidAnnonce());
+
+                            chatRepository.singleUpdate(chatEntity)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                                    .subscribe();
+                        })
+                        .subscribe();
+            }
         }
 
         @Override
@@ -101,12 +125,12 @@ public class FirebaseSyncListenerService extends Service {
 
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
-// do nothing
+            // do nothing
         }
 
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
-// do nothing
+            // do nothing
         }
     };
 
@@ -192,8 +216,10 @@ public class FirebaseSyncListenerService extends Service {
         if (intent.getStringExtra(CHAT_SYNC_UID_USER) == null || intent.getStringExtra(CHAT_SYNC_UID_USER).isEmpty()) {
             stopSelf();
         } else {
-            chatRepository = ChatRepository.getInstance(this);
-            messageRepository = MessageRepository.getInstance(this);
+            DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
+
+            chatRepository = component.getChatRepository();
+            messageRepository = component.getMessageRepository();
             listChatQueryListener = new HashMap<>();
 
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
@@ -248,13 +274,14 @@ public class FirebaseSyncListenerService extends Service {
         chatRepository.findFlowableByUidUserAndStatusNotIn(uidUser, Utility.allStatusToAvoid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .onBackpressureBuffer()
+                .distinct()
                 .doOnNext(listChat -> {
                     for (ChatEntity chat : listChat) {
                         if (chat.getUidChat() != null && !isChatAlreadyObserved(chat.getUidChat())) {
                             Log.d(TAG, "Nouveau chat a écouté " + chat.getUidChat());
 
-                            // Création de listener pour chacun de ces chats
-                            Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("timestamp");
+                            // Création de listener pour les messages non lus de chacun de ces chats
+                            Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_MESSAGES_REF).child(chat.getUidChat()).orderByChild("read").equalTo(false);
                             query.addChildEventListener(messageChildListener);
 
                             // Ajout de la query et du listener à notre liste
@@ -275,10 +302,11 @@ public class FirebaseSyncListenerService extends Service {
         return false;
     }
 
-    private void clearMessageListener() {
+    private synchronized void clearMessageListener() {
         for (Map.Entry<String, Query> entry : listChatQueryListener.entrySet()) {
             Query query = entry.getValue();
             if (query != null) {
+                Log.d(TAG, String.format("Suppression des messageChildListener pour l'UID le chat %s", entry.getKey()));
                 query.removeEventListener(messageChildListener);
             }
         }
