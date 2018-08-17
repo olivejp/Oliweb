@@ -196,19 +196,18 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                     chatEntityCustomLiveData.postValue(currentChat);
                 })
                 .doOnComplete(() -> {
-                            Log.d(TAG, "findOrCreateNewChat.doOnComplete");
-                            chatRepository.singleSave(initializeChatEntity())
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                    .doOnSuccess(chatCreated -> {
-                                        Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
-                                        currentChat = chatCreated;
-                                        selectedIdChat = chatCreated.getIdChat();
-                                        chatEntityCustomLiveData.postValue(currentChat);
-                                    })
-                                    .subscribe();
-                        }
-                )
+                    Log.d(TAG, "findOrCreateNewChat.doOnComplete");
+                    chatRepository.singleSave(initializeChatEntity())
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .doOnSuccess(chatCreated -> {
+                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
+                                currentChat = chatCreated;
+                                selectedIdChat = chatCreated.getIdChat();
+                                chatEntityCustomLiveData.postValue(currentChat);
+                            })
+                            .subscribe();
+                })
                 .subscribe();
         return chatEntityCustomLiveData;
     }
