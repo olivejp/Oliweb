@@ -13,12 +13,10 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
 import java.util.List;
 
@@ -30,6 +28,7 @@ import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
+import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
@@ -70,34 +69,23 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Vérification des arguments
         Bundle args = getIntent().getExtras();
-        if (!argsAvailable(args)){
-            finish();
-            return;
-        }
+        ArgumentsChecker argumentsChecker = new ArgumentsChecker();
+        argumentsChecker
+                .setArguments(args)
+                .isMandatory(ARG_UID_USER)
+                .setOnFailureListener(e -> finish())
+                .check();
 
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
-        viewModel.findAnnoncesByUidUser(uidUser)
-                .observe(this, annonceWithPhotos -> {
-                    if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
-                        initEmptyLayout();
-                    } else {
-                        initLayout(annonceWithPhotos);
-                    }
-                });
-    }
-
-    private boolean argsAvailable(Bundle args) {
-        if (args == null) {
-            Log.e(TAG, "No arguments found");
-            return false;
-        } else if (!args.containsKey(ARG_UID_USER) || args.get(ARG_UID_USER) == null) {
-            Log.e(TAG, String.format("Argument named %s is mandatory", ARG_UID_USER));
-            return false;
-        }
-        return true;
+        viewModel.findAnnoncesByUidUser(uidUser).observe(this, annonceWithPhotos -> {
+            if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
+                initEmptyLayout();
+            } else {
+                initLayout(annonceWithPhotos);
+            }
+        });
     }
 
     @Override
@@ -171,10 +159,8 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
 
     private void initEmptyLayout() {
         setContentView(R.layout.empty_recyclerview);
-        TextView textEmpty = findViewById(R.id.text_empty);
         FloatingActionButton fab = findViewById(R.id.fab_empty_add);
         fab.setOnClickListener(this::callPostAnnonceCreate);
-        textEmpty.setText(R.string.empty_my_annonces_list);
     }
 
     private void initLayout(List<AnnoncePhotos> annonceWithPhotos) {

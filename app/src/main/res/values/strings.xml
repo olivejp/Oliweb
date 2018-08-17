@@ -137,5 +137,6 @@
     <string name="sign_in">Se connecter</string>
     <string name="empty_my_annonces_list">Vous n\'avez encore posté aucune annonce. Appuyez sur le + pour saisir une annonce.</string>
     <string name="confirm_delete_annonce">Supprimer l\'annonce %s ?%n%nVous perdrez tous les informations relatives à cette annonce (Chats, Messages).</string>
+    <string name="empty_list">Vous n\'avez encore posté aucune annonce.\n Appuyez sur le + pour saisir une annonce.</string>
 
 </resources>

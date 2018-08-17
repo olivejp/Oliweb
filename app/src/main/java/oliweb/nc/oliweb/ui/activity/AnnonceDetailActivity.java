@@ -115,7 +115,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         // Vérification des arguments
         Bundle arguments = getIntent().getExtras();
-        if (!argsAvailable(arguments)){
+        if (!argsAvailable(arguments)) {
             finish();
             return;
         }

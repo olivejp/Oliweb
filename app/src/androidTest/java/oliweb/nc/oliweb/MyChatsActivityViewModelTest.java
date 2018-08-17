@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -50,23 +51,27 @@ public class MyChatsActivityViewModelTest {
     @Mock
     private Observer<ChatEntity> observer;
 
+    private ChatEntity getChatEntity() {
+        ChatEntity chatEntity = new ChatEntity();
+        chatEntity.setTitreAnnonce(TITRE_ANNONCE);
+        chatEntity.setUidAnnonce(UID_ANNONCE);
+        chatEntity.setUidSeller(UID_USER);
+        return chatEntity;
+    }
+
+
     @Before
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
         UtilityTest.cleanBase(appContext);
 
         when(chatRepository.findByUidUserAndUidAnnonce(argThat(UID_USER::equals), argThat(UID_ANNONCE::equals)))
-                .thenReturn(Maybe.create(e -> {
-                    ChatEntity chatEntity = new ChatEntity();
-                    chatEntity.setTitreAnnonce(TITRE_ANNONCE);
-                    chatEntity.setUidAnnonce(UID_ANNONCE);
-                    chatEntity.setUidSeller(UID_USER);
-                    e.onSuccess(chatEntity);
-                }));
+                .thenReturn(Maybe.create(e -> e.onSuccess(getChatEntity())));
     }
 
     @Test
     public void test() {
         viewModel.findOrCreateLiveNewChat().observeOnce(observer);
+        verify(observer).onChanged(getChatEntity());
     }
 }
