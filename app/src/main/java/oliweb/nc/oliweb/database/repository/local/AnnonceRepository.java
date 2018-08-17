@@ -29,7 +29,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private static final String TAG = AnnonceRepository.class.getName();
 
-
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
     private FirebasePhotoStorage fbPhotoStorage;
@@ -109,19 +108,9 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.countAllFavoritesByUser(uidUser);
     }
 
-    public Single<Integer> countByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
-        Log.d(TAG, "Starting countByUidUtilisateurAndUidAnnonce uidUtilisateur : " + uidUtilisateur + " uidAnnonce : " + uidAnnonce);
+    public Single<Integer> countByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
+        Log.d(TAG, "Starting countByUidUserAndUidAnnonce uidUtilisateur : " + uidUtilisateur + " uidAnnonce : " + uidAnnonce);
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
-    }
-
-    /**
-     * Will return > 0 if true
-     *
-     * @param uidAnnonce
-     * @return
-     */
-    public Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce) {
-        return this.annonceDao.isAnnonceFavorite(uidUser, uidAnnonce);
     }
 
     /**
@@ -159,6 +148,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                             chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .subscribe();
+                            emitter.onSuccess(new AtomicBoolean(true));
                         })
                         .subscribe()
         );

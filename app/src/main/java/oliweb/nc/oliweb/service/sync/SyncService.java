@@ -28,9 +28,9 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
     public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
 
-    public static final String ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT = "ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT";
+    public static final String ARG_UID_CHAT = "ARG_UID_CHAT";
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
-    public static final String ARG_ACTION_SEND_DIRECT_UID_USER = "ARG_ACTION_SEND_DIRECT_UID_USER";
+    public static final String ARG_UID_USER = "ARG_UID_USER";
 
     private FirebaseServicesComponent componentFbServices;
 

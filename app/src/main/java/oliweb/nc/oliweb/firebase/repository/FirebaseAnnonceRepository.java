@@ -49,7 +49,8 @@ public class FirebaseAnnonceRepository {
         this.annonceRepository = annonceRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;
         annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-        genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>(){};
+        genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
+        };
     }
 
     private Query queryByUidUser(String uidUser) {
@@ -58,7 +59,7 @@ public class FirebaseAnnonceRepository {
     }
 
     /**
-     * Retrieve all the annonces on the Fb database for the specified User.
+     * Retrieve all the annonces on the Fb database for the specified User uid.
      * Then we try to find them in the local DB.
      * If not present the MutableLiveData shouldAskQuestion will receive True.
      *
@@ -70,12 +71,9 @@ public class FirebaseAnnonceRepository {
         observeAllAnnonceByUidUser(uidUser)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
-                .switchMapSingle(annonceDto -> annonceRepository.countByUidUtilisateurAndUidAnnonce(uidUser, annonceDto.getUuid()))
-                .doOnNext(integer -> {
-                    if (integer != null && integer == 0) {
-                        shouldAskQuestion.postValue(new AtomicBoolean(true));
-                    }
-                })
+                .switchMapSingle(annonceDto -> annonceRepository.countByUidUserAndUidAnnonce(uidUser, annonceDto.getUuid()))
+                .filter(integer -> integer != null && integer == 0)
+                .doOnNext(integer -> shouldAskQuestion.postValue(new AtomicBoolean(true)))
                 .subscribe();
     }
 
@@ -120,9 +118,9 @@ public class FirebaseAnnonceRepository {
      */
     private void saveAnnonceDtoToLocalDb(Context context, AnnonceDto annonceDto) {
         Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
-        annonceRepository.countByUidUtilisateurAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
+        annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(throwable -> Log.e(TAG, "countByUidUtilisateurAndUidAnnonce.doOnError " + throwable.getMessage()))
+                .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .filter(integer -> integer == null || integer.equals(0))
                 .map(integer -> {
                     AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
@@ -239,19 +237,12 @@ public class FirebaseAnnonceRepository {
         return Single.create(emitter -> {
             if (annonceDto == null) {
                 emitter.onError((new RuntimeException("Can't save null annonceDto object to Firebase")));
-            } else if (annonceDto.getUuid() == null) {
+            } else if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
                 emitter.onError((new RuntimeException("UID is mandatory to save in Firebase")));
             } else {
                 annonceRef.child(annonceDto.getUuid()).setValue(annonceDto)
-                        .addOnFailureListener(emitter::onError)
-                        .addOnSuccessListener(o ->
-                                findMaybeByUidAnnonce(annonceDto.getUuid())
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                        .doOnError(emitter::onError)
-                                        .doOnSuccess(annonceDto1 -> emitter.onSuccess(annonceDto1.getUuid()))
-                                        .doOnComplete(() -> emitter.onError(new RuntimeException("No annonceDto in Firebase with Uid : " + annonceDto.getUuid())))
-                                        .subscribe()
-                        );
+                        .addOnSuccessListener(o -> emitter.onSuccess(annonceDto.getUuid()))
+                        .addOnFailureListener(emitter::onError);
             }
         });
     }

@@ -7,6 +7,9 @@ Properties props = new Properties()
 props.load(new FileInputStream(propFile))
 
 android {
+    testOptions{
+        unitTests.returnDefaultValues = true;
+    }
     signingConfigs {
         config {
             keyPassword props['KEY_PASSWORD']

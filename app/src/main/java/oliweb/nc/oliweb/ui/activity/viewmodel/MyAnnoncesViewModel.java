@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
@@ -46,30 +46,27 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
     }
 
-    public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
+    public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
     public LiveDataOnce<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
-        Log.d(TAG, "Starting shouldIAskQuestionToRetrieveData uidUtilisateur : " + uidUtilisateur);
         if (shouldAskQuestion == null) {
             shouldAskQuestion = new CustomLiveData<>();
         }
-
         if (uidUtilisateur != null) {
             firebaseAnnonceRepository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
         }
-
         return shouldAskQuestion;
     }
 
-    /**
-     * Update annonce and photo status to TO_DELETE
-     * ScheduleSync will do the trick.
-     *
-     * @param idAnnonce
-     */
-    public Single<AtomicBoolean> markToDelete(long idAnnonce) {
-        return this.annonceRepository.markAsToDelete(idAnnonce);
+    public LiveDataOnce<AtomicBoolean> markToDelete(long idAnnonce) {
+        CustomLiveData<AtomicBoolean> customLiveData = new CustomLiveData<>();
+        this.annonceRepository.markAsToDelete(idAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(customLiveData::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return customLiveData;
     }
 }

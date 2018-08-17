@@ -2,7 +2,6 @@ package oliweb.nc.oliweb.database.repository.local;
 
 import android.arch.lifecycle.LiveData;
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.List;
@@ -18,7 +17,6 @@ import oliweb.nc.oliweb.database.dao.PhotoDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.task.AbstractRepositoryCudTask;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -35,42 +33,14 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         this.dao = this.photoDao;
     }
 
-    public void save(PhotoEntity photoEntity) {
-        save(photoEntity, null);
-    }
-
-    private void save(PhotoEntity photoEntity, @Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute) {
-        Log.d(TAG, "Starting save photoEntity : " + photoEntity);
-        if (photoEntity != null) {
-            this.photoDao.findSingleById(photoEntity.getId())
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnSuccess(photoSaved -> {
-                        if (photoSaved != null) {
-                            insert(onRespositoryPostExecute, photoEntity);
-                        } else {
-                            update(onRespositoryPostExecute, photoEntity);
-                        }
-                    })
-                    .doOnError(exception -> Log.e(TAG, "save " + exception.getLocalizedMessage(), exception))
-                    .subscribe();
-        } else {
-            insert(onRespositoryPostExecute, photoEntity);
-        }
-    }
-
     public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findByIdAnnonce(idAnnonce);
     }
 
-    public Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
+    private Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {
         Log.d(TAG, "Starting findAllPhotosByIdAnnonce idAnnonce : " + idAnnonce);
         return this.photoDao.findAllSingleByIdAnnonce(idAnnonce);
-    }
-
-    public Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status) {
-        Log.d(TAG, "Starting getAllPhotosByUidUserAndStatus uidUser : " + uidUser + " status : " + status);
-        return this.photoDao.getAllPhotosByUidUserAndStatus(uidUser, status);
     }
 
     public Flowable<PhotoEntity> getAllPhotosByStatus(List<String> status) {
@@ -125,24 +95,5 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
                         })
                         .subscribe()
         );
-    }
-
-    public Single<List<PhotoEntity>> markAsToSend(List<PhotoEntity> list) {
-        Log.d(TAG, "markAsToSend list : " + list);
-        return Observable.fromIterable(list)
-                .map(photoEntity -> {
-                    photoEntity.setStatut(StatusRemote.TO_SEND);
-                    return photoEntity;
-                })
-                .switchMap(photoEntity -> singleSave(photoEntity).toObservable())
-                .toList();
-    }
-
-    public Observable<PhotoEntity> markAsSending(PhotoEntity photoEntity) {
-        Log.d(TAG, "markAsSending photoEntity : " + photoEntity);
-        photoEntity.setStatut(StatusRemote.SENDING);
-        return this.singleSave(photoEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
     }
 }

@@ -26,18 +26,9 @@ public class FirebaseUserRepository {
     private static final String TAG = FirebaseUserRepository.class.getName();
     private DatabaseReference userRef;
 
-    private static FirebaseUserRepository instance;
-
     @Inject
     public FirebaseUserRepository() {
         userRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF);
-    }
-
-    public static synchronized FirebaseUserRepository getInstance() {
-        if (instance == null) {
-            instance = new FirebaseUserRepository();
-        }
-        return instance;
     }
 
     public Single<AtomicBoolean> insertUserIntoFirebase(UserEntity userEntity) {
@@ -61,8 +52,16 @@ public class FirebaseUserRepository {
                 userRef.child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        UserEntity user = dataSnapshot.getValue(UserEntity.class);
-                        emitter.onSuccess(user);
+                        try {
+                            UserEntity user = dataSnapshot.getValue(UserEntity.class);
+                            if (user != null) {
+                                emitter.onSuccess(user);
+                            } else {
+                                throw new FirebaseRepositoryException("Return a null value");
+                            }
+                        } catch (FirebaseRepositoryException e) {
+                            emitter.onError(e);
+                        }
                     }
 
                     @Override

@@ -71,8 +71,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         this.chatRepository = component.getChatRepository();
         this.messageRepository = component.getMessageRepository();
         this.firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
-        this.firebaseUserRepository = FirebaseUserRepository.getInstance();
-        this.firebaseChatRepository = FirebaseChatRepository.getInstance();
+        this.firebaseUserRepository = componentFb.getFirebaseUserRepository();
+        this.firebaseChatRepository = componentFb.getFirebaseChatRepository();
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();
     }
 
@@ -98,6 +98,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .doOnSuccess(customLiveData::postValue)
+                .doOnComplete(() -> customLiveData.postValue(null))
                 .subscribe();
         return customLiveData;
     }
@@ -247,10 +248,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return liveDataPhotoUrlUsers;
     }
 
+    /**
+     * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
+     * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
+     */
     public void getPhotoUrlsByUidUser() {
-
         HashMap<String, UserEntity> map = new HashMap<>();
-
         this.firebaseChatRepository.getByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

@@ -17,6 +17,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -43,9 +44,8 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
@@ -101,9 +101,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     TextView textDatePublication;
 
     private AnnoncePhotos annoncePhotos;
-    private UserEntity seller;
-    private FirebaseAuth auth;
     private boolean comeFromChatFragment;
+    private String uidUser;
+    private UserEntity seller;
 
     public AnnonceDetailActivity() {
         // Required empty public constructor
@@ -115,15 +115,19 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         // Vérification des arguments
         Bundle arguments = getIntent().getExtras();
-        assertNotNull("No arguments found", arguments);
-        assertTrue(String.format("Argument named %s is mandatory", ARG_ANNONCE), arguments.containsKey(ARG_ANNONCE));
-        assertNotNull(String.format("Argument named %s should not be null", ARG_ANNONCE), arguments.get(ARG_ANNONCE));
+        if (!argsAvailable(arguments)){
+            finish();
+            return;
+        }
 
         // Récupération des arguments
         annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
         if (arguments.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
             comeFromChatFragment = arguments.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
         }
+
+        // Récupération de l'uid de l'utilisateur
+        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
 
         // Récupération du ViewModel
         AnnonceDetailViewModel viewModel = ViewModelProviders.of(this).get(AnnonceDetailViewModel.class);
@@ -139,32 +143,11 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        auth = FirebaseAuth.getInstance();
-
         // Récupération de l'annonce
-        initDisplay(annoncePhotos);
+        initAnnonceViews(annoncePhotos);
 
         // Récupération des infos du vendeur
-        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser())
-                .observe(this, dataSnapshot -> {
-                    if (dataSnapshot == null) return;
-
-                    seller = dataSnapshot.getValue(UserEntity.class);
-                    if (seller == null) return;
-
-                    if (seller.getPhotoUrl() != null) {
-                        GlideApp.with(imageProfilSeller)
-                                .load(seller.getPhotoUrl())
-                                .circleCrop()
-                                .placeholder(R.drawable.ic_person_white_48dp)
-                                .error(R.drawable.ic_person_white_48dp)
-                                .into(imageProfilSeller);
-
-                    }
-
-                    // Initialisation des actions possibles
-                    initCommunicationActions();
-                });
+        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observeOnce(this::initSeller);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
@@ -201,12 +184,18 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void initDisplay(AnnoncePhotos annoncePhotos) {
-        // Condition de garde. Si pas d'annonce, on ne fait rien.
-        if (annoncePhotos == null) {
-            return;
+    private boolean argsAvailable(Bundle args) {
+        if (args == null) {
+            Log.e(TAG, "No arguments found");
+            return false;
+        } else if (!args.containsKey(ARG_ANNONCE) || args.getParcelable(ARG_ANNONCE) == null) {
+            Log.e(TAG, String.format("Argument named %s is mandatory", ARG_ANNONCE));
+            return false;
         }
+        return true;
+    }
 
+    private void initAnnonceViews(AnnoncePhotos annoncePhotos) {
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
@@ -220,9 +209,21 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void initCommunicationActions() {
+    private void initSeller(@NonNull UserEntity seller) {
+        this.seller = seller;
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
-        boolean amITheOwner = auth.getCurrentUser() != null && auth.getCurrentUser().getUid().equals(annonce.getUidUser());
+
+        if (seller.getPhotoUrl() != null) {
+            GlideApp.with(imageProfilSeller)
+                    .load(seller.getPhotoUrl())
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_person_white_48dp)
+                    .error(R.drawable.ic_person_white_48dp)
+                    .into(imageProfilSeller);
+
+        }
+
+        boolean amITheOwner = uidUser != null && !uidUser.isEmpty() && uidUser.equals(annonce.getUidUser());
         if (amITheOwner) {
             fabActionUpdate.setVisibility(View.VISIBLE);
             fabActionEmail.setVisibility(View.GONE);

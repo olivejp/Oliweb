@@ -2,30 +2,38 @@ package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
-
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
+import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
+import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 
 public class AnnonceDetailViewModel extends AndroidViewModel {
 
-    private FirebaseQueryLiveData fbSellerLiveData;
+    private static final String TAG = AnnonceDetailViewModel.class.getCanonicalName();
+
+    private FirebaseUserRepository userRepository;
 
     public AnnonceDetailViewModel(@NonNull Application application) {
         super(application);
+        ContextModule contextModule = new ContextModule(application);
+        FirebaseRepositoriesComponent firebaseRepositoriesComponent = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        userRepository = firebaseRepositoriesComponent.getFirebaseUserRepository();
     }
 
-    public LiveData<DataSnapshot> getFirebaseSeller(String uidSeller) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(uidSeller);
-        if (fbSellerLiveData == null || fbSellerLiveData.getQuery() != ref) {
-            fbSellerLiveData = new FirebaseQueryLiveData(ref, false);
-        }
-        return fbSellerLiveData;
+    public LiveDataOnce<UserEntity> getFirebaseSeller(String uidSeller) {
+        CustomLiveData<UserEntity> customLiveData = new CustomLiveData<>();
+        userRepository.getUtilisateurByUid(uidSeller)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(customLiveData::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return customLiveData;
     }
 }

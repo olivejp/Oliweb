@@ -13,6 +13,9 @@ import org.junit.runner.RunWith;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -33,7 +36,6 @@ public class AnnonceRepositoryTest {
 
     private static final String UID_USER = "123456";
     private AnnonceRepository annonceRepository;
-    private CategorieRepository categorieRepository;
     private List<CategorieEntity> listCategorie;
 
 
@@ -41,8 +43,12 @@ public class AnnonceRepositoryTest {
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
         UtilityTest.cleanBase(appContext);
-        annonceRepository = AnnonceRepository.getInstance(appContext);
-        categorieRepository = CategorieRepository.getInstance(appContext);
+
+        ContextModule contextModule = new ContextModule(appContext);
+        DatabaseRepositoriesComponent repositoriesComponent = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+
+        annonceRepository = repositoriesComponent.getAnnonceRepository();
+        CategorieRepository categorieRepository = repositoriesComponent.getCategorieRepository();
         TestObserver<List<CategorieEntity>> listTestObs = categorieRepository.getListCategorie().test();
         listCategorie = listTestObs.values().get(0);
     }

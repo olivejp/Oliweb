@@ -234,7 +234,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
 
-        // On attache la searchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         if (searchManager != null && searchView != null) {
@@ -250,7 +249,6 @@ public class MainActivity extends AppCompatActivity
             SortDialog sortDialog = new SortDialog();
             sortDialog.show(getSupportFragmentManager(), SORT_DIALOG);
         }
-
         return true;
     }
 
@@ -289,6 +287,7 @@ public class MainActivity extends AppCompatActivity
         if (uidUser != null) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
+            intent.putExtra(ARG_USER_UID, uidUser);
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }

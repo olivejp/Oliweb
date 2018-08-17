@@ -22,7 +22,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -32,7 +31,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceRawAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.Constants;
-import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
@@ -41,24 +39,17 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialogFragment.DialogListener {
 
-    private static final String TAG = MyAnnoncesActivity.class.getName();
-
-    private RecyclerView recyclerView;
+    private static final String TAG = MyAnnoncesActivity.class.getCanonicalName();
 
     public static final String ARG_NOTICE_BUNDLE_ID_ANNONCE = "ARG_NOTICE_BUNDLE_ID_ANNONCE";
+    public static final String ARG_UID_USER = "ARG_UID_USER";
     public static final String DIALOG_TAG_DELETE = "DIALOG_TAG_DELETE";
-    public static final String DIALOG_TAG_SYNC = "DIALOG_TAG_SYNC";
     public static final int REQUEST_STORAGE_PERMISSION_CODE = 5841;
-
-    private String uidUser;
-
     public static final int REQUEST_CODE_POST = 548;
 
+    private String uidUser;
     private MyAnnoncesViewModel viewModel;
 
-    /**
-     * OnClickListener qui ouvrira le popup
-     */
     private View.OnClickListener onPopupClickListener = v -> {
         PopupMenu popup = new PopupMenu(this, v);
         popup.setOnMenuItemClickListener(item -> {
@@ -79,16 +70,16 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Récupération du UID de l'utilisateur connecté.
-        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-        if (uidUser == null || uidUser.isEmpty()) {
-            Log.e(TAG, "Missing mandatory parameter");
+        // Vérification des arguments
+        Bundle args = getIntent().getExtras();
+        if (!argsAvailable(args)){
             finish();
+            return;
         }
 
+        uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
-
-        viewModel.findActiveAnnonceByUidUtilisateur(uidUser)
+        viewModel.findAnnoncesByUidUser(uidUser)
                 .observe(this, annonceWithPhotos -> {
                     if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                         initEmptyLayout();
@@ -98,52 +89,15 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 });
     }
 
-    private void initEmptyLayout() {
-        setContentView(R.layout.empty_recyclerview);
-        TextView textEmpty = findViewById(R.id.text_empty);
-        FloatingActionButton fab = findViewById(R.id.fab_empty_add);
-        fab.setOnClickListener(this::callPostAnnonceCreate);
-        textEmpty.setText("Vous n'avez encore posté aucune annonce.\nAppuyez sur le + pour saisir une annonce.");
-    }
-
-    private void initLayout(List<AnnoncePhotos> annonceWithPhotos) {
-        setContentView(R.layout.activity_my_annonces);
-        recyclerView = findViewById(R.id.recycler_annonces);
-
-        FloatingActionButton fabPostAnnonce = findViewById(R.id.fab_post_annonce);
-        fabPostAnnonce.setOnClickListener(this::callPostAnnonceCreate);
-
-        AnnonceRawAdapter annonceRawAdapter = new AnnonceRawAdapter(v -> {
-            AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
-            callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
-        }, onPopupClickListener);
-        recyclerView.setAdapter(annonceRawAdapter);
-
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(itemDecoration);
-
-        annonceRawAdapter.setListAnnonces(annonceWithPhotos);
-    }
-
-    /**
-     * Ask to delete an annonce
-     *
-     * @param annoncePhotos
-     */
-    public void askToDelete(AnnoncePhotos annoncePhotos) {
-        // Création d'un bundle dans lequel on va passer nos items
-        Bundle bundle = new Bundle();
-        bundle.putLong(ARG_NOTICE_BUNDLE_ID_ANNONCE, annoncePhotos.getAnnonceEntity().getId());
-        DialogInfos dialogInfos = new DialogInfos();
-        dialogInfos.setMessage(String.format("Supprimer l'annonce %s ?%n%nVous perdrez tous les informations relatives à cette annonce (Chats, Messages).", annoncePhotos.getAnnonceEntity().getTitre()))
-                .setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO)
-                .setIdDrawable(R.drawable.ic_delete_grey_900_24dp)
-                .setTag(DIALOG_TAG_DELETE)
-                .setBundlePar(bundle);
-        NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos, this);
+    private boolean argsAvailable(Bundle args) {
+        if (args == null) {
+            Log.e(TAG, "No arguments found");
+            return false;
+        } else if (!args.containsKey(ARG_UID_USER) || args.get(ARG_UID_USER) == null) {
+            Log.e(TAG, String.format("Argument named %s is mandatory", ARG_UID_USER));
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -158,11 +112,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
             long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
             if (idAnnonce != 0) {
-                viewModel.markToDelete(idAnnonce)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(exception -> Log.e(TAG, "markToDeleteByAnnonce.doOnError exception : " + exception.getLocalizedMessage(), exception))
-                        .doOnSuccess(result -> Log.d(TAG, "markToDeleteByAnnonce.doOnSuccess result : " + result))
-                        .subscribe();
+                viewModel.markToDelete(idAnnonce).observeOnce(atomicBoolean -> {
+
+                });
             }
         }
 
@@ -177,10 +129,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 callForFirebaseSync();
             }
         }
-    }
-
-    private void callForFirebaseSync() {
-        SyncService.launchSynchroFromFirebase(this, uidUser);
     }
 
     @Override
@@ -219,6 +167,52 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         if (requestCode == REQUEST_STORAGE_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             callForFirebaseSync();
         }
+    }
+
+    private void initEmptyLayout() {
+        setContentView(R.layout.empty_recyclerview);
+        TextView textEmpty = findViewById(R.id.text_empty);
+        FloatingActionButton fab = findViewById(R.id.fab_empty_add);
+        fab.setOnClickListener(this::callPostAnnonceCreate);
+        textEmpty.setText(R.string.empty_my_annonces_list);
+    }
+
+    private void initLayout(List<AnnoncePhotos> annonceWithPhotos) {
+        setContentView(R.layout.activity_my_annonces);
+        RecyclerView recyclerView = findViewById(R.id.recycler_annonces);
+
+        FloatingActionButton fabPostAnnonce = findViewById(R.id.fab_post_annonce);
+        fabPostAnnonce.setOnClickListener(this::callPostAnnonceCreate);
+
+        AnnonceRawAdapter annonceRawAdapter = new AnnonceRawAdapter(v -> {
+            AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
+            callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
+        }, onPopupClickListener);
+        recyclerView.setAdapter(annonceRawAdapter);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(itemDecoration);
+
+        annonceRawAdapter.setListAnnonces(annonceWithPhotos);
+    }
+
+    public void askToDelete(AnnoncePhotos annoncePhotos) {
+        Bundle bundle = new Bundle();
+        bundle.putLong(ARG_NOTICE_BUNDLE_ID_ANNONCE, annoncePhotos.getAnnonceEntity().getId());
+        DialogInfos dialogInfos = new DialogInfos();
+        dialogInfos.setMessage(String.format(getString(R.string.confirm_delete_annonce), annoncePhotos.getAnnonceEntity().getTitre()))
+                .setButtonType(NoticeDialogFragment.TYPE_BOUTON_YESNO)
+                .setIdDrawable(R.drawable.ic_delete_grey_900_24dp)
+                .setTag(DIALOG_TAG_DELETE)
+                .setBundlePar(bundle);
+        NoticeDialogFragment.sendDialog(getSupportFragmentManager(), dialogInfos, this);
+    }
+
+    private void callForFirebaseSync() {
+        SyncService.launchSynchroFromFirebase(this, uidUser);
     }
 
     private void callPostAnnonceCreate(View v) {
