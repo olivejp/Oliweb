@@ -7,13 +7,12 @@ import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.dagger.component.DaggerBusinessComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
@@ -26,10 +25,9 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.ChatRepository;
 import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
 import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.ui.activity.business.MyChatsActivityBusiness;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.Utility;
@@ -55,24 +53,23 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private FirebaseUserRepository firebaseUserRepository;
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
     private MutableLiveData<Map<String, UserEntity>> liveDataPhotoUrlUsers;
+    private MyChatsActivityBusiness business;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
         FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        business = DaggerBusinessComponent.builder().contextModule(contextModule).build().getMyChatsActivityBusiness();
 
         this.chatRepository = component.getChatRepository();
         this.messageRepository = component.getMessageRepository();
-        this.firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
-        this.firebaseUserRepository = componentFb.getFirebaseUserRepository();
         this.firebaseChatRepository = componentFb.getFirebaseChatRepository();
+
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();
     }
 
@@ -93,14 +90,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     }
 
     public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
-        CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
-        this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
-                .doOnSuccess(customLiveData::postValue)
-                .doOnComplete(() -> customLiveData.postValue(null))
-                .subscribe();
-        return customLiveData;
+        return business.findLiveFirebaseByUidAnnonce(uidAnnonce);
     }
 
     public boolean isTwoPane() {
@@ -158,25 +148,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         annonce = annonceEntity;
     }
 
-    private ChatEntity initializeChatEntity() {
-        ChatEntity chatEntity = new ChatEntity();
-        chatEntity.setStatusRemote(StatusRemote.TO_SEND);
-        chatEntity.setUidBuyer(firebaseUserUid);
-        chatEntity.setUidAnnonce(annonce.getUid());
-        chatEntity.setUidSeller(annonce.getUidUser());
-        chatEntity.setTitreAnnonce(annonce.getTitre());
-        return chatEntity;
-    }
-
     public LiveDataOnce<ChatEntity> findLiveChatByUidUserAndUidAnnonce() {
-        CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
-        chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(chatEntityCustomLiveData::postValue)
-                .doOnComplete(() -> chatEntityCustomLiveData.postValue(null))
-                .subscribe();
-        return chatEntityCustomLiveData;
+        return business.findLiveChatByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid());
     }
 
     /**
@@ -186,27 +159,13 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      */
     public LiveDataOnce<ChatEntity> findOrCreateLiveNewChat() {
         CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
-        chatRepository.findByUidUserAndUidAnnonce(firebaseUserUid, annonce.getUid())
+        business.findOrCreateLiveNewChat(firebaseUserUid, annonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatFound -> {
-                    Log.d(TAG, "findOrCreateNewChat.doOnSuccess chatFound :" + chatFound);
                     currentChat = chatFound;
                     selectedIdChat = chatFound.getIdChat();
                     chatEntityCustomLiveData.postValue(currentChat);
-                })
-                .doOnComplete(() -> {
-                    Log.d(TAG, "findOrCreateNewChat.doOnComplete");
-                    chatRepository.singleSave(initializeChatEntity())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .doOnSuccess(chatCreated -> {
-                                Log.d(TAG, "findOrCreateNewChat.doOnComplete.singleSave.doOnSuccess chatCreated : " + chatCreated);
-                                currentChat = chatCreated;
-                                selectedIdChat = chatCreated.getIdChat();
-                                chatEntityCustomLiveData.postValue(currentChat);
-                            })
-                            .subscribe();
                 })
                 .subscribe();
         return chatEntityCustomLiveData;
@@ -252,20 +211,10 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
      */
     public void getPhotoUrlsByUidUser() {
-        HashMap<String, UserEntity> map = new HashMap<>();
-        this.firebaseChatRepository.getByUidUser(firebaseUserUid)
+        this.firebaseChatRepository.getPhotoUrlsByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .flattenAsObservable(chatFirebases -> chatFirebases)
-                .map(chatFirebase -> chatFirebase.getMembers().keySet())
-                .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
-                .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
-                .distinct()
-                .map(utilisateurEntity -> {
-                    map.put(utilisateurEntity.getUid(), utilisateurEntity);
-                    return map;
-                })
-                .doOnComplete(() -> liveDataPhotoUrlUsers.postValue(map))
+                .doOnSuccess(map -> liveDataPhotoUrlUsers.postValue(map))
                 .subscribe();
     }
 }

@@ -10,6 +10,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,6 +20,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
 import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
 
@@ -28,21 +30,15 @@ public class FirebaseChatRepository {
 
     private static final String TAG = FirebaseChatRepository.class.getName();
     private DatabaseReference chatRef;
-
-    private static FirebaseChatRepository instance;
     private FirebaseMessageRepository fbMessageRepository;
+    private FirebaseUserRepository fbUserRepository;
 
     @Inject
-    public FirebaseChatRepository() {
+    public FirebaseChatRepository(FirebaseMessageRepository fbMessageRepository,
+                                  FirebaseUserRepository fbUserRepository) {
         chatRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
-    }
-
-    public static synchronized FirebaseChatRepository getInstance() {
-        if (instance == null) {
-            instance = new FirebaseChatRepository();
-            instance.fbMessageRepository = FirebaseMessageRepository.getInstance();
-        }
-        return instance;
+        this.fbMessageRepository = fbMessageRepository;
+        this.fbUserRepository = fbUserRepository;
     }
 
     private Single<AtomicBoolean> removeChatByUid(String uidChat) {
@@ -79,7 +75,7 @@ public class FirebaseChatRepository {
         );
     }
 
-    public Single<List<ChatFirebase>> getByUidUser(String uidUser) {
+    private Single<List<ChatFirebase>> getByUidUser(String uidUser) {
         return Single.create(emitter -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -170,6 +166,29 @@ public class FirebaseChatRepository {
                         emitter.onError(new RuntimeException(databaseError.getMessage()));
                     }
                 })
+        );
+    }
+
+    /**
+     * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
+     * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
+     */
+    public Single<HashMap<String, UserEntity>> getPhotoUrlsByUidUser(String uidUser) {
+        HashMap<String, UserEntity> map = new HashMap<>();
+        return Single.create(emitter -> getByUidUser(uidUser)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(chatFirebases -> chatFirebases)
+                .map(chatFirebase -> chatFirebase.getMembers().keySet())
+                .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
+                .flatMap(foreignUidUserFromChat -> fbUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
+                .distinct()
+                .map(utilisateurEntity -> {
+                    map.put(utilisateurEntity.getUid(), utilisateurEntity);
+                    return map;
+                })
+                .doOnComplete(() -> emitter.onSuccess(map))
+                .subscribe()
         );
     }
 

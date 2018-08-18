@@ -37,9 +37,10 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
         this.dao = dao;
     }
 
-    public void insert(T... entities) {
+    public AbstractRepositoryCudTask<T, U> insert(T... entities) {
         AbstractRepositoryCudTask<T, U> repositoryTask = new AbstractRepositoryCudTask<>(dao, TypeTask.INSERT);
         repositoryTask.execute(entities);
+        return repositoryTask;
     }
 
     public void insert(@Nullable AbstractRepositoryCudTask.OnRespositoryPostExecute onRespositoryPostExecute, T... entities) {

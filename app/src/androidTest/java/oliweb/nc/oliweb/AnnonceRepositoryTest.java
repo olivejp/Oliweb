@@ -21,10 +21,11 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
+import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.UtilityTest.checkCount;
-import static oliweb.nc.oliweb.UtilityTest.initAnnonce;
-import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;
+import static oliweb.nc.oliweb.utility.UtilityTest.initAnnonce;
+import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.

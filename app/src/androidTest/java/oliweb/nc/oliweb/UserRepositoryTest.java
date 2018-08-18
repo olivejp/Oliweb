@@ -21,14 +21,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
+import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.database.repository.local.UserRepository;
 import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.UtilityTest.UID_USER;
-import static oliweb.nc.oliweb.UtilityTest.checkCount;
-import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
-import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;
+import static oliweb.nc.oliweb.utility.UtilityTest.initUtilisateur;
+import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,13 +55,18 @@ public class UserRepositoryTest {
     private FirebaseUser mockUser;
     private UserRepository userRepository;
 
+
+    // TODO refaire ce test
     @Before
     public void init() {
         mockUser = mock(FirebaseUser.class);
         FirebaseUserRepository mockFirebaseUserRepository = mock(FirebaseUserRepository.class);
 
         Context appContext = InstrumentationRegistry.getTargetContext();
-        userRepository = UserRepository.getInstance(appContext);
+
+        ContextModule contextModule = new ContextModule(appContext);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        userRepository = component.getUserRepository();
 
         UtilityTest.cleanBase(appContext);
 
@@ -176,7 +184,7 @@ public class UserRepositoryTest {
     public void test_delete_afterInsert() {
         test_deleteAll();
 
-        test_singleSave(UID_USER, USER_PROFILE, USER_EMAIL);
+        test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
         checkCount(1, userRepository.count());
 
@@ -189,12 +197,12 @@ public class UserRepositoryTest {
     public void test_findSingleByUid() {
         test_deleteAll();
 
-        test_singleSave(UID_USER, USER_PROFILE, USER_EMAIL);
+        test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
         checkCount(1, userRepository.count());
 
         TestObserver<UserEntity> subscriberFindByUid = new TestObserver<>();
-        userRepository.findSingleByUid(UID_USER).subscribe(subscriberFindByUid);
+        userRepository.findSingleByUid(USER_UID).subscribe(subscriberFindByUid);
         waitTerminalEvent(subscriberFindByUid, 5);
         subscriberFindByUid.assertNoErrors();
         subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), USER_EMAIL)

@@ -82,22 +82,29 @@ public class AnnonceConverter {
     }
 
     public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
-        AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceEntity.setUid(annonceDto.getUuid());
-        annonceEntity.setTitre(annonceDto.getTitre());
-        annonceEntity.setDescription(annonceDto.getDescription());
-        annonceEntity.setDatePublication(annonceDto.getDatePublication());
-        annonceEntity.setPrix(annonceDto.getPrix());
-        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
-        annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
-        annonceEntity.setStatut(StatusRemote.SEND);
+        if (annonceDto != null) {
+            AnnonceEntity annonceEntity = new AnnonceEntity();
+            annonceEntity.setUid(annonceDto.getUuid());
+            annonceEntity.setTitre(annonceDto.getTitre());
+            annonceEntity.setDescription(annonceDto.getDescription());
+            annonceEntity.setDatePublication(annonceDto.getDatePublication());
+            annonceEntity.setPrix(annonceDto.getPrix());
+            annonceEntity.setStatut(StatusRemote.SEND);
+            annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
+            annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
+            annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+            annonceEntity.setFavorite(0);
 
-        annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
-        annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
-        annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+            if (annonceDto.getCategorie() != null) {
+                annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+            }
 
-        annonceEntity.setFavorite(0);
+            if (annonceDto.getUtilisateur() != null) {
+                annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
+            }
 
-        return annonceEntity;
+            return annonceEntity;
+        }
+        return null;
     }
 }

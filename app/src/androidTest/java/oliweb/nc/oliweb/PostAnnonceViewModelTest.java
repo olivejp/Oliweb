@@ -21,9 +21,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
-
-import static oliweb.nc.oliweb.UtilityTest.CATEGORIE_NAME;
-import static oliweb.nc.oliweb.UtilityTest.UID_USER;
+import oliweb.nc.oliweb.utility.UtilityTest;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -31,9 +29,11 @@ import static oliweb.nc.oliweb.UtilityTest.UID_USER;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
-public class PostAnnonceTest {
+public class PostAnnonceViewModelTest {
 
     private PostAnnonceActivityViewModel viewModel;
+    private static final String UID_USER = "12345";
+    private static final String CATEGORIE_NAME = "CAT_NAME";
 
     @Rule
     public ActivityTestRule<PostAnnonceActivity> postAnnonceActivity = new ActivityTestRule<>(PostAnnonceActivity.class);
