@@ -17,8 +17,8 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.ChatFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.MessageFirebaseSender;
+import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
+import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
@@ -69,8 +69,8 @@ public class DatabaseSyncListenerService extends Service {
         PhotoRepository photoRepository = component.getPhotoRepository();
         AnnonceFirebaseSender annonceFirebaseSender = componentFbService.getAnnonceFirebaseSender();
         AnnonceFirebaseDeleter annonceFirebaseDeleter = componentFbService.getAnnonceFirebaseDeleter();
-        MessageFirebaseSender messageFirebaseSender = componentFbService.getMessageFirebaseSender();
-        ChatFirebaseSender chatFirebaseSender = componentFbService.getChatFirebaseSender();
+        FirebaseMessageService firebaseMessageService = componentFbService.getFirebaseMessageService();
+        FirebaseChatService firebaseChatService = componentFbService.getFirebaseChatService();
         FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
 
         // SENDERS
@@ -87,7 +87,7 @@ public class DatabaseSyncListenerService extends Service {
                 .distinct()
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(chatFirebaseSender::sendNewChat)
+                .doOnNext(firebaseChatService::sendNewChat)
                 .subscribe());
 
         // Envoi tous les messages
@@ -97,7 +97,7 @@ public class DatabaseSyncListenerService extends Service {
                 .toObservable()
                 .flatMapIterable(list -> list)
                 .distinct()
-                .switchMap(messageFirebaseSender::sendMessage)
+                .switchMap(firebaseMessageService::sendMessage)
                 .subscribe());
 
         // Envoi tous les utilisateurs

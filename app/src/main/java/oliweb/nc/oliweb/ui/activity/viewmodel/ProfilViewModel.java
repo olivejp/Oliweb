@@ -16,12 +16,15 @@ import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 public class ProfilViewModel extends AndroidViewModel {
@@ -30,6 +33,7 @@ public class ProfilViewModel extends AndroidViewModel {
     private FirebaseChatRepository firebaseChatRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private FirebaseUserRepository firebaseUserRepository;
+    private FirebaseMessageService firebaseMessageService;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
@@ -37,9 +41,10 @@ public class ProfilViewModel extends AndroidViewModel {
                 .contextModule(new ContextModule(application))
                 .build();
 
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder()
-                .contextModule(new ContextModule(application))
-                .build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().build();
+        firebaseMessageService = componentFbServices.getFirebaseMessageService();
+
         userRepository = component.getUserRepository();
         firebaseChatRepository = componentFb.getFirebaseChatRepository();
         firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
@@ -48,7 +53,7 @@ public class ProfilViewModel extends AndroidViewModel {
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
-        return this.firebaseChatRepository.getCountMessageByUidUser(uidUser);
+        return this.firebaseMessageService.getCountMessageByUidUser(uidUser);
     }
 
     public LiveData<Long> getFirebaseUserNbChatsCount(String uidUser) {

@@ -1,6 +1,13 @@
 package oliweb.nc.oliweb.service.firebase;
 
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
+import android.support.annotation.NonNull;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -10,26 +17,26 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
 import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
+import oliweb.nc.oliweb.repository.local.MessageRepository;
 
 /**
  * Cette classe découpe toutes les étapes nécessaires pour l'envoi d'un message sur Firebase
  */
 @Singleton
-public class MessageFirebaseSender {
+public class FirebaseMessageService {
 
-    private static final String TAG = MessageFirebaseSender.class.getName();
+    private static final String TAG = FirebaseMessageService.class.getName();
 
     private FirebaseMessageRepository firebaseMessageRepository;
     private FirebaseChatRepository firebaseChatRepository;
     private MessageRepository messageRepository;
 
     @Inject
-    public MessageFirebaseSender(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
+    public FirebaseMessageService(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.firebaseMessageRepository = firebaseMessageRepository;
         this.messageRepository = messageRepository;
@@ -118,5 +125,27 @@ public class MessageFirebaseSender {
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
+    }
+
+    public LiveData<Long> getCountMessageByUidUser(String uidUser) {
+        return new LiveData<Long>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+                super.observe(owner, observer);
+                List<Long> countTotal = new ArrayList<>();
+                firebaseChatRepository.getByUidUser(uidUser)
+                        .flattenAsObservable(chatFirebases -> chatFirebases)
+                        .flatMapSingle(chatFirebase -> firebaseMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
+                        .doOnNext(countTotal::add)
+                        .doOnComplete(() -> {
+                            Long total = 0L;
+                            for (Long count : countTotal) {
+                                total = total + count;
+                            }
+                            observer.onChanged(total);
+                        })
+                        .subscribe();
+            }
+        };
     }
 }

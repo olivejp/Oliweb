@@ -6,20 +6,21 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
-import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
-import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.ChatFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.MessageFirebaseSender;
+import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
+import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
+import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 
 @Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
@@ -52,8 +53,8 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public ChatFirebaseSender chatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository) {
-        return new ChatFirebaseSender(firebaseChatRepository, chatRepository, messageRepository);
+    public FirebaseChatService chatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository, FirebaseUserRepository firebaseUserRepository) {
+        return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository);
     }
 
     @Provides
@@ -67,7 +68,7 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public MessageFirebaseSender messageFirebaseSender(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
-        return new MessageFirebaseSender(firebaseMessageRepository, firebaseChatRepository, messageRepository);
+    public FirebaseMessageService messageFirebaseSender(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
+        return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository);
     }
 }

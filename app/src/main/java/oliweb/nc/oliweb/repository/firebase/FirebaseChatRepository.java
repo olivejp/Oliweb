@@ -13,57 +13,30 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
-import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
 import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.utility.FirebaseUtility;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
 
+@Singleton
 public class FirebaseChatRepository {
 
     private static final String TAG = FirebaseChatRepository.class.getName();
     private DatabaseReference chatRef;
-    private FirebaseMessageRepository fbMessageRepository;
-    private FirebaseUserRepository fbUserRepository;
 
     @Inject
-    public FirebaseChatRepository(FirebaseMessageRepository fbMessageRepository,
-                                  FirebaseUserRepository fbUserRepository) {
+    public FirebaseChatRepository() {
         chatRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_CHATS_REF);
-        this.fbMessageRepository = fbMessageRepository;
-        this.fbUserRepository = fbUserRepository;
-    }
-
-    public LiveData<Long> getCountMessageByUidUser(String uidUser) {
-        return new LiveData<Long>() {
-            @Override
-            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
-                super.observe(owner, observer);
-                List<Long> countTotal = new ArrayList<>();
-                getByUidUser(uidUser)
-                        .flattenAsObservable(chatFirebases -> chatFirebases)
-                        .flatMapSingle(chatFirebase -> fbMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
-                        .doOnNext(countTotal::add)
-                        .doOnComplete(() -> {
-                            Long total = 0L;
-                            for (Long count : countTotal) {
-                                total = total + count;
-                            }
-                            observer.onChanged(total);
-                        })
-                        .subscribe();
-            }
-        };
     }
 
     public LiveData<Long> getCountChatByUidUser(String uidUser) {
@@ -142,30 +115,7 @@ public class FirebaseChatRepository {
                 .switchMap(chatFirebaseToSave -> this.saveChat(chatFirebaseToSave).toObservable());
     }
 
-    /**
-     * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
-     * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
-     */
-    public Single<HashMap<String, UserEntity>> getPhotoUrlsByUidUser(String uidUser) {
-        HashMap<String, UserEntity> map = new HashMap<>();
-        return Single.create(emitter -> getByUidUser(uidUser)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .flattenAsObservable(chatFirebases -> chatFirebases)
-                .map(chatFirebase -> chatFirebase.getMembers().keySet())
-                .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
-                .flatMap(foreignUidUserFromChat -> fbUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
-                .distinct()
-                .map(utilisateurEntity -> {
-                    map.put(utilisateurEntity.getUid(), utilisateurEntity);
-                    return map;
-                })
-                .doOnComplete(() -> emitter.onSuccess(map))
-                .subscribe()
-        );
-    }
-
-    private Single<List<ChatFirebase>> getByUidUser(String uidUser) {
+    public Single<List<ChatFirebase>> getByUidUser(String uidUser) {
         return Single.create(emitter -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override

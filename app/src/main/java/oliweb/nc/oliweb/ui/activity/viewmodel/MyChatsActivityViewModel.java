@@ -18,14 +18,14 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
-import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerBusinessComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.ui.activity.business.MyChatsActivityBusiness;
 import oliweb.nc.oliweb.utility.CustomLiveData;
@@ -53,22 +53,22 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private TypeRechercheMessage typeRechercheMessage;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private FirebaseChatRepository firebaseChatRepository;
     private ChatEntity currentChat;
     private String firebaseUserUid;
     private MutableLiveData<Map<String, UserEntity>> liveDataPhotoUrlUsers;
     private MyChatsActivityBusiness business;
+    private FirebaseChatService fbChatService;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
         business = DaggerBusinessComponent.builder().contextModule(contextModule).build().getMyChatsActivityBusiness();
 
         this.chatRepository = component.getChatRepository();
         this.messageRepository = component.getMessageRepository();
-        this.firebaseChatRepository = componentFb.getFirebaseChatRepository();
+        this.fbChatService = componentFbServices.getFirebaseChatService();
 
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();
     }
@@ -211,7 +211,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
      */
     public void getPhotoUrlsByUidUser() {
-        this.firebaseChatRepository.getPhotoUrlsByUidUser(firebaseUserUid)
+        this.fbChatService.getPhotoUrlsByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(map -> liveDataPhotoUrlUsers.postValue(map))

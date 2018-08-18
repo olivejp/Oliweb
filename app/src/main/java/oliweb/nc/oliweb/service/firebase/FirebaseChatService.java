@@ -2,37 +2,47 @@ package oliweb.nc.oliweb.service.firebase;
 
 import android.util.Log;
 
+import java.util.HashMap;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 
 /**
  * Cette classe décompose toutes les étapes nécessaires pour l'envoi d'un chat
  * sur Firebase.
  */
 @Singleton
-public class ChatFirebaseSender {
+public class FirebaseChatService {
 
-    private static final String TAG = ChatFirebaseSender.class.getName();
+    private static final String TAG = FirebaseChatService.class.getName();
 
     private FirebaseChatRepository firebaseChatRepository;
+    private FirebaseUserRepository firebaseUserRepository;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
 
     @Inject
-    public ChatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository) {
+    public FirebaseChatService(FirebaseChatRepository firebaseChatRepository,
+                               ChatRepository chatRepository,
+                               MessageRepository messageRepository,
+                               FirebaseUserRepository firebaseUserRepository) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
+        this.firebaseUserRepository = firebaseUserRepository;
     }
 
     /**
@@ -130,5 +140,28 @@ public class ChatFirebaseSender {
         chatRepository.singleSave(chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
+    }
+
+    /**
+     * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
+     * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
+     */
+    public Single<HashMap<String, UserEntity>> getPhotoUrlsByUidUser(String uidUser) {
+        HashMap<String, UserEntity> map = new HashMap<>();
+        return Single.create(emitter -> firebaseChatRepository.getByUidUser(uidUser)
+                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(chatFirebases -> chatFirebases)
+                .map(chatFirebase -> chatFirebase.getMembers().keySet())
+                .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
+                .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
+                .distinct()
+                .map(utilisateurEntity -> {
+                    map.put(utilisateurEntity.getUid(), utilisateurEntity);
+                    return map;
+                })
+                .doOnComplete(() -> emitter.onSuccess(map))
+                .subscribe()
+        );
     }
 }

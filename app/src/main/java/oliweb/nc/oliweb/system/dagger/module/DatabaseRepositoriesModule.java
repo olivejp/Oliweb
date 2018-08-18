@@ -15,11 +15,11 @@ import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
+import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.ChatFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.MessageFirebaseSender;
 
 @Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
 public class DatabaseRepositoriesModule {
@@ -80,12 +80,12 @@ public class DatabaseRepositoriesModule {
                                      AnnonceFirebaseSender annonceFirebaseSender,
                                      ChatRepository chatRepository,
                                      MessageRepository messageRepository,
-                                     MessageFirebaseSender messageFirebaseSender,
-                                     ChatFirebaseSender chatFirebaseSender) {
+                                     FirebaseMessageService firebaseMessageService,
+                                     FirebaseChatService firebaseChatService) {
         return new ScheduleSync(firebaseUserRepository,
                 userRepository, annonceRepository,
                 annonceFirebaseSender, chatRepository,
-                messageRepository, messageFirebaseSender,
-                chatFirebaseSender);
+                messageRepository, firebaseMessageService,
+                firebaseChatService);
     }
 }
