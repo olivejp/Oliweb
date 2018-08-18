@@ -39,11 +39,11 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
-    public abstract LiveData<UserEntity> findByUuid(String uuidUtilisateur);
+    public abstract LiveData<UserEntity> findByUid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
-    public abstract Maybe<UserEntity> findMaybeByUuid(String uuidUtilisateur);
+    public abstract Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :uuidUtilisateur")

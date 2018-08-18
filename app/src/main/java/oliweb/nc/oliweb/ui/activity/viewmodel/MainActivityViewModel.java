@@ -53,6 +53,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private UserRepository userRepository;
     private AnnonceService annonceService;
     private UserService userService;
+    private FirebaseUser mFirebaseUser;
 
     private ChatRepository chatRepository;
     private MutableLiveData<Integer> sorting;
@@ -95,7 +96,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         return sorting;
     }
 
-    public LiveData<UserEntity> getUserByUid(String uidUser) {
+    public LiveData<UserEntity> findByUid(String uidUser) {
         return userRepository.findByUid(uidUser);
     }
 
@@ -146,6 +147,11 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public void setFirebaseUser(FirebaseUser firebaseUser) {
-        liveDataFirebaseUser.postValue(firebaseUser);
+        mFirebaseUser = firebaseUser;
+        liveDataFirebaseUser.postValue(mFirebaseUser);
+    }
+
+    public FirebaseUser getFirebaseUser() {
+        return mFirebaseUser;
     }
 }

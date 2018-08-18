@@ -31,11 +31,11 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
     }
 
     public LiveData<UserEntity> findByUid(String uuidUtilisateur) {
-        return this.utilisateurDao.findByUuid(uuidUtilisateur);
+        return this.utilisateurDao.findByUid(uuidUtilisateur);
     }
 
     public Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur) {
-        return this.utilisateurDao.findMaybeByUuid(uuidUtilisateur);
+        return this.utilisateurDao.findMaybeByUid(uuidUtilisateur);
     }
 
     public Single<AtomicBoolean> existByUid(String uidUser) {
@@ -53,7 +53,6 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
     public Single<List<UserEntity>> findAllByStatus(List<String> status) {
         return utilisateurDao.findAllByStatus(status);
     }
-
 
 
 }
