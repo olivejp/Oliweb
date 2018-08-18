@@ -99,7 +99,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
 
     public Single<T> singleSave(T entity) {
         return Single.create(emitter -> findById(entity.getId())
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(emitter::onError)
                 .doOnSuccess(entityRead ->
                         singleUpdate(entity)

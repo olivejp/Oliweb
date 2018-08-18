@@ -43,7 +43,7 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
-    public abstract Maybe<UserEntity> findSingleByUuid(String uuidUtilisateur);
+    public abstract Maybe<UserEntity> findMaybeByUuid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :uuidUtilisateur")

@@ -131,8 +131,8 @@
     <string name="sell_easily">Vendez\nFacilement</string>
     <string name="skip">Passer</string>
     <string name="not_send">Non envoyé</string>
-    <string name="default_mail_message">Bonjour, votre annonce m\'intéresse...</string>
-    <string name="default_mail_chooser_title">Envoi d\'email...</string>
+    <string name="default_mail_message">Bonjour, votre annonce m\'intéresse…</string>
+    <string name="default_mail_chooser_title">Envoi d\'email…</string>
     <string name="sign_out">Se déconnecter</string>
     <string name="sign_in">Se connecter</string>
     <string name="empty_my_annonces_list">Vous n\'avez encore posté aucune annonce. Appuyez sur le + pour saisir une annonce.</string>

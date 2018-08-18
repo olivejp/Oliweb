@@ -2,10 +2,12 @@ package oliweb.nc.oliweb.system.dagger.module;
 
 import android.content.Context;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
@@ -22,7 +24,10 @@ import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
 
-@Module(includes = {ContextModule.class, DatabaseRepositoriesModule.class, FirebaseServicesModule.class})
+@Module(includes = {ContextModule.class,
+        DatabaseRepositoriesModule.class,
+        FirebaseServicesModule.class,
+        SchedulerModule.class})
 public class ServicesModule {
 
     @Provides
@@ -43,8 +48,11 @@ public class ServicesModule {
 
     @Provides
     @Singleton
-    public UserService userService(UserRepository userRepository, FirebaseUserRepository firebaseUserRepository) {
-        return new UserService(userRepository, firebaseUserRepository);
+    public UserService userService(UserRepository userRepository,
+                                   FirebaseUserRepository firebaseUserRepository,
+                                   @Named("processScheduler") Scheduler processScheduler,
+                                   @Named("androidScheduler") Scheduler androidScheduler) {
+        return new UserService(userRepository, firebaseUserRepository, processScheduler, androidScheduler);
     }
 
     @Provides

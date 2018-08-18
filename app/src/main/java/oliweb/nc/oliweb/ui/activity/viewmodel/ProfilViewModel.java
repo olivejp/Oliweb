@@ -14,7 +14,6 @@ import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -32,7 +31,6 @@ public class ProfilViewModel extends AndroidViewModel {
     private UserRepository userRepository;
     private FirebaseChatRepository firebaseChatRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private FirebaseUserRepository firebaseUserRepository;
     private FirebaseMessageService firebaseMessageService;
 
     public ProfilViewModel(@NonNull Application application) {
@@ -48,8 +46,6 @@ public class ProfilViewModel extends AndroidViewModel {
         userRepository = component.getUserRepository();
         firebaseChatRepository = componentFb.getFirebaseChatRepository();
         firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
-        firebaseUserRepository = componentFb.getFirebaseUserRepository();
-
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
@@ -62,10 +58,6 @@ public class ProfilViewModel extends AndroidViewModel {
 
     public LiveData<Long> getFirebaseUserNbAnnoncesCount(String uidUser) {
         return this.firebaseAnnonceRepository.getCountAnnonceByUidUser(uidUser);
-    }
-
-    public LiveData<UserEntity> getFirebaseUser(String uidUser) {
-        return this.firebaseUserRepository.getLiveUtilisateurByUid(uidUser);
     }
 
     public LiveData<UserEntity> getUtilisateurByUid(String uidUser) {

@@ -76,7 +76,6 @@ public class UtilityTest {
     }
 
     public static void cleanBase(Context context) {
-
         ContextModule contextModule = new ContextModule(context);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
@@ -87,23 +86,14 @@ public class UtilityTest {
         UserRepository userRepository = component.getUserRepository();
         PhotoRepository photoRepository = component.getPhotoRepository();
 
-        TestObserver testAnnonce = annonceRepository.deleteAll().test();
-        TestObserver testCategorie = categorieRepository.deleteAll().test();
-        TestObserver testChat = chatRepository.deleteAll().test();
-        TestObserver testUtilisateur = userRepository.deleteAll().test();
-        TestObserver testMessage = messageRepository.deleteAll().test();
-        TestObserver testPhoto = photoRepository.deleteAll().test();
+        annonceRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
+        categorieRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
+        chatRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
+        userRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
+        messageRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
+        photoRepository.deleteAll().subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).subscribe();
 
-        waitTerminalEvent(testAnnonce, 5);
-        waitTerminalEvent(testCategorie, 5);
-        waitTerminalEvent(testChat, 5);
-        waitTerminalEvent(testUtilisateur, 5);
-        waitTerminalEvent(testMessage, 5);
-        waitTerminalEvent(testPhoto, 5);
-
-        // Remplissage par défaut
         initCategories(categorieRepository);
-        initUsers(userRepository);
     }
 
     private static void initCategories(CategorieRepository categorieRepository) {

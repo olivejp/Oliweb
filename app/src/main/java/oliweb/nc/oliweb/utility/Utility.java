@@ -17,6 +17,7 @@ import com.firebase.ui.auth.AuthUI;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -64,9 +65,15 @@ public class Utility {
     }
 
     public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
+        List<String> listPermissionsFacebook = new ArrayList<>(
+                Arrays.asList("public_profile",
+                        "email",
+                        "user_friends",
+                        "user_hometown",
+                        "user_likes"));
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
         listProviders.add(new AuthUI.IdpConfig.GoogleBuilder().build());
-        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().setPermissions(listPermissionsFacebook).build());
         listProviders.add(new AuthUI.IdpConfig.EmailBuilder().build());
 
         activityCaller.startActivityForResult(

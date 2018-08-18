@@ -95,7 +95,7 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        setTitle(getString(R.string.looking_for) + query);
+        setTitle(String.format("%s %s", getString(R.string.looking_for), query));
 
         // Recherche du mode display actuellement dans les préférences.
         annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),

@@ -34,8 +34,8 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
         return this.utilisateurDao.findByUuid(uuidUtilisateur);
     }
 
-    public Maybe<UserEntity> findSingleByUid(String uuidUtilisateur) {
-        return this.utilisateurDao.findSingleByUuid(uuidUtilisateur);
+    public Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur) {
+        return this.utilisateurDao.findMaybeByUuid(uuidUtilisateur);
     }
 
     public Single<AtomicBoolean> existByUid(String uidUser) {
