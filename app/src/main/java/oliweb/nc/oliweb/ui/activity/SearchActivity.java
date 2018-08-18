@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,8 +25,6 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -98,7 +95,7 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        setTitle("Recherche " + query);
+        setTitle(getString(R.string.looking_for) + query);
 
         // Recherche du mode display actuellement dans les préférences.
         annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
@@ -258,7 +255,7 @@ public class SearchActivity extends AppCompatActivity {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     Intent sendIntent = new Intent();
-                    String msg = "Hey, regarde cette petite annonce : " + shortLink;
+                    String msg = getString(R.string.default_text_share_link) + shortLink;
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
                     sendIntent.setType("text/plain");
@@ -267,11 +264,11 @@ public class SearchActivity extends AppCompatActivity {
 
                 @Override
                 public void getLinkError() {
-                    Snackbar.make(recyclerView, "Une erreur n'a pas permis le partage", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(recyclerView, R.string.dynamic_link_failed, Snackbar.LENGTH_LONG).show();
                 }
             });
         } else {
-            Snackbar.make(recyclerView, "Un compte est requis", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(recyclerView, R.string.sign_in_required, Snackbar.LENGTH_LONG).show();
         }
     };
 
@@ -283,27 +280,26 @@ public class SearchActivity extends AppCompatActivity {
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             searchActivityViewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
-                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                    .doOnError(e -> Log.e(TAG, e.getMessage(), e))
-                    .doOnSuccess(codeResult -> {
-                        switch (codeResult) {
-                            case ONE_OF_YOURS:
-                                Toast.makeText(this, "Action impossible\nCette annonce vous appartient", Toast.LENGTH_LONG).show();
-                                break;
-                            case ADD_SUCCESSFUL:
-                                Snackbar.make(recyclerView, "Annonce bien ajoutée aux favoris", Snackbar.LENGTH_LONG).show();
-                                break;
-                            case REMOVE_SUCCESSFUL:
-                                Snackbar.make(recyclerView, "Annonce retirée des favoris", Snackbar.LENGTH_LONG).show();
-                                break;
-                            case REMOVE_FAILED:
-                                Toast.makeText(this, "Suppression des favoris a échouée", Toast.LENGTH_LONG).show();
-                                break;
-                            default:
-                                break;
+                    .observeOnce(addRemoveFromFavorite -> {
+                        if (addRemoveFromFavorite != null) {
+                            switch (addRemoveFromFavorite) {
+                                case ONE_OF_YOURS:
+                                    Toast.makeText(this, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                                    break;
+                                case ADD_SUCCESSFUL:
+                                    Snackbar.make(recyclerView, R.string.annonce_correctly_recorded_as_favorite, Snackbar.LENGTH_LONG).show();
+                                    break;
+                                case REMOVE_SUCCESSFUL:
+                                    Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                                    break;
+                                case REMOVE_FAILED:
+                                    Toast.makeText(this, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
-                    })
-                    .subscribe();
+                    });
         }
     };
 }

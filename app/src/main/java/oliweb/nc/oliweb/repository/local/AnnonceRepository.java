@@ -19,7 +19,6 @@ import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 
 /**
  * Created by 2761oli on 29/01/2018.
@@ -31,66 +30,30 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
-    private FirebasePhotoStorage fbPhotoStorage;
 
     private AnnonceDao annonceDao;
 
     @Inject
-    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, FirebasePhotoStorage fbPhotoStorage) {
+    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository) {
         super(context);
         this.dao = this.db.getAnnonceDao();
         this.annonceDao = (AnnonceDao) this.dao;
         this.photoRepository = photoRepository;
         this.chatRepository = chatRepository;
-        this.fbPhotoStorage = fbPhotoStorage;
     }
 
     public LiveData<AnnonceEntity> findLiveById(long idAnnonce) {
-        Log.d(TAG, "Starting findLiveById " + idAnnonce);
         return this.annonceDao.findLiveById(idAnnonce);
     }
 
     public LiveData<AnnonceEntity> findByUid(String uidAnnonce) {
-        Log.d(TAG, "Starting findByUid " + uidAnnonce);
         return this.annonceDao.findByUid(uidAnnonce);
     }
 
     public Observable<AnnonceEntity> findObservableByUid(String uidAnnonce) {
-        Log.d(TAG, "Starting findObservableByUid " + uidAnnonce);
         return this.annonceDao.findSingleByUid(uidAnnonce).toObservable();
     }
 
-    /**
-     * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer ou celle déjà existante.
-     * renverra onError dans le cas d'une erreur.
-     *
-     * @param context
-     * @param uidUser       qui veut rajouter cette annonce dans ses favoris
-     * @param annoncePhotos qui sera sauvé avec ses photos
-     * @return
-     */
-    public Single<AnnonceEntity> saveToFavorite(Context context, String uidUser, AnnoncePhotos annoncePhotos) {
-        return Single.create(emitter ->
-                getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(emitter::onSuccess)
-                        .doOnComplete(() -> {
-                            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
-                            annonceEntity.setFavorite(1);
-                            annonceEntity.setUidUserFavorite(uidUser);
-                            singleSave(annonceEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceEntity1 -> {
-                                        this.fbPhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos());
-                                        emitter.onSuccess(annonceEntity1);
-                                    })
-                                    .subscribe();
-                        })
-                        .subscribe()
-        );
-    }
 
     public Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status) {
         return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
@@ -109,7 +72,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Single<Integer> countByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
-        Log.d(TAG, "Starting countByUidUserAndUidAnnonce uidUtilisateur : " + uidUtilisateur + " uidAnnonce : " + uidAnnonce);
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
@@ -130,12 +92,11 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @param uidAnnonce
      * @return
      */
-    private Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
+    public Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
         return this.annonceDao.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
     public Single<AtomicBoolean> markAsToDelete(Long idAnnonce) {
-        Log.d(TAG, "Starting markToDeleteByAnnonce idAnnonce : " + idAnnonce);
         return Single.create(emitter ->
                 findById(idAnnonce)
                         .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
@@ -155,7 +116,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsSending annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.SENDING);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -164,7 +124,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsSend annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.SEND);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -173,7 +132,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     private Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.TO_DELETE);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -182,7 +140,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Observable<AnnonceEntity> markAsFailedToSend(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsFailedToSend annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -191,7 +148,6 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     }
 
     public Observable<AnnonceEntity> markAsFailedToDelete(AnnonceEntity annonceEntity) {
-        Log.d(TAG, "markAsFailedToDelete annonceEntity : " + annonceEntity);
         annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
         return this.singleSave(annonceEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

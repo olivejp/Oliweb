@@ -11,9 +11,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -23,6 +23,7 @@ import oliweb.nc.oliweb.utility.FirebaseUtility;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 
+@Singleton
 public class FirebaseMessageRepository {
 
     private static final String TAG = FirebaseMessageRepository.class.getName();
@@ -98,7 +99,6 @@ public class FirebaseMessageRepository {
                 );
     }
 
-
     /**
      * Envoi d'un message sur la Firebase Database
      *
@@ -110,16 +110,6 @@ public class FirebaseMessageRepository {
         return Single.create(emitter ->
                 msgRef.child(messageFirebase.getUidChat()).child(messageFirebase.getUidMessage()).setValue(messageFirebase)
                         .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
-                        .addOnFailureListener(emitter::onError)
-        );
-    }
-
-    public Single<AtomicBoolean> deleteMessageByUidChat(String uidChat) {
-        Log.d(TAG, "Starting deleteMessageByUidChat uidChat : " + uidChat);
-        return Single.create(emitter ->
-                msgRef.child(uidChat)
-                        .removeValue()
-                        .addOnSuccessListener(aVoid -> emitter.onSuccess(new AtomicBoolean(true)))
                         .addOnFailureListener(emitter::onError)
         );
     }

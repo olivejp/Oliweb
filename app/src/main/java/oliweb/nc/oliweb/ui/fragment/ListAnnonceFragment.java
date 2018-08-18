@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -143,7 +144,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();
                     Intent sendIntent = new Intent();
-                    String msg = "Hey, regarde cette petite annonce : " + shortLink;
+                    String msg = getString(R.string.default_text_share_link) + shortLink;
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
                     sendIntent.setType("text/plain");
@@ -177,26 +178,29 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (uidUser.equals(annoncePhotos.getAnnonceEntity().getUidUser())) {
-                Toast.makeText(appCompatActivity, R.string.IMPOSSIBLE_YOU_OWN_THIS_AD, Toast.LENGTH_LONG).show();
-            } else {
-                if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
-                    // Suppression des favoris
-                    viewModel.removeFromFavoriteLive(uidUser, annoncePhotos)
-                            .observeOnce(atomicBoolean -> {
-                                if (atomicBoolean != null && atomicBoolean.get()) {
-                                    Snackbar.make(coordinatorLayout, R.string.AD_REMOVE_FROM_FAVORITE, Snackbar.LENGTH_LONG).show();
-                                }
-                            });
-                } else {
-                    viewModel.saveToFavorite(uidUser, annoncePhotos).observeOnce(annonceEntity ->
-                            Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                    .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                    .show()
-                    );
-                }
-            }
+            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+                    .observeOnce(addRemoveFromFavorite -> {
+                        if (addRemoveFromFavorite != null) {
+                            switch (addRemoveFromFavorite) {
+                                case ONE_OF_YOURS:
+                                    Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                                    break;
+                                case ADD_SUCCESSFUL:
+                                    Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                            .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                            .show();
+                                    break;
+                                case REMOVE_SUCCESSFUL:
+                                    Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                                    break;
+                                case REMOVE_FAILED:
+                                    Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
         }
     };
 

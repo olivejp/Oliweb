@@ -6,6 +6,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
@@ -14,12 +15,10 @@ import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 
 @Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
 public class DatabaseRepositoriesModule {
@@ -32,8 +31,8 @@ public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public AnnonceRepository annonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, FirebasePhotoStorage firebasePhotoStorage) {
-        return new AnnonceRepository(context, photoRepository, chatRepository, firebasePhotoStorage);
+    public AnnonceRepository annonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository) {
+        return new AnnonceRepository(context, photoRepository, chatRepository);
     }
 
     @Provides

@@ -138,5 +138,12 @@
     <string name="empty_my_annonces_list">Vous n\'avez encore posté aucune annonce. Appuyez sur le + pour saisir une annonce.</string>
     <string name="confirm_delete_annonce">Supprimer l\'annonce %s ?%n%nVous perdrez tous les informations relatives à cette annonce (Chats, Messages).</string>
     <string name="empty_list">Vous n\'avez encore posté aucune annonce.\n Appuyez sur le + pour saisir une annonce.</string>
+    <string name="action_impossible_own_this_annonce">Action impossible Cette annonce vous appartient</string>
+    <string name="annonce_correctly_recorded_as_favorite">Annonce bien ajoutée aux favoris</string>
+    <string name="annonce_remove_from_favorite">Annonce retirée des favoris</string>
+    <string name="remove_from_favorite_failed">Suppression des favoris a échouée</string>
+    <string name="dynamic_link_failed">Une erreur n\'a pas permis le partage</string>
+    <string name="looking_for">Recherche</string>
+    <string name="default_text_share_link">Hey, regarde cette petite annonce :</string>
 
 </resources>

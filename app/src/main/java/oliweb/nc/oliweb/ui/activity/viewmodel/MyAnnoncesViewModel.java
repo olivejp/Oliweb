@@ -33,7 +33,6 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
-    private CustomLiveData<AtomicBoolean> shouldAskQuestion;
     private FirebaseRetrieverService fbRetrieverService;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
@@ -51,13 +50,10 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     }
 
     public LiveDataOnce<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
-        if (shouldAskQuestion == null) {
-            shouldAskQuestion = new CustomLiveData<>();
-        }
         if (uidUtilisateur != null) {
-            fbRetrieverService.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+            return fbRetrieverService.checkFirebaseRepository(uidUtilisateur);
         }
-        return shouldAskQuestion;
+        return observer -> observer.onChanged(new AtomicBoolean(false));
     }
 
     public LiveDataOnce<AtomicBoolean> markToDelete(long idAnnonce) {

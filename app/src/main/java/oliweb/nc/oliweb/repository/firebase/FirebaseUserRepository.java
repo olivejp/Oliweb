@@ -97,7 +97,6 @@ public class FirebaseUserRepository {
         };
     }
 
-
     public Single<String> getToken() {
         Log.d(TAG, "Starting getToken");
         return Single.create(emitter ->

@@ -78,6 +78,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
     }
 
     public Maybe<T> singleInsert(T entity) {
+        Log.d(TAG, "singleUpdate:" + entity.toString());
         U id = dao.insert(entity);
         if (id != null) {
             return findById(id);
@@ -87,6 +88,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
     }
 
     public Maybe<T> singleUpdate(T entity) {
+        Log.d(TAG, "singleUpdate:" + entity.toString());
         int updatedCount = dao.update(entity);
         if (updatedCount == 1) {
             return findById(entity.getId());
@@ -121,6 +123,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
     }
 
     public Single<Integer> deleteAll() {
+        Log.d(TAG, "deleteAll");
         return Single.create(e -> dao.getAll()
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                 .doOnSuccess(entity -> {
