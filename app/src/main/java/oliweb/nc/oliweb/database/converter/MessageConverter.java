@@ -5,7 +5,7 @@ import java.util.List;
 
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.firebase.dto.MessageFirebase;
+import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 
 public class MessageConverter {
 

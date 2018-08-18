@@ -3,7 +3,7 @@ package oliweb.nc.oliweb.database.converter;
 import com.google.firebase.auth.FirebaseUser;
 
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.firebase.dto.UtilisateurFirebase;
+import oliweb.nc.oliweb.dto.firebase.UtilisateurFirebase;
 import oliweb.nc.oliweb.utility.Utility;
 
 

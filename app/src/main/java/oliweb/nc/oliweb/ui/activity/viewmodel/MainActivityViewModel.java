@@ -16,21 +16,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.database.repository.local.UserRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -46,6 +49,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private UserRepository userRepository;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
+    private FirebaseRetrieverService firebaseRetrieverService;
     private AnnonceRepository annonceRepository;
     private ChatRepository chatRepository;
     private PhotoRepository photoRepository;
@@ -59,6 +63,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
         FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
 
         userRepository = component.getUserRepository();
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
@@ -66,6 +71,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         photoRepository = component.getPhotoRepository();
         chatRepository = component.getChatRepository();
         firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
+        firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
     }
 
     public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
@@ -79,7 +85,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         }
         shouldAskQuestion.setValue(new AtomicBoolean(false));
         if (uidUser != null) {
-            firebaseAnnonceRespository.checkFirebaseRepository(uidUser, shouldAskQuestion);
+            firebaseRetrieverService.checkFirebaseRepository(uidUser, shouldAskQuestion);
         }
 
         return shouldAskQuestion;

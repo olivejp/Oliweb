@@ -9,12 +9,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.UtilityTest;
 
 import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;

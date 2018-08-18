@@ -18,15 +18,15 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import io.reactivex.Maybe;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.CategorieDto;
+import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.elasticsearch.CategorieDto;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 

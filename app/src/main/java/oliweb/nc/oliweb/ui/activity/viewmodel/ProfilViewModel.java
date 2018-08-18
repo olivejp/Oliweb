@@ -10,19 +10,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.database.repository.local.UserRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseChatRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 public class ProfilViewModel extends AndroidViewModel {
 

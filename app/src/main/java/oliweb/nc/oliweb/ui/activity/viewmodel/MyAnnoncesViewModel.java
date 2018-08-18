@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
@@ -34,16 +34,16 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
     private CustomLiveData<AtomicBoolean> shouldAskQuestion;
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseRetrieverService fbRetrieverService;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         annonceRepository = component.getAnnonceRepository();
-        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
+        fbRetrieverService = componentFbServices.getFirebaseRetrieverService();
     }
 
     public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {
@@ -55,7 +55,7 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
             shouldAskQuestion = new CustomLiveData<>();
         }
         if (uidUtilisateur != null) {
-            firebaseAnnonceRepository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+            fbRetrieverService.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
         }
         return shouldAskQuestion;
     }

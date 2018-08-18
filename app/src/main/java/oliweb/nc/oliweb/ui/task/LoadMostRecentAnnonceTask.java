@@ -13,7 +13,7 @@ import java.util.List;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
 
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;

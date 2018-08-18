@@ -23,9 +23,9 @@ import java.util.Date;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;

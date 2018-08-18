@@ -21,12 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.database.repository.local.UserRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.UtilityTest;
 
 import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;

@@ -13,14 +13,14 @@ import org.junit.runner.RunWith;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.CategorieRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.CategorieRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.UtilityTest;
 
 import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;

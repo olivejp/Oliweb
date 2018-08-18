@@ -41,11 +41,11 @@ import java.util.HashMap;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.SyncService;
-import oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService;
-import oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
@@ -573,11 +573,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void stopServicesIfRunning() {
-        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.DatabaseSyncListenerService")) {
+        if (isServiceRunning("oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService")) {
             stopService(intentLocalDbService);
         }
 
-        if (isServiceRunning("oliweb.nc.oliweb.service.sync.listener.FirebaseSyncListenerService")) {
+        if (isServiceRunning("oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService")) {
             stopService(intentFirebaseDbService);
         }
     }

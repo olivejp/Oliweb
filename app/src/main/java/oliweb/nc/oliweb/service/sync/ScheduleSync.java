@@ -7,14 +7,14 @@ import javax.inject.Singleton;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
-import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.database.repository.local.UserRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
-import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
-import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.MessageRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
+import oliweb.nc.oliweb.service.firebase.ChatFirebaseSender;
+import oliweb.nc.oliweb.service.firebase.MessageFirebaseSender;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**

@@ -10,9 +10,9 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.CategorieDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurDto;
+import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.elasticsearch.CategorieDto;
+import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 
 
 public class AnnonceConverter {

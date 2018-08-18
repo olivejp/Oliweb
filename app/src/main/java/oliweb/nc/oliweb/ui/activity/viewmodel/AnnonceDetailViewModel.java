@@ -6,11 +6,11 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
