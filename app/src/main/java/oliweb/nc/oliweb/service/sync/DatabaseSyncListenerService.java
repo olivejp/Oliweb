@@ -59,8 +59,8 @@ public class DatabaseSyncListenerService extends Service {
 
         ContextModule contextModule = new ContextModule(this);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
         FirebaseServicesComponent componentFbService = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
+        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
 
         ChatRepository chatRepository = component.getChatRepository();
         MessageRepository messageRepository = component.getMessageRepository();
@@ -72,6 +72,9 @@ public class DatabaseSyncListenerService extends Service {
         FirebaseMessageService firebaseMessageService = componentFbService.getFirebaseMessageService();
         FirebaseChatService firebaseChatService = componentFbService.getFirebaseChatService();
         FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
+
+        // Suppression des listeners
+        disposables.clear();
 
         // SENDERS
         // Envoi toutes les annonces
