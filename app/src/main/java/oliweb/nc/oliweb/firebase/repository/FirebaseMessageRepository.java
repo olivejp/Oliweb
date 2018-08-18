@@ -27,18 +27,25 @@ public class FirebaseMessageRepository {
     private static final String TAG = FirebaseMessageRepository.class.getName();
     private DatabaseReference msgRef;
 
-    private static FirebaseMessageRepository instance;
-
     @Inject
     public FirebaseMessageRepository() {
         msgRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
     }
 
-    public static  synchronized FirebaseMessageRepository getInstance() {
-        if (instance == null) {
-            instance = new FirebaseMessageRepository();
-        }
-        return instance;
+    public Single<Long> getCountMessageByUidUserAndUidChat(String uidUser, String uidChat) {
+        return Single.create(emitter ->
+                msgRef.child(uidChat).orderByChild("uidAuthor").equalTo(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        emitter.onSuccess(dataSnapshot.getChildrenCount());
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        emitter.onSuccess(0L);
+                    }
+                })
+        );
     }
 
     public Single<List<MessageFirebase>> getAllMessagesByUidChat(String uidChat) {
@@ -48,14 +55,12 @@ public class FirebaseMessageRepository {
                     ArrayList<MessageFirebase> listMessages = new ArrayList<>();
 
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         try {
-                            if (dataSnapshot != null) {
-                                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                    MessageFirebase messageFirebase = data.getValue(MessageFirebase.class);
-                                    if (messageFirebase != null) {
-                                        listMessages.add(messageFirebase);
-                                    }
+                            for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                MessageFirebase messageFirebase = data.getValue(MessageFirebase.class);
+                                if (messageFirebase != null) {
+                                    listMessages.add(messageFirebase);
                                 }
                             }
                             e.onSuccess(listMessages);
@@ -65,7 +70,7 @@ public class FirebaseMessageRepository {
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
                         e.onError(new RuntimeException(databaseError.getMessage()));
                     }
                 }));

@@ -91,7 +91,6 @@ public class MyChatsActivityViewModelTest {
         annonceRepository = component.getAnnonceRepository();
 
         viewModel = new MyChatsActivityViewModel(myChatsActivity.getActivity().getApplication());
-        viewModel.setFirebaseAnnonceRepository(mockFirebaseAnnonceRepository);
         observer = mock(Observer.class);
 
         mockLifecycle = mock(LifecycleOwner.class);

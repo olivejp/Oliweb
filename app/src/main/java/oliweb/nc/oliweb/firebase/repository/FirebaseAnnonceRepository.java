@@ -1,6 +1,9 @@
 package oliweb.nc.oliweb.firebase.repository;
 
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -56,6 +59,27 @@ public class FirebaseAnnonceRepository {
     private Query queryByUidUser(String uidUser) {
         Log.d(TAG, "queryByUidUser called with uidUser = " + uidUser);
         return annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser);
+    }
+
+    public LiveData<Long> getCountAnnonceByUidUser(String uidUser) {
+        return new LiveData<Long>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+                super.observe(owner, observer);
+                annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        observer.onChanged(count);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        observer.onChanged(0L);
+                    }
+                });
+            }
+        };
     }
 
     /**

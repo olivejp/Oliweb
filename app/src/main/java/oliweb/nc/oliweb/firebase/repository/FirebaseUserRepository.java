@@ -1,5 +1,8 @@
 package oliweb.nc.oliweb.firebase.repository;
 
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -71,6 +74,29 @@ public class FirebaseUserRepository {
                 })
         );
     }
+
+    public LiveData<UserEntity> getLiveUtilisateurByUid(String uidUser) {
+        return new LiveData<UserEntity>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<UserEntity> observer) {
+                super.observe(owner, observer);
+                userRef.child(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        UserEntity user = dataSnapshot.getValue(UserEntity.class);
+                        observer.onChanged(user);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e(TAG, databaseError.getMessage());
+                        observer.onChanged(null);
+                    }
+                });
+            }
+        };
+    }
+
 
     public Single<String> getToken() {
         Log.d(TAG, "Starting getToken");

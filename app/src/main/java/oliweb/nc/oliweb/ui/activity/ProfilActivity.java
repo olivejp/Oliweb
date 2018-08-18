@@ -4,6 +4,7 @@ package oliweb.nc.oliweb.ui.activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -23,11 +24,13 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
 import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NEVER;
 
+@SuppressWarnings("squid:MaximumInheritanceDepth")
 public class ProfilActivity extends AppCompatActivity {
 
     private static final String TAG = ProfilActivity.class.getName();
@@ -35,14 +38,10 @@ public class ProfilActivity extends AppCompatActivity {
     public static final String PROFIL_ACTIVITY_UID_USER = "uidUser";
     public static final String UPDATE = "availableUpdate";
 
-    private String uidUser;
     private boolean availableUpdate;
 
     @BindView(R.id.profil_photo)
     ImageView imageProfil;
-
-    @BindView(R.id.profil_image_background)
-    ImageView imageBackground;
 
     @BindView(R.id.profil_name)
     TextView textName;
@@ -81,33 +80,39 @@ public class ProfilActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ArgumentsChecker argumentsChecker = new ArgumentsChecker();
+        argumentsChecker.setArguments(getIntent().getExtras())
+                .isMandatory(PROFIL_ACTIVITY_UID_USER)
+                .isMandatory(UPDATE)
+                .setOnFailureListener(e -> finish())
+                .setOnSuccessListener(this::initViews)
+                .check();
+    }
+
+    private void initViews(@NonNull Bundle args) {
+        String uidUser = args.getString(PROFIL_ACTIVITY_UID_USER);
+        availableUpdate = args.getBoolean(UPDATE);
+
         setContentView(R.layout.activity_profil);
         ButterKnife.bind(this);
 
         viewModel = ViewModelProviders.of(this).get(ProfilViewModel.class);
 
-        Bundle args = getIntent().getExtras();
-        if (args != null) {
-            uidUser = args.getString(PROFIL_ACTIVITY_UID_USER);
-            availableUpdate = args.getBoolean(UPDATE);
-            if (uidUser != null) {
-                viewModel.getUtilisateurByUid(uidUser).observe(this, userEntity -> {
-                    if (userEntity != null) {
-                        this.userEntity = userEntity;
-                        textName.setText(this.userEntity.getProfile());
-                        textEmail.setText(this.userEntity.getEmail());
-                        textTelephone.setText(this.userEntity.getTelephone());
-                        GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
-                    }
-                });
-
-                viewModel.getFirebaseUserNbAnnoncesCount(uidUser).observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
-
-                viewModel.getFirebaseUserNbChatsCount(uidUser).observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
-
-                viewModel.getFirebaseUserNbMessagesCount(uidUser).observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
+        viewModel.getUtilisateurByUid(uidUser).observe(this, userFound -> {
+            if (userFound != null) {
+                this.userEntity = userFound;
+                textName.setText(this.userEntity.getProfile());
+                textEmail.setText(this.userEntity.getEmail());
+                textTelephone.setText(this.userEntity.getTelephone());
+                GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
             }
-        }
+        });
+
+        viewModel.getFirebaseUserNbAnnoncesCount(uidUser).observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
+
+        viewModel.getFirebaseUserNbChatsCount(uidUser).observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
+
+        viewModel.getFirebaseUserNbMessagesCount(uidUser).observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
 
         mainConstraint.setTop(Utility.getStatusBarHeight(this));
 

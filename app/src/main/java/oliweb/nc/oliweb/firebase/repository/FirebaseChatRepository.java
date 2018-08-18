@@ -1,5 +1,8 @@
 package oliweb.nc.oliweb.firebase.repository;
 
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -41,6 +44,28 @@ public class FirebaseChatRepository {
         this.fbUserRepository = fbUserRepository;
     }
 
+    public LiveData<Long> getCountMessageByUidUser(String uidUser) {
+        return new LiveData<Long>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+                super.observe(owner, observer);
+                List<Long> countTotal = new ArrayList<>();
+                getByUidUser(uidUser)
+                        .flattenAsObservable(chatFirebases -> chatFirebases)
+                        .flatMapSingle(chatFirebase -> fbMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
+                        .doOnNext(countTotal::add)
+                        .doOnComplete(() -> {
+                            Long total = 0L;
+                            for (Long count : countTotal) {
+                                total = total + count;
+                            }
+                            observer.onChanged(total);
+                        })
+                        .subscribe();
+            }
+        };
+    }
+
     private Single<AtomicBoolean> removeChatByUid(String uidChat) {
         Log.d(TAG, "Starting removeChatByUid uidChat : " + uidChat);
         return Single.create(emitter ->
@@ -75,7 +100,7 @@ public class FirebaseChatRepository {
         );
     }
 
-    private Single<List<ChatFirebase>> getByUidUser(String uidUser) {
+    public Single<List<ChatFirebase>> getByUidUser(String uidUser) {
         return Single.create(emitter -> chatRef.orderByChild("members/" + uidUser).equalTo(true)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -93,6 +118,27 @@ public class FirebaseChatRepository {
                         emitter.onError(new RuntimeException(databaseError.getMessage()));
                     }
                 }));
+    }
+
+    public LiveData<Long> getCountChatByUidUser(String uidUser) {
+        return new LiveData<Long>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+                super.observe(owner, observer);
+                chatRef.orderByChild("members/" + uidUser).equalTo(true).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        observer.onChanged(count);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        observer.onChanged(0L);
+                    }
+                });
+            }
+        };
     }
 
     /**
