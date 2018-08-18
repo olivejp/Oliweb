@@ -43,7 +43,7 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")
-    public abstract Maybe<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
+    public abstract Single<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")

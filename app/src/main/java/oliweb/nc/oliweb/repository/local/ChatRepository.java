@@ -58,8 +58,8 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
-    public Observable<ChatEntity> findByStatusIn(List<String> status) {
-        return this.chatDao.getAllChatByStatus(status).flattenAsObservable(chatEntities -> chatEntities);
+    public Single<List<ChatEntity>> findAllByStatusIn(List<String> status) {
+        return this.chatDao.getAllChatByStatus(status);
     }
 
     public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {

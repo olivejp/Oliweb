@@ -11,9 +11,6 @@ import io.reactivex.schedulers.Schedulers;
 @Module
 public class SchedulerModule {
 
-    public SchedulerModule() {
-    }
-
     @Provides
     @Named("processScheduler")
     public Scheduler getProcessScheduler() {

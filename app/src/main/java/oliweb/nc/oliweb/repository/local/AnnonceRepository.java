@@ -59,8 +59,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
     }
 
-    public Observable<AnnonceEntity> getAllAnnonceByStatus(List<String> status) {
-        return this.annonceDao.getAllAnnonceByStatus(status).flattenAsObservable(annonceEntities -> annonceEntities);
+    public Single<List<AnnonceEntity>> findAllByStatus(List<String> status) {
+        return this.annonceDao.getAllAnnonceByStatus(status);
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {

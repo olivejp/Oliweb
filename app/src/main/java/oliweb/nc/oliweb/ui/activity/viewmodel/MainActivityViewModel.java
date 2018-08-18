@@ -17,10 +17,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.UserService;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
@@ -48,6 +50,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private FirebaseRetrieverService firebaseRetrieverService;
     private AnnonceRepository annonceRepository;
+    private UserRepository userRepository;
     private AnnonceService annonceService;
     private UserService userService;
 
@@ -66,6 +69,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         annonceRepository = component.getAnnonceRepository();
+        userRepository = component.getUserRepository();
         chatRepository = component.getChatRepository();
         firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
         firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
@@ -89,6 +93,10 @@ public class MainActivityViewModel extends AndroidViewModel {
             sorting = new MutableLiveData<>();
         }
         return sorting;
+    }
+
+    public LiveData<UserEntity> getUserByUid(String uidUser) {
+        return userRepository.findByUid(uidUser);
     }
 
     public void updateSort(int sort) {

@@ -50,4 +50,10 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
         return utilisateurDao.getAllUtilisateursByStatus(status);
     }
 
+    public Single<List<UserEntity>> findAllByStatus(List<String> status) {
+        return utilisateurDao.findAllByStatus(status);
+    }
+
+
+
 }

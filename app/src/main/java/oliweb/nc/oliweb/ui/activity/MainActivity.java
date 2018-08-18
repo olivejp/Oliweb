@@ -42,6 +42,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.SyncService;
@@ -408,18 +409,16 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    private void initViewsForThisUser(FirebaseUser user) {
-        if (user == null) {
-            return;
-        }
+    private void initViewsForThisUser(UserEntity userEntity) {
+        if (userEntity == null) return;
 
-        profileName.setText(user.getDisplayName());
-        if (user.getEmail() != null) {
-            profileEmail.setText(user.getEmail());
+        profileName.setText(userEntity.getProfile());
+        if (userEntity.getEmail() != null && !userEntity.getEmail().isEmpty()) {
+            profileEmail.setText(userEntity.getEmail());
         }
-        if (user.getPhotoUrl() != null && !user.getPhotoUrl().toString().isEmpty()) {
+        if (userEntity.getPhotoUrl() != null && !userEntity.getPhotoUrl().isEmpty()) {
             GlideApp.with(profileImage)
-                    .load(user.getPhotoUrl())
+                    .load(userEntity.getPhotoUrl())
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.ic_person_white_48dp)
@@ -427,7 +426,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
-        activeBadges(user.getUid(), true);
+        activeBadges(userEntity.getUid(), true);
     }
 
     private void activeBadges(String uidUser, boolean active) {
@@ -487,7 +486,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
-                initViewsForThisUser(mFirebaseUser);
+                viewModel.getUserByUid(mFirebaseUser.getUid()).observe(this, this::initViewsForThisUser);
 
                 if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
                     viewModel.shouldIAskQuestionToRetrieveData(mFirebaseUser.getUid()).observeOnce(atomicBoolean -> {

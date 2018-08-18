@@ -55,7 +55,7 @@ public abstract class ChatDao implements AbstractDao<ChatEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM chat WHERE statusRemote IN (:status)")
-    public abstract Maybe<List<ChatEntity>> getAllChatByStatus(List<String> status);
+    public abstract Single<List<ChatEntity>> getAllChatByStatus(List<String> status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM chat WHERE (uidBuyer = :uidUser OR uidSeller = :uidUser) AND statusRemote NOT IN (:status)")

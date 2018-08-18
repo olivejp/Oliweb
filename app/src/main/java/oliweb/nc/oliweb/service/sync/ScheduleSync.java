@@ -7,11 +7,11 @@ import javax.inject.Singleton;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
@@ -62,27 +62,26 @@ public class ScheduleSync {
     }
 
     private void sendAnnonces() {
-        annonceRepository.getAllAnnonceByStatus(Utility.allStatusToSend())
-                .distinct()
+        annonceRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(annonceEntities -> annonceEntities)
                 .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
                 .subscribe();
     }
 
 
     private void sendChats() {
-        chatRepository.findByStatusIn(Utility.allStatusToSend())
-                .distinct()
+        chatRepository.findAllByStatusIn(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(chatEntities -> chatEntities)
                 .doOnNext(firebaseChatService::sendNewChat)
                 .subscribe();
     }
 
     private void sendMessages() {
-        messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
-                .distinct()
+        messageRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable()
@@ -92,9 +91,10 @@ public class ScheduleSync {
     }
 
     private void sendUtilisateurs() {
-        userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
+        userRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .flattenAsObservable(userEntities -> userEntities)
                 .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
                         .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                         .doOnSuccess(success -> {
