@@ -10,7 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.UtilisateurConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -40,6 +42,7 @@ public class UserService {
      */
     public LiveDataOnce<AtomicBoolean> saveUserFromFirebase(FirebaseUser firebaseUser) {
         return observer -> userRepository.findSingleByUid(firebaseUser.getUid())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> observer.onChanged(new AtomicBoolean(false)))
                 .doOnSuccess(utilisateurEntity -> saveUser(observer, utilisateurEntity, false))
                 .doOnComplete(() -> {
@@ -57,6 +60,7 @@ public class UserService {
                     utilisateurEntity.setDateLastConnexion(Utility.getNowInEntityFormat());
                     utilisateurEntity.setStatut(StatusRemote.TO_SEND);
                     userRepository.singleSave(utilisateurEntity)
+                            .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                             .doOnError(e -> observer.onChanged(new AtomicBoolean(false)))
                             .doOnSuccess(utilisateurEntity1 -> observer.onChanged(new AtomicBoolean(isAnCreation)))
                             .subscribe();

@@ -6,6 +6,7 @@ import dagger.Component;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.PhotoService;
 import oliweb.nc.oliweb.service.UserService;
+import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.system.dagger.module.ServicesModule;
 
 @Component(modules = {ServicesModule.class})
@@ -16,4 +17,6 @@ public interface ServicesComponent {
     PhotoService getPhotoService();
 
     UserService getUserService();
+
+    ScheduleSync getScheduleSync();
 }

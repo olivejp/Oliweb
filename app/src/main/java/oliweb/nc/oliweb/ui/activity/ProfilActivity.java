@@ -96,7 +96,7 @@ public class ProfilActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profil);
         ButterKnife.bind(this);
 
-        viewModel = ViewModelProviders.of(this).get(ProfilViewModel.class);
+        viewModel = ViewModelProviders.of(ProfilActivity.this).get(ProfilViewModel.class);
 
         viewModel.getUtilisateurByUid(uidUser).observe(this, userFound -> {
             if (userFound != null) {

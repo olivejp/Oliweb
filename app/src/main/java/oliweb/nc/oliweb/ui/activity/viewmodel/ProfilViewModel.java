@@ -37,12 +37,12 @@ public class ProfilViewModel extends AndroidViewModel {
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
-                .contextModule(new ContextModule(application))
-                .build();
 
+        ContextModule contextModule = new ContextModule(application);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
         FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
-        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().build();
+
         firebaseMessageService = componentFbServices.getFirebaseMessageService();
 
         userRepository = component.getUserRepository();

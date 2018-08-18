@@ -103,6 +103,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
                 .doOnError(emitter::onError)
                 .doOnSuccess(entityRead ->
                         singleUpdate(entity)
+                                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
                                 .doOnComplete(() -> Log.e(TAG, "Failed to update"))
@@ -110,6 +111,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
                 )
                 .doOnComplete(() ->
                         singleInsert(entity)
+                                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
                                 .doOnSuccess(emitter::onSuccess)
                                 .doOnError(emitter::onError)
                                 .doOnComplete(() -> Log.e(TAG, "Failed to insert"))

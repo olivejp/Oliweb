@@ -6,7 +6,6 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
@@ -15,18 +14,14 @@ import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
-import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.service.sync.ScheduleSync;
 
-@Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
+@Module(includes = {ContextModule.class})
 public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public UserRepository userRepository(Context context, FirebaseUserRepository firebaseUserRepository) {
-        return new UserRepository(context, firebaseUserRepository);
+    public UserRepository userRepository(Context context) {
+        return new UserRepository(context);
     }
 
     @Provides
@@ -69,22 +64,5 @@ public class DatabaseRepositoriesModule {
     @Singleton
     public PhotoRepository photoRepository(Context context) {
         return new PhotoRepository(context);
-    }
-
-    @Provides
-    @Singleton
-    public ScheduleSync scheduleSync(FirebaseUserRepository firebaseUserRepository,
-                                     UserRepository userRepository,
-                                     AnnonceRepository annonceRepository,
-                                     AnnonceFirebaseSender annonceFirebaseSender,
-                                     ChatRepository chatRepository,
-                                     MessageRepository messageRepository,
-                                     FirebaseMessageService firebaseMessageService,
-                                     FirebaseChatService firebaseChatService) {
-        return new ScheduleSync(firebaseUserRepository,
-                userRepository, annonceRepository,
-                annonceFirebaseSender, chatRepository,
-                messageRepository, firebaseMessageService,
-                firebaseChatService);
     }
 }
