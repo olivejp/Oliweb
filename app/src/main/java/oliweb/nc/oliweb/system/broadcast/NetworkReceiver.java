@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Created by orlanth23 on 09/10/2017
- *
+ * <p>
  * Cette classe permet d'écouter les changements de connexion de l'appareil.
  * Il suffit d'appeler une instance du NetworkReceiver et d'ajouter un NetworkChangeListener
  * grâce à la méthode listen()
@@ -81,6 +81,15 @@ public class NetworkReceiver extends BroadcastReceiver {
             return false;
         }
         return false;
+    }
+
+    public static void removeListener(NetworkChangeListener listener) {
+        if (mNetworkChangeListener == null || mNetworkChangeListener.isEmpty() || listener == null)
+            return;
+
+        if (mNetworkChangeListener.contains(listener)) {
+            mNetworkChangeListener.remove(listener);
+        }
     }
 
     public interface NetworkChangeListener {
