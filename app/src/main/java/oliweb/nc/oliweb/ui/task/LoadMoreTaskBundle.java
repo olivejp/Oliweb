@@ -4,14 +4,14 @@ import com.google.firebase.database.DataSnapshot;
 
 import java.util.List;
 
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 
 /**
  * Created by 2761oli on 09/03/2018.
  */
 
 public class LoadMoreTaskBundle {
-    private List<AnnoncePhotos> listPhotosResult;
+    private List<AnnonceFull> listPhotosResult;
     private DataSnapshot dataSnapshot;
     private int tri;
     private int direction;
@@ -19,18 +19,18 @@ public class LoadMoreTaskBundle {
     public LoadMoreTaskBundle() {
     }
 
-    public LoadMoreTaskBundle(List<AnnoncePhotos> listPhotosResult, DataSnapshot dataSnapshot, int tri, int direction) {
+    public LoadMoreTaskBundle(List<AnnonceFull> listPhotosResult, DataSnapshot dataSnapshot, int tri, int direction) {
         this.listPhotosResult = listPhotosResult;
         this.dataSnapshot = dataSnapshot;
         this.tri = tri;
         this.direction = direction;
     }
 
-    public List<AnnoncePhotos> getListPhotosResult() {
+    public List<AnnonceFull> getListPhotosResult() {
         return listPhotosResult;
     }
 
-    public void setListPhotosResult(List<AnnoncePhotos> listPhotosResult) {
+    public void setListPhotosResult(List<AnnonceFull> listPhotosResult) {
         this.listPhotosResult = listPhotosResult;
     }
 

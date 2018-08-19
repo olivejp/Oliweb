@@ -18,11 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
@@ -52,7 +52,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = MainActivityViewModel.class.getName();
 
-    private AnnonceWithPhotosRepository annonceWithPhotosRepository;
+    private AnnonceFullRepository annonceFullRepository;
     private FirebaseAnnonceRepository firebaseAnnonceRespository;
     private FirebaseRetrieverService firebaseRetrieverService;
     private AnnonceRepository annonceRepository;
@@ -86,8 +86,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
         FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
 
-        annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         annonceRepository = component.getAnnonceRepository();
+        annonceFullRepository = component.getAnnonceFullRepository();
         userRepository = component.getUserRepository();
         chatRepository = component.getChatRepository();
         firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
@@ -96,8 +96,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         userService = componentServices.getUserService();
     }
 
-    public LiveData<List<AnnoncePhotos>> getFavoritesByUidUser(String uidUtilisateur) {
-        return annonceWithPhotosRepository.findFavoritesByUidUser(uidUtilisateur);
+    public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {
+        return annonceFullRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
     public LiveDataOnce<AtomicBoolean> shouldIAskQuestionToRetrieveData(@Nullable String uidUser) {
@@ -141,12 +141,12 @@ public class MainActivityViewModel extends AndroidViewModel {
         return chatRepository.countAllChatsByUser(uidUser, status);
     }
 
-    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
-        return annonceService.addOrRemoveFromFavorite(uidUser, annoncePhotos);
+    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
+        return annonceService.addOrRemoveFromFavorite(uidUser, annonceFull);
     }
 
-    public LiveDataOnce<AnnoncePhotos> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
-        CustomLiveData<AnnoncePhotos> customLiveData = new CustomLiveData<>();
+    public LiveDataOnce<AnnonceFull> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnonceFull> customLiveData = new CustomLiveData<>();
         firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))

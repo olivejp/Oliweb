@@ -2,12 +2,12 @@ package oliweb.nc.oliweb.ui.activity;
 
 
 import android.Manifest;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -37,10 +37,8 @@ import me.relex.circleindicator.CircleIndicator;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
@@ -101,7 +99,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.text_date_publication)
     TextView textDatePublication;
 
-    private AnnoncePhotos annoncePhotos;
+    private AnnonceFull annonceFull;
     private boolean comeFromChatFragment;
     private String uidUser;
     private UserEntity seller;
@@ -115,6 +113,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Bundle arguments = getIntent().getExtras();
+        if (savedInstanceState != null) {
+            arguments = savedInstanceState;
+        }
+
         ArgumentsChecker checker = new ArgumentsChecker();
         checker.setArguments(arguments)
                 .isMandatory(ARG_ANNONCE)
@@ -126,16 +128,13 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private void initActivity(Bundle params) {
         // Récupération des arguments
-        annoncePhotos = params.getParcelable(ARG_ANNONCE);
+        annonceFull = params.getParcelable(ARG_ANNONCE);
         if (params.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
             comeFromChatFragment = params.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
         }
 
-        // Récupération de l'uid de l'utilisateur
+        // Récupération de l'uid de l'utilisateur connecté
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-
-        // Récupération du ViewModel
-        AnnonceDetailViewModel viewModel = ViewModelProviders.of(this).get(AnnonceDetailViewModel.class);
 
         // Création de la vue
         setContentView(R.layout.activity_annonce_detail);
@@ -149,10 +148,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
 
         // Récupération de l'annonce
-        initAnnonceViews(annoncePhotos);
-
-        // Récupération des infos du vendeur
-        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(this, this::initSeller);
+        initAnnonceViews(annonceFull);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
@@ -189,31 +185,38 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void initAnnonceViews(AnnoncePhotos annoncePhotos) {
-        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putParcelable(ARG_ANNONCE, annonceFull);
+        outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
+    }
+
+    private void initAnnonceViews(AnnonceFull annonceFull) {
+        AnnonceEntity annonce = annonceFull.getAnnonce();
 
         prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
         description.setText(annonce.getDescription());
         collapsingToolbarLayout.setTitle(annonce.getTitre());
         textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
 
-        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annoncePhotos.getPhotos()));
+        if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
+            viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
             indicator.setViewPager(viewPager);
         }
+
+        initViewsSeller(annonceFull.getUtilisateur().get(0));
     }
 
-    private void initSeller(@NonNull UserEntity seller) {
+    private void initViewsSeller(@NonNull UserEntity seller) {
         this.seller = seller;
-        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
-        if (NetworkReceiver.checkConnection(this) && seller.getPhotoUrl() != null) {
-            GlideApp.with(this)
-                    .load(seller.getPhotoUrl())
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_person_white_48dp)
-                    .error(R.drawable.ic_person_white_48dp)
-                    .into(imageProfilSeller);
-        }
+        AnnonceEntity annonce = annonceFull.getAnnonce();
+        GlideApp.with(this)
+                .load(seller.getPhotoUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_person_white_48dp)
+                .error(R.drawable.ic_person_white_48dp)
+                .into(imageProfilSeller);
 
         boolean amITheOwner = uidUser != null && !uidUser.isEmpty() && uidUser.equals(annonce.getUidUser());
         if (amITheOwner) {
@@ -261,7 +264,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             ShareCompat.IntentBuilder.from(this)
                     .setType(MAIL_MESSAGE_TYPE)
                     .addEmailTo(seller.getEmail())
-                    .setSubject(getString(R.string.app_name) + " - " + annoncePhotos.getAnnonceEntity().getTitre())
+                    .setSubject(getString(R.string.app_name) + " - " + annonceFull.getAnnonce().getTitre())
                     .setText(getString(R.string.default_mail_message))
                     .setChooserTitle(R.string.default_mail_chooser_title)
                     .startChooser();
@@ -276,7 +279,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, PostAnnonceActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
-        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annoncePhotos.getAnnonceEntity().getUid());
+        bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annonceFull.getAnnonce().getUid());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CALL_POST_ANNONCE);
     }
@@ -299,7 +302,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setClass(this, MyChatsActivity.class);
         intent.setAction(ARG_ACTION_FRAGMENT_MESSAGE);
-        intent.putExtra(ARG_ANNONCE, annoncePhotos.getAnnonceEntity());
+        intent.putExtra(ARG_ANNONCE, annonceFull.getAnnonce());
         intent.putExtra(DATA_FIREBASE_USER_UID, FirebaseAuth.getInstance().getUid());
         startActivity(intent);
         overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);

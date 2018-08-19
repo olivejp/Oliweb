@@ -28,7 +28,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -40,7 +40,7 @@ public class AnnonceBeautyAdapter extends
 
     public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
-    private List<AnnoncePhotos> listAnnonces;
+    private List<AnnonceFull> listAnnonces;
     private int backGroundColor;
     private View.OnClickListener onClickListener;
     private View.OnClickListener onClickListenerShare;
@@ -69,7 +69,7 @@ public class AnnonceBeautyAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
-        AnnoncePhotos annoncePhotos = listAnnonces.get(position);
+        AnnonceFull annoncePhotos = listAnnonces.get(position);
         bindViewHolderBeauty(viewHolder, annoncePhotos);
     }
 
@@ -80,7 +80,7 @@ public class AnnonceBeautyAdapter extends
 
     @Override
     public int getItemViewType(int position) {
-        AnnoncePhotos annoncePhotos = listAnnonces.get(position);
+        AnnonceFull annoncePhotos = listAnnonces.get(position);
         if (annoncePhotos.getPhotos() == null || annoncePhotos.getPhotos().isEmpty() || (annoncePhotos.getPhotos().size() == 1)) {
             return 1;
         } else {
@@ -88,10 +88,10 @@ public class AnnonceBeautyAdapter extends
         }
     }
 
-    private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnoncePhotos annoncePhotos) {
+    private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
-        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
+        AnnonceEntity annonce = annoncePhotos.getAnnonce();
         viewHolderBeauty.annoncePhotos = annoncePhotos;
 
         // Transition
@@ -108,12 +108,12 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
         viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
-        if (viewHolderBeauty.annoncePhotos.getAnnonceEntity().isFavorite()) {
+        if (viewHolderBeauty.annoncePhotos.getAnnonce().isFavorite()) {
             viewHolderBeauty.imageFavorite.setImageResource(R.drawable.ic_favorite_red_700_48dp);
         }
 
         // Récupération de la date de publication
-        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annoncePhotos.getAnnonceEntity().getDatePublication()));
+        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annoncePhotos.getAnnonce().getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf"));
@@ -147,7 +147,7 @@ public class AnnonceBeautyAdapter extends
         }
     }
 
-    public void setListAnnonces(final List<AnnoncePhotos> newListAnnonces) {
+    public void setListAnnonces(final List<AnnonceFull> newListAnnonces) {
         if (listAnnonces == null) {
             listAnnonces = newListAnnonces;
             notifyItemRangeInserted(0, newListAnnonces.size());
@@ -165,13 +165,13 @@ public class AnnonceBeautyAdapter extends
 
                 @Override
                 public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    return listAnnonces.get(oldItemPosition).getAnnonceEntity().getUid().equals(newListAnnonces.get(newItemPosition).getAnnonceEntity().getUid());
+                    return listAnnonces.get(oldItemPosition).getAnnonce().getUid().equals(newListAnnonces.get(newItemPosition).getAnnonce().getUid());
                 }
 
                 @Override
                 public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                    AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonceEntity();
-                    AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonceEntity();
+                    AnnonceEntity newAnnonce = newListAnnonces.get(newItemPosition).getAnnonce();
+                    AnnonceEntity oldAnnonce = listAnnonces.get(oldItemPosition).getAnnonce();
                     return newAnnonce.getUid().equals(oldAnnonce.getUid())
                             && newAnnonce.getTitre().equals(oldAnnonce.getTitre())
                             && newAnnonce.getDescription().equals(oldAnnonce.getDescription())
@@ -211,7 +211,7 @@ public class AnnonceBeautyAdapter extends
         ProgressBar progressBar;
 
 
-        AnnoncePhotos annoncePhotos;
+        AnnonceFull annoncePhotos;
 
         ViewGroup parent;
 
@@ -224,7 +224,7 @@ public class AnnonceBeautyAdapter extends
             return imageView;
         }
 
-        public AnnoncePhotos getAnnoncePhotos() {
+        public AnnonceFull getAnnoncePhotos() {
             return annoncePhotos;
         }
 

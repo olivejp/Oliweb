@@ -1,6 +1,9 @@
 package oliweb.nc.oliweb.repository.local;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
+
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,6 +34,10 @@ public class AnnonceFullRepository {
 
     public Observable<AnnonceFull> findAnnonceFullByAnnonceEntity(AnnonceEntity annonceEntity) {
         return this.annonceFullDao.findSingleByIdAnnonce(annonceEntity.getIdAnnonce()).toObservable();
+    }
+
+    public LiveData<List<AnnonceFull>> findFavoritesByUidUser(String uuidUtilisateur) {
+        return this.annonceFullDao.findFavoritesByUidUser(uuidUtilisateur);
     }
 
 }

@@ -43,7 +43,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
@@ -408,9 +408,9 @@ public class MainActivity extends AppCompatActivity
                 .addOnFailureListener(this, e -> Log.w(TAG, "getDynamicLink:onFailure", e));
     }
 
-    private void callAnnonceDetailActivity(AnnoncePhotos annoncePhotos) {
+    private void callAnnonceDetailActivity(AnnonceFull annonceFull) {
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
-        intent.putExtra(ARG_ANNONCE, annoncePhotos);
+        intent.putExtra(ARG_ANNONCE, annonceFull);
         startActivity(intent);
     }
 

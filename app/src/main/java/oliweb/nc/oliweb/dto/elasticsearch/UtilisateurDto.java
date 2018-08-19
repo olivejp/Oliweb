@@ -9,15 +9,17 @@ public class UtilisateurDto {
     private String uuid;
     private String telephone;
     private String email;
+    private String photoUrl;
 
     public UtilisateurDto() {
     }
 
-    public UtilisateurDto(String profile, String uuid, String telephone, String email) {
+    public UtilisateurDto(String profile, String uuid, String telephone, String email, String photoUrl) {
         this.profile = profile;
         this.uuid = uuid;
         this.telephone = telephone;
         this.email = email;
+        this.photoUrl = photoUrl;
     }
 
     public String getProfile() {
@@ -52,6 +54,14 @@ public class UtilisateurDto {
         this.email = email;
     }
 
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
     @Override
     public String toString() {
         return "UtilisateurDto{" +
@@ -59,6 +69,7 @@ public class UtilisateurDto {
                 ", uuid='" + uuid + '\'' +
                 ", telephone='" + telephone + '\'' +
                 ", email='" + email + '\'' +
+                ", photoUrl='" + photoUrl + '\'' +
                 '}';
     }
 }

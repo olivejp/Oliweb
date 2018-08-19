@@ -38,7 +38,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -102,7 +102,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
-    private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
+    private ArrayList<AnnonceFull> annoncePhotosList = new ArrayList<>();
     private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sortSelected = SORT_DATE;
     private int directionSelected;
@@ -131,8 +131,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
@@ -327,7 +327,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
                             Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
-                            annoncePhotosList = (ArrayList<AnnoncePhotos>) annoncePhotos;
+                            annoncePhotosList = (ArrayList<AnnonceFull>) annoncePhotos;
                             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
                             linearLayout.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
@@ -379,7 +379,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             }
 
             if (action.equals(ACTION_MOST_RECENT)) {
-                ArrayList<AnnoncePhotos> list = new ArrayList<>();
+                ArrayList<AnnonceFull> list = new ArrayList<>();
                 annonceBeautyAdapter.setListAnnonces(list);
                 annonceBeautyAdapter.notifyDataSetChanged();
                 annoncePhotosList = list;
@@ -402,9 +402,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 break;
             case SORT_PRICE:
                 loadSortPrice().addListenerForSingleValueEvent(loadSortListener);
-                break;
             default:
-                break;
         }
     }
 
@@ -412,17 +410,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Query query = annoncesReference.orderByChild("prix");
         if (directionSelected == ASC) {
             Integer lastPrice = 0;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonceEntity().getPrix() > lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonce().getPrix() > lastPrice) {
+                    lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
             query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (directionSelected == DESC) {
             Integer lastPrice = Integer.MAX_VALUE;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (lastPrice < annoncePhotos.getAnnonceEntity().getPrix()) {
-                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (lastPrice < annoncePhotos.getAnnonce().getPrix()) {
+                    lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
             query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
@@ -434,17 +432,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Query query = annoncesReference.orderByChild("datePublication");
         if (directionSelected == ASC) {
             Long lastDate = 0L;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonceEntity().getDatePublication() > lastDate) {
-                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
+                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
             query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (directionSelected == DESC) {
             Long lastDate = Long.MAX_VALUE;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
-                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (lastDate < annoncePhotos.getAnnonce().getDatePublication()) {
+                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
             query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
@@ -467,7 +465,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
-    private TaskListener<ArrayList<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
+    private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
         annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);

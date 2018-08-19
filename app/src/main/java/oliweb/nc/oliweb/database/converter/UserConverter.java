@@ -5,6 +5,7 @@ import com.google.firebase.auth.UserInfo;
 
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 import oliweb.nc.oliweb.dto.firebase.UtilisateurFirebase;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -22,6 +23,16 @@ public class UserConverter {
         utilisateurFirebase.setProfileName(userEntity.getProfile());
         utilisateurFirebase.setTokenDevice(userEntity.getTokenDevice());
         return utilisateurFirebase;
+    }
+
+    public static UserEntity convertDtoToEntity(UtilisateurDto utilisateurDto) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setTelephone(utilisateurDto.getTelephone());
+        userEntity.setEmail(utilisateurDto.getEmail());
+        userEntity.setPhotoUrl(utilisateurDto.getPhotoUrl());
+        userEntity.setProfile(utilisateurDto.getProfile());
+        userEntity.setUid(utilisateurDto.getUuid());
+        return userEntity;
     }
 
     public static UserEntity convertFbToEntity(FirebaseUser firebaseUser, String token, boolean isCreation) {

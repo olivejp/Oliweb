@@ -3,6 +3,8 @@ package oliweb.nc.oliweb.database.entity;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 /**
@@ -10,7 +12,7 @@ import android.support.annotation.NonNull;
  */
 
 @Entity(tableName = "categorie")
-public class CategorieEntity extends AbstractEntity<Long> {
+public class CategorieEntity extends AbstractEntity<Long> implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)
     private Long idCategorie;
@@ -55,4 +57,35 @@ public class CategorieEntity extends AbstractEntity<Long> {
     public void setCouleur(String couleur) {
         this.couleur = couleur;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.idCategorie);
+        dest.writeString(this.name);
+        dest.writeString(this.couleur);
+    }
+
+    protected CategorieEntity(Parcel in) {
+        this.idCategorie = (Long) in.readValue(Long.class.getClassLoader());
+        this.name = in.readString();
+        this.couleur = in.readString();
+    }
+
+    public static final Creator<CategorieEntity> CREATOR = new Creator<CategorieEntity>() {
+        @Override
+        public CategorieEntity createFromParcel(Parcel source) {
+            return new CategorieEntity(source);
+        }
+
+        @Override
+        public CategorieEntity[] newArray(int size) {
+            return new CategorieEntity[size];
+        }
+    };
 }

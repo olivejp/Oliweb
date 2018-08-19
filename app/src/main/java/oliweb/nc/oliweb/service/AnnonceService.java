@@ -12,7 +12,7 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
@@ -61,14 +61,14 @@ public class AnnonceService {
      * @param annoncePhotos qui sera sauvé avec ses photos
      * @return
      */
-    private Single<AnnonceEntity> saveToFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    private Single<AnnonceEntity> saveToFavorite(String uidUser, AnnonceFull annoncePhotos) {
         return Single.create(emitter ->
-                annonceRepository.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
+                annonceRepository.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annoncePhotos.getAnnonce().getUid())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() -> {
-                            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+                            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
                             annonceEntity.setFavorite(1);
                             annonceEntity.setUidUserFavorite(uidUser);
                             annonceRepository.singleSave(annonceEntity)
@@ -84,10 +84,10 @@ public class AnnonceService {
         );
     }
 
-    private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnonceFull annoncePhotos) {
         Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
         return Single.create(emitter ->
-                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonceEntity().getUid())
+                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonce().getUid())
                         .doOnError(emitter::onError)
                         .doOnSuccess(annoncePhotos1 -> {
                             photoService.deleteListPhoto(annoncePhotos.getPhotos());
@@ -98,12 +98,12 @@ public class AnnonceService {
         );
     }
 
-    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnoncePhotos annoncePhotos) {
+    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annoncePhotos) {
         return observer -> {
-            if (annoncePhotos.getAnnonceEntity().getUidUser().equals(uidUser)) {
+            if (annoncePhotos.getAnnonce().getUidUser().equals(uidUser)) {
                 observer.onChanged(ONE_OF_YOURS);
             } else {
-                if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
+                if (annoncePhotos.getAnnonce().getFavorite() == 1) {
                     removeFromFavorite(uidUser, annoncePhotos)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnError(e -> observer.onChanged(REMOVE_FAILED))

@@ -6,8 +6,9 @@ import java.util.List;
 
 /**
  * Created by 2761oli on 20/02/2018.
+ *
+ * Firebase Annonce Model
  */
-
 public class AnnonceDto {
     private UtilisateurDto utilisateur;
     private List<String> photos;

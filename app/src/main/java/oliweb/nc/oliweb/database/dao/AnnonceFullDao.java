@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.database.dao;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
@@ -32,4 +33,8 @@ public abstract class AnnonceFullDao {
     @Transaction
     @Query("SELECT * FROM annonce WHERE uidUser = :uidUser")
     public abstract Single<List<AnnonceFull>> getAllAnnoncesByUidUser(String uidUser);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uidUserFavorite = :uuidUtilisateur AND favorite = 1")
+    public abstract LiveData<List<AnnonceFull>> findFavoritesByUidUser(String uuidUtilisateur);
 }

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.service.AnnonceService;
@@ -57,8 +57,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
 
-    private ArrayList<AnnoncePhotos> listAnnonce;
-    private MutableLiveData<ArrayList<AnnoncePhotos>> liveListAnnonce;
+    private ArrayList<AnnonceFull> listAnnonce;
+    private MutableLiveData<ArrayList<AnnonceFull>> liveListAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
     private AnnonceService annonceService;
@@ -78,8 +78,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     for (DataSnapshot child : snapshotResults.getChildren()) {
                         ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
                         if (elasticsearchResult != null) {
-                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(elasticsearchResult.get_source());
-                            listAnnonce.add(annoncePhotos);
+                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(elasticsearchResult.get_source());
+                            listAnnonce.add(annonceFull);
                         }
                     }
                     liveListAnnonce.postValue(listAnnonce);
@@ -107,7 +107,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         };
     }
 
-    public LiveData<ArrayList<AnnoncePhotos>> getLiveListAnnonce() {
+    public LiveData<ArrayList<AnnonceFull>> getLiveListAnnonce() {
         if (liveListAnnonce == null) {
             liveListAnnonce = new MutableLiveData<>();
             listAnnonce = new ArrayList<>();
@@ -124,7 +124,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return loading;
     }
 
-    public LiveDataOnce<AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidCurrentUser, AnnoncePhotos annoncePhotos) {
+    public LiveDataOnce<AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidCurrentUser, AnnonceFull annoncePhotos) {
         return annonceService.addOrRemoveFromFavorite(uidCurrentUser, annoncePhotos);
     }
 

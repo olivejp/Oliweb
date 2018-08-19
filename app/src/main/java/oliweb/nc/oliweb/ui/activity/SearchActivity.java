@@ -27,7 +27,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -63,7 +63,7 @@ public class SearchActivity extends AppCompatActivity {
     SearchView searchView;
 
     private String query;
-    private ArrayList<AnnoncePhotos> listAnnonce;
+    private ArrayList<AnnonceFull> listAnnonce;
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel searchActivityViewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
@@ -224,7 +224,7 @@ public class SearchActivity extends AppCompatActivity {
         searchActivityViewModel.getLiveListAnnonce().observe(this, this::initAdapter);
     }
 
-    private void initAdapter(ArrayList<AnnoncePhotos> annonceWithPhotos) {
+    private void initAdapter(ArrayList<AnnonceFull> annonceWithPhotos) {
         this.listAnnonce = annonceWithPhotos;
         if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
             linearLayout.setVisibility(View.GONE);
@@ -248,8 +248,8 @@ public class SearchActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
             DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos(), new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override

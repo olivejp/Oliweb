@@ -26,7 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
@@ -156,11 +156,11 @@ public class ListChatFragment extends Fragment {
     private void openAnnonceDetail(ChatEntity chatchatEntity) {
         viewModel.findLiveFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
             if (annonceDto != null) {
-                AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
                 Intent intent = new Intent();
                 intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
                 Bundle bundle = new Bundle();
-                bundle.putParcelable(ARG_ANNONCE, annoncePhotos);
+                bundle.putParcelable(ARG_ANNONCE, annonceFull);
                 bundle.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, true);
                 intent.putExtras(bundle);
                 startActivity(intent);
@@ -181,7 +181,6 @@ public class ListChatFragment extends Fragment {
                         .commit();
             } else {
                 FragmentTransaction ft = appCompatActivity.getSupportFragmentManager().beginTransaction();
-                // TODO les animations de sortie ne fonctionnent pas
                 ft.setCustomAnimations(R.anim.slide_in_from_right, android.R.anim.fade_out, R.anim.slide_in_from_left, android.R.anim.fade_out);
                 ft.replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT);
                 ft.addToBackStack(null);
