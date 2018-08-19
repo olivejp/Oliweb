@@ -190,6 +190,8 @@ public class MainActivity extends AppCompatActivity
 
         navigationView.setNavigationItemSelectedListener(this);
 
+        prepareNavigationMenu(false);
+
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
     }
 
