@@ -27,6 +27,7 @@ public class UserEntity extends AbstractEntity<Long> {
     private String tokenDevice;
     @TypeConverters(StatusConverter.class)
     private StatusRemote statut;
+    private Integer favorite;
 
     @Exclude
     @NonNull
@@ -108,6 +109,14 @@ public class UserEntity extends AbstractEntity<Long> {
         this.tokenDevice = tokenDevice;
     }
 
+    public Integer getFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(Integer favorite) {
+        this.favorite = favorite;
+    }
+
     @Exclude
     public StatusRemote getStatut() {
         return statut;
@@ -130,6 +139,7 @@ public class UserEntity extends AbstractEntity<Long> {
                 ", photoUrl='" + photoUrl + '\'' +
                 ", tokenDevice='" + tokenDevice + '\'' +
                 ", statut=" + statut +
+                ", favorite=" + favorite +
                 '}';
     }
 }
