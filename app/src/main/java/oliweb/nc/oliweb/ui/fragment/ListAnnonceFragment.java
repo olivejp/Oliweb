@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -35,13 +36,11 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
-import oliweb.nc.oliweb.ui.activity.AdvancedSearchActivity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -110,6 +109,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private ActionBar actionBar;
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
+    private Snackbar snackbar;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -244,8 +244,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             action = getArguments().getString(ARG_ACTION);
         }
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveDataFirebaseUser().observe(appCompatActivity, firebaseUser ->
-                uidUser = (firebaseUser != null) ? firebaseUser.getUid() : null
+        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity ->
+                uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
     }
 
@@ -256,6 +256,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
+        snackbar = Snackbar.make(coordinatorLayout, "Réseau non disponible", BaseTransientBottomBar.LENGTH_INDEFINITE);
+        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
+        layout.setBackgroundColor(appCompatActivity.getResources().getColor(R.color.colorAccentDarker));
         annonceBeautyAdapter = new AnnonceBeautyAdapter(appCompatActivity.getResources().getColor(R.color.colorPrimary),
                 onClickListener,
                 onClickListenerShare,
@@ -273,6 +276,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         swipeRefreshLayout.setOnRefreshListener(this);
 
         viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
+
+        viewModel.getIsNetworkAvailable().observe(this, atomicBoolean -> {
+            if (atomicBoolean != null && !atomicBoolean.get()) {
+                snackbar.show();
+            } else {
+                snackbar.dismiss();
+            }
+        });
 
         initAccordingToAction();
 
@@ -304,13 +315,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
-    }
-
-    @OnClick(R.id.fab_advanced_search)
-    public void onClickAdvancedSearch(View v) {
-        Intent intent = new Intent(appCompatActivity, AdvancedSearchActivity.class);
-        startActivity(intent);
-        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
     private void initAccordingToAction() {

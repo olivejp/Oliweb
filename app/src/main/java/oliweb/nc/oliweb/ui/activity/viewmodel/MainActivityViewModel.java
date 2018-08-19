@@ -4,6 +4,8 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -26,6 +28,9 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.UserService;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
+import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
@@ -37,6 +42,7 @@ import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -53,14 +59,26 @@ public class MainActivityViewModel extends AndroidViewModel {
     private UserRepository userRepository;
     private AnnonceService annonceService;
     private UserService userService;
-    private FirebaseUser mFirebaseUser;
+    private UserEntity userConnected;
+    private boolean isNetworkAvailble;
 
     private ChatRepository chatRepository;
     private MutableLiveData<Integer> sorting;
-    private MutableLiveData<FirebaseUser> liveDataFirebaseUser;
+    private MutableLiveData<UserEntity> liveUserConnected;
+    private MutableLiveData<AtomicBoolean> liveNetworkAvailable;
+
+    private Intent intentLocalDbService;
+    private Intent intentFirebaseDbService;
+
+    private Application application;
 
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
+
+        this.application = application;
+
+        intentLocalDbService = new Intent(application, DatabaseSyncListenerService.class);
+        intentFirebaseDbService = new Intent(application, FirebaseSyncListenerService.class);
 
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
@@ -139,19 +157,107 @@ public class MainActivityViewModel extends AndroidViewModel {
         return customLiveData;
     }
 
-    public LiveData<FirebaseUser> getLiveDataFirebaseUser() {
-        if (liveDataFirebaseUser == null) {
-            liveDataFirebaseUser = new MutableLiveData<>();
+    public LiveData<UserEntity> getLiveUserConnected() {
+        if (liveUserConnected == null) {
+            liveUserConnected = new MutableLiveData<>();
         }
-        return liveDataFirebaseUser;
+        return liveUserConnected;
     }
 
-    public void setFirebaseUser(FirebaseUser firebaseUser) {
-        mFirebaseUser = firebaseUser;
-        liveDataFirebaseUser.postValue(mFirebaseUser);
+    private void setUserConnected(UserEntity user) {
+        userConnected = user;
+        liveUserConnected.postValue(userConnected);
     }
 
-    public FirebaseUser getFirebaseUser() {
-        return mFirebaseUser;
+    public UserEntity getUserConnected() {
+        return userConnected;
+    }
+
+    /**
+     * Return true if this is a disconnection
+     *
+     * @param firebaseUser
+     * @return
+     */
+    public LiveDataOnce<AuthEventType> listenAuthentication(FirebaseUser firebaseUser) {
+        return new CustomLiveData<AuthEventType>() {
+            @Override
+            public void observeOnce(Observer<AuthEventType> observer) {
+                super.observeOnce(observer);
+
+                AuthEventType authEventType;
+                if (userConnected == null) {
+                    authEventType = (firebaseUser == null) ? AuthEventType.NOTHING : AuthEventType.NEW_CONNECTION;
+                } else {
+                    if (firebaseUser == null) {
+                        authEventType = AuthEventType.DISCONNECT;
+                    } else {
+                        authEventType = (userConnected.getUid().equals(firebaseUser.getUid())) ? AuthEventType.SAME_CONNECTION : AuthEventType.NEW_CONNECTION;
+                    }
+                }
+
+                switch (authEventType) {
+                    case DISCONNECT:
+                        setUserConnected(null);
+                        stopAllServices();
+                        SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(null);
+                        break;
+                    case NEW_CONNECTION:
+                        SharedPreferencesHelper.getInstance(application).setRetrievePreviousAnnonces(true);
+                        userService.saveSingleUserFromFirebase(firebaseUser)
+                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .doOnError(e -> Log.e(TAG, "Saving user failed", e))
+                                .doOnSuccess(userSaved -> {
+                                    setUserConnected(userSaved);
+                                    stopAllServices();
+                                    startAllServices(userSaved.getUid());
+                                    SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(userSaved.getUid());
+                                })
+                                .subscribe();
+                        break;
+                    case SAME_CONNECTION:
+                    case NOTHING:
+                }
+
+                observer.onChanged(authEventType);
+            }
+        };
+    }
+
+    public void startAllServices(String uidUser) {
+        if (NetworkReceiver.checkConnection(application)) {
+            intentLocalDbService.putExtra(DatabaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
+            application.startService(intentLocalDbService);
+
+            intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
+            application.startService(intentFirebaseDbService);
+        }
+    }
+
+    public void stopAllServices() {
+        application.stopService(intentLocalDbService);
+        application.stopService(intentFirebaseDbService);
+    }
+
+    public void setIsNetworkAvailable(boolean available) {
+        isNetworkAvailble = available;
+        if (liveNetworkAvailable != null) {
+            liveNetworkAvailable.postValue(new AtomicBoolean(isNetworkAvailble));
+        }
+    }
+
+    public LiveData<AtomicBoolean> getIsNetworkAvailable() {
+        if (liveNetworkAvailable == null) {
+            liveNetworkAvailable = new MutableLiveData<>();
+        }
+        liveNetworkAvailable.setValue(new AtomicBoolean(isNetworkAvailble));
+        return liveNetworkAvailable;
+    }
+
+    public enum AuthEventType {
+        NOTHING,
+        DISCONNECT,
+        NEW_CONNECTION,
+        SAME_CONNECTION
     }
 }

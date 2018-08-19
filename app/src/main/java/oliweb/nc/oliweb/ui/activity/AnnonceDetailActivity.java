@@ -17,7 +17,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -40,9 +39,11 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -113,17 +114,21 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Vérification des arguments
         Bundle arguments = getIntent().getExtras();
-        if (!argsAvailable(arguments)) {
-            finish();
-            return;
-        }
+        ArgumentsChecker checker = new ArgumentsChecker();
+        checker.setArguments(arguments)
+                .isMandatory(ARG_ANNONCE)
+                .isOptional(ARG_COME_FROM_CHAT_FRAGMENT)
+                .setOnFailureListener(e -> finish())
+                .setOnSuccessListener(this::initActivity)
+                .check();
+    }
 
+    private void initActivity(Bundle params) {
         // Récupération des arguments
-        annoncePhotos = arguments.getParcelable(ARG_ANNONCE);
-        if (arguments.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
-            comeFromChatFragment = arguments.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
+        annoncePhotos = params.getParcelable(ARG_ANNONCE);
+        if (params.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
+            comeFromChatFragment = params.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
         }
 
         // Récupération de l'uid de l'utilisateur
@@ -147,7 +152,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         initAnnonceViews(annoncePhotos);
 
         // Récupération des infos du vendeur
-        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observeOnce(this::initSeller);
+        viewModel.getFirebaseSeller(annoncePhotos.getAnnonceEntity().getUidUser()).observe(this, this::initSeller);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
@@ -184,17 +189,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private boolean argsAvailable(Bundle args) {
-        if (args == null) {
-            Log.e(TAG, "No arguments found");
-            return false;
-        } else if (!args.containsKey(ARG_ANNONCE) || args.getParcelable(ARG_ANNONCE) == null) {
-            Log.e(TAG, String.format("Argument named %s is mandatory", ARG_ANNONCE));
-            return false;
-        }
-        return true;
-    }
-
     private void initAnnonceViews(AnnoncePhotos annoncePhotos) {
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
 
@@ -212,15 +206,13 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private void initSeller(@NonNull UserEntity seller) {
         this.seller = seller;
         AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
-
-        if (seller.getPhotoUrl() != null) {
-            GlideApp.with(imageProfilSeller)
+        if (NetworkReceiver.checkConnection(this) && seller.getPhotoUrl() != null) {
+            GlideApp.with(this)
                     .load(seller.getPhotoUrl())
                     .circleCrop()
                     .placeholder(R.drawable.ic_person_white_48dp)
                     .error(R.drawable.ic_person_white_48dp)
                     .into(imageProfilSeller);
-
         }
 
         boolean amITheOwner = uidUser != null && !uidUser.isEmpty() && uidUser.equals(annonce.getUidUser());

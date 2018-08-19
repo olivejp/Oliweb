@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
@@ -37,15 +38,13 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
-import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -84,6 +83,9 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
+    @BindView(R.id.coordinator_layout)
+    CoordinatorLayout coordinatorLayout;
+
     @BindView(R.id.nav_view)
     NavigationView navigationView;
 
@@ -110,9 +112,6 @@ public class MainActivity extends AppCompatActivity
     private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
     private boolean dynamicLinkProcessed = false;
-
-    private Intent intentLocalDbService;
-    private Intent intentFirebaseDbService;
 
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
         TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
@@ -155,7 +154,7 @@ public class MainActivity extends AppCompatActivity
         // cas où il y a du réseau.
         NetworkReceiver.getInstance().listen(this);
 
-        initServicesIntents();
+        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 
         initConfigDefaultValues();
 
@@ -163,12 +162,6 @@ public class MainActivity extends AppCompatActivity
 
         initFragments(savedInstanceState);
     }
-
-    private void initServicesIntents() {
-        intentLocalDbService = new Intent(getApplicationContext(), DatabaseSyncListenerService.class);
-        intentFirebaseDbService = new Intent(getApplicationContext(), FirebaseSyncListenerService.class);
-    }
-
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
@@ -196,6 +189,8 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
+
+        viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
     }
 
     private void initFragments(Bundle savedInstanceState) {
@@ -281,7 +276,6 @@ public class MainActivity extends AppCompatActivity
             Utility.signIn(this, RC_SIGN_IN);
         } else {
             Utility.signOut(getApplicationContext());
-            stopAllServices();
         }
     }
 
@@ -320,7 +314,7 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
         }
         if (requestCode == RC_POST_ANNONCE && resultCode == RESULT_OK) {
-            Snackbar.make(toolbar, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(coordinatorLayout, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -346,7 +340,7 @@ public class MainActivity extends AppCompatActivity
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
             SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
-            SyncService.launchSynchroFromFirebase(MainActivity.this, viewModel.getFirebaseUser().getUid());
+            SyncService.launchSynchroFromFirebase(MainActivity.this, viewModel.getUserConnected().getUid());
             dialog.dismiss();
         }
     }
@@ -382,9 +376,17 @@ public class MainActivity extends AppCompatActivity
         viewModel.updateSort(sort);
     }
 
+    @OnClick(R.id.fab_advanced_search)
+    public void onClickAdvancedSearch(View v) {
+        Intent intent = new Intent(this, AdvancedSearchActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
     private void catchDynamicLink() {
         mFirebaseDynamicLinks.getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {
+                    // TODO Déplacer ce code dans une classe plus business.
                     if (data != null && data.getLink() != null && !dynamicLinkProcessed) {
                         Uri deepLink = data.getLink();
                         String uidAnnonce = deepLink.getLastPathSegment();
@@ -418,7 +420,7 @@ public class MainActivity extends AppCompatActivity
         if (userEntity.getEmail() != null && !userEntity.getEmail().isEmpty()) {
             profileEmail.setText(userEntity.getEmail());
         }
-        if (userEntity.getPhotoUrl() != null && !userEntity.getPhotoUrl().isEmpty()) {
+        if (userEntity.getPhotoUrl() != null) {
             GlideApp.with(profileImage)
                     .load(userEntity.getPhotoUrl())
                     .circleCrop()
@@ -467,25 +469,29 @@ public class MainActivity extends AppCompatActivity
     }
 
     private FirebaseAuth.AuthStateListener defineAuthListener() {
-        return firebaseAuth -> {
-            if (firebaseAuth.getCurrentUser() == null) {
-                initNoConnectedUser();
-                return;
-            }
-
-            viewModel.saveUser(firebaseAuth.getCurrentUser()).observeOnce(isNewUser -> initConnectedUser(firebaseAuth.getCurrentUser(), isNewUser));
-            viewModel.findByUid(firebaseAuth.getCurrentUser().getUid()).observe(this, this::initViewsForThisUser);
-        };
+        return firebaseAuth -> viewModel
+                .listenAuthentication(firebaseAuth.getCurrentUser())
+                .observeOnce(authEventType -> {
+                    if (authEventType != null) {
+                        switch (authEventType) {
+                            case DISCONNECT:
+                                clearConnectedUser();
+                                break;
+                            case NEW_CONNECTION:
+                                initNewConnection(firebaseAuth.getCurrentUser());
+                                break;
+                            case NOTHING:
+                            case SAME_CONNECTION:
+                            default:
+                        }
+                    }
+                });
     }
 
-    private void initConnectedUser(FirebaseUser firebaseUser, AtomicBoolean isNewUser) {
-        if (isNewUser != null && isNewUser.get()) {
-            Snackbar.make(navigationView, R.string.welcome, Snackbar.LENGTH_LONG).setAction(R.string.show_profile, v -> callProfilActivity()).show();
-        }
-        SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(firebaseUser.getUid());
-        viewModel.setFirebaseUser(firebaseUser);
+    private void initNewConnection(FirebaseUser user) {
+        Snackbar.make(coordinatorLayout, R.string.welcome, Snackbar.LENGTH_LONG).setAction(R.string.show_profile, v -> callProfilActivity()).show();
         if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
-            viewModel.shouldIAskQuestionToRetrieveData(firebaseUser.getUid()).observeOnce(shouldAsk -> {
+            viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {
                 if (shouldAsk != null && shouldAsk.get() && !questionHasBeenAsked) {
                     questionHasBeenAsked = true;
                     sendNotificationToRetreiveData(getSupportFragmentManager(), this);
@@ -493,16 +499,14 @@ public class MainActivity extends AppCompatActivity
             });
             questionHasBeenAsked = false;
         }
-        startAllServices(firebaseUser.getUid());
     }
 
-    private void initNoConnectedUser() {
+    private void clearConnectedUser() {
         // activeBadges doit être appelé avant de supprimer l'UID du user dans les SharedPreferences
         prepareNavigationMenu(false);
         activeBadges(SharedPreferencesHelper.getInstance(getApplicationContext()).getUidFirebaseUser(), false);
         profileName.setText(null);
         profileEmail.setText(null);
-        viewModel.setFirebaseUser(null);
         profileImage.setImageResource(R.drawable.ic_person_white_48dp);
         SharedPreferencesHelper.getInstance(this).setUidFirebaseUser(null);
         SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(true);
@@ -541,33 +545,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void startAllServices(String uidUser) {
-        if (NetworkReceiver.checkConnection(this)) {
-            // Lancement du service pour écouter la DB en local
-            intentLocalDbService.putExtra(DatabaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
-            startService(intentLocalDbService);
-
-            // Lancement du service pour écouter Firebase
-            intentFirebaseDbService.putExtra(FirebaseSyncListenerService.CHAT_SYNC_UID_USER, uidUser);
-            startService(intentFirebaseDbService);
-        }
-    }
-
-    private void stopAllServices() {
-        stopService(intentLocalDbService);
-        stopService(intentFirebaseDbService);
-    }
-
     @Override
     public void onNetworkEnable() {
         String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
         if (uidUser != null && !uidUser.isEmpty()) {
-            startAllServices(uidUser);
+            viewModel.startAllServices(uidUser);
         }
+        viewModel.setIsNetworkAvailable(true);
     }
 
     @Override
     public void onNetworkDisable() {
-        stopAllServices();
+        viewModel.stopAllServices();
+        viewModel.setIsNetworkAvailable(false);
     }
 }
