@@ -4,7 +4,6 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 
 import oliweb.nc.oliweb.R;
@@ -12,10 +11,10 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.fragment.ListMessageFragment;
+import oliweb.nc.oliweb.utility.ArgumentsChecker;
 
-import static junit.framework.Assert.assertNotNull;
-import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT;
-import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_UID_USER;
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_CHAT;
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_USER;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyChatsActivity extends AppCompatActivity {
@@ -30,7 +29,6 @@ public class MyChatsActivity extends AppCompatActivity {
     public static final String ARG_ACTION_FRAGMENT_MESSAGE = "ARG_ACTION_FRAGMENT_MESSAGE";
 
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
-
     public static final String DATA_FIREBASE_USER_UID = "DATA_FIREBASE_USER_UID";
 
     private MyChatsActivityViewModel viewModel;
@@ -39,45 +37,40 @@ public class MyChatsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getIntent() == null || getIntent().getAction() == null || getIntent().getAction().isEmpty()) {
-            Log.e(TAG, "No intent or no action to open MyChatsActivity", new RuntimeException());
-            finish();
-        }
-
         String action = getIntent().getAction();
+        Bundle args = getIntent().getExtras();
+        ArgumentsChecker argumentsChecker = new ArgumentsChecker();
+        argumentsChecker.setArguments(args)
+                .isMandatoryWithCondition(DATA_FIREBASE_USER_UID, bundle -> ARG_ACTION_OPEN_CHATS.equals(action))
+                .isMandatoryWithCondition(ARG_UID_USER, bundle -> ARG_ACTION_SEND_DIRECT_MESSAGE.equals(action))
+                .isMandatoryWithCondition(ARG_UID_CHAT, bundle -> ARG_ACTION_SEND_DIRECT_MESSAGE.equals(action))
+                .isMandatoryWithCondition(ARG_ANNONCE, bundle -> ARG_ACTION_FRAGMENT_MESSAGE.equals(action))
+                .isMandatoryWithCondition(DATA_FIREBASE_USER_UID, bundle -> ARG_ACTION_FRAGMENT_MESSAGE.equals(action))
+                .setOnFailureListener(e -> finish())
+                .check();
+
         viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
         viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
         setContentView(R.layout.activity_my_chats);
 
         if (ARG_ACTION_OPEN_CHATS.equals(action)) {
-            assertNotNull(String.format("Need extras named %s containing the uid user", DATA_FIREBASE_USER_UID), getIntent().getExtras());
-            assertNotNull(String.format("Extra %s can't be null", DATA_FIREBASE_USER_UID), getIntent().getExtras().get(DATA_FIREBASE_USER_UID));
             String argUidUser = getIntent().getStringExtra(DATA_FIREBASE_USER_UID);
             viewModel.setFirebaseUserUid(argUidUser);
             initFragments();
         } else if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(action)) {
-            assertNotNull(String.format("Need extras named %s containing the uid user and %s containing the uid chat", ARG_ACTION_SEND_DIRECT_UID_USER, ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT), getIntent().getExtras());
-            assertNotNull(String.format("Extra %s can't be null", ARG_ACTION_SEND_DIRECT_UID_USER), getIntent().getExtras().get(ARG_ACTION_SEND_DIRECT_UID_USER));
-            assertNotNull(String.format("Extra %s can't be null", ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT), getIntent().getExtras().get(ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT));
-            String argUidUser = getIntent().getStringExtra(ARG_ACTION_SEND_DIRECT_UID_USER);
-            String argUidChat = getIntent().getStringExtra(ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT);
+            String argUidUser = getIntent().getStringExtra(ARG_UID_USER);
+            String argUidChat = getIntent().getStringExtra(ARG_UID_CHAT);
             viewModel.setFirebaseUserUid(argUidUser);
             viewModel.rechercheMessageByUidChat(argUidChat);
             initFragments();
         } else if (ARG_ACTION_FRAGMENT_MESSAGE.equals(action)) {
-            assertNotNull(String.format("Need extras named %s containing an AnnonceEntity and %s containing the uid of the connected user", ARG_ANNONCE, DATA_FIREBASE_USER_UID), getIntent().getExtras());
-            assertNotNull(String.format("Extra %s can't be null", ARG_ANNONCE), getIntent().getExtras().get(ARG_ANNONCE));
-            assertNotNull(String.format("Extra %s can't be null", DATA_FIREBASE_USER_UID), getIntent().getExtras().get(DATA_FIREBASE_USER_UID));
-            AnnonceEntity annonce = getIntent().getExtras().getParcelable(ARG_ANNONCE);
+            AnnonceEntity annonce = args.getParcelable(ARG_ANNONCE);
             String argUidUser = getIntent().getStringExtra(DATA_FIREBASE_USER_UID);
             viewModel.setFirebaseUserUid(argUidUser);
             viewModel.rechercheMessageByAnnonce(annonce);
             setTitle(annonce.getTitre());
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listMessageFragment, TAG_MASTER_FRAGMENT).commit();
-        } else {
-            Log.e(TAG, String.format("%s is not an available actions", action), new RuntimeException());
-            finish();
         }
 
         // Récupération d'une map avec tous les UID des personnes qui correspondent avec moi.

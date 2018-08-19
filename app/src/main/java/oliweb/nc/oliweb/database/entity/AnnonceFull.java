@@ -2,6 +2,8 @@ package oliweb.nc.oliweb.database.entity;
 
 import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Relation;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.util.List;
 
@@ -9,7 +11,7 @@ import java.util.List;
  * Created by orlanth23 on 08/02/2018.
  */
 
-public class AnnonceFull {
+public class AnnonceFull implements Parcelable {
     @Embedded
     public AnnonceEntity annonce;
 
@@ -63,4 +65,40 @@ public class AnnonceFull {
                 ", utilisateur=" + utilisateur +
                 '}';
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(this.annonce, flags);
+        dest.writeTypedList(this.photos);
+        dest.writeTypedList(this.categorie);
+        dest.writeTypedList(this.utilisateur);
+    }
+
+    public AnnonceFull() {
+    }
+
+    protected AnnonceFull(Parcel in) {
+        this.annonce = in.readParcelable(AnnonceEntity.class.getClassLoader());
+        this.photos = in.createTypedArrayList(PhotoEntity.CREATOR);
+        this.categorie = in.createTypedArrayList(CategorieEntity.CREATOR);
+        this.utilisateur = in.createTypedArrayList(UserEntity.CREATOR);
+    }
+
+    public static final Creator<AnnonceFull> CREATOR = new Creator<AnnonceFull>() {
+        @Override
+        public AnnonceFull createFromParcel(Parcel source) {
+            return new AnnonceFull(source);
+        }
+
+        @Override
+        public AnnonceFull[] newArray(int size) {
+            return new AnnonceFull[size];
+        }
+    };
 }

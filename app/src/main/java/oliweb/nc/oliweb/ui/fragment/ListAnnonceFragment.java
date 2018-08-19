@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -23,6 +24,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,13 +36,11 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
-import oliweb.nc.oliweb.ui.activity.AdvancedSearchActivity;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -102,13 +102,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
-    private ArrayList<AnnoncePhotos> annoncePhotosList = new ArrayList<>();
+    private ArrayList<AnnonceFull> annoncePhotosList = new ArrayList<>();
     private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sortSelected = SORT_DATE;
     private int directionSelected;
     private ActionBar actionBar;
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
+    private Snackbar snackbar;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -130,8 +131,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonceEntity();
+            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
@@ -143,7 +144,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();
                     Intent sendIntent = new Intent();
-                    String msg = "Hey, regarde cette petite annonce : " + shortLink;
+                    String msg = getString(R.string.default_text_share_link) + shortLink;
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
                     sendIntent.setType("text/plain");
@@ -177,26 +178,29 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnoncePhotos annoncePhotos = viewHolder.getAnnoncePhotos();
-            if (uidUser.equals(annoncePhotos.getAnnonceEntity().getUidUser())) {
-                Toast.makeText(appCompatActivity, R.string.IMPOSSIBLE_YOU_OWN_THIS_AD, Toast.LENGTH_LONG).show();
-            } else {
-                if (annoncePhotos.getAnnonceEntity().getFavorite() == 1) {
-                    // Suppression des favoris
-                    viewModel.removeFromFavoriteLive(uidUser, annoncePhotos)
-                            .observeOnce(atomicBoolean -> {
-                                if (atomicBoolean != null && atomicBoolean.get()) {
-                                    Snackbar.make(coordinatorLayout, R.string.AD_REMOVE_FROM_FAVORITE, Snackbar.LENGTH_LONG).show();
-                                }
-                            });
-                } else {
-                    viewModel.saveToFavorite(uidUser, annoncePhotos).observeOnce(annonceEntity ->
-                            Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                    .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                    .show()
-                    );
-                }
-            }
+            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+                    .observeOnce(addRemoveFromFavorite -> {
+                        if (addRemoveFromFavorite != null) {
+                            switch (addRemoveFromFavorite) {
+                                case ONE_OF_YOURS:
+                                    Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                                    break;
+                                case ADD_SUCCESSFUL:
+                                    Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                            .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                            .show();
+                                    break;
+                                case REMOVE_SUCCESSFUL:
+                                    Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                                    break;
+                                case REMOVE_FAILED:
+                                    Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
         }
     };
 
@@ -240,8 +244,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             action = getArguments().getString(ARG_ACTION);
         }
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveDataFirebaseUser().observe(appCompatActivity, firebaseUser ->
-                uidUser = (firebaseUser != null) ? firebaseUser.getUid() : null
+        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity ->
+                uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
     }
 
@@ -252,6 +256,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
+        snackbar = Snackbar.make(coordinatorLayout, "Réseau non disponible", BaseTransientBottomBar.LENGTH_INDEFINITE);
+        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
+        layout.setBackgroundColor(appCompatActivity.getResources().getColor(R.color.colorAccentDarker));
         annonceBeautyAdapter = new AnnonceBeautyAdapter(appCompatActivity.getResources().getColor(R.color.colorPrimary),
                 onClickListener,
                 onClickListenerShare,
@@ -269,6 +276,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         swipeRefreshLayout.setOnRefreshListener(this);
 
         viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
+
+        viewModel.getIsNetworkAvailable().observe(this, atomicBoolean -> {
+            if (atomicBoolean != null && !atomicBoolean.get()) {
+                snackbar.show();
+            } else {
+                snackbar.dismiss();
+            }
+        });
 
         initAccordingToAction();
 
@@ -302,13 +317,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
     }
 
-    @OnClick(R.id.fab_advanced_search)
-    public void onClickAdvancedSearch(View v) {
-        Intent intent = new Intent(appCompatActivity, AdvancedSearchActivity.class);
-        startActivity(intent);
-        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-    }
-
     private void initAccordingToAction() {
         switch (action) {
             case ACTION_FAVORITE:
@@ -319,7 +327,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
                         if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
                             Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
-                            annoncePhotosList = (ArrayList<AnnoncePhotos>) annoncePhotos;
+                            annoncePhotosList = (ArrayList<AnnonceFull>) annoncePhotos;
                             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
                             linearLayout.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
@@ -371,7 +379,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             }
 
             if (action.equals(ACTION_MOST_RECENT)) {
-                ArrayList<AnnoncePhotos> list = new ArrayList<>();
+                ArrayList<AnnonceFull> list = new ArrayList<>();
                 annonceBeautyAdapter.setListAnnonces(list);
                 annonceBeautyAdapter.notifyDataSetChanged();
                 annoncePhotosList = list;
@@ -394,9 +402,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 break;
             case SORT_PRICE:
                 loadSortPrice().addListenerForSingleValueEvent(loadSortListener);
-                break;
             default:
-                break;
         }
     }
 
@@ -404,17 +410,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Query query = annoncesReference.orderByChild("prix");
         if (directionSelected == ASC) {
             Integer lastPrice = 0;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonceEntity().getPrix() > lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonce().getPrix() > lastPrice) {
+                    lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
             query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (directionSelected == DESC) {
             Integer lastPrice = Integer.MAX_VALUE;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (lastPrice < annoncePhotos.getAnnonceEntity().getPrix()) {
-                    lastPrice = annoncePhotos.getAnnonceEntity().getPrix();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (lastPrice < annoncePhotos.getAnnonce().getPrix()) {
+                    lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
             query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
@@ -426,17 +432,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Query query = annoncesReference.orderByChild("datePublication");
         if (directionSelected == ASC) {
             Long lastDate = 0L;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonceEntity().getDatePublication() > lastDate) {
-                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
+                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
             query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
         } else if (directionSelected == DESC) {
             Long lastDate = Long.MAX_VALUE;
-            for (AnnoncePhotos annoncePhotos : annoncePhotosList) {
-                if (lastDate < annoncePhotos.getAnnonceEntity().getDatePublication()) {
-                    lastDate = annoncePhotos.getAnnonceEntity().getDatePublication();
+            for (AnnonceFull annoncePhotos : annoncePhotosList) {
+                if (lastDate < annoncePhotos.getAnnonce().getDatePublication()) {
+                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
             query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
@@ -459,7 +465,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
-    private TaskListener<ArrayList<AnnoncePhotos>> taskListener = listAnnoncePhotos -> {
+    private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
         annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);

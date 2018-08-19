@@ -12,8 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
+import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
 
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
@@ -24,92 +24,92 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
  * Created by 2761oli on 08/03/2018.
  */
 
-public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Void, ArrayList<AnnoncePhotos>> {
+public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Void, ArrayList<AnnonceFull>> {
 
     private static final String TAG = LoadMostRecentAnnonceTask.class.getName();
 
-    public LoadMostRecentAnnonceTask(TaskListener<ArrayList<AnnoncePhotos>> listener) {
+    public LoadMostRecentAnnonceTask(TaskListener<ArrayList<AnnonceFull>> listener) {
         this.listener = listener;
     }
 
-    private TaskListener<ArrayList<AnnoncePhotos>> listener;
+    private TaskListener<ArrayList<AnnonceFull>> listener;
 
-    public void setListener(TaskListener<ArrayList<AnnoncePhotos>> listener) {
+    public void setListener(TaskListener<ArrayList<AnnonceFull>> listener) {
         this.listener = listener;
     }
 
-    private static Comparator<AnnoncePhotos> compareDateAsc = (o1, o2) -> {
-        if (o1.getAnnonceEntity().getDatePublication() < o2.getAnnonceEntity().getDatePublication()) {
+    private static Comparator<AnnonceFull> compareDateAsc = (o1, o2) -> {
+        if (o1.getAnnonce().getDatePublication() < o2.getAnnonce().getDatePublication()) {
             return 1;
         }
-        if (o1.getAnnonceEntity().getDatePublication() > o2.getAnnonceEntity().getDatePublication()) {
+        if (o1.getAnnonce().getDatePublication() > o2.getAnnonce().getDatePublication()) {
             return -1;
         }
-        if (o1.getAnnonceEntity().getDatePublication().equals(o2.getAnnonceEntity().getDatePublication())) {
+        if (o1.getAnnonce().getDatePublication().equals(o2.getAnnonce().getDatePublication())) {
             return 0;
         }
         return 0;
     };
 
-    private static Comparator<AnnoncePhotos> compareDateDesc = (o1, o2) -> {
-        if (o1.getAnnonceEntity().getDatePublication() > o2.getAnnonceEntity().getDatePublication()) {
+    private static Comparator<AnnonceFull> compareDateDesc = (o1, o2) -> {
+        if (o1.getAnnonce().getDatePublication() > o2.getAnnonce().getDatePublication()) {
             return 1;
         }
-        if (o1.getAnnonceEntity().getDatePublication() < o2.getAnnonceEntity().getDatePublication()) {
+        if (o1.getAnnonce().getDatePublication() < o2.getAnnonce().getDatePublication()) {
             return -1;
         }
-        if (o1.getAnnonceEntity().getDatePublication().equals(o2.getAnnonceEntity().getDatePublication())) {
+        if (o1.getAnnonce().getDatePublication().equals(o2.getAnnonce().getDatePublication())) {
             return 0;
         }
         return 0;
     };
 
-    private static Comparator<AnnoncePhotos> comparePrixAsc = (o1, o2) -> {
-        if (o1.getAnnonceEntity().getPrix() > o2.getAnnonceEntity().getPrix()) {
+    private static Comparator<AnnonceFull> comparePrixAsc = (o1, o2) -> {
+        if (o1.getAnnonce().getPrix() > o2.getAnnonce().getPrix()) {
             return 1;
         }
-        if (o1.getAnnonceEntity().getPrix() < o2.getAnnonceEntity().getPrix()) {
+        if (o1.getAnnonce().getPrix() < o2.getAnnonce().getPrix()) {
             return -1;
         }
-        if (o1.getAnnonceEntity().getPrix().equals(o2.getAnnonceEntity().getPrix())) {
+        if (o1.getAnnonce().getPrix().equals(o2.getAnnonce().getPrix())) {
             return 0;
         }
         return 0;
     };
 
-    private static Comparator<AnnoncePhotos> comparePrixDesc = (o1, o2) -> {
-        if (o1.getAnnonceEntity().getPrix() < o2.getAnnonceEntity().getPrix()) {
+    private static Comparator<AnnonceFull> comparePrixDesc = (o1, o2) -> {
+        if (o1.getAnnonce().getPrix() < o2.getAnnonce().getPrix()) {
             return 1;
         }
-        if (o1.getAnnonceEntity().getPrix() > o2.getAnnonceEntity().getPrix()) {
+        if (o1.getAnnonce().getPrix() > o2.getAnnonce().getPrix()) {
             return -1;
         }
-        if (o1.getAnnonceEntity().getPrix().equals(o2.getAnnonceEntity().getPrix())) {
+        if (o1.getAnnonce().getPrix().equals(o2.getAnnonce().getPrix())) {
             return 0;
         }
         return 0;
     };
 
-    public static void sortList(List<AnnoncePhotos> listAnnoncePhotos, int tri, int direction) {
+    public static void sortList(List<AnnonceFull> listAnnonce, int tri, int direction) {
         switch (tri) {
             case SORT_DATE:
-                Collections.sort(listAnnoncePhotos, (direction == ASC) ? compareDateAsc : compareDateDesc);
+                Collections.sort(listAnnonce, (direction == ASC) ? compareDateAsc : compareDateDesc);
                 break;
             case SORT_TITLE:
-                Collections.sort(listAnnoncePhotos, (o1, o2) -> o1.getAnnonceEntity().getTitre().compareTo(o2.getAnnonceEntity().getTitre()));
+                Collections.sort(listAnnonce, (o1, o2) -> o1.getAnnonce().getTitre().compareTo(o2.getAnnonce().getTitre()));
                 break;
             case SORT_PRICE:
-                Collections.sort(listAnnoncePhotos, (direction == ASC) ? comparePrixAsc : comparePrixDesc);
-                break;
+                Collections.sort(listAnnonce, (direction == ASC) ? comparePrixAsc : comparePrixDesc);
+            default:
         }
     }
 
     @Override
-    protected ArrayList<AnnoncePhotos> doInBackground(LoadMoreTaskBundle[] bundles) {
-        ArrayList<AnnoncePhotos> listPhotosResult = new ArrayList<>();
+    protected ArrayList<AnnonceFull> doInBackground(LoadMoreTaskBundle[] bundles) {
+        ArrayList<AnnonceFull> listPhotosResult = new ArrayList<>();
 
         LoadMoreTaskBundle bundle = bundles[0];
-        List<AnnoncePhotos> oldList = bundle.getListPhotosResult();
+        List<AnnonceFull> oldList = bundle.getListPhotosResult();
         DataSnapshot dataSnapshot = bundle.getDataSnapshot();
 
         if (oldList != null && dataSnapshot != null) {
@@ -119,16 +119,16 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
                     AnnonceDto annonceDto = child.getValue(AnnonceDto.class);
                     if (annonceDto != null) {
                         boolean trouve = false;
-                        for (AnnoncePhotos anno : oldList) {
-                            if (anno.getAnnonceEntity().getUid().equals(annonceDto.getUuid())) {
+                        for (AnnonceFull anno : oldList) {
+                            if (anno.getAnnonce().getUid().equals(annonceDto.getUuid())) {
                                 trouve = true;
                                 break;
                             }
                         }
                         if (!trouve) {
-                            AnnoncePhotos annoncePhotos = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
                             Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
-                            listPhotosResult.add(annoncePhotos);
+                            listPhotosResult.add(annonceFull);
                         }
                     }
                 } catch (DatabaseException databaseException) {
@@ -143,7 +143,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
     }
 
     @Override
-    protected void onPostExecute(ArrayList<AnnoncePhotos> listResult) {
+    protected void onPostExecute(ArrayList<AnnonceFull> listResult) {
         listener.onTaskSuccess(listResult);
     }
 }

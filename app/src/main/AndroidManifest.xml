@@ -201,11 +201,11 @@
         </activity>
 
         <service
-            android:name=".service.sync.listener.FirebaseSyncListenerService"
+            android:name=".service.firebase.FirebaseSyncListenerService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".service.sync.listener.DatabaseSyncListenerService"
+            android:name=".service.sync.DatabaseSyncListenerService"
             android:enabled="true"
             android:exported="false" />
 

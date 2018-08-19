@@ -10,16 +10,16 @@ import android.util.Log;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Single;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
@@ -33,43 +33,36 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
     private AnnonceRepository annonceRepository;
-    private CustomLiveData<AtomicBoolean> shouldAskQuestion;
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseRetrieverService fbRetrieverService;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         ContextModule contextModule = new ContextModule(application);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
         annonceWithPhotosRepository = component.getAnnonceWithPhotosRepository();
         annonceRepository = component.getAnnonceRepository();
-        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
+        fbRetrieverService = componentFbServices.getFirebaseRetrieverService();
     }
 
-    public LiveData<List<AnnoncePhotos>> findActiveAnnonceByUidUtilisateur(String uuidUtilisateur) {
+    public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {
         return annonceWithPhotosRepository.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
     public LiveDataOnce<AtomicBoolean> shouldIAskQuestionToRetreiveData(@Nullable String uidUtilisateur) {
-        Log.d(TAG, "Starting shouldIAskQuestionToRetrieveData uidUtilisateur : " + uidUtilisateur);
-        if (shouldAskQuestion == null) {
-            shouldAskQuestion = new CustomLiveData<>();
-        }
-
         if (uidUtilisateur != null) {
-            firebaseAnnonceRepository.checkFirebaseRepository(uidUtilisateur, shouldAskQuestion);
+            return fbRetrieverService.checkFirebaseRepository(uidUtilisateur);
         }
-
-        return shouldAskQuestion;
+        return observer -> observer.onChanged(new AtomicBoolean(false));
     }
 
-    /**
-     * Update annonce and photo status to TO_DELETE
-     * ScheduleSync will do the trick.
-     *
-     * @param idAnnonce
-     */
-    public Single<AtomicBoolean> markToDelete(long idAnnonce) {
-        return this.annonceRepository.markAsToDelete(idAnnonce);
+    public LiveDataOnce<AtomicBoolean> markToDelete(long idAnnonce) {
+        CustomLiveData<AtomicBoolean> customLiveData = new CustomLiveData<>();
+        this.annonceRepository.markAsToDelete(idAnnonce)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnSuccess(customLiveData::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+        return customLiveData;
     }
 }

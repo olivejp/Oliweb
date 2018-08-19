@@ -9,11 +9,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
@@ -30,12 +29,11 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SYNC_FROM_FIREBASE = "ARG_ACTION_SYNC_FROM_FIREBASE";
     public static final String ARG_ACTION_SYNC_USER = "ARG_ACTION_SYNC_USER";
 
-    public static final String ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT = "ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT";
+    public static final String ARG_UID_CHAT = "ARG_UID_CHAT";
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
-    public static final String ARG_ACTION_SEND_DIRECT_UID_USER = "ARG_ACTION_SEND_DIRECT_UID_USER";
+    public static final String ARG_UID_USER = "ARG_UID_USER";
 
-    private DatabaseRepositoriesComponent component;
-    private FirebaseRepositoriesComponent componentFb;
+    private FirebaseServicesComponent componentFbServices;
 
     public SyncService() {
         super("SyncService");
@@ -77,12 +75,12 @@ public class SyncService extends IntentService {
     }
 
     private void handleActionSyncAll() {
-        ScheduleSync scheduleSync = componentFb.getScheduleSync();
+        ScheduleSync scheduleSync = componentFbServices.getScheduleSync();
         scheduleSync.synchronize();
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
-        FirebaseRetrieverService firebaseRetrieverService = componentFb.getFirebaseRetrieverService();
+        FirebaseRetrieverService firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
         firebaseRetrieverService.synchronize(this, uidUtilisateur);
     }
 
@@ -91,8 +89,7 @@ public class SyncService extends IntentService {
         if (intent == null) return;
 
         ContextModule contextModule = new ContextModule(this);
-        component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        componentFb = DaggerFirebaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
 
         Bundle bundle = intent.getExtras();
         if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {

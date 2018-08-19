@@ -299,7 +299,7 @@ public class MediaUtility {
             return false;
         }
 
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, Constants.MAX_SIZE);
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, Constants.MAX_IMG_PIXEL_SIZE);
         if (bitmapDst == null) {
             Log.e(TAG, "Le retaillage de l'image a échoué.");
             return false;

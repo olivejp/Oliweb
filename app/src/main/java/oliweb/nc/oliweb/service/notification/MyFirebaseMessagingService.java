@@ -16,21 +16,21 @@ import java.util.Map;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.dagger.module.ContextModule;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
-import oliweb.nc.oliweb.database.repository.local.MessageRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.ui.activity.MyChatsActivity;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
-import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT;
-import static oliweb.nc.oliweb.service.sync.SyncService.ARG_ACTION_SEND_DIRECT_UID_USER;
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_CHAT;
+import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_SEND_DIRECT_MESSAGE;
 import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
 
@@ -88,16 +88,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Intent intent = new Intent(this, SyncService.class);
             intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
-            intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT, chatUid);
+            intent.putExtra(ARG_UID_CHAT, chatUid);
             intent.putExtra(SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_ACTION_SEND_DIRECT_UID_USER, uidReceiver);
+            intent.putExtra(ARG_UID_USER, uidReceiver);
             pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         } else {
             Intent intent = new Intent(this, MyChatsActivity.class);
             intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
-            intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE_UID_CHAT, chatUid);
+            intent.putExtra(ARG_UID_CHAT, chatUid);
             intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_ACTION_SEND_DIRECT_UID_USER, uidReceiver);
+            intent.putExtra(ARG_UID_USER, uidReceiver);
             pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
 

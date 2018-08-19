@@ -7,6 +7,9 @@ Properties props = new Properties()
 props.load(new FileInputStream(propFile))
 
 android {
+    testOptions{
+        unitTests.returnDefaultValues = true;
+    }
     signingConfigs {
         config {
             keyPassword props['KEY_PASSWORD']
@@ -99,6 +102,7 @@ dependencies {
     testImplementation 'android.arch.core:core-testing:1.1.1'
     testImplementation 'android.arch.persistence.room:testing:1.1.1'
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.21.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
     annotationProcessor "android.arch.lifecycle:compiler:1.1.1"

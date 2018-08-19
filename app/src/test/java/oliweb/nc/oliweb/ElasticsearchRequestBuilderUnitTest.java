@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.network.ElasticsearchQueryBuilder;
+import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 
 @RunWith(JUnit4.class)
 public class ElasticsearchRequestBuilderUnitTest {

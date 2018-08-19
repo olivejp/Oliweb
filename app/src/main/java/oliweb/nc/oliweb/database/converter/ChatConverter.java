@@ -6,7 +6,7 @@ import java.util.List;
 
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.firebase.dto.ChatFirebase;
+import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
 
 public class ChatConverter {
 

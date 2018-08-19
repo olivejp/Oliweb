@@ -7,14 +7,14 @@ import javax.inject.Singleton;
 
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
-import oliweb.nc.oliweb.database.repository.local.MessageRepository;
-import oliweb.nc.oliweb.database.repository.local.UserRepository;
-import oliweb.nc.oliweb.firebase.repository.FirebaseUserRepository;
-import oliweb.nc.oliweb.service.sync.sender.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.sync.sender.ChatFirebaseSender;
-import oliweb.nc.oliweb.service.sync.sender.MessageFirebaseSender;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.MessageRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
+import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
+import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
+import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -32,8 +32,8 @@ public class ScheduleSync {
     private AnnonceFirebaseSender annonceFirebaseSender;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private MessageFirebaseSender messageFirebaseSender;
-    private ChatFirebaseSender chatFirebaseSender;
+    private FirebaseMessageService firebaseMessageService;
+    private FirebaseChatService firebaseChatService;
 
     @Inject
     public ScheduleSync(FirebaseUserRepository firebaseUserRepository,
@@ -42,16 +42,16 @@ public class ScheduleSync {
                         AnnonceFirebaseSender annonceFirebaseSender,
                         ChatRepository chatRepository,
                         MessageRepository messageRepository,
-                        MessageFirebaseSender messageFirebaseSender,
-                        ChatFirebaseSender chatFirebaseSender) {
+                        FirebaseMessageService firebaseMessageService,
+                        FirebaseChatService firebaseChatService) {
         this.firebaseUserRepository = firebaseUserRepository;
         this.annonceFirebaseSender = annonceFirebaseSender;
         this.userRepository = userRepository;
         this.annonceRepository = annonceRepository;
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
-        this.chatFirebaseSender = chatFirebaseSender;
-        this.messageFirebaseSender = messageFirebaseSender;
+        this.firebaseChatService = firebaseChatService;
+        this.firebaseMessageService = firebaseMessageService;
     }
 
     public void synchronize() {
@@ -62,39 +62,39 @@ public class ScheduleSync {
     }
 
     private void sendAnnonces() {
-        annonceRepository.getAllAnnonceByStatus(Utility.allStatusToSend())
-                .distinct()
+        annonceRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .flattenAsObservable(annonceEntities -> annonceEntities)
                 .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
                 .subscribe();
     }
 
 
     private void sendChats() {
-        chatRepository.findByStatusIn(Utility.allStatusToSend())
-                .distinct()
+        chatRepository.findAllByStatusIn(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(chatFirebaseSender::sendNewChat)
+                .flattenAsObservable(chatEntities -> chatEntities)
+                .doOnNext(firebaseChatService::sendNewChat)
                 .subscribe();
     }
 
     private void sendMessages() {
-        messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
-                .distinct()
+        messageRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable()
                 .flatMapIterable(list -> list)
-                .switchMap(messageFirebaseSender::sendMessage)
+                .switchMap(firebaseMessageService::sendMessage)
                 .subscribe();
     }
 
     private void sendUtilisateurs() {
-        userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
+        userRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .flattenAsObservable(userEntities -> userEntities)
                 .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
                         .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                         .doOnSuccess(success -> {

@@ -1,18 +1,18 @@
 package oliweb.nc.oliweb.database.converter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.network.elasticsearchDto.AnnonceDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.CategorieDto;
-import oliweb.nc.oliweb.network.elasticsearchDto.UtilisateurDto;
+import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.elasticsearch.CategorieDto;
+import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 
 
 public class AnnonceConverter {
@@ -26,22 +26,26 @@ public class AnnonceConverter {
      * @param annonceDto
      * @return
      */
-    public static AnnoncePhotos convertDtoToAnnoncePhotos(AnnonceDto annonceDto) {
-        AnnoncePhotos annoncePhotos = new AnnoncePhotos();
-        annoncePhotos.setPhotos(new ArrayList<>());
+    public static AnnonceFull convertDtoToAnnoncePhotos(AnnonceDto annonceDto) {
+        AnnonceFull annonceFull = new AnnonceFull();
+        annonceFull.setPhotos(new ArrayList<>());
         AnnonceEntity annonceEntity = convertDtoToEntity(annonceDto);
+
+        UtilisateurDto utilisateurDto = annonceDto.getUtilisateur();
+        UserEntity userEntity = UserConverter.convertDtoToEntity(utilisateurDto);
+        annonceFull.setUtilisateur(Collections.singletonList(userEntity));
         annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
 
         if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
             for (String photoUrl : annonceDto.getPhotos()) {
                 PhotoEntity photoEntity = new PhotoEntity();
                 photoEntity.setFirebasePath(photoUrl);
-                annoncePhotos.getPhotos().add(photoEntity);
+                annonceFull.getPhotos().add(photoEntity);
             }
         }
-        annoncePhotos.setAnnonceEntity(annonceEntity);
+        annonceFull.setAnnonce(annonceEntity);
 
-        return annoncePhotos;
+        return annonceFull;
     }
 
     /**
@@ -51,7 +55,7 @@ public class AnnonceConverter {
     public static AnnonceDto convertFullEntityToDto(AnnonceFull annonceFull) {
         AnnonceDto annonceDto = new AnnonceDto();
         UserEntity userEntity = annonceFull.getUtilisateur().get(0);
-        UtilisateurDto utilisateurDto = new UtilisateurDto(userEntity.getProfile(), userEntity.getUid(), userEntity.getTelephone(), userEntity.getEmail());
+        UtilisateurDto utilisateurDto = new UtilisateurDto(userEntity.getProfile(), userEntity.getUid(), userEntity.getTelephone(), userEntity.getEmail(), userEntity.getPhotoUrl());
         annonceDto.setUtilisateur(utilisateurDto);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
@@ -82,22 +86,29 @@ public class AnnonceConverter {
     }
 
     public static AnnonceEntity convertDtoToEntity(AnnonceDto annonceDto) {
-        AnnonceEntity annonceEntity = new AnnonceEntity();
-        annonceEntity.setUid(annonceDto.getUuid());
-        annonceEntity.setTitre(annonceDto.getTitre());
-        annonceEntity.setDescription(annonceDto.getDescription());
-        annonceEntity.setDatePublication(annonceDto.getDatePublication());
-        annonceEntity.setPrix(annonceDto.getPrix());
-        annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
-        annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
-        annonceEntity.setStatut(StatusRemote.SEND);
+        if (annonceDto != null) {
+            AnnonceEntity annonceEntity = new AnnonceEntity();
+            annonceEntity.setUid(annonceDto.getUuid());
+            annonceEntity.setTitre(annonceDto.getTitre());
+            annonceEntity.setDescription(annonceDto.getDescription());
+            annonceEntity.setDatePublication(annonceDto.getDatePublication());
+            annonceEntity.setPrix(annonceDto.getPrix());
+            annonceEntity.setStatut(StatusRemote.SEND);
+            annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
+            annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
+            annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+            annonceEntity.setFavorite(0);
 
-        annonceEntity.setContactByMsg(annonceDto.isContactMsg() ? "O" : "N");
-        annonceEntity.setContactByTel(annonceDto.isContactTel() ? "O" : "N");
-        annonceEntity.setContactByEmail(annonceDto.isContactEmail() ? "O" : "N");
+            if (annonceDto.getCategorie() != null) {
+                annonceEntity.setIdCategorie(annonceDto.getCategorie().getId());
+            }
 
-        annonceEntity.setFavorite(0);
+            if (annonceDto.getUtilisateur() != null) {
+                annonceEntity.setUidUser(annonceDto.getUtilisateur().getUuid());
+            }
 
-        return annonceEntity;
+            return annonceEntity;
+        }
+        return null;
     }
 }

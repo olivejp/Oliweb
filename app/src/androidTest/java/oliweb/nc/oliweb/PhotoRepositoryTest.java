@@ -9,9 +9,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.reactivex.observers.TestObserver;
-import oliweb.nc.oliweb.database.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -27,7 +31,9 @@ public class PhotoRepositoryTest {
     @Before
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
-        photoRepository = PhotoRepository.getInstance(appContext);
+        ContextModule contextModule = new ContextModule(appContext);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        photoRepository = component.getPhotoRepository();
         UtilityTest.cleanBase(appContext);
     }
 

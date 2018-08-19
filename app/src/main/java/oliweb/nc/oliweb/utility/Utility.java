@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.utility;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,15 +18,16 @@ import com.firebase.ui.auth.AuthUI;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -64,9 +66,15 @@ public class Utility {
     }
 
     public static void callLoginUi(AppCompatActivity activityCaller, int requestCode) {
+        List<String> listPermissionsFacebook = new ArrayList<>(
+                Arrays.asList("public_profile",
+                        "email",
+                        "user_friends",
+                        "user_hometown",
+                        "user_likes"));
         List<AuthUI.IdpConfig> listProviders = new ArrayList<>();
         listProviders.add(new AuthUI.IdpConfig.GoogleBuilder().build());
-        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().build());
+        listProviders.add(new AuthUI.IdpConfig.FacebookBuilder().setPermissions(listPermissionsFacebook).build());
         listProviders.add(new AuthUI.IdpConfig.EmailBuilder().build());
 
         activityCaller.startActivityForResult(
@@ -273,4 +281,12 @@ public class Utility {
         NoticeDialogFragment.sendDialog(fragmentManager, dialogInfos, listener);
     }
 
+    public static int getNavigationBarHeight(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
 }

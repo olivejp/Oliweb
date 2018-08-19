@@ -1,31 +1,42 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
-import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
 
-import oliweb.nc.oliweb.firebase.FirebaseQueryLiveData;
+public class AnnonceDetailViewModel extends ViewModel {
 
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_USER_REF;
+    private static final String TAG = AnnonceDetailViewModel.class.getCanonicalName();
 
-public class AnnonceDetailViewModel extends AndroidViewModel {
+    private FirebaseUserRepository firebaseUserRepository;
 
-    private FirebaseQueryLiveData fbSellerLiveData;
-
-    public AnnonceDetailViewModel(@NonNull Application application) {
-        super(application);
+    public AnnonceDetailViewModel() {
+        super();
+        FirebaseRepositoriesComponent firebaseRepositoriesComponent = DaggerFirebaseRepositoriesComponent.builder().build();
+        firebaseUserRepository = firebaseRepositoriesComponent.getFirebaseUserRepository();
     }
 
-    public LiveData<DataSnapshot> getFirebaseSeller(String uidSeller) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_USER_REF).child(uidSeller);
-        if (fbSellerLiveData == null || fbSellerLiveData.getQuery() != ref) {
-            fbSellerLiveData = new FirebaseQueryLiveData(ref, false);
-        }
-        return fbSellerLiveData;
+    public LiveData<UserEntity> getFirebaseSeller(String uidSeller) {
+        return new LiveData<UserEntity>() {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<UserEntity> observer) {
+                super.observe(owner, observer);
+                firebaseUserRepository.getUtilisateurByUid(uidSeller)
+                        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                        .doOnSuccess(observer::onChanged)
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .subscribe();
+            }
+        };
     }
 }

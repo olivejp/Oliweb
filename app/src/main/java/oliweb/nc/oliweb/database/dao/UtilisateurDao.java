@@ -39,11 +39,11 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
-    public abstract LiveData<UserEntity> findByUuid(String uuidUtilisateur);
+    public abstract LiveData<UserEntity> findByUid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
-    public abstract Maybe<UserEntity> findSingleByUuid(String uuidUtilisateur);
+    public abstract Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM utilisateur WHERE uid = :uuidUtilisateur")
@@ -52,4 +52,8 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
     public abstract Flowable<UserEntity> getAllUtilisateursByStatus(List<String> statutList);
+
+    @Transaction
+    @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
+    public abstract Single<List<UserEntity>> findAllByStatus(List<String> statutList);
 }

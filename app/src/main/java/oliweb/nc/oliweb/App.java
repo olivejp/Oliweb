@@ -6,9 +6,9 @@ import com.evernote.android.job.JobManager;
 import com.facebook.stetho.Stetho;
 import com.squareup.leakcanary.LeakCanary;
 
-import oliweb.nc.oliweb.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.service.job.SyncJob;
 import oliweb.nc.oliweb.service.job.SyncJobCreator;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 
 
 /**

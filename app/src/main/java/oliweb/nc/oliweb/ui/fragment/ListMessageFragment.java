@@ -25,8 +25,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.MessageAdapter;
 import oliweb.nc.oliweb.utility.Utility;
 
-import static junit.framework.Assert.assertNotNull;
-
 /**
  * Created by 2761oli on 23/03/2018.
  */
@@ -140,13 +138,14 @@ public class ListMessageFragment extends Fragment {
                 Toast.makeText(appCompatActivity, "Impossible de s'envoyer des messages", Toast.LENGTH_LONG).show();
             } else {
                 viewModel.findOrCreateLiveNewChat().observeOnce(chatEntity -> {
-                            assertNotNull(TAG + " : Le chatEntity est null", chatEntity);
-                            viewModel.saveLiveMessage(messageToSend).observeOnce(atomicBoolean -> {
-                                Log.d(TAG, "Message correctement sauvegardé");
-                                if (initializeAdapterLater) {
-                                    initializeAdapterByIdChat(chatEntity.getIdChat());
-                                }
-                            });
+                            if (chatEntity != null) {
+                                viewModel.saveLiveMessage(messageToSend).observeOnce(atomicBoolean -> {
+                                    Log.d(TAG, "Message correctement sauvegardé");
+                                    if (initializeAdapterLater) {
+                                        initializeAdapterByIdChat(chatEntity.getIdChat());
+                                    }
+                                });
+                            }
                         }
                 );
             }

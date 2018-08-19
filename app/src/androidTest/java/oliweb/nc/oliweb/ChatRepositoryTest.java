@@ -11,10 +11,14 @@ import org.junit.runner.RunWith;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.database.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.UtilityTest.checkCount;
-import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;
+import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -30,7 +34,9 @@ public class ChatRepositoryTest {
     @Before
     public void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
-        chatRepository = ChatRepository.getInstance(appContext);
+        ContextModule contextModule = new ContextModule(appContext);
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
+        chatRepository = component.getChatRepository();
         UtilityTest.cleanBase(appContext);
     }
 
@@ -56,7 +62,7 @@ public class ChatRepositoryTest {
         // Insert
         TestObserver<ChatEntity> listTestObserver = new TestObserver<>();
         chatRepository.singleSave(chat).subscribe(listTestObserver);
-        waitTerminalEvent(listTestObserver,5);
+        waitTerminalEvent(listTestObserver, 5);
         listTestObserver.assertNoErrors();
         listTestObserver.dispose();
 

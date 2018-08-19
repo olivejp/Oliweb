@@ -46,7 +46,9 @@
                         android:id="@+id/indicator_detail"
                         android:layout_width="match_parent"
                         android:layout_height="64dp"
-                        app:layout_constraintTop_toTopOf="parent"/>
+                        app:ci_drawable="@xml/circle_indicator_color"
+                        app:ci_drawable_unselected="@xml/circle_indicator_color"
+                        app:layout_constraintTop_toTopOf="parent" />
                 </android.support.constraint.ConstraintLayout>
 
                 <android.support.v7.widget.Toolbar

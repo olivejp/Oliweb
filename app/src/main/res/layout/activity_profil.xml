@@ -16,13 +16,11 @@
             android:layout_height="wrap_content"
             tools:context=".ui.activity.ProfilActivity">
 
-            <ImageView
+            <View
                 android:id="@+id/profil_image_background"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="@color/colorPrimary"
-                android:scaleType="fitXY"
-                android:src="@drawable/wallpaper"
+                android:background="@color/colorPrimaryDark"
                 app:layout_constraintTop_toTopOf="parent" />
 
 
