@@ -42,6 +42,7 @@ import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
+import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -129,16 +130,16 @@ public class MainActivityViewModel extends AndroidViewModel {
         return userService.saveUserFromFirebase(firebaseUser);
     }
 
-    public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {
-        return annonceRepository.countAllAnnoncesByUser(uid, statusToAvoid);
+    public LiveData<Integer> countAllAnnoncesByUser(String uid) {
+        return annonceRepository.countAllAnnoncesByUser(uid, Utility.allStatusToAvoid());
     }
 
     public LiveData<Integer> countAllFavoritesByUser(String uid) {
         return annonceRepository.countAllFavoritesByUser(uid);
     }
 
-    public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
-        return chatRepository.countAllChatsByUser(uidUser, status);
+    public LiveData<Integer> countAllChatsByUser(String uidUser) {
+        return chatRepository.countAllChatsByUser(uidUser, Utility.allStatusToAvoid());
     }
 
     public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
