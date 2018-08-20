@@ -74,6 +74,10 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
 
     @Transaction
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
+    public abstract Maybe<AnnonceEntity> findMaybeByUid(String uidAnnonce);
+
+    @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE idAnnonce = :idAnnonce")
     public abstract Single<Integer> countById(Long idAnnonce);
 

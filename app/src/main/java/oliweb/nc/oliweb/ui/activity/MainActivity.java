@@ -150,16 +150,12 @@ public class MainActivity extends AppCompatActivity
                 .setDeveloperModeEnabled(true)
                 .build());
 
-        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le
-        // cas où il y a du réseau.
         NetworkReceiver.getInstance().listen(this);
 
         viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 
         initConfigDefaultValues();
-
         initViews();
-
         initFragments(savedInstanceState);
     }
 
@@ -281,42 +277,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void callMyAnnoncesActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-        if (uidUser != null) {
-            Intent intent = new Intent();
-            intent.setClass(this, MyAnnoncesActivity.class);
-            intent.putExtra(ARG_UID_USER, uidUser);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-        }
-    }
-
-    private void callChatsActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-        if (uidUser != null) {
-            Intent intent = new Intent(this, MyChatsActivity.class);
-            intent.setAction(ARG_ACTION_OPEN_CHATS);
-            intent.putExtra(DATA_FIREBASE_USER_UID, uidUser);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-        }
-    }
-
-    private void callSettingActivity() {
-        Intent intent = new Intent();
-        intent.setClass(this, SettingsActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
-            Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.connection_aborted, Toast.LENGTH_SHORT).show();
         }
         if (requestCode == RC_POST_ANNONCE && resultCode == RESULT_OK) {
-            Snackbar.make(coordinatorLayout, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(coordinatorLayout, R.string.annonce_correctly_saved, Snackbar.LENGTH_LONG).show();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -379,6 +346,21 @@ public class MainActivity extends AppCompatActivity
         viewModel.updateSort(sort);
     }
 
+    @Override
+    public void onNetworkEnable() {
+        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+        if (uidUser != null && !uidUser.isEmpty()) {
+            viewModel.startAllServices(uidUser);
+        }
+        viewModel.setIsNetworkAvailable(true);
+    }
+
+    @Override
+    public void onNetworkDisable() {
+        viewModel.stopAllServices();
+        viewModel.setIsNetworkAvailable(false);
+    }
+
     @OnClick(R.id.fab_advanced_search)
     public void onClickAdvancedSearch(View v) {
         Intent intent = new Intent(this, AdvancedSearchActivity.class);
@@ -432,16 +414,15 @@ public class MainActivity extends AppCompatActivity
                     .into(profileImage);
         }
 
-        // activeBadges doit être appelé après avoir renseigné l'UID du user dans les SharedPreferences
         activeBadges(userEntity.getUid(), true);
     }
 
     private void activeBadges(@Nullable String uidUser, boolean active) {
-        if (active) {
+        if (active && uidUser != null && !uidUser.isEmpty()) {
             // On lance les observers pour récupérer les badges
-            liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uidUser, Utility.allStatusToAvoid());
+            liveCountAllActiveAnnonce = viewModel.countAllAnnoncesByUser(uidUser);
             liveCountAllFavorite = viewModel.countAllFavoritesByUser(uidUser);
-            liveCountAllChat = viewModel.countAllChatsByUser(uidUser, Utility.allStatusToAvoid());
+            liveCountAllChat = viewModel.countAllChatsByUser(uidUser);
 
             liveCountAllActiveAnnonce.removeObservers(this);
             liveCountAllFavorite.removeObservers(this);
@@ -548,18 +529,32 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onNetworkEnable() {
-        String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-        if (uidUser != null && !uidUser.isEmpty()) {
-            viewModel.startAllServices(uidUser);
+    private void callMyAnnoncesActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, MyAnnoncesActivity.class);
+            intent.putExtra(ARG_UID_USER, uidUser);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
-        viewModel.setIsNetworkAvailable(true);
     }
 
-    @Override
-    public void onNetworkDisable() {
-        viewModel.stopAllServices();
-        viewModel.setIsNetworkAvailable(false);
+    private void callChatsActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent(this, MyChatsActivity.class);
+            intent.setAction(ARG_ACTION_OPEN_CHATS);
+            intent.putExtra(DATA_FIREBASE_USER_UID, uidUser);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
+    }
+
+    private void callSettingActivity() {
+        Intent intent = new Intent();
+        intent.setClass(this, SettingsActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 }

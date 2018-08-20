@@ -7,7 +7,6 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
-import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -23,18 +22,10 @@ public abstract class AnnonceFullDao {
     public abstract Single<AnnonceFull> findSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:statutList)")
-    public abstract Maybe<List<AnnonceFull>> getAllAnnoncesByUidUserAndStatus(String uidUser, List<String> statutList);
-
-    @Transaction
-    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
-    public abstract Flowable<AnnonceFull> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
-
-    @Transaction
-    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser")
-    public abstract Single<List<AnnonceFull>> getAllAnnoncesByUidUser(String uidUser);
-
-    @Transaction
     @Query("SELECT * FROM annonce WHERE uidUserFavorite = :uuidUtilisateur AND favorite = 1")
     public abstract LiveData<List<AnnonceFull>> findFavoritesByUidUser(String uuidUtilisateur);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce")
+    public abstract Maybe<AnnonceFull> findMaybeByUid(String uidAnnonce);
 }

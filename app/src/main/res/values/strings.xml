@@ -148,5 +148,8 @@
     <string name="show_profile">Voir mon profil</string>
     <string name="welcome">Bienvenue sur Oliweb</string>
     <string name="nice_to_see_you">Content de vous revoir %s</string>
+    <string name="connection_aborted">Connexion abandonnée</string>
+    <string name="annonce_correctly_saved">Votre annonce a bien été sauvée.</string>
+    <string name="annonce_not_available">Oups... cette annonce n\'est plus disponible</string>
 
 </resources>

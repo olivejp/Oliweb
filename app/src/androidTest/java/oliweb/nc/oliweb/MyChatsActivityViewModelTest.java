@@ -107,7 +107,7 @@ public class MyChatsActivityViewModelTest {
 
         when(mockFirebaseAnnonceRepository.findMaybeByUidAnnonce(argThat(UUID::equals))).thenReturn(Maybe.just(annonceDto));
 
-        viewModel.findLiveFirebaseByUidAnnonce(UUID).observeOnce(observer);
+        viewModel.findLiveByUidAnnonce(UUID).observeOnce(observer);
         verify(observer).onChanged(annonceDto);
     }
 

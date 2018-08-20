@@ -71,7 +71,7 @@ public class ListChatFragment extends Fragment {
         popup.show();
     };
 
-    private View.OnClickListener onClickListener = v -> callListMessage((Long) v.getTag());
+    private View.OnClickListener onChatClickListener = v -> callListMessage((Long) v.getTag());
 
     @Override
     public void onDestroyView() {
@@ -94,31 +94,6 @@ public class ListChatFragment extends Fragment {
         }
     }
 
-    @NonNull
-    private List<ChatAdapter.ListItem> prepareListItems(List<ChatEntity> listChats) {
-        if (listChats == null || listChats.isEmpty())
-            return Collections.emptyList();
-
-        List<String> listTitreDejaTraite = new ArrayList<>();
-        List<ChatAdapter.ListItem> listItems = new ArrayList<>();
-
-        for (ChatEntity chatEntity : listChats) {
-            if (!listTitreDejaTraite.contains(chatEntity.getTitreAnnonce())) {
-                ChatAdapter.HeaderItem header = new ChatAdapter.HeaderItem();
-                header.setTitreAnnonce(chatEntity.getTitreAnnonce());
-                listItems.add(header);
-                listTitreDejaTraite.add(chatEntity.getTitreAnnonce());
-            }
-
-            ChatAdapter.EventItem eventItem = new ChatAdapter.EventItem();
-            eventItem.setChatEntity(chatEntity);
-            listItems.add(eventItem);
-
-        }
-
-        return listItems;
-    }
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -129,7 +104,7 @@ public class ListChatFragment extends Fragment {
         // Init du Adapter
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(itemDecoration);
-        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUserUid(), onClickListener, onPopupClickListener);
+        ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUserUid(), onChatClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -153,10 +128,33 @@ public class ListChatFragment extends Fragment {
         return view;
     }
 
+    @NonNull
+    private List<ChatAdapter.ListItem> prepareListItems(List<ChatEntity> listChats) {
+        if (listChats == null || listChats.isEmpty())
+            return Collections.emptyList();
+
+        List<String> listTitreDejaTraite = new ArrayList<>();
+        List<ChatAdapter.ListItem> listItems = new ArrayList<>();
+
+        for (ChatEntity chatEntity : listChats) {
+            if (!listTitreDejaTraite.contains(chatEntity.getTitreAnnonce())) {
+                ChatAdapter.HeaderItem header = new ChatAdapter.HeaderItem();
+                header.setTitreAnnonce(chatEntity.getTitreAnnonce());
+                listItems.add(header);
+                listTitreDejaTraite.add(chatEntity.getTitreAnnonce());
+            }
+
+            ChatAdapter.EventItem eventItem = new ChatAdapter.EventItem();
+            eventItem.setChatEntity(chatEntity);
+            listItems.add(eventItem);
+        }
+        return listItems;
+    }
+
     private void openAnnonceDetail(ChatEntity chatchatEntity) {
-        viewModel.findLiveFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
+        viewModel.findLiveByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
             if (annonceDto != null) {
-                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
                 Intent intent = new Intent();
                 intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
                 Bundle bundle = new Bundle();
@@ -165,7 +163,7 @@ public class ListChatFragment extends Fragment {
                 intent.putExtras(bundle);
                 startActivity(intent);
             } else {
-                Toast.makeText(appCompatActivity, "Oups... cette annonce n'est plus disponible", Toast.LENGTH_LONG).show();
+                Toast.makeText(appCompatActivity, R.string.annonce_not_available, Toast.LENGTH_LONG).show();
             }
         });
     }

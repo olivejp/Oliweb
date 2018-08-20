@@ -8,6 +8,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.OliwebDatabase;
@@ -38,6 +39,10 @@ public class AnnonceFullRepository {
 
     public LiveData<List<AnnonceFull>> findFavoritesByUidUser(String uuidUtilisateur) {
         return this.annonceFullDao.findFavoritesByUidUser(uuidUtilisateur);
+    }
+
+    public Maybe<AnnonceFull> findMaybeByUid(String uuidUtilisateur) {
+        return this.annonceFullDao.findMaybeByUid(uuidUtilisateur);
     }
 
 }

@@ -5,15 +5,18 @@ import android.util.Log;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.repository.local.ChatRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
@@ -27,23 +30,40 @@ public class MyChatsActivityBusiness {
 
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private ChatRepository chatRepository;
+    private AnnonceFullRepository annonceFullRepository;
 
     @Inject
     public MyChatsActivityBusiness(FirebaseAnnonceRepository firebaseAnnonceRepository,
-                                   ChatRepository chatRepository) {
+                                   ChatRepository chatRepository,
+                                   AnnonceFullRepository annonceFullRepository) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.chatRepository = chatRepository;
+        this.annonceFullRepository = annonceFullRepository;
     }
 
-    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(final String uidAnnonce) {
         CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
-        this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+        findFromDatabase(uidAnnonce)
+                .switchIfEmpty(findFromFirebase(uidAnnonce))
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(customLiveData::postValue)
                 .doOnComplete(() -> customLiveData.postValue(null))
                 .subscribe();
+
         return customLiveData;
+    }
+
+    private Maybe<AnnonceDto> findFromFirebase(String uidAnnonce) {
+        return this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
+                .subscribeOn(Schedulers.io())
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable));
+    }
+
+    private Maybe<AnnonceDto> findFromDatabase(String uidAnnonce) {
+        return this.annonceFullRepository.findMaybeByUid(uidAnnonce)
+                .subscribeOn(Schedulers.io())
+                .map(AnnonceConverter::convertFullEntityToDto)
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable));
     }
 
     public LiveDataOnce<ChatEntity> findLiveChatByUidUserAndUidAnnonce(String uidUser, String uidAnonce) {

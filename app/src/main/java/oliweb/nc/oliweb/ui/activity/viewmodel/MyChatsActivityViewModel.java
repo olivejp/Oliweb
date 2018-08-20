@@ -89,7 +89,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatRepository.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
-    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+    public LiveDataOnce<AnnonceDto> findLiveByUidAnnonce(String uidAnnonce) {
         return business.findLiveFirebaseByUidAnnonce(uidAnnonce);
     }
 

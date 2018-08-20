@@ -73,6 +73,13 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private Application application;
 
+    public enum AuthEventType {
+        NOTHING,
+        DISCONNECT,
+        NEW_CONNECTION,
+        SAME_CONNECTION
+    }
+
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
 
@@ -126,10 +133,6 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public LiveDataOnce<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
-        return userService.saveUserFromFirebase(firebaseUser);
-    }
-
     public LiveData<Integer> countAllAnnoncesByUser(String uid) {
         return annonceRepository.countAllAnnoncesByUser(uid, Utility.allStatusToAvoid());
     }
@@ -151,7 +154,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
+                .map(AnnonceConverter::convertDtoToAnnonceFull)
                 .doOnSuccess(customLiveData::postValue)
                 .doOnComplete(() -> customLiveData.postValue(null))
                 .subscribe();
@@ -174,12 +177,6 @@ public class MainActivityViewModel extends AndroidViewModel {
         return userConnected;
     }
 
-    /**
-     * Return true if this is a disconnection
-     *
-     * @param firebaseUser
-     * @return
-     */
     public LiveDataOnce<AuthEventType> listenAuthentication(FirebaseUser firebaseUser) {
         return new CustomLiveData<AuthEventType>() {
             @Override
@@ -253,12 +250,5 @@ public class MainActivityViewModel extends AndroidViewModel {
         }
         liveNetworkAvailable.setValue(new AtomicBoolean(isNetworkAvailble));
         return liveNetworkAvailable;
-    }
-
-    public enum AuthEventType {
-        NOTHING,
-        DISCONNECT,
-        NEW_CONNECTION,
-        SAME_CONNECTION
     }
 }
