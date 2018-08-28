@@ -244,8 +244,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             uidUser = getArguments().getString(ARG_UID_USER);
             action = getArguments().getString(ARG_ACTION);
         }
-        viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity ->
+        viewModel = ViewModelProviders.of(getActivity()).get(MainActivityViewModel.class);
+        viewModel.getLiveUserConnected().observe(this, userEntity ->
                 uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
 

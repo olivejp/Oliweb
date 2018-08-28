@@ -75,6 +75,8 @@ public class MainActivityViewModel extends AndroidViewModel {
     public MainActivityViewModel(@NonNull Application application) {
         super(application);
 
+        Log.d(TAG, "Création d'une nouvelle instance de MainActivityViewModel");
+
         this.application = application;
 
         intentLocalDbService = new Intent(application, DatabaseSyncListenerService.class);
