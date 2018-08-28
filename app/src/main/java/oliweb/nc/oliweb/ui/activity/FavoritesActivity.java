@@ -44,7 +44,7 @@ public class FavoritesActivity extends AppCompatActivity {
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
-    private static final String ARG_UID_USER = "ARG_UID_USER";
+    public static final String ARG_UID_USER = "ARG_UID_USER";
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;

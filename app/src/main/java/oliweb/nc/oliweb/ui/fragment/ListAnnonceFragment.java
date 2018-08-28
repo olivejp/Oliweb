@@ -40,7 +40,6 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
-import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
@@ -57,20 +56,14 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static android.support.v4.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener
-        , NetworkReceiver.NetworkChangeListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
-
-    private static final String ARG_UID_USER = "ARG_UID_USER";
-    private static final String ARG_ACTION = "ARG_ACTION";
-
-    public static final String ACTION_FAVORITE = "ACTION_FAVORITE";
-    public static final String ACTION_MOST_RECENT = "ACTION_MOST_RECENT";
 
     public static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
     public static final String SAVE_SORT = "SAVE_SORT";
@@ -99,7 +92,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     CoordinatorLayout coordinatorLayout;
 
     private String uidUser;
-    private String action;
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
@@ -216,16 +208,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         // Empty constructor
     }
 
-    public static synchronized ListAnnonceFragment getInstance(String uidUtilisateur, String
-            action) {
-        ListAnnonceFragment listAnnonceFragment = new ListAnnonceFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(ARG_UID_USER, uidUtilisateur);
-        bundle.putString(ARG_ACTION, action);
-        listAnnonceFragment.setArguments(bundle);
-        return listAnnonceFragment;
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -239,16 +221,10 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            uidUser = getArguments().getString(ARG_UID_USER);
-            action = getArguments().getString(ARG_ACTION);
-        }
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
         viewModel.getLiveUserConnected().observe(this, userEntity ->
                 uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
-
-        NetworkReceiver.getInstance().listen(this);
     }
 
     @Override
@@ -277,9 +253,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        viewModel.sortingUpdated().observe(this, this::changeSortAndUpdateList);
+        viewModel.sortingUpdated().observe(appCompatActivity, this::changeSortAndUpdateList);
 
-        viewModel.getIsNetworkAvailable().observe(this, atomicBoolean -> {
+        viewModel.getIsNetworkAvailable().observe(appCompatActivity, atomicBoolean -> {
             if (atomicBoolean != null && !atomicBoolean.get()) {
                 snackbar.show();
             } else {
@@ -314,54 +290,23 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        NetworkReceiver.getInstance().removeListener(this);
-    }
-
-    @Override
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
     }
 
     private void initAccordingToAction() {
-        switch (action) {
-            case ACTION_FAVORITE:
-                if (uidUser != null) {
-                    if (actionBar != null) {
-                        actionBar.setTitle(R.string.MY_FAVORITE);
-                    }
-                    viewModel.getFavoritesByUidUser(uidUser).observe(this, annoncePhotos -> {
-                        if (annoncePhotos != null && !annoncePhotos.isEmpty()) {
-                            Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
-                            annoncePhotosList = (ArrayList<AnnonceFull>) annoncePhotos;
-                            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
-                            linearLayout.setVisibility(View.GONE);
-                            recyclerView.setVisibility(View.VISIBLE);
-                        } else {
-                            linearLayout.setVisibility(View.VISIBLE);
-                            recyclerView.setVisibility(View.GONE);
-                        }
-                    });
-                }
-                break;
-            case ACTION_MOST_RECENT:
-                if (actionBar != null) {
-                    actionBar.setTitle(R.string.RECENT_ADS);
-                }
-                RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
-                scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
-                    @Override
-                    public void onLoadMore() {
-                        loadMoreDatas();
-                    }
-                };
-                recyclerView.addOnScrollListener(scrollListener);
-                break;
-            default:
-                break;
+        if (actionBar != null) {
+            actionBar.setTitle(R.string.RECENT_ADS);
         }
+        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView, annonceBeautyAdapter);
+        scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore() {
+                loadMoreDatas();
+            }
+        };
+        recyclerView.addOnScrollListener(scrollListener);
     }
 
     private void changeSortAndUpdateList(Integer newSort) {
@@ -386,16 +331,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     break;
             }
 
-            if (action.equals(ACTION_MOST_RECENT)) {
-                ArrayList<AnnonceFull> list = new ArrayList<>();
-                annonceBeautyAdapter.setListAnnonces(list);
-                annonceBeautyAdapter.notifyDataSetChanged();
-                annoncePhotosList = list;
-                loadMoreDatas();
-            } else if (action.equals(ACTION_FAVORITE)) {
-                LoadMostRecentAnnonceTask.sortList(annoncePhotosList, this.sortSelected, directionSelected);
-                annonceBeautyAdapter.notifyDataSetChanged();
-            }
+            ArrayList<AnnonceFull> list = new ArrayList<>();
+            annonceBeautyAdapter.setListAnnonces(list);
+            annonceBeautyAdapter.notifyDataSetChanged();
+            annoncePhotosList = list;
+            loadMoreDatas();
         }
 
         if (swipeRefreshLayout.isRefreshing()) {
@@ -478,14 +418,4 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
     };
-
-    @Override
-    public void onNetworkEnable() {
-        viewModel.setIsNetworkAvailable(true);
-    }
-
-    @Override
-    public void onNetworkDisable() {
-        viewModel.setIsNetworkAvailable(false);
-    }
 }

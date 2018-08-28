@@ -63,7 +63,6 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ACTION_MOST_RECENT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -202,7 +201,7 @@ public class MainActivity extends AppCompatActivity
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_ANNONCE);
         }
         if (listAnnonceFragment == null) {
-            listAnnonceFragment = ListAnnonceFragment.getInstance(null, ACTION_MOST_RECENT);
+            listAnnonceFragment = new ListAnnonceFragment();
         }
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
@@ -211,7 +210,9 @@ public class MainActivity extends AppCompatActivity
         ListChatFragment listChatFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CHAT)) {
             listChatFragment = (ListChatFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CHAT);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
+            if (listChatFragment != null) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
+            }
         }
     }
 
