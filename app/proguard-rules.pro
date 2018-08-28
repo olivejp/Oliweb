@@ -23,6 +23,7 @@
 -keepattributes Signature
 
 -keep class android.support.v7.widget.SearchView { *; }
+-keep class android.support.v7.widget.** { *; }
 
 -keep class oliweb.nc.oliweb.** { *; }
 -keepclassmembers class oliweb.nc.oliweb.** {

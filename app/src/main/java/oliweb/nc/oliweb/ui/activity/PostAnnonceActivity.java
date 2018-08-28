@@ -33,6 +33,7 @@ import android.widget.Toast;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.theartofdev.edmodo.cropper.CropImage;
 
 import java.io.File;
 import java.io.IOException;
@@ -379,12 +380,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
             PhotoEntity photoEntity = (PhotoEntity) v.getTag();
             viewModel.setUpdatedPhoto(photoEntity);
             WorkImageFragment workImageFragment = new WorkImageFragment();
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .addSharedElement(v, getString(R.string.image_working_transition))
-                    .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
-                    .addToBackStack(null)
-                    .commit();
+//            getSupportFragmentManager()
+//                    .beginTransaction()
+//                    .addSharedElement(v, getString(R.string.image_working_transition))
+//                    .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
+//                    .addToBackStack(null)
+//                    .commit();
+
+
+            // start cropping activity for pre-acquired image saved on the device
+            CropImage.activity(Uri.parse(photoEntity.getUriLocal()))
+                    .setMinCropResultSize(200,200)
+                    .setMaxCropResultSize(400,400)
+                    .start(this);
         }
     }
 

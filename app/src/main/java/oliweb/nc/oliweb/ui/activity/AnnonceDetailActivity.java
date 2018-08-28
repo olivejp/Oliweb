@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -112,10 +111,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle arguments = getIntent().getExtras();
-        if (savedInstanceState != null) {
-            arguments = savedInstanceState;
-        }
+        Bundle arguments = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
 
         ArgumentsChecker checker = new ArgumentsChecker();
         checker.setArguments(arguments)
@@ -186,8 +182,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
         outState.putParcelable(ARG_ANNONCE, annonceFull);
         outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
     }
