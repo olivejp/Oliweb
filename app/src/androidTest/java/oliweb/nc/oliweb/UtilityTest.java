@@ -1,9 +1,9 @@
-package oliweb.nc.oliweb.utility;
+package oliweb.nc.oliweb;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,11 +27,15 @@ import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 public class UtilityTest {
 
-    static final String UID_USER = "123456";
-    static final String CATEGORIE_NAME = "CATEGORIE_NAME";
-    public static final String DEFAULT_PROFILE = "orlanth23";
-    public static final String DEFAULT_EMAIL = "orlanth23@hotmail.com";
-    public static final String DEFAULT_COLOR = "123456";
+    private static final String UID_USER = "123456";
+    private static final String CATEGORIE_NAME = "CATEGORIE_NAME";
+    private static final String DEFAULT_PROFILE = "orlanth23";
+    private static final String DEFAULT_EMAIL = "orlanth23@hotmail.com";
+    private static final String DEFAULT_COLOR = "123456";
+
+    private UtilityTest() {
+
+    }
 
     public static void waitTerminalEvent(TestObserver testObserver, int countDown) {
         if (!testObserver.awaitTerminalEvent(countDown, TimeUnit.SECONDS)) {

@@ -148,5 +148,6 @@
     <string name="show_profile">Voir mon profil</string>
     <string name="welcome">Bienvenue sur Oliweb</string>
     <string name="nice_to_see_you">Content de vous revoir %s</string>
+    <string name="network_unavailable">Réseau non disponible</string>
 
 </resources>

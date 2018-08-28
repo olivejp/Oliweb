@@ -53,14 +53,14 @@ public class MainActivityViewModel extends AndroidViewModel {
     private static final String TAG = MainActivityViewModel.class.getName();
 
     private AnnonceFullRepository annonceFullRepository;
-    private FirebaseAnnonceRepository firebaseAnnonceRespository;
+    private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private FirebaseRetrieverService firebaseRetrieverService;
     private AnnonceRepository annonceRepository;
     private UserRepository userRepository;
     private AnnonceService annonceService;
     private UserService userService;
     private UserEntity userConnected;
-    private boolean isNetworkAvailble;
+    private boolean isNetworkAvailable;
 
     private ChatRepository chatRepository;
     private MutableLiveData<Integer> sorting;
@@ -90,7 +90,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         annonceFullRepository = component.getAnnonceFullRepository();
         userRepository = component.getUserRepository();
         chatRepository = component.getChatRepository();
-        firebaseAnnonceRespository = componentFb.getFirebaseAnnonceRepository();
+        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
         firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
         annonceService = componentServices.getAnnonceService();
         userService = componentServices.getUserService();
@@ -147,7 +147,7 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public LiveDataOnce<AnnonceFull> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
         CustomLiveData<AnnonceFull> customLiveData = new CustomLiveData<>();
-        firebaseAnnonceRespository.findMaybeByUidAnnonce(uidAnnonce)
+        firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnoncePhotos)
@@ -240,9 +240,9 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public void setIsNetworkAvailable(boolean available) {
-        isNetworkAvailble = available;
+        isNetworkAvailable = available;
         if (liveNetworkAvailable != null) {
-            liveNetworkAvailable.postValue(new AtomicBoolean(isNetworkAvailble));
+            liveNetworkAvailable.postValue(new AtomicBoolean(isNetworkAvailable));
         }
     }
 
@@ -250,7 +250,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         if (liveNetworkAvailable == null) {
             liveNetworkAvailable = new MutableLiveData<>();
         }
-        liveNetworkAvailable.setValue(new AtomicBoolean(isNetworkAvailble));
+        liveNetworkAvailable.setValue(new AtomicBoolean(isNetworkAvailable));
         return liveNetworkAvailable;
     }
 

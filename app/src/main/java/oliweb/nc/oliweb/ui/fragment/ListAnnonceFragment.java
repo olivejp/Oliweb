@@ -40,6 +40,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity;
@@ -60,7 +61,8 @@ import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener
+        , NetworkReceiver.NetworkChangeListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
@@ -109,7 +111,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private ActionBar actionBar;
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
-    private Snackbar snackbar;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -247,6 +248,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity ->
                 uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
+
+        NetworkReceiver.getInstance().listen(this);
     }
 
     @Override
@@ -256,7 +259,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
-        snackbar = Snackbar.make(coordinatorLayout, "Réseau non disponible", BaseTransientBottomBar.LENGTH_INDEFINITE);
+        Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, BaseTransientBottomBar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(appCompatActivity.getResources().getColor(R.color.colorAccentDarker));
         annonceBeautyAdapter = new AnnonceBeautyAdapter(appCompatActivity.getResources().getColor(R.color.colorPrimary),
@@ -309,6 +312,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
         outState.putInt(SAVE_SORT, sortSelected);
         outState.putInt(SAVE_DIRECTION, directionSelected);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        NetworkReceiver.getInstance().removeListener(this);
     }
 
     @Override
@@ -470,4 +479,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
     };
+
+    @Override
+    public void onNetworkEnable() {
+        viewModel.setIsNetworkAvailable(true);
+    }
+
+    @Override
+    public void onNetworkDisable() {
+        viewModel.setIsNetworkAvailable(false);
+    }
 }

@@ -30,7 +30,6 @@ import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.UserService;
 import oliweb.nc.oliweb.utility.CustomLiveData;
-import oliweb.nc.oliweb.utility.UtilityTest;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
