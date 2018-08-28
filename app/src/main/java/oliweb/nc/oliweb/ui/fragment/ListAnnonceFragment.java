@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -81,9 +80,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     @BindView(R.id.recycler_list_annonces)
     RecyclerView recyclerView;
-
-    @BindView(R.id.empty_favorite_linear)
-    LinearLayout linearLayout;
 
     @BindView(R.id.constraint_list_annonce)
     ConstraintLayout constraintLayout;

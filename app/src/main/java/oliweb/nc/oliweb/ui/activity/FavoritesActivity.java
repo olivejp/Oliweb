@@ -164,7 +164,7 @@ public class FavoritesActivity extends AppCompatActivity {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(FavoriteActivityViewModel.class);
 
-        setContentView(R.layout.fragment_list_annonce);
+        setContentView(R.layout.fragment_list_favorite);
 
         ButterKnife.bind(this);
 
