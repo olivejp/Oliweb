@@ -58,6 +58,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.android.support:exifinterface:${supportLibrary}"
     implementation "com.android.support:appcompat-v7:${supportLibrary}"
     implementation "com.android.support:design:${supportLibrary}"
     implementation "com.android.support:customtabs:${supportLibrary}"
