@@ -43,7 +43,7 @@ import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
-import oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity;
+import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -57,7 +57,6 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static android.support.v4.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
-import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
@@ -207,8 +206,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private void callFavoriteAnnonceActivity() {
         Intent intent = new Intent();
-        intent.setClass(appCompatActivity, FavoriteAnnonceActivity.class);
-        intent.putExtra(ARG_USER_UID, uidUser);
+        intent.setClass(appCompatActivity, FavoritesActivity.class);
+        intent.putExtra(ARG_UID_USER, uidUser);
         startActivity(intent);
         appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
@@ -244,7 +243,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             uidUser = getArguments().getString(ARG_UID_USER);
             action = getArguments().getString(ARG_ACTION);
         }
-        viewModel = ViewModelProviders.of(getActivity()).get(MainActivityViewModel.class);
+        viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
         viewModel.getLiveUserConnected().observe(this, userEntity ->
                 uidUser = (userEntity != null) ? userEntity.getUid() : null
         );
@@ -255,7 +254,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_list_annonce_entity, container, false);
+        View view = inflater.inflate(R.layout.fragment_list_annonce, container, false);
 
         ButterKnife.bind(this, view);
 

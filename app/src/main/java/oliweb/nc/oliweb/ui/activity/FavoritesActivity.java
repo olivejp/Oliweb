@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -150,11 +151,20 @@ public class FavoritesActivity extends AppCompatActivity {
                 .check();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(FavoriteActivityViewModel.class);
 
-        setContentView(R.layout.fragment_list_annonce_entity);
+        setContentView(R.layout.fragment_list_annonce);
 
         ButterKnife.bind(this);
 

@@ -57,7 +57,6 @@ import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
-import static oliweb.nc.oliweb.ui.activity.FavoriteAnnonceActivity.ARG_USER_UID;
 import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_OPEN_CHATS;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
@@ -541,8 +540,8 @@ public class MainActivity extends AppCompatActivity
         String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
         if (uidUser != null) {
             Intent intent = new Intent();
-            intent.setClass(this, FavoriteAnnonceActivity.class);
-            intent.putExtra(ARG_USER_UID, uidUser);
+            intent.setClass(this, FavoritesActivity.class);
+            intent.putExtra(ARG_UID_USER, uidUser);
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
