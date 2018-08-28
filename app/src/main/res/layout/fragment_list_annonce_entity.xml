@@ -10,18 +10,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swipeRefreshLayout"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_list_annonces"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recycler_list_annonces"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </android.support.v4.widget.SwipeRefreshLayout>
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
             android:id="@+id/empty_favorite_linear"
@@ -38,7 +32,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="50dp"
                 android:gravity="center"
-                android:text="Vous n'avez ajouté aucune annonce à vos favoris pour le moment." />
+                android:text="@string/no_favorites_at_this_time" />
         </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>

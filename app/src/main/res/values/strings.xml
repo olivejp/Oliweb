@@ -149,5 +149,6 @@
     <string name="welcome">Bienvenue sur Oliweb</string>
     <string name="nice_to_see_you">Content de vous revoir %s</string>
     <string name="network_unavailable">Réseau non disponible</string>
+    <string name="no_favorites_at_this_time">Vous n\'avez ajouté aucune annonce à vos favoris pour le moment.</string>
 
 </resources>

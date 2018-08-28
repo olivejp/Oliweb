@@ -69,7 +69,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle args = getIntent().getExtras();
+        Bundle args = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
         ArgumentsChecker argumentsChecker = new ArgumentsChecker();
         argumentsChecker
                 .setArguments(args)
@@ -92,6 +92,12 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.my_annonces_activity, menu);
         return true;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ARG_UID_USER, uidUser);
     }
 
     @Override
