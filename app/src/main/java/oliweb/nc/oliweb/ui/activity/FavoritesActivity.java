@@ -160,11 +160,17 @@ public class FavoritesActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+    }
+
     private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(FavoriteActivityViewModel.class);
 
-        setContentView(R.layout.fragment_list_favorite);
+        setContentView(R.layout.activity_list_favorite);
 
         ButterKnife.bind(this);
 
@@ -186,9 +192,12 @@ public class FavoritesActivity extends AppCompatActivity {
                 onClickListenerShare,
                 onClickListenerFavorite);
 
+        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
         recyclerView.setAdapter(annonceBeautyAdapter);
+        recyclerView.setLayoutManager(layoutManager);
 
         annonceBeautyAdapter.setListAnnonces(listAnnonces);
+        annonceBeautyAdapter.notifyDataSetChanged();
     }
 
     private void initEmptyLayout() {

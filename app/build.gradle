@@ -103,7 +103,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Cropping image
-    implementation 'com.theartofdev.edmodo:android-image-cropper:2.7.+'
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.7.0'
 
     // Dagger 2
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
