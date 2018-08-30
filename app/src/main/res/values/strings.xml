@@ -150,5 +150,13 @@
     <string name="nice_to_see_you">Content de vous revoir %s</string>
     <string name="network_unavailable">Réseau non disponible</string>
     <string name="no_favorites_at_this_time">Vous n\'avez ajouté aucune annonce à vos favoris pour le moment.</string>
+    <string name="delete_photo">Supprimer une photo</string>
+    <string name="delete_photo_are_you_sure">Etes vous sûr de vouloir supprimer la photo ?</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="add_new_photo">Ajouter une nouvelle photo</string>
+    <string name="add_photo_question">Vous pouvez prendre une nouvelle photo ou choisir une photo existante depuis votre galerie.</string>
+    <string name="take_new_picture">Prendre photo</string>
+    <string name="choose_from_galery">Choisir dans la galerie</string>
 
 </resources>

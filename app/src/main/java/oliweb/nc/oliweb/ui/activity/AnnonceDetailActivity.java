@@ -201,7 +201,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             indicator.setViewPager(viewPager);
         }
 
-        initViewsSeller(annonceFull.getUtilisateur().get(0));
+        if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
+            initViewsSeller(annonceFull.getUtilisateur().get(0));
+        }
     }
 
     private void initViewsSeller(@NonNull UserEntity seller) {
