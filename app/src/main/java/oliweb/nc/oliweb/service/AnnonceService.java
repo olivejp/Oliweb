@@ -13,8 +13,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -36,6 +38,7 @@ public class AnnonceService {
     private Context context;
     private AnnonceRepository annonceRepository;
     private PhotoService photoService;
+    private UserRepository userRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
 
@@ -44,9 +47,11 @@ public class AnnonceService {
                           AnnonceRepository annonceRepository,
                           AnnonceWithPhotosRepository annonceWithPhotosRepository,
                           FirebasePhotoStorage firebasePhotoStorage,
-                          PhotoService photoService) {
+                          PhotoService photoService,
+                          UserRepository userRepository) {
         this.context = context;
         this.annonceRepository = annonceRepository;
+        this.userRepository = userRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.annonceWithPhotosRepository = annonceWithPhotosRepository;
         this.photoService = photoService;
@@ -68,8 +73,13 @@ public class AnnonceService {
                         .doOnError(emitter::onError)
                         .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() -> {
-                            // TODO enregistrer l'utilisateur dans le repository
-
+                            if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
+                                UserEntity userEntity = annonceFull.getUtilisateur().get(0);
+                                userEntity.setFavorite(1);
+                                userRepository.singleSave(userEntity)
+                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                        .subscribe();
+                            }
 
                             AnnonceEntity annonceEntity = annonceFull.getAnnonce();
                             annonceEntity.setFavorite(1);
