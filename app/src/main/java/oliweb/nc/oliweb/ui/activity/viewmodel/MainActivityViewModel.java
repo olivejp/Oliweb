@@ -127,10 +127,6 @@ public class MainActivityViewModel extends AndroidViewModel {
         sorting.postValue(sort);
     }
 
-    public LiveDataOnce<AtomicBoolean> saveUser(FirebaseUser firebaseUser) {
-        return userService.saveUserFromFirebase(firebaseUser);
-    }
-
     public LiveData<Integer> countAllAnnoncesByUser(String uid, List<String> statusToAvoid) {
         return annonceRepository.countAllAnnoncesByUser(uid, statusToAvoid);
     }
