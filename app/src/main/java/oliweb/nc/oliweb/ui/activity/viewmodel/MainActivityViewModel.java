@@ -152,7 +152,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .map(AnnonceConverter::convertDtoToAnnoncePhotos)
+                .map(AnnonceConverter::convertDtoToAnnonceFull)
                 .doOnSuccess(customLiveData::postValue)
                 .doOnComplete(() -> customLiveData.postValue(null))
                 .subscribe();

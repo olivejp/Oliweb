@@ -53,7 +53,6 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
-import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -306,6 +305,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (resultCode != RESULT_OK) {
             return;
         }
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            Uri resultUri = result.getUri();
+        }
+
         if (requestCode == DIALOG_REQUEST_IMAGE) {
             try {
                 if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
@@ -369,17 +374,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
             } else {
                 builder = new AlertDialog.Builder(this);
             }
-            builder.setTitle("Envie d'ajouter une nouvelle image ?")
-                    .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
-                    .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
-                    .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
+            builder.setTitle(R.string.add_new_photo)
+                    .setMessage(R.string.add_photo_question)
+                    .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())
+                    .setNegativeButton(R.string.choose_from_galery, (dialog, which) -> onGalleryClick())
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                     .show();
         } else {
             // Mode mise à jour
             PhotoEntity photoEntity = (PhotoEntity) v.getTag();
             viewModel.setUpdatedPhoto(photoEntity);
-            WorkImageFragment workImageFragment = new WorkImageFragment();
+            callCropActivity(Uri.parse(photoEntity.getUriLocal()));
+//            WorkImageFragment workImageFragment = new WorkImageFragment();
 //            getSupportFragmentManager()
 //                    .beginTransaction()
 //                    .addSharedElement(v, getString(R.string.image_working_transition))
@@ -388,12 +394,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
 //                    .commit();
 
 
-            // start cropping activity for pre-acquired image saved on the device
-            CropImage.activity(Uri.parse(photoEntity.getUriLocal()))
-                    .setMinCropResultSize(200,200)
-                    .setMaxCropResultSize(400,400)
-                    .start(this);
         }
+    }
+
+    private void callCropActivity(Uri uriImage) {
+        CropImage.activity(uriImage)
+                .setMinCropResultSize(200, 200)
+                .setMaxCropResultSize(400, 400)
+                .start(this);
     }
 
     @OnLongClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
@@ -406,10 +414,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 builder = new AlertDialog.Builder(this);
             }
 
-            builder.setTitle("Supprimer une photo")
-                    .setMessage("Etes vous sûr de vouloir supprimer la photo ?")
-                    .setPositiveButton("Oui", (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
-                    .setNegativeButton("Non", (dialog, which) -> {
+            builder.setTitle(R.string.delete_photo)
+                    .setMessage(R.string.delete_photo_are_you_sure)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
+                    .setNegativeButton(R.string.no, (dialog, which) -> {
                     })
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                     .show();

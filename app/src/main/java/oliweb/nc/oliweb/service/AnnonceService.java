@@ -57,25 +57,28 @@ public class AnnonceService {
      * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer ou celle déjà existante.
      * renverra onError dans le cas d'une erreur.
      *
-     * @param uidUser       qui veut rajouter cette annonce dans ses favoris
-     * @param annoncePhotos qui sera sauvé avec ses photos
+     * @param uidUser     qui veut rajouter cette annonce dans ses favoris
+     * @param annonceFull qui sera sauvé avec ses photos
      * @return
      */
-    private Single<AnnonceEntity> saveToFavorite(String uidUser, AnnonceFull annoncePhotos) {
+    private Single<AnnonceEntity> saveToFavorite(String uidUser, AnnonceFull annonceFull) {
         return Single.create(emitter ->
-                annonceRepository.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annoncePhotos.getAnnonce().getUid())
+                annonceRepository.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() -> {
-                            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
+                            // TODO enregistrer l'utilisateur dans le repository
+
+
+                            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
                             annonceEntity.setFavorite(1);
                             annonceEntity.setUidUserFavorite(uidUser);
                             annonceRepository.singleSave(annonceEntity)
                                     .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                                     .doOnError(emitter::onError)
                                     .doOnSuccess(annonceEntity1 -> {
-                                        firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annoncePhotos.getPhotos());
+                                        firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos());
                                         emitter.onSuccess(annonceEntity1);
                                     })
                                     .subscribe();
@@ -98,19 +101,19 @@ public class AnnonceService {
         );
     }
 
-    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annoncePhotos) {
+    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
         return observer -> {
-            if (annoncePhotos.getAnnonce().getUidUser().equals(uidUser)) {
+            if (annonceFull.getAnnonce().getUidUser().equals(uidUser)) {
                 observer.onChanged(ONE_OF_YOURS);
             } else {
-                if (annoncePhotos.getAnnonce().getFavorite() == 1) {
-                    removeFromFavorite(uidUser, annoncePhotos)
+                if (annonceFull.getAnnonce().getFavorite() == 1) {
+                    removeFromFavorite(uidUser, annonceFull)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnError(e -> observer.onChanged(REMOVE_FAILED))
                             .doOnSuccess(atomicBoolean -> observer.onChanged(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
                             .subscribe();
                 } else {
-                    saveToFavorite(uidUser, annoncePhotos)
+                    saveToFavorite(uidUser, annonceFull)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnError(e -> observer.onChanged(ADD_FAILED))
                             .doOnSuccess(annonceEntity -> observer.onChanged(ADD_SUCCESSFUL))

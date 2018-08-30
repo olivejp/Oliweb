@@ -126,7 +126,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
                             }
                         }
                         if (!trouve) {
-                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
                             Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
                             listPhotosResult.add(annonceFull);
                         }

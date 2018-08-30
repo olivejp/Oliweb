@@ -26,7 +26,7 @@ public class AnnonceConverter {
      * @param annonceDto
      * @return
      */
-    public static AnnonceFull convertDtoToAnnoncePhotos(AnnonceDto annonceDto) {
+    public static AnnonceFull convertDtoToAnnonceFull(AnnonceDto annonceDto) {
         AnnonceFull annonceFull = new AnnonceFull();
         annonceFull.setPhotos(new ArrayList<>());
         AnnonceEntity annonceEntity = convertDtoToEntity(annonceDto);
