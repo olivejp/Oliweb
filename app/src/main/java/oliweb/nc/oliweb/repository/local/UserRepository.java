@@ -38,6 +38,10 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
         return this.utilisateurDao.findMaybeByUid(uuidUtilisateur);
     }
 
+    public Maybe<UserEntity> findMaybeFavoriteByUid(String uuidUtilisateur) {
+        return this.utilisateurDao.findMaybeFavoriteByUid(uuidUtilisateur);
+    }
+
     public Single<AtomicBoolean> existByUid(String uidUser) {
         return Single.create(e -> utilisateurDao.countByUid(uidUser)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
@@ -53,6 +57,4 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
     public Single<List<UserEntity>> findAllByStatus(List<String> status) {
         return utilisateurDao.findAllByStatus(status);
     }
-
-
 }

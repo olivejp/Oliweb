@@ -37,8 +37,8 @@ public class ServicesModule {
                                          AnnonceWithPhotosRepository annonceWithPhotosRepository,
                                          FirebasePhotoStorage firebasePhotoStorage,
                                          PhotoService photoService,
-                                         UserRepository userRepository) {
-        return new AnnonceService(context, annonceRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userRepository);
+                                         UserService userService) {
+        return new AnnonceService(context, annonceRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userService);
     }
 
     @Provides

@@ -13,10 +13,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -38,7 +36,7 @@ public class AnnonceService {
     private Context context;
     private AnnonceRepository annonceRepository;
     private PhotoService photoService;
-    private UserRepository userRepository;
+    private UserService userService;
     private FirebasePhotoStorage firebasePhotoStorage;
     private AnnonceWithPhotosRepository annonceWithPhotosRepository;
 
@@ -48,10 +46,10 @@ public class AnnonceService {
                           AnnonceWithPhotosRepository annonceWithPhotosRepository,
                           FirebasePhotoStorage firebasePhotoStorage,
                           PhotoService photoService,
-                          UserRepository userRepository) {
+                          UserService userService) {
         this.context = context;
         this.annonceRepository = annonceRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.annonceWithPhotosRepository = annonceWithPhotosRepository;
         this.photoService = photoService;
@@ -73,25 +71,28 @@ public class AnnonceService {
                         .doOnError(emitter::onError)
                         .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() -> {
+                            // Sauvegarde de l'utilisateur, créateur de l'annonce
                             if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
-                                UserEntity userEntity = annonceFull.getUtilisateur().get(0);
-                                userEntity.setFavorite(1);
-                                userRepository.singleSave(userEntity)
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                userService.saveUserToFavorite(annonceFull.getUtilisateur().get(0));
+                            } else {
+                                Log.e(TAG, "Tentative d'insertion d'une annonce en favoris sans créateur.");
+                            }
+
+                            // Sauvegarde de l'annonce
+                            if (annonceFull.getAnnonce() != null) {
+                                AnnonceEntity annonceEntity = annonceFull.getAnnonce();
+                                annonceEntity.setFavorite(1);
+                                annonceEntity.setUidUserFavorite(uidUser);
+                                annonceRepository.singleSave(annonceEntity)
+                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .doOnError(emitter::onError)
+                                        .doOnSuccess(annonceEntity1 -> {
+                                            firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos());
+                                            emitter.onSuccess(annonceEntity1);
+                                        })
                                         .subscribe();
                             }
 
-                            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
-                            annonceEntity.setFavorite(1);
-                            annonceEntity.setUidUserFavorite(uidUser);
-                            annonceRepository.singleSave(annonceEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                    .doOnError(emitter::onError)
-                                    .doOnSuccess(annonceEntity1 -> {
-                                        firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos());
-                                        emitter.onSuccess(annonceEntity1);
-                                    })
-                                    .subscribe();
                         })
                         .subscribe()
         );

@@ -15,6 +15,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.disposables.Disposable;
 import oliweb.nc.oliweb.database.converter.UserConverter;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
@@ -59,8 +60,26 @@ public class UserService {
         );
     }
 
+    public void saveUserToFavorite(UserEntity user) {
+        userRepository.findMaybeFavoriteByUid(user.getUid())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .switchIfEmpty(saveUserFavorite(user))
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .subscribe();
+    }
+
+    private Single<UserEntity> saveUserFavorite(UserEntity userEntity) {
+        userEntity.setFavorite(1);
+        userEntity.setStatut(StatusRemote.NOT_TO_SEND);
+        return userRepository.singleSave(userEntity)
+                .doOnSuccess(userSaved -> Log.d(TAG, String.format("Utilisateur créé dans les favoris %s", userSaved)));
+    }
+
     @NonNull
-    private Disposable saveUserFromFirebase(SingleEmitter<UserEntity> emitter, @Nullable UserEntity utilisateurEntity, FirebaseUser firebaseUser, boolean isAnCreation) {
+    private Disposable saveUserFromFirebase(SingleEmitter<UserEntity> emitter,
+                                            @Nullable UserEntity utilisateurEntity,
+                                            FirebaseUser firebaseUser,
+                                            boolean isAnCreation) {
         return firebaseUserRepository.getToken()
                 .map(token -> UserConverter.convertFbToEntity(firebaseUser, token, isAnCreation))
                 .map(userEntity -> {
