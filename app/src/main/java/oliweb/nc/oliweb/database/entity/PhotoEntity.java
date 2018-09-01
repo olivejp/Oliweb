@@ -112,4 +112,15 @@ public class PhotoEntity extends AbstractEntity<Long> implements Parcelable {
             return new PhotoEntity[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "PhotoEntity{" +
+                "idPhoto=" + idPhoto +
+                ", uriLocal='" + uriLocal + '\'' +
+                ", firebasePath='" + firebasePath + '\'' +
+                ", statut=" + statut +
+                ", idAnnonce=" + idAnnonce +
+                '}';
+    }
 }

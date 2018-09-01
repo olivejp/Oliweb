@@ -32,6 +32,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -98,6 +99,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private ActionBar actionBar;
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
+    private List<String> listUidFavorites = new ArrayList<>();
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -166,7 +168,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+            AnnonceFull annonceFull = viewHolder.getAnnoncePhotos();
+            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), annonceFull)
                     .observeOnce(addRemoveFromFavorite -> {
                         if (addRemoveFromFavorite != null) {
                             switch (addRemoveFromFavorite) {
@@ -218,8 +221,18 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveUserConnected().observe(this, userEntity ->
-                uidUser = (userEntity != null) ? userEntity.getUid() : null
+        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
+                    uidUser = (userEntity != null) ? userEntity.getUid() : null;
+                    viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
+                        listUidFavorites.clear();
+                        if (annonceFulls != null) {
+                            for (AnnonceFull annonceFull : annonceFulls) {
+                                listUidFavorites.add(annonceFull.getAnnonce().getUid());
+                            }
+                        }
+                        updateListWithFavorite(listUidFavorites);
+                    });
+                }
         );
     }
 
@@ -409,9 +422,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
+    private void updateListWithFavorite(List<String> listUidFavorites) {
+        for (AnnonceFull annonceFull : annoncePhotosList) {
+            if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
+                annonceFull.getAnnonce().setFavorite(1);
+            } else {
+                annonceFull.getAnnonce().setFavorite(0);
+            }
+        }
+        annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+        annonceBeautyAdapter.notifyDataSetChanged();
+    }
+
     private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
-        annonceBeautyAdapter.setListAnnonces(listAnnoncePhotos);
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
+        updateListWithFavorite(listUidFavorites);
     };
 }

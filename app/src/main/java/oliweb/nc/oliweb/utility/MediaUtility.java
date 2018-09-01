@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -44,7 +43,7 @@ public class MediaUtility {
         VIDEO
     }
 
-    private static final String TAG = PostAnnonceActivity.class.getName();
+    private static final String TAG = MediaUtility.class.getName();
 
     private MediaUtility() {
 
@@ -327,7 +326,7 @@ public class MediaUtility {
                 return true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getLocalizedMessage(), e);
         }
         return false;
     }
@@ -342,9 +341,8 @@ public class MediaUtility {
         }
     }
 
-    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) throws IOException {
-            OutputStream outStream = new FileOutputStream(file.getAbsoluteFile());
-
+    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) {
+        try (OutputStream outStream = new FileOutputStream(file.getAbsoluteFile())) {
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -353,6 +351,9 @@ public class MediaUtility {
 
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(outStream);
+        } catch (IOException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+        }
     }
 
     @NonNull

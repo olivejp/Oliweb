@@ -379,13 +379,6 @@ public class MainActivity extends AppCompatActivity
         viewModel.updateSort(sort);
     }
 
-    @OnClick(R.id.fab_advanced_search)
-    public void onClickAdvancedSearch(View v) {
-        Intent intent = new Intent(this, AdvancedSearchActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-    }
-
     private void catchDynamicLink() {
         mFirebaseDynamicLinks.getDynamicLink(getIntent())
                 .addOnSuccessListener(this, data -> {

@@ -55,6 +55,33 @@ public class AnnonceService {
         this.photoService = photoService;
     }
 
+    /**
+     * @param uidUser
+     * @param annonceFull
+     * @return Will return ONE_OF_YOURS if annonce already owned by the user
+     * Otherwise will return one of these values : ADD_SUCCESSFUL | ADD_FAILED | REMOVE_SUCCESSFUL | REMOVE_FAILED
+     */
+    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
+        return observer -> {
+            if (annonceFull.getAnnonce().getUidUser().equals(uidUser)) {
+                observer.onChanged(ONE_OF_YOURS);
+            } else {
+                if (annonceFull.getAnnonce().getFavorite() == 1) {
+                    removeFromFavorite(uidUser, annonceFull)
+                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .doOnError(e -> observer.onChanged(REMOVE_FAILED))
+                            .doOnSuccess(atomicBoolean -> observer.onChanged(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
+                            .subscribe();
+                } else {
+                    saveToFavorite(uidUser, annonceFull)
+                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                            .doOnError(e -> observer.onChanged(ADD_FAILED))
+                            .doOnSuccess(annonceEntity -> observer.onChanged(ADD_SUCCESSFUL))
+                            .subscribe();
+                }
+            }
+        };
+    }
 
     /**
      * renverra onSuccess avec l'AnnonceEntity qu'elle viendra de créer ou celle déjà existante.
@@ -110,27 +137,5 @@ public class AnnonceService {
                         })
                         .subscribe()
         );
-    }
-
-    public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
-        return observer -> {
-            if (annonceFull.getAnnonce().getUidUser().equals(uidUser)) {
-                observer.onChanged(ONE_OF_YOURS);
-            } else {
-                if (annonceFull.getAnnonce().getFavorite() == 1) {
-                    removeFromFavorite(uidUser, annonceFull)
-                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnError(e -> observer.onChanged(REMOVE_FAILED))
-                            .doOnSuccess(atomicBoolean -> observer.onChanged(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
-                            .subscribe();
-                } else {
-                    saveToFavorite(uidUser, annonceFull)
-                            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnError(e -> observer.onChanged(ADD_FAILED))
-                            .doOnSuccess(annonceEntity -> observer.onChanged(ADD_SUCCESSFUL))
-                            .subscribe();
-                }
-            }
-        };
     }
 }
