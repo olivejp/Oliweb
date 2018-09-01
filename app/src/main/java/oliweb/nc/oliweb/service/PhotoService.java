@@ -17,8 +17,6 @@ import oliweb.nc.oliweb.utility.MediaUtility;
 @Singleton
 public class PhotoService {
 
-    private static final String TAG = PhotoService.class.getName();
-
     private PhotoRepository photoRepository;
     private Context context;
 
@@ -32,7 +30,7 @@ public class PhotoService {
     public void deleteListPhoto(List<PhotoEntity> listToDelete) {
         if (listToDelete != null && !listToDelete.isEmpty()) {
             for (PhotoEntity photo : listToDelete) {
-                MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo);
+                MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
                 photoRepository.delete(photo);
             }
         }

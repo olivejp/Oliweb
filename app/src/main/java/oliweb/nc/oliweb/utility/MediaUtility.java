@@ -29,7 +29,6 @@ import java.util.Locale;
 import java.util.UUID;
 
 import oliweb.nc.oliweb.BuildConfig;
-import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -331,12 +330,12 @@ public class MediaUtility {
         return false;
     }
 
-    public static boolean deletePhotoFromDevice(ContentResolver contentResolver, PhotoEntity photoToDelete) {
-        Log.d(TAG, "Starting deletePhotoFromDevice " + photoToDelete);
+    public static boolean deletePhotoFromDevice(ContentResolver contentResolver, String uriPhoto) {
+        Log.d(TAG, "Starting deletePhotoFromDevice " + uriPhoto);
         try {
-            return (contentResolver.delete(Uri.parse(photoToDelete.getUriLocal()), null, null) != 0);
+            return (contentResolver.delete(Uri.parse(uriPhoto), null, null) != 0);
         } catch (Exception e) {
-            Log.e(TAG, "Exception encountered to delete physical photo : " + photoToDelete.getUriLocal());
+            Log.e(TAG, "Exception encountered to delete physical photo : " + uriPhoto);
             return false;
         }
     }
