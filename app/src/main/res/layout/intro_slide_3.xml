@@ -15,15 +15,16 @@
         android:textColor="@color/colorPrimary"
         android:textSize="40sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/img_telephone"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/img_telephone"
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/img_telephone"
         android:layout_width="64dp"
         android:layout_height="64dp"
+        android:layout_gravity="center"
         android:layout_marginEnd="8dp"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintBottom_toTopOf="@+id/text_slide_1"
@@ -36,19 +37,21 @@
         android:id="@+id/img_mail"
         android:layout_width="64dp"
         android:layout_height="64dp"
+        android:layout_gravity="center"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintEnd_toStartOf="@+id/img_telephone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
-        app:srcCompat="@drawable/fui_ic_mail_white_24dp" />
+        app:srcCompat="@drawable/ic_email_white_48dp" />
 
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/img_chat"
         android:layout_width="64dp"
         android:layout_height="64dp"
+        android:layout_gravity="center"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         app:backgroundTint="@color/colorPrimary"

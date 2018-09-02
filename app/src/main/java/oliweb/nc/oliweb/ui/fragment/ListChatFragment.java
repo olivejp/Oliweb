@@ -156,7 +156,7 @@ public class ListChatFragment extends Fragment {
     private void openAnnonceDetail(ChatEntity chatchatEntity) {
         viewModel.findLiveFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
             if (annonceDto != null) {
-                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnoncePhotos(annonceDto);
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
                 Intent intent = new Intent();
                 intent.setClass(appCompatActivity, AnnonceDetailActivity.class);
                 Bundle bundle = new Bundle();

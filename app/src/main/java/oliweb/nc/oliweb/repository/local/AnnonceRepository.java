@@ -50,8 +50,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.findByUid(uidAnnonce);
     }
 
-    public Observable<AnnonceEntity> findObservableByUid(String uidAnnonce) {
-        return this.annonceDao.findSingleByUid(uidAnnonce).toObservable();
+    public Maybe<AnnonceEntity> findMaybeByUidAndFavorite(String uidAnnonce, int favorite) {
+        return this.annonceDao.findMaybeByUidAndFavorite(uidAnnonce, favorite);
     }
 
 

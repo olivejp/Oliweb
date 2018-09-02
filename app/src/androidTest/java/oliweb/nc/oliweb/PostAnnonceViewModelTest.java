@@ -21,7 +21,6 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
-import oliweb.nc.oliweb.utility.UtilityTest;
 
 /**
  * Instrumented test, which will execute on an Android device.

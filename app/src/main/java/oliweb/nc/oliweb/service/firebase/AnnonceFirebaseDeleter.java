@@ -115,7 +115,7 @@ public class AnnonceFirebaseDeleter {
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         // 2 - Suppression sur le device
-                        if (MediaUtility.deletePhotoFromDevice(contentResolver, photo)) {
+                        if (MediaUtility.deletePhotoFromDevice(contentResolver, photo.getUriLocal())) {
                             Log.d(TAG, "Successful delete from local device");
                         } else {
                             Log.e(TAG, "Failed to delete photo from local device");

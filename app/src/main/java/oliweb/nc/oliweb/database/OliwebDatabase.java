@@ -29,7 +29,7 @@ import oliweb.nc.oliweb.database.entity.UserEntity;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 27, entities = {UserEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
+@Database(version = 28, entities = {UserEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
     private static OliwebDatabase instance;
 

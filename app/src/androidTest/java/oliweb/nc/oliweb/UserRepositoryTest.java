@@ -32,11 +32,10 @@ import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
-import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.utility.UtilityTest.checkCount;
-import static oliweb.nc.oliweb.utility.UtilityTest.initUtilisateur;
-import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.UtilityTest.checkCount;
+import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
+import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

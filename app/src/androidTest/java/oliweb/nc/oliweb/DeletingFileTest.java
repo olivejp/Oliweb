@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -34,7 +33,7 @@ public class DeletingFileTest {
     }
 
     @Test
-    public void createAndDeleteFile() throws IOException {
+    public void createAndDeleteFile() {
         Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(context, false, MediaUtility.MediaType.IMAGE);
         context.grantUriPermission(context.getApplicationContext().getPackageName(), pair.first, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 

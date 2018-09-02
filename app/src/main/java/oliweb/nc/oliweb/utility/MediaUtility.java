@@ -29,8 +29,6 @@ import java.util.Locale;
 import java.util.UUID;
 
 import oliweb.nc.oliweb.BuildConfig;
-import oliweb.nc.oliweb.database.entity.PhotoEntity;
-import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -44,7 +42,7 @@ public class MediaUtility {
         VIDEO
     }
 
-    private static final String TAG = PostAnnonceActivity.class.getName();
+    private static final String TAG = MediaUtility.class.getName();
 
     private MediaUtility() {
 
@@ -290,9 +288,8 @@ public class MediaUtility {
      * @param uriSource
      * @param uriDestination
      * @return false si le fichier source n'a pas pu être lu
-     * @throws IOException
      */
-    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) throws IOException {
+    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) {
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
             Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
@@ -305,16 +302,13 @@ public class MediaUtility {
             return false;
         }
 
-        OutputStream out = context.getContentResolver().openOutputStream(uriDestination);
-        try {
+        try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
             bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
-        } finally {
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
+            return true;
+        } catch (IOException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
         }
-        return true;
+        return false;
     }
 
     public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
@@ -327,24 +321,23 @@ public class MediaUtility {
                 return true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getLocalizedMessage(), e);
         }
         return false;
     }
 
-    public static boolean deletePhotoFromDevice(ContentResolver contentResolver, PhotoEntity photoToDelete) {
-        Log.d(TAG, "Starting deletePhotoFromDevice " + photoToDelete);
+    public static boolean deletePhotoFromDevice(ContentResolver contentResolver, String uriPhoto) {
+        Log.d(TAG, "Starting deletePhotoFromDevice " + uriPhoto);
         try {
-            return (contentResolver.delete(Uri.parse(photoToDelete.getUriLocal()), null, null) != 0);
+            return (contentResolver.delete(Uri.parse(uriPhoto), null, null) != 0);
         } catch (Exception e) {
-            Log.e(TAG, "Exception encountered to delete physical photo : " + photoToDelete.getUriLocal());
+            Log.e(TAG, "Exception encountered to delete physical photo : " + uriPhoto);
             return false;
         }
     }
 
-    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) throws IOException {
-            OutputStream outStream = new FileOutputStream(file.getAbsoluteFile());
-
+    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) {
+        try (OutputStream outStream = new FileOutputStream(file.getAbsoluteFile())) {
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -353,6 +346,9 @@ public class MediaUtility {
 
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(outStream);
+        } catch (IOException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+        }
     }
 
     @NonNull

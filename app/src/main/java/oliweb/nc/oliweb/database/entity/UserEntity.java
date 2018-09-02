@@ -13,7 +13,7 @@ import com.google.firebase.database.Exclude;
 /**
  * Created by orlanth23 on 28/01/2018.
  */
-@Entity(tableName = "utilisateur", indices = {@Index(value = "uid", unique = true)})
+@Entity(tableName = "utilisateur", indices = {@Index(value = "uid")})
 public class UserEntity extends AbstractEntity<Long> implements Parcelable {
     @Exclude
     @NonNull

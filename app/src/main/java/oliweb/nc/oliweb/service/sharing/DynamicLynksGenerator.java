@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.service.sharing;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
@@ -18,6 +19,8 @@ import static oliweb.nc.oliweb.utility.Constants.OLIWEB_SITE;
  * Created by orlanth23 on 24/05/2018.
  */
 public class DynamicLynksGenerator {
+
+    private static final String TAG = DynamicLynksGenerator.class.getCanonicalName();
 
     private static String generateLink(String uidUser, String uidAnnonce) {
         return OLIWEB_SITE + OLIWEB_ANNONCE_VIEW_PATH + uidAnnonce + "?from=" + uidUser;
@@ -57,7 +60,8 @@ public class DynamicLynksGenerator {
                     } else {
                         dynamicLinkListener.getLinkError();
                     }
-                });
+                }).addOnFailureListener(e -> Log.e(TAG, e.getLocalizedMessage(), e)
+        );
     }
 
     /**

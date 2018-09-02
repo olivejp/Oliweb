@@ -42,6 +42,10 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
     public abstract LiveData<UserEntity> findByUid(String uuidUtilisateur);
 
     @Transaction
+    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur AND favorite = 1")
+    public abstract Maybe<UserEntity> findMaybeFavoriteByUid(String uuidUtilisateur);
+
+    @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
     public abstract Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur);
 

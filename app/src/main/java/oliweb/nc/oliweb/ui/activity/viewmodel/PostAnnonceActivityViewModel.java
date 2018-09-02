@@ -4,9 +4,12 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +28,7 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -33,6 +37,8 @@ import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = PostAnnonceActivityViewModel.class.getName();
+
+    private static final int NBR_MAX = 4;
 
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
@@ -166,7 +172,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public boolean canHandleAnotherPhoto() {
-        return this.currentListPhoto.size() < 4;
+        return this.currentListPhoto.size() < NBR_MAX;
     }
 
     public void removePhotoToCurrentList(PhotoEntity photoEntity) {
@@ -195,5 +201,15 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void setCurrentCategorie(CategorieEntity categorie) {
         this.currentCategorie = categorie;
+    }
+
+    public Uri generateNewUri(boolean externalStorage) {
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
+        if (pair != null && pair.first != null) {
+            return pair.first;
+        } else {
+            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            return null;
+        }
     }
 }

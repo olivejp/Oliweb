@@ -13,9 +13,8 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
-import oliweb.nc.oliweb.utility.UtilityTest;
 
-import static oliweb.nc.oliweb.utility.UtilityTest.waitTerminalEvent;
+import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 
 /**
  * Instrumented test, which will execute on an Android device.

@@ -24,8 +24,6 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
-import static junit.framework.Assert.assertNotNull;
-
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class IntroActivity extends AppCompatActivity {
 
@@ -55,7 +53,7 @@ public class IntroActivity extends AppCompatActivity {
         }
 
         // Making notification bar transparent
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         }
 
@@ -174,7 +172,6 @@ public class IntroActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            assertNotNull("LayoutInflater can't be null", layoutInflater);
             View view = layoutInflater.inflate(layouts[position], container, false);
             container.addView(view);
             return view;

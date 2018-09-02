@@ -238,7 +238,7 @@ public class SearchActivity extends AppCompatActivity {
     private View.OnClickListener onClickListener = (View v) -> {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
-        intent.putExtra(ARG_ANNONCE, viewHolder.getAnnoncePhotos());
+        intent.putExtra(ARG_ANNONCE, viewHolder.getAnnonceFull());
         Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
         ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage);
         startActivity(intent, options.toBundle());
@@ -248,7 +248,7 @@ public class SearchActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
             DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos(), new DynamicLynksGenerator.DynamicLinkListener() {
@@ -279,7 +279,7 @@ public class SearchActivity extends AppCompatActivity {
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            searchActivityViewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+            searchActivityViewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
                     .observeOnce(addRemoveFromFavorite -> {
                         if (addRemoveFromFavorite != null) {
                             switch (addRemoveFromFavorite) {

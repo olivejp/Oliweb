@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -34,8 +33,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -305,16 +302,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (resultCode != RESULT_OK) {
             return;
         }
+
         if (requestCode == DIALOG_REQUEST_IMAGE) {
-            try {
-                if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
-                    viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
-                } else {
-                    Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
-                }
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
+            resizePhotoThenInsertToCurrentList(mFileUriTemp);
         } else if (requestCode == DIALOG_GALLERY_IMAGE) {
             // Insertion multiple
             if (data.getClipData() != null) {
@@ -323,14 +313,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 while (i++ < data.getClipData().getItemCount() - 1) {
                     if (viewModel.canHandleAnotherPhoto()) {
                         item = data.getClipData().getItemAt(i);
-                        insertPhotoFromGallery(item.getUri());
+                        resizePhotoThenInsertToCurrentList(item.getUri());
                     }
                 }
             } else {
                 // Insertion simple
-                Uri uri = data.getData();
-                if (uri != null) {
-                    insertPhotoFromGallery(uri);
+                if (data.getData() != null) {
+                    resizePhotoThenInsertToCurrentList(data.getData());
                 }
             }
         }
@@ -368,10 +357,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
             } else {
                 builder = new AlertDialog.Builder(this);
             }
-            builder.setTitle("Envie d'ajouter une nouvelle image ?")
-                    .setMessage("Vous pouvez prendre une nouvelle photo ou choisir une photo existante dans votre galerie.")
-                    .setPositiveButton("Nouvelle image", (dialog, which) -> onNewPictureClick())
-                    .setNegativeButton("Choisir depuis la galerie", (dialog, which) -> onGalleryClick())
+            builder.setTitle(R.string.add_new_photo)
+                    .setMessage(R.string.add_photo_question)
+                    .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())
+                    .setNegativeButton(R.string.choose_from_galery, (dialog, which) -> onGalleryClick())
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                     .show();
         } else {
@@ -385,6 +374,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
                     .addToBackStack(null)
                     .commit();
+
+
         }
     }
 
@@ -398,10 +389,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 builder = new AlertDialog.Builder(this);
             }
 
-            builder.setTitle("Supprimer une photo")
-                    .setMessage("Etes vous sûr de vouloir supprimer la photo ?")
-                    .setPositiveButton("Oui", (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
-                    .setNegativeButton("Non", (dialog, which) -> {
+            builder.setTitle(R.string.delete_photo)
+                    .setMessage(R.string.delete_photo_are_you_sure)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
+                    .setNegativeButton(R.string.no, (dialog, which) -> {
                     })
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
                     .show();
@@ -549,18 +540,14 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return false;
     }
 
-    private void insertPhotoFromGallery(Uri uri) {
-        try {
-            Uri newUri = generateNewUri();
-            if (newUri != null) {
-                if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, newUri)) {
-                    viewModel.addPhotoToCurrentList(newUri.toString());
-                } else {
-                    Snackbar.make(photo1, "L'image " + uri.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
-                }
+    private void resizePhotoThenInsertToCurrentList(Uri uriSrc) {
+        Uri uriDst = viewModel.generateNewUri(externalStorage);
+        if (uriDst != null) {
+            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uriSrc, uriDst)) {
+                viewModel.addPhotoToCurrentList(uriDst.toString());
+            } else {
+                Snackbar.make(photo1, "L'image " + uriSrc.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -606,23 +593,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = generateNewUri();
+        mFileUriTemp = viewModel.generateNewUri(externalStorage);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
 
-    @Nullable
-    private Uri generateNewUri() {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaUtility.MediaType.IMAGE);
-        if (pair != null && pair.first != null) {
-            return pair.first;
-        } else {
-            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
-            return null;
-        }
-    }
 
     private void displayAnnonce(AnnonceEntity annonce) {
         textViewTitre.setText(annonce.getTitre());
