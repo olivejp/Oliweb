@@ -9,9 +9,9 @@ import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 
 /**
  * Cette classe découpe toutes les étapes nécessaires pour l'envoi d'une annonce sur Firebase
@@ -48,7 +48,7 @@ public class AnnonceFirebaseSender {
                 .toObservable()
                 .switchMap(annonceRepository::markAsSending)
                 .switchMap(this::convertToFullAndSendToFirebase)
-                .switchMap(annonceRepository::findObservableByUid)
+                .switchMap(uidAnnonce -> annonceRepository.findMaybeByUidAndFavorite(uidAnnonce, 0).toObservable())
                 .switchMap(annonceRepository::markAsSend)
                 .switchMap(annonceFullRepository::findAnnonceFullByAnnonceEntity)
                 .filter(annonceFull -> annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty())

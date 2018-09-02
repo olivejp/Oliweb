@@ -75,8 +75,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 .setArguments(args)
                 .isMandatory(ARG_UID_USER)
                 .setOnFailureListener(e -> finish())
+                .setOnSuccessListener(this::initActivity)
                 .check();
+    }
 
+    private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
         viewModel.findAnnoncesByUidUser(uidUser).observe(this, annonceWithPhotos -> {

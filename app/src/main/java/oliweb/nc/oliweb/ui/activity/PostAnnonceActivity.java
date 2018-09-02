@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -35,7 +34,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.theartofdev.edmodo.cropper.CropImage;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -567,7 +565,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void insertPhotoFromGallery(Uri uri) {
         try {
-            Uri newUri = generateNewUri();
+            Uri newUri = viewModel.generateNewUri(externalStorage);
             if (newUri != null) {
                 if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uri, newUri)) {
                     viewModel.addPhotoToCurrentList(newUri.toString());
@@ -622,23 +620,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
      */
     private void callCaptureIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = generateNewUri();
+        mFileUriTemp = viewModel.generateNewUri(externalStorage);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
 
-    @Nullable
-    private Uri generateNewUri() {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(this, externalStorage, MediaUtility.MediaType.IMAGE);
-        if (pair != null && pair.first != null) {
-            return pair.first;
-        } else {
-            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
-            return null;
-        }
-    }
 
     private void displayAnnonce(AnnonceEntity annonce) {
         textViewTitre.setText(annonce.getTitre());

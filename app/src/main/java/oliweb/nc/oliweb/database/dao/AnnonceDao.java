@@ -38,16 +38,12 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract LiveData<AnnonceEntity> findLiveById(Long idAnnonce);
 
     @Transaction
-    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce")
-    public abstract Maybe<AnnonceEntity> findSingleByUid(String uidAnnonce);
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = :favorite")
+    public abstract Maybe<AnnonceEntity> findMaybeByUidAndFavorite(String uidAnnonce, int favorite);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")
     public abstract Single<List<AnnonceEntity>> getAllAnnonceByStatus(List<String> status);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE statut = :status")
-    public abstract Flowable<Integer> countFlowableAllAnnoncesByStatus(String status);
 
     @Transaction
     @Query("SELECT COUNT(*) FROM annonce WHERE uidUser = :uidUser AND statut NOT IN (:statutToAvoid) AND favorite <> 1")
@@ -62,24 +58,12 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Single<Integer> existByUidUtilisateurAndUidAnnonce(String uidUtilisateur, String uidAnnonce);
 
     @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE uid = :uidAnnonce AND uidUserFavorite = :uidUser AND favorite = 1")
-    public abstract Single<Integer> isAnnonceFavorite(String uidUser, String uidAnnonce);
-
-    @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 1 AND uidUserFavorite = :uidUser")
     public abstract Maybe<AnnonceEntity> getAnnonceFavoriteByUidUserAndUidAnnonce(String uidUser, String uidAnnonce);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
     public abstract LiveData<AnnonceEntity> findByUid(String uidAnnonce);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM annonce WHERE idAnnonce = :idAnnonce")
-    public abstract Single<Integer> countById(Long idAnnonce);
-
-    @Transaction
-    @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:statutList)")
-    public abstract Maybe<List<AnnonceEntity>> getAllAnnoncesByUidUserAndStatus(String uidUser, List<String> statutList);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
