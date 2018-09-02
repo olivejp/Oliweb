@@ -108,7 +108,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
+        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnonceFull());
         intent.putExtras(bundle);
         Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
         ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage);
@@ -121,15 +121,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
+            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
+            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLynksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();
@@ -168,7 +168,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annonceFull = viewHolder.getAnnoncePhotos();
+            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
             viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), annonceFull)
                     .observeOnce(addRemoveFromFavorite -> {
                         if (addRemoveFromFavorite != null) {

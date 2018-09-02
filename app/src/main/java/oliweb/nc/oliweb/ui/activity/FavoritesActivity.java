@@ -66,7 +66,7 @@ public class FavoritesActivity extends AppCompatActivity {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnoncePhotos());
+        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnonceFull());
         intent.putExtras(bundle);
         Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
         ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
@@ -79,7 +79,7 @@ public class FavoritesActivity extends AppCompatActivity {
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annoncePhotos = viewHolder.getAnnoncePhotos();
+            AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
             // Display a loading spinner
@@ -119,7 +119,7 @@ public class FavoritesActivity extends AppCompatActivity {
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            viewModel.removeFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnoncePhotos())
+            viewModel.removeFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
                     .observeOnce(isRemoved -> {
                         if (isRemoved != null) {
                             switch (isRemoved) {

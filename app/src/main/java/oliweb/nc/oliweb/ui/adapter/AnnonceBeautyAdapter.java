@@ -92,7 +92,7 @@ public class AnnonceBeautyAdapter extends
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
-        viewHolderBeauty.annoncePhotos = annoncePhotos;
+        viewHolderBeauty.annonceFull = annoncePhotos;
 
         // Transition
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -109,11 +109,11 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
 
-        boolean isFavorite = viewHolderBeauty.annoncePhotos.getAnnonce().isFavorite();
+        boolean isFavorite = viewHolderBeauty.annonceFull.getAnnonce().isFavorite();
         viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp);
 
         // Récupération de la date de publication
-        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annoncePhotos.getAnnonce().
+        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annonceFull.getAnnonce().
 
                 getDatePublication()));
 
@@ -219,7 +219,7 @@ public class AnnonceBeautyAdapter extends
         ProgressBar progressBar;
 
 
-        AnnonceFull annoncePhotos;
+        AnnonceFull annonceFull;
 
         ViewGroup parent;
 
@@ -232,8 +232,8 @@ public class AnnonceBeautyAdapter extends
             return imageView;
         }
 
-        public AnnonceFull getAnnoncePhotos() {
-            return annoncePhotos;
+        public AnnonceFull getAnnonceFull() {
+            return annonceFull;
         }
 
         public ViewGroup getParent() {
