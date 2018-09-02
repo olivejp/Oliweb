@@ -38,6 +38,8 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = PostAnnonceActivityViewModel.class.getName();
 
+    private static final int NBR_MAX = 4;
+
     private AnnonceRepository annonceRepository;
     private PhotoRepository photoRepository;
     private UserRepository userRepository;
@@ -170,7 +172,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public boolean canHandleAnotherPhoto() {
-        return this.currentListPhoto.size() < 4;
+        return this.currentListPhoto.size() < NBR_MAX;
     }
 
     public void removePhotoToCurrentList(PhotoEntity photoEntity) {

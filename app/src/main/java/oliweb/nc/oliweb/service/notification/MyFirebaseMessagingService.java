@@ -32,7 +32,7 @@ import oliweb.nc.oliweb.utility.MediaUtility;
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_CHAT;
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_SEND_DIRECT_MESSAGE;
-import static oliweb.nc.oliweb.utility.Constants.notificationSyncAnnonceId;
+import static oliweb.nc.oliweb.utility.Constants.NOTIFICATION_SYNC_ANNONCE_ID;
 
 /**
  * Created by 2761oli on 22/03/2018.
@@ -75,7 +75,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 builder.setContentText(remoteMessage.getNotification().getBody());
                 builder.setSmallIcon(R.drawable.ic_launcher_round_splash);
                 builder.setContentIntent(resultPendingIntent);
-                NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
+                NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
             }
         }
         super.onMessageReceived(remoteMessage);
@@ -144,6 +144,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private void sendNotification(NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle) {
         builder.setStyle(messagingStyle);
-        NotificationManagerCompat.from(this).notify(notificationSyncAnnonceId, builder.build());
+        NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
     }
 }

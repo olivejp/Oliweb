@@ -288,9 +288,8 @@ public class MediaUtility {
      * @param uriSource
      * @param uriDestination
      * @return false si le fichier source n'a pas pu être lu
-     * @throws IOException
      */
-    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) throws IOException {
+    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) {
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
             Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
@@ -303,16 +302,13 @@ public class MediaUtility {
             return false;
         }
 
-        OutputStream out = context.getContentResolver().openOutputStream(uriDestination);
-        try {
+        try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
             bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
-        } finally {
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
+            return true;
+        } catch (IOException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
         }
-        return true;
+        return false;
     }
 
     public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
