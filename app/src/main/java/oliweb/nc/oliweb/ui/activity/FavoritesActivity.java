@@ -58,6 +58,7 @@ public class FavoritesActivity extends AppCompatActivity {
     private String uidUser;
     private FavoriteActivityViewModel viewModel;
     private LoadingDialogFragment loadingDialogFragment;
+    private AnnonceBeautyAdapter annonceBeautyAdapter;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -170,9 +171,17 @@ public class FavoritesActivity extends AppCompatActivity {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(FavoriteActivityViewModel.class);
 
+        // Init views
         setContentView(R.layout.activity_list_favorite);
-
         ButterKnife.bind(this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
+                onClickListener,
+                onClickListenerShare,
+                onClickListenerFavorite);
+
+        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
+        recyclerView.setAdapter(annonceBeautyAdapter);
+        recyclerView.setLayoutManager(layoutManager);
 
         viewModel.getFavoritesByUidUser(uidUser).observe(this, annonceWithPhotos -> {
             if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
@@ -186,16 +195,6 @@ public class FavoritesActivity extends AppCompatActivity {
     private void initLayout(List<AnnonceFull> listAnnonces) {
         recyclerView.setVisibility(View.VISIBLE);
         emptyLinearLayout.setVisibility(View.GONE);
-
-        AnnonceBeautyAdapter annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
-                onClickListener,
-                onClickListenerShare,
-                onClickListenerFavorite);
-
-        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView, annonceBeautyAdapter);
-        recyclerView.setAdapter(annonceBeautyAdapter);
-        recyclerView.setLayoutManager(layoutManager);
-
         annonceBeautyAdapter.setListAnnonces(listAnnonces);
         annonceBeautyAdapter.notifyDataSetChanged();
     }
