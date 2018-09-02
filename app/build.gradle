@@ -3,7 +3,7 @@ apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
 ext {
-    supportLibrary = '28.0.0-rc02'
+    supportLibrary = '28.0.0-rc01'
 }
 
 def propFile = file('signing.properties')
@@ -78,10 +78,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:16.0.1'
     implementation 'com.google.firebase:firebase-auth:16.0.3'
     implementation 'com.google.firebase:firebase-storage:16.0.1'
+
+    // Ne pas toucher à la version de firebase-invites car pas rétro compatibilité
     implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.google.firebase:firebase-invites:16.0.1'
     implementation 'com.google.firebase:firebase-messaging:17.3.0'
     implementation 'com.google.firebase:firebase-config:16.0.0'
-    implementation 'com.google.firebase:firebase-invites:16.0.1'
     implementation 'com.firebaseui:firebase-ui-auth:3.2.2'
     implementation 'com.firebaseui:firebase-ui-database:3.2.2'
     implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
