@@ -12,12 +12,12 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -68,6 +68,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_UID_ANNONCE = "BUNDLE_KEY_UID_ANNONCE";
     public static final String BUNDLE_KEY_MODE = "MODE";
+    public static final String BUNDLE_KEY_URI_LIST = "BUNDLE_KEY_URI_LIST";
+    public static final String BUNDLE_URI_TO_CROP = "BUNDLE_URI_TO_CROP";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
@@ -84,6 +86,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidUser;
     private String uidAnnonce;
     private String mode;
+    private Uri uriToCrop;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -137,6 +140,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     TextView textCheckboxTelephone;
 
     List<Pair<ImageView, FrameLayout>> arrayImageViews = new ArrayList<>();
+
+    ArrayList<Uri> listUriPhotoToCrop = new ArrayList<>();
 
     // Evenement sur le spinner
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
@@ -305,36 +310,37 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            if (listUriPhotoToCrop != null && !listUriPhotoToCrop.isEmpty() && uriToCrop != null) {
+                // TODO ENCORE BCP DE TRAVAIL ICI
+                ;;{ICI}
+                listUriPhotoToCrop.remove(uriToCrop);
+            }
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            Uri resultUri = result.getUri();
+            if (result.getUri() != null && viewModel.canHandleAnotherPhoto()) {
+                insertPhotoFromGallery(result.getUri());
+            }
         }
 
         if (requestCode == DIALOG_REQUEST_IMAGE) {
-            try {
-                if (MediaUtility.copyAndResizeUriImages(this, mFileUriTemp, mFileUriTemp)) {
-                    viewModel.addPhotoToCurrentList(mFileUriTemp.toString());
-                } else {
-                    Snackbar.make(photo1, "L'image " + mFileUriTemp.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
-                }
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
+            if (viewModel.canHandleAnotherPhoto()) {
+                callCropActivity(mFileUriTemp);
             }
         } else if (requestCode == DIALOG_GALLERY_IMAGE) {
             // Insertion multiple
             if (data.getClipData() != null) {
                 int i = -1;
                 ClipData.Item item;
+                listUriPhotoToCrop = new ArrayList<>();
                 while (i++ < data.getClipData().getItemCount() - 1) {
                     if (viewModel.canHandleAnotherPhoto()) {
                         item = data.getClipData().getItemAt(i);
-                        insertPhotoFromGallery(item.getUri());
+                        listUriPhotoToCrop.add(item.getUri());
                     }
                 }
             } else {
                 // Insertion simple
-                Uri uri = data.getData();
-                if (uri != null) {
-                    insertPhotoFromGallery(uri);
+                if (viewModel.canHandleAnotherPhoto()) {
+                    callCropActivity(data.getData());
                 }
             }
         }
@@ -343,9 +349,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(BUNDLE_KEY_URI_LIST, listUriPhotoToCrop);
         outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
         outState.putString(BUNDLE_KEY_UID_ANNONCE, uidAnnonce);
         outState.putString(BUNDLE_KEY_MODE, mode);
+        outState.putParcelable(BUNDLE_URI_TO_CROP, uriToCrop);
         outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
         outState.putParcelable(SAVE_ANNONCE, viewModel.getCurrentAnnonce());
         outState.putParcelableArrayList(SAVE_LIST_PHOTO, new ArrayList<>(viewModel.getCurrentListPhoto()));
@@ -383,15 +391,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             PhotoEntity photoEntity = (PhotoEntity) v.getTag();
             viewModel.setUpdatedPhoto(photoEntity);
             callCropActivity(Uri.parse(photoEntity.getUriLocal()));
-//            WorkImageFragment workImageFragment = new WorkImageFragment();
-//            getSupportFragmentManager()
-//                    .beginTransaction()
-//                    .addSharedElement(v, getString(R.string.image_working_transition))
-//                    .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
-//                    .addToBackStack(null)
-//                    .commit();
-
-
         }
     }
 
