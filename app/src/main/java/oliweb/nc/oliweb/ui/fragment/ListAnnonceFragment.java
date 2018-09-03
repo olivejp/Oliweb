@@ -221,20 +221,23 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
-                    uidUser = (userEntity != null) ? userEntity.getUid() : null;
-                    viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
-                        listUidFavorites.clear();
-                        if (annonceFulls != null) {
-                            for (AnnonceFull annonceFull : annonceFulls) {
-                                listUidFavorites.add(annonceFull.getAnnonce().getUid());
+
+        if (savedInstanceState == null) {
+            viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
+                        uidUser = (userEntity != null) ? userEntity.getUid() : null;
+                        viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
+                            listUidFavorites.clear();
+                            if (annonceFulls != null) {
+                                for (AnnonceFull annonceFull : annonceFulls) {
+                                    listUidFavorites.add(annonceFull.getAnnonce().getUid());
+                                }
                             }
-                        }
-                        updateListWithFavorite(listUidFavorites);
-                        updateListAdapter();
-                    });
-                }
-        );
+                            updateListWithFavorite(listUidFavorites);
+                            updateListAdapter();
+                        });
+                    }
+            );
+        }
     }
 
     @Override
@@ -259,6 +262,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (savedInstanceState != null) {
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+            updateListAdapter();
         }
 
         swipeRefreshLayout.setOnRefreshListener(this);
