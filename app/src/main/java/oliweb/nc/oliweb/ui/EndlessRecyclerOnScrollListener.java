@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,15 +11,20 @@ public abstract class EndlessRecyclerOnScrollListener extends
 
     // The current offset index of data you have loaded
     private int currentPage = 0;
+
     // The total number of items in the dataset after the last load
     private int previousTotalItemCount = 0;
+
     // True if we are still waiting for the last set of data to load.
     private boolean loading = true;
+
     // Sets the starting page index
     private int startingPageIndex = 0;
+
     // The minimum amount of items to have below your current scroll position
     // before loading more.
     private int visibleThreshold = 5;
+
     private RecyclerView.LayoutManager mLayoutManager;
 
     protected EndlessRecyclerOnScrollListener(
@@ -49,7 +55,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
     }
 
     @Override
-    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+    public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
         int lastVisibleItemPosition = 0;
         int totalItemCount = mLayoutManager.getItemCount();
 

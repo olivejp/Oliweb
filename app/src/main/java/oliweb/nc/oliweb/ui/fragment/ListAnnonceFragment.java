@@ -231,6 +231,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                             }
                         }
                         updateListWithFavorite(listUidFavorites);
+                        updateListAdapter();
                     });
                 }
         );
@@ -372,39 +373,37 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
-            query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (directionSelected == DESC) {
+            return query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
+        } else {
             Integer lastPrice = Integer.MAX_VALUE;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
                 if (lastPrice < annoncePhotos.getAnnonce().getPrix()) {
                     lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
-            query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
+            return query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
         }
-        return query;
     }
 
     private Query loadSortDate() {
         Query query = annoncesReference.orderByChild("datePublication");
-        if (directionSelected == ASC) {
+        if (directionSelected == DESC) {
             Long lastDate = 0L;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
                 if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
                     lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
-            query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (directionSelected == DESC) {
+            return query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
+        } else {
             Long lastDate = Long.MAX_VALUE;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (lastDate < annoncePhotos.getAnnonce().getDatePublication()) {
+                if (annoncePhotos.getAnnonce().getDatePublication() < lastDate) {
                     lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
-            query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
+            return query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
         }
-        return query;
     }
 
     private ValueEventListener loadSortListener = new ValueEventListener() {
@@ -430,6 +429,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 annonceFull.getAnnonce().setFavorite(0);
             }
         }
+    }
+
+    private void updateListAdapter() {
         annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         annonceBeautyAdapter.notifyDataSetChanged();
     }
@@ -438,5 +440,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
         updateListWithFavorite(listUidFavorites);
+        updateListAdapter();
     };
 }
