@@ -377,7 +377,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         } else {
             Integer lastPrice = Integer.MAX_VALUE;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (lastPrice < annoncePhotos.getAnnonce().getPrix()) {
+                if (annoncePhotos.getAnnonce().getPrix() < lastPrice) {
                     lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
