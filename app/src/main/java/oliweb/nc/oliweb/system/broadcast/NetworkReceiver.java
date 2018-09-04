@@ -35,13 +35,13 @@ public class NetworkReceiver extends BroadcastReceiver {
         return mInstance;
     }
 
-    public void listen(NetworkChangeListener networkChangeListener) {
+    public static void listen(NetworkChangeListener networkChangeListener) {
         if (!mNetworkChangeListener.contains(networkChangeListener)) {
             mNetworkChangeListener.add(networkChangeListener);
         }
     }
 
-    public void removeListener(NetworkChangeListener networkChangeListener) {
+    public static void removeListener(NetworkChangeListener networkChangeListener) {
         if (mNetworkChangeListener.contains(networkChangeListener)) {
             mNetworkChangeListener.remove(networkChangeListener);
         }

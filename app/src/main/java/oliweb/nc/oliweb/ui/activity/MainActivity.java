@@ -41,7 +41,6 @@ import java.util.HashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -336,7 +335,7 @@ public class MainActivity extends AppCompatActivity
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
-        NetworkReceiver.getInstance().removeListener(this);
+        NetworkReceiver.removeListener(this);
     }
 
     @Override
