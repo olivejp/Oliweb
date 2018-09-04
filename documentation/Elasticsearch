@@ -1,0 +1,58 @@
+Pour faire une recherche "avancée en ES" on va utiliser l'opérateur bool / must.
+
+La requête suivante permet de rechercher toutes les annonces
+Avec des photos
+Dont le libellé de la catégorie est "Fleur" ou "Immobilier",
+Dont le titre ou la description contiennent le mot "Test",
+Dont le prix est >= 1100 et <= 9000
+Et on trie le tout sur la date de publication de la plus ancienne à la plus récente grâce au Sort.
+
+{
+    "sort" : [
+		{
+			"datePublication": {
+			    "order":"asc"
+			}
+		}
+    ],
+   "query":{
+      "bool":{
+         "must":[
+            {
+                "exists": {
+                    "field":"photos"
+                }
+            },
+            {
+               "bool":{
+                  "should":[
+                     {
+                        "match":{
+                           "categorie.libelle":"Fleur"
+                        }
+                     },
+                     {
+                        "match":{
+                           "categorie.libelle":"Automobile"
+                        }
+                     }
+                  ]
+               }
+            },
+            {
+               "multi_match":{
+                  "query":"Test",
+                  "fields":["titre", "description"]
+               }
+            },{
+	            "range":{
+	               "prix":{
+	                  "gte":1100,
+	                  "lte":9000
+	               }
+	            }
+            }
+         ]
+      }
+   }
+}
