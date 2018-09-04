@@ -139,6 +139,56 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
+    public void makeAnAdvancedSearch(String categorie, boolean photo, Integer lowestPrice, Integer higherPrice, String query, int pagingSize, int from, int tri, int direction) {
+        updateLoadingStatus(true);
+        FirebaseUtility.getServerTimestamp()
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(throwable -> {
+                    Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                    updateLoadingStatus(false);
+                })
+                .doOnSuccess(timestamp -> {
+                    if (from == 0) {
+                        listAnnonce.clear();
+                    }
+
+                    List<String> listField = new ArrayList<>();
+                    listField.add("titre");
+                    listField.add("description");
+
+                    String directionStr;
+                    if (direction == ASC) {
+                        directionStr = "asc";
+                    } else {
+                        directionStr = "desc";
+                    }
+
+                    String field;
+                    if (tri == SORT_TITLE) {
+                        field = "titre";
+                    } else if (tri == SORT_PRICE) {
+                        field = "prix";
+                    } else {
+                        field = "datePublication";
+                    }
+
+                    ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
+                    builder.setSize(pagingSize)
+                            .setTimestamp(timestamp)
+                            .setFrom(from)
+                            .setMultiMatchQuery(listField, query)
+                            .addSortingFields(field, directionStr);
+
+                    // Création d'une nouvelle request dans la table request
+                    newRequestRef = requestReference.push();
+                    newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
+
+                    // Ensuite on va écouter les changements pour cette nouvelle requête
+                    newRequestRef.addValueEventListener(requestValueListener);
+                })
+                .subscribe();
+    }
+
     /**
      * Launch a search with the Query
      *
