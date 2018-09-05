@@ -25,11 +25,12 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AdvancedSearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 
+import static oliweb.nc.oliweb.ui.activity.SearchActivity.ACTION_ADVANCED_SEARCH;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.CATEGORIE;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.HIGHER_PRICE;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.KEYWORD;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.LOWER_PRICE;
-import static oliweb.nc.oliweb.ui.activity.SearchActivity.WITH_PHOTO;
+import static oliweb.nc.oliweb.ui.activity.SearchActivity.WITH_PHOTO_ONLY;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class AdvancedSearchActivity extends AppCompatActivity {
@@ -109,8 +110,11 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         intent.putExtra(CATEGORIE, currentCategorie);
         intent.putExtra(LOWER_PRICE, priceLow);
         intent.putExtra(HIGHER_PRICE, priceHigh);
-        intent.putExtra(WITH_PHOTO, isPhoto);
+        intent.putExtra(WITH_PHOTO_ONLY, isPhoto);
         intent.putExtra(KEYWORD, keywordSearched);
+
+        intent.setAction(ACTION_ADVANCED_SEARCH);
+
         intent.setClass(this, SearchActivity.class);
 
         startActivity(intent);

@@ -28,6 +28,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -55,8 +56,9 @@ public class SearchActivity extends AppCompatActivity {
     public static final String CATEGORIE = "CATEGORIE";
     public static final String LOWER_PRICE = "LOWER_PRICE";
     public static final String HIGHER_PRICE = "HIGHER_PRICE";
-    public static final String WITH_PHOTO = "WITH_PHOTO";
+    public static final String WITH_PHOTO_ONLY = "WITH_PHOTO_ONLY";
     public static final String KEYWORD = "KEYWORD";
+    public static final String ACTION_ADVANCED_SEARCH = "ACTION_ADVANCED_SEARCH";
 
 
     @BindView(R.id.recycler_search_annonce)
@@ -78,6 +80,12 @@ public class SearchActivity extends AppCompatActivity {
     private int tri;
     private int direction;
     private int currentPage = 0;
+    private String action;
+
+    private CategorieEntity categorieEntity;
+    private int lowerPrice;
+    private int higherPrice;
+    private boolean withPhotoOnly;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,10 +100,28 @@ public class SearchActivity extends AppCompatActivity {
 
         // Get the intent, verify the action and get the query string
         Intent intentParam = getIntent();
-        if (Intent.ACTION_SEARCH.equals(intentParam.getAction())) {
+        action = intentParam.getAction();
+        if (Intent.ACTION_SEARCH.equals(action)) {
             query = intentParam.getStringExtra(SearchManager.QUERY);
+            setTitle(String.format("%s %s", getString(R.string.looking_for), query));
+        } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
+            setTitle("Recherche avancée");
+            if (intentParam.hasExtra(KEYWORD)) {
+                query = intentParam.getStringExtra(KEYWORD);
+            }
+            if (intentParam.hasExtra(CATEGORIE)) {
+                categorieEntity = intentParam.getParcelableExtra(CATEGORIE);
+            }
+            if (intentParam.hasExtra(LOWER_PRICE)) {
+                lowerPrice = intentParam.getIntExtra(LOWER_PRICE, 0);
+            }
+            if (intentParam.hasExtra(HIGHER_PRICE)) {
+                higherPrice = intentParam.getIntExtra(HIGHER_PRICE, Integer.MAX_VALUE);
+            }
+            if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
+                withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
+            }
         }
-
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -103,9 +129,6 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        setTitle(String.format("%s %s", getString(R.string.looking_for), query));
-
-        // Recherche du mode display actuellement dans les préférences.
         annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
                 onClickListener,
                 onClickListenerShare,
@@ -203,11 +226,16 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void launchNewSearch(int currentPage) {
-        if (searchActivityViewModel.isConnected()) {
-            int from = currentPage * Constants.PER_PAGE_REQUEST;
-            searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
-        } else {
+        if (!searchActivityViewModel.isConnected()) {
             Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
+        } else {
+            if (Intent.ACTION_SEARCH.equals(action)) {
+                int from = currentPage * Constants.PER_PAGE_REQUEST;
+                searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+            } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
+                int from = currentPage * Constants.PER_PAGE_REQUEST;
+                searchActivityViewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+            }
         }
     }
 

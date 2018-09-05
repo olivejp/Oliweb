@@ -16,7 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -139,7 +139,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
-    public void makeAnAdvancedSearch(String categorie, boolean photo, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
+    public void makeAnAdvancedSearch(String libelleCategorie, boolean withPhotoOnly, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
         FirebaseUtility.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
@@ -152,33 +152,17 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         listAnnonce.clear();
                     }
 
-                    List<String> listField = new ArrayList<>();
-                    listField.add("titre");
-                    listField.add("description");
-
-                    String directionStr;
-
-                    if (direction == ASC) {
-                        directionStr = "asc";
-                    } else {
-                        directionStr = "desc";
+                    ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
+                    if (query != null) {
+                        builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
                     }
-
-                    String field;
-                    if (tri == SORT_TITLE) {
-                        field = "titre";
-                    } else if (tri == SORT_PRICE) {
-                        field = "prix";
-                    } else {
-                        field = "datePublication";
+                    if (libelleCategorie != null) {
+                        builder.setCategorie(libelleCategorie);
                     }
-
-                    ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
-                    builder.setSize(pagingSize)
-                            .setTimestamp(timestamp)
-                            .setFrom(from)
-                            .setMultiMatchQuery(listField, query)
-                            .addSortingFields(field, directionStr);
+                    if (lowestPrice != null && highestPrice != null) {
+                        builder.setRangePrice(lowestPrice, highestPrice);
+                    }
+                    builder.setWithPhotoOnly(withPhotoOnly);
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
@@ -212,32 +196,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         listAnnonce.clear();
                     }
 
-                    List<String> listField = new ArrayList<>();
-                    listField.add("titre");
-                    listField.add("description");
-
-                    String directionStr;
-                    if (direction == ASC) {
-                        directionStr = "asc";
-                    } else {
-                        directionStr = "desc";
-                    }
-
-                    String field;
-                    if (tri == SORT_TITLE) {
-                        field = "titre";
-                    } else if (tri == SORT_PRICE) {
-                        field = "prix";
-                    } else {
-                        field = "datePublication";
-                    }
-
-                    ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
-                    builder.setSize(pagingSize)
-                            .setTimestamp(timestamp)
-                            .setFrom(from)
-                            .setMultiMatchQuery(listField, query)
-                            .addSortingFields(field, directionStr);
+                    ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
+                    builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
@@ -247,5 +207,31 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     newRequestRef.addValueEventListener(requestValueListener);
                 })
                 .subscribe();
+    }
+
+    private ElasticsearchQueryBuilder initQueryBuilder(Long timestamp, int pagingSize, int direction, int from, int tri) {
+        String directionStr;
+        if (direction == ASC) {
+            directionStr = "asc";
+        } else {
+            directionStr = "desc";
+        }
+
+        String field;
+        if (tri == SORT_TITLE) {
+            field = "titre";
+        } else if (tri == SORT_PRICE) {
+            field = "prix";
+        } else {
+            field = "datePublication";
+        }
+
+        ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
+        builder.setSize(pagingSize)
+                .setTimestamp(timestamp)
+                .setFrom(from)
+                .addSortingFields(field, directionStr);
+
+        return builder;
     }
 }

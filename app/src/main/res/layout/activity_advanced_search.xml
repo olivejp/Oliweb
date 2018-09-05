@@ -32,7 +32,7 @@
         app:layout_constraintTop_toBottomOf="@+id/text_categorie" />
 
     <TextView
-        android:id="@+id/with_photos"
+        android:id="@+id/with_photos_only"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -40,7 +40,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:gravity="center"
-        android:text="Avec photos"
+        android:text="Avec photos uniquement"
         android:textColor="@color/colorAccent"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/text_layout_keywords"
@@ -67,7 +67,7 @@
         android:textColorHint="@color/colorAccent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/with_photos">
+        app:layout_constraintTop_toBottomOf="@+id/with_photos_only">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/keyword"

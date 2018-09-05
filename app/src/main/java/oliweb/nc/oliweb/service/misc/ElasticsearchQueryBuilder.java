@@ -61,6 +61,25 @@ public class ElasticsearchQueryBuilder {
         return this;
     }
 
+    public ElasticsearchQueryBuilder setCategorie(String libelleCategorie) {
+        checkJsonObjectExist();
+        jsonRequest.addProperty("categorie", libelleCategorie);
+        return this;
+    }
+
+    public ElasticsearchQueryBuilder setRangePrice(int lowerPrice, int higherPrice) {
+        checkJsonObjectExist();
+        jsonRequest.addProperty("lower", lowerPrice);
+        jsonRequest.addProperty("higher", higherPrice);
+        return this;
+    }
+
+    public ElasticsearchQueryBuilder setWithPhotoOnly(boolean withPhotoOnly) {
+        checkJsonObjectExist();
+        jsonRequest.addProperty("withPhotoOnly", withPhotoOnly);
+        return this;
+    }
+
     public ElasticsearchQueryBuilder addSortingFields(String field, String direction) {
         checkJsonObjectExist();
         checkJsonSortArray();
