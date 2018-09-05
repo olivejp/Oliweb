@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity
             callChatsActivity();
         } else if (id == R.id.nav_annonces) {
             callMyAnnoncesActivity();
-        } else if(id == R.id.nav_advanced_search){
+        } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
         }
 
@@ -294,13 +294,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void callAdvancedSearchActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-        if (uidUser != null) {
-            Intent intent = new Intent();
-            intent.setClass(this, AdvancedSearchActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-        }
+        Intent intent = new Intent();
+        intent.setClass(this, AdvancedSearchActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
     private void callChatsActivity() {
