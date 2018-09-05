@@ -11,14 +11,14 @@ import java.util.List;
 public class ElasticsearchQueryBuilder {
     private JsonObject jsonRequest;
 
-    private void checkJsonObject() {
+    private void checkJsonObjectExist() {
         if (jsonRequest == null) {
             jsonRequest = new JsonObject();
         }
     }
 
     private void checkJsonSortArray() {
-        checkJsonObject();
+        checkJsonObjectExist();
         if (!jsonRequest.has("sort")) {
             JsonArray sort = new JsonArray();
             jsonRequest.add("sort", sort);
@@ -26,25 +26,25 @@ public class ElasticsearchQueryBuilder {
     }
 
     public ElasticsearchQueryBuilder setTimestamp(Long timestamp) {
-        checkJsonObject();
+        checkJsonObjectExist();
         jsonRequest.addProperty("timestamp", timestamp);
         return this;
     }
 
     public ElasticsearchQueryBuilder setFrom(int from) {
-        checkJsonObject();
+        checkJsonObjectExist();
         jsonRequest.addProperty("from", from);
         return this;
     }
 
     public ElasticsearchQueryBuilder setSize(int size) {
-        checkJsonObject();
+        checkJsonObjectExist();
         jsonRequest.addProperty("size", size);
         return this;
     }
 
     public ElasticsearchQueryBuilder setMultiMatchQuery(List<String> fields, String query) {
-        checkJsonObject();
+        checkJsonObjectExist();
 
         JsonArray jsonFieldArray = new JsonArray();
         for (String field : fields) {
@@ -62,7 +62,7 @@ public class ElasticsearchQueryBuilder {
     }
 
     public ElasticsearchQueryBuilder addSortingFields(String field, String direction) {
-        checkJsonObject();
+        checkJsonObjectExist();
         checkJsonSortArray();
         JsonArray sortArray = jsonRequest.getAsJsonArray("sort");
 
@@ -79,6 +79,6 @@ public class ElasticsearchQueryBuilder {
     }
 
     public String build() {
-         return jsonRequest.toString();
+        return jsonRequest.toString();
     }
 }

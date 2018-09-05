@@ -28,6 +28,15 @@
         </menu>
     </item>
 
+    <item android:title="@string/search">
+        <menu>
+            <item
+                android:id="@+id/nav_advanced_search"
+                android:icon="@drawable/ic_zoom_in_grey_900_48dp"
+                android:title="@string/advanced_search" />
+        </menu>
+    </item>
+
     <item android:title="@string/param_tres">
         <menu>
             <item

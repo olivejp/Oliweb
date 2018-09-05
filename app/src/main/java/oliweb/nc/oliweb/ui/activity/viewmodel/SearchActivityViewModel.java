@@ -139,7 +139,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
-    public void makeAnAdvancedSearch(String categorie, boolean photo, Integer lowestPrice, Integer higherPrice, String query, int pagingSize, int from, int tri, int direction) {
+    public void makeAnAdvancedSearch(String categorie, boolean photo, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
         FirebaseUtility.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
@@ -157,6 +157,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     listField.add("description");
 
                     String directionStr;
+
                     if (direction == ASC) {
                         directionStr = "asc";
                     } else {
