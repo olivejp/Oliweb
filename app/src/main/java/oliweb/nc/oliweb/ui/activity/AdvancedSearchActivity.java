@@ -4,6 +4,8 @@ package oliweb.nc.oliweb.ui.activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatSpinner;
 import android.view.MenuItem;
@@ -41,7 +43,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     AppCompatSpinner spinnerCategorie;
 
     @BindView(R.id.photo_switch)
-    CheckBox withPhoto;
+    CheckBox withPhotoOnly;
 
     @BindView(R.id.higher_price)
     EditText higherPrice;
@@ -52,7 +54,11 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     @BindView(R.id.keyword)
     EditText keyword;
 
+    @BindView(R.id.constraint_advanced_saerch)
+    ConstraintLayout constraintLayout;
+
     private CategorieEntity currentCategorie;
+    private boolean error;
 
     public AdvancedSearchActivity() {
         // Required empty public constructor
@@ -85,39 +91,48 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-    @OnTextChanged(R.id.lower_price)
-    public void onTextChangeLower(View v) {
-        if (Integer.valueOf(lowerPrice.getText().toString()) > Integer.valueOf((higherPrice.getText().toString()))) {
-            lowerPrice.setError("Le minimum doit être inférieur au maximum");
-        }
-    }
-
-    @OnTextChanged(R.id.higher_price)
-    public void onTextChangeHigher(View v) {
-        if (Integer.valueOf(lowerPrice.getText().toString()) < Integer.valueOf((higherPrice.getText().toString()))) {
+    @OnTextChanged({R.id.higher_price, R.id.lower_price})
+    public void onTextChangeHigher(CharSequence s, int start, int before, int count) {
+        error = false;
+        String higher = higherPrice.getText().toString();
+        String lower = lowerPrice.getText().toString();
+        if (!higher.isEmpty() && !lower.isEmpty() && Integer.valueOf(lower) > Integer.valueOf((higher))) {
             higherPrice.setError("Le maximum doit être supérieur au minimum");
+            error = true;
+        }
+
+        if (higher.isEmpty() && !lower.isEmpty() || !higher.isEmpty() && lower.isEmpty()) {
+            higherPrice.setError("La fourchette de prix est incomplète");
+            error = true;
         }
     }
 
     @OnClick(R.id.fab_advanced_search)
     public void onClickSearch(View v) {
-        Integer priceLow = Integer.valueOf(lowerPrice.getText().toString());
-        Integer priceHigh = Integer.valueOf(higherPrice.getText().toString());
-        boolean isPhoto = withPhoto.isChecked();
-        String keywordSearched = keyword.getText().toString();
+        if (error) {
+            Snackbar.make(constraintLayout, "Erreur dans la recherche", Snackbar.LENGTH_LONG).show();
+        } else {
+            String higher = higherPrice.getText().toString();
+            String lower = lowerPrice.getText().toString();
 
-        Intent intent = new Intent();
-        intent.putExtra(CATEGORIE, currentCategorie);
-        intent.putExtra(LOWER_PRICE, priceLow);
-        intent.putExtra(HIGHER_PRICE, priceHigh);
-        intent.putExtra(WITH_PHOTO_ONLY, isPhoto);
-        intent.putExtra(KEYWORD, keywordSearched);
+            int priceLow = (lower.isEmpty()) ? 0 : Integer.valueOf(lowerPrice.getText().toString());
+            int priceHigh = (higher.isEmpty()) ? Integer.MAX_VALUE : Integer.valueOf(higherPrice.getText().toString());
+            boolean isPhoto = withPhotoOnly.isChecked();
+            String keywordSearched = keyword.getText().toString();
 
-        intent.setAction(ACTION_ADVANCED_SEARCH);
+            Intent intent = new Intent();
+            intent.putExtra(CATEGORIE, currentCategorie);
+            intent.putExtra(LOWER_PRICE, priceLow);
+            intent.putExtra(HIGHER_PRICE, priceHigh);
+            intent.putExtra(WITH_PHOTO_ONLY, isPhoto);
+            intent.putExtra(KEYWORD, keywordSearched);
 
-        intent.setClass(this, SearchActivity.class);
+            intent.setAction(ACTION_ADVANCED_SEARCH);
 
-        startActivity(intent);
+            intent.setClass(this, SearchActivity.class);
+
+            startActivity(intent);
+        }
     }
 
     private void defineSpinnerCategorie(List<CategorieEntity> categorieEntities) {
