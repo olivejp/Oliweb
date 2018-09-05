@@ -5,13 +5,14 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
-@Module
+@Module(includes = FirebaseUtilityModule.class)
 public class FirebaseAnnonceRepositoryModule {
 
     @Provides
     @Singleton
-    public FirebaseAnnonceRepository firebaseAnnonceRepository() {
-        return new FirebaseAnnonceRepository();
+    public FirebaseAnnonceRepository firebaseAnnonceRepository(FirebaseUtilityService firebaseUtilityService) {
+        return new FirebaseAnnonceRepository(firebaseUtilityService);
     }
 }

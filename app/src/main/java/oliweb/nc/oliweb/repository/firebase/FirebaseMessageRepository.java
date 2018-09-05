@@ -19,7 +19,7 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
-import oliweb.nc.oliweb.utility.FirebaseUtility;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
 
@@ -28,10 +28,12 @@ public class FirebaseMessageRepository {
 
     private static final String TAG = FirebaseMessageRepository.class.getName();
     private DatabaseReference msgRef;
+    private FirebaseUtilityService firebaseUtilityService;
 
     @Inject
-    public FirebaseMessageRepository() {
+    public FirebaseMessageRepository(FirebaseUtilityService firebaseUtilityService) {
         msgRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_MESSAGES_REF);
+        this.firebaseUtilityService = firebaseUtilityService;
     }
 
     public Single<Long> getCountMessageByUidUserAndUidChat(String uidUser, String uidChat) {
@@ -86,7 +88,7 @@ public class FirebaseMessageRepository {
      */
     public Single<MessageEntity> getUidAndTimestampFromFirebase(@NonNull String uidChat, MessageEntity messageEntity) {
         Log.d(TAG, "Starting getUidAndTimestampFromFirebase uidChat : " + uidChat + " messageEntity : " + messageEntity);
-        return FirebaseUtility.getServerTimestamp()
+        return firebaseUtilityService.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .map(timestamp -> {

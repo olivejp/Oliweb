@@ -53,7 +53,10 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebaseChatService chatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository, FirebaseUserRepository firebaseUserRepository) {
+    public FirebaseChatService firebaseChatService(FirebaseChatRepository firebaseChatRepository,
+                                                   ChatRepository chatRepository,
+                                                   MessageRepository messageRepository,
+                                                   FirebaseUserRepository firebaseUserRepository) {
         return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository);
     }
 
@@ -68,7 +71,7 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebaseMessageService messageFirebaseSender(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
+    public FirebaseMessageService firebaseMessageService(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
         return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository);
     }
 }
