@@ -36,6 +36,7 @@ import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static android.support.v4.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
@@ -50,6 +51,13 @@ public class SearchActivity extends AppCompatActivity {
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
     private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
     private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
+
+    public static final String CATEGORIE = "CATEGORIE";
+    public static final String LOWER_PRICE = "LOWER_PRICE";
+    public static final String HIGHER_PRICE = "HIGHER_PRICE";
+    public static final String WITH_PHOTO = "WITH_PHOTO";
+    public static final String KEYWORD = "KEYWORD";
+
 
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
@@ -239,8 +247,8 @@ public class SearchActivity extends AppCompatActivity {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, viewHolder.getAnnonceFull());
-        Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage);
+        Pair pairImage = new Pair<View, String>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
+        ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
         startActivity(intent, options.toBundle());
     };
 
