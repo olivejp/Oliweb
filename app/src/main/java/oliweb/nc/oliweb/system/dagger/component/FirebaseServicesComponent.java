@@ -11,9 +11,10 @@ import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseServicesModule;
+import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
-@Component(modules = {FirebaseServicesModule.class})
+@Component(modules = {FirebaseServicesModule.class, SchedulerModule.class})
 @Singleton
 public interface FirebaseServicesComponent {
 

@@ -2,10 +2,12 @@ package oliweb.nc.oliweb.system.dagger.module;
 
 import android.content.Context;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
@@ -41,8 +43,9 @@ public class FirebaseServicesModule {
     @Singleton
     public FirebaseRetrieverService firebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                              AnnonceRepository annonceRepository,
-                                                             FirebasePhotoStorage photoStorage) {
-        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage);
+                                                             FirebasePhotoStorage photoStorage,
+                                                             @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage, processScheduler);
     }
 
     @Provides
