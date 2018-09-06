@@ -1,11 +1,11 @@
 package oliweb.nc.oliweb;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
@@ -16,33 +16,91 @@ import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AnnonceConverterTest {
 
-    public static final String UID_USER = "123";
-    public static final String UID_ANNONCE = "456";
-    public static final String MON_TITRE = "Mon titre";
-    public static final String MA_DESCRIPTION = "Ma description";
-    public static final int PRIX = 7000;
-    public static final long ID_CATEGORIE = 1L;
-    public static final String LIBELLE_CATEGORIE = "AUTOMOBILE";
-    public static final String PROFILE_USER = "PROFILE";
-    public static final String EMAIL = "EMAIL";
-    public static final String PHOTO_URL_USER = "PHOTO_URL";
-    public static final String TELEPHONE_USER = "790723";
-    public static final String TOKEN_DEVICE_USER = "TOKEN_DEVICE";
-    public static final String PHOTO_FIREBASE_URL = "MY_FIREBASE_URL";
-    public static final long ID_ANNONCE = 1L;
-    public static final long ID_PHOTO = 10L;
-    public static final String URI_LOCAL_PHOTO = "MY_URI_LOCAL";
+    private static final String UID_USER = "123";
+    private static final String UID_ANNONCE = "456";
+    private static final String MON_TITRE = "Mon titre";
+    private static final String MA_DESCRIPTION = "Ma description";
+    private static final int PRIX = 7000;
+    private static final long ID_CATEGORIE = 1L;
+    private static final String LIBELLE_CATEGORIE = "AUTOMOBILE";
+    private static final String PROFILE_USER = "PROFILE";
+    private static final String EMAIL = "EMAIL";
+    private static final String PHOTO_URL_USER = "PHOTO_URL";
+    private static final String TELEPHONE_USER = "790723";
+    private static final String TOKEN_DEVICE_USER = "TOKEN_DEVICE";
+    private static final String PHOTO_FIREBASE_URL = "MY_FIREBASE_URL";
+    private static final String PHOTO_FIREBASE_URL2 = "MY_FIREBASE_URL_2";
+    private static final long ID_ANNONCE = 1L;
+    private static final long ID_PHOTO = 10L;
+    private static final String URI_LOCAL_PHOTO = "MY_URI_LOCAL";
 
     @Before
     public void setUp() {
     }
 
     @Test
-    public void testConvertDto() {
+    public void testConvertDtoToEntity() {
+
+        UtilisateurDto utilisateurDto = new UtilisateurDto();
+        utilisateurDto.setEmail(EMAIL);
+        utilisateurDto.setPhotoUrl(PHOTO_URL_USER);
+        utilisateurDto.setProfile(PROFILE_USER);
+        utilisateurDto.setTelephone(TELEPHONE_USER);
+        utilisateurDto.setUuid(UID_USER);
+
+        AnnonceDto annonceDto = new AnnonceDto();
+        annonceDto.setUuid(UID_ANNONCE);
+        annonceDto.setTitre(MON_TITRE);
+        annonceDto.setDescription(MA_DESCRIPTION);
+        annonceDto.setContactEmail(true);
+        annonceDto.setContactTel(false);
+        annonceDto.setContactMsg(true);
+        annonceDto.setPrix(PRIX);
+        annonceDto.setUtilisateur(utilisateurDto);
+        annonceDto.setPhotos(Arrays.asList(PHOTO_FIREBASE_URL, PHOTO_FIREBASE_URL2));
+
+        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
+
+        assertNotNull(annonceFull);
+        assertNotNull(annonceFull.getAnnonce());
+        assertNotNull(annonceFull.getUtilisateur());
+        assertNotNull(annonceFull.getPhotos());
+
+        assertEquals(2, annonceFull.getPhotos().size());
+        assertEquals(1, annonceFull.getUtilisateur().size());
+
+        assertEquals(UID_ANNONCE, annonceFull.getAnnonce().getUid());
+        assertEquals(MON_TITRE, annonceFull.getAnnonce().getTitre());
+        assertEquals(MA_DESCRIPTION, annonceFull.getAnnonce().getDescription());
+        assertEquals(PRIX, annonceFull.getAnnonce().getPrix().intValue());
+        assertEquals("O", annonceFull.getAnnonce().getContactByEmail());
+        assertEquals("N", annonceFull.getAnnonce().getContactByTel());
+        assertEquals("O", annonceFull.getAnnonce().getContactByMsg());
+
+        assertEquals(EMAIL, annonceFull.getUtilisateur().get(0).getEmail());
+        assertEquals(PROFILE_USER, annonceFull.getUtilisateur().get(0).getProfile());
+        assertEquals(TELEPHONE_USER, annonceFull.getUtilisateur().get(0).getTelephone());
+        assertEquals(UID_USER, annonceFull.getUtilisateur().get(0).getUid());
+        assertEquals(PHOTO_URL_USER, annonceFull.getUtilisateur().get(0).getPhotoUrl());
+
+        assertEquals(PHOTO_FIREBASE_URL, annonceFull.getPhotos().get(0).getFirebasePath());
+        assertEquals(PHOTO_FIREBASE_URL2, annonceFull.getPhotos().get(1).getFirebasePath());
+    }
+
+    @Test
+    public void testConvertFullToDto() {
+
+        // Préparation des données du test
         AnnonceEntity annonceEntity = new AnnonceEntity();
         annonceEntity.setIdAnnonce(ID_ANNONCE);
         annonceEntity.setUidUser(UID_USER);
@@ -82,22 +140,31 @@ public class AnnonceConverterTest {
         annonceFull.setPhotos(Collections.singletonList(photoEntity));
         annonceFull.setUtilisateur(Collections.singletonList(userEntity));
 
+
+        // Lancement du test
         AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
 
-        Assert.assertNotNull(annonceDto);
-        Assert.assertNotNull(annonceDto.getCategorie());
-        Assert.assertNotNull(annonceDto.getUtilisateur());
-        Assert.assertNotNull(annonceDto.getPhotos());
+        assertNotNull(annonceDto);
+        assertNotNull(annonceDto.getCategorie());
+        assertNotNull(annonceDto.getUtilisateur());
+        assertNotNull(annonceDto.getPhotos());
 
-        Assert.assertEquals(UID_ANNONCE, annonceDto.getUuid());
-        Assert.assertEquals(MON_TITRE, annonceDto.getTitre());
-        Assert.assertEquals(MA_DESCRIPTION, annonceDto.getDescription());
-        Assert.assertEquals(PRIX, annonceDto.getPrix());
+        assertEquals(UID_ANNONCE, annonceDto.getUuid());
+        assertEquals(MON_TITRE, annonceDto.getTitre());
+        assertEquals(MA_DESCRIPTION, annonceDto.getDescription());
+        assertEquals(PRIX, annonceDto.getPrix());
 
-        Assert.assertEquals(UID_USER, annonceDto.getUtilisateur().getUuid());
-        Assert.assertEquals(EMAIL, annonceDto.getUtilisateur().getEmail());
-        Assert.assertEquals(PHOTO_URL_USER, annonceDto.getUtilisateur().getPhotoUrl());
-        Assert.assertEquals(PROFILE_USER, annonceDto.getUtilisateur().getProfile());
-        Assert.assertEquals(TELEPHONE_USER, annonceDto.getUtilisateur().getTelephone());
+        assertEquals(UID_USER, annonceDto.getUtilisateur().getUuid());
+        assertEquals(EMAIL, annonceDto.getUtilisateur().getEmail());
+        assertEquals(PHOTO_URL_USER, annonceDto.getUtilisateur().getPhotoUrl());
+        assertEquals(PROFILE_USER, annonceDto.getUtilisateur().getProfile());
+        assertEquals(TELEPHONE_USER, annonceDto.getUtilisateur().getTelephone());
+
+        assertEquals(1, annonceDto.getPhotos().size());
+        assertEquals(PHOTO_FIREBASE_URL, annonceDto.getPhotos().get(0));
+
+        assertTrue(annonceDto.isContactEmail());
+        assertTrue(annonceDto.isContactMsg());
+        assertFalse(annonceDto.isContactTel());
     }
 }

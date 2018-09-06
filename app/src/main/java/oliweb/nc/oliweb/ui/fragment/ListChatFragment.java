@@ -41,12 +41,9 @@ import static oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel.Ty
 /**
  * Created by 2761oli on 23/03/2018.
  */
-
 public class ListChatFragment extends Fragment {
 
-    private static final String TAG = ListChatFragment.class.getName();
     private AppCompatActivity appCompatActivity;
-
     private MyChatsActivityViewModel viewModel;
 
     @BindView(R.id.recycler_list_chats)
