@@ -33,7 +33,7 @@ public class PhotoFirebaseSender {
         this.photoRepository = photoRepository;
     }
 
-    Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
+    public Single<AtomicBoolean> sendPhotosToRemote(List<PhotoEntity> listPhoto) {
         Log.d(TAG, "sendPhotosToRemote listPhoto : " + listPhoto);
         return Single.create(emitter ->
                 Observable.fromIterable(listPhoto)

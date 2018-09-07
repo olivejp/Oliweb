@@ -5,6 +5,7 @@ import android.content.Context;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.reactivex.Maybe;
@@ -23,8 +24,11 @@ import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,7 +37,7 @@ import static org.mockito.Mockito.when;
 public class AnnonceFirebaseSenderTest {
 
     private static final String UID_ANNONCE = "UID";
-    private static final String UID_USER = "123";
+
 
     @Mock
     Context context;
@@ -49,6 +53,10 @@ public class AnnonceFirebaseSenderTest {
 
     @Mock
     private AnnonceFullRepository annonceFullRepository;
+
+    private void resetMock() {
+        Mockito.reset(annonceFullRepository, annonceRepository, firebaseAnnonceRepository, photoFirebaseSender);
+    }
 
     @Test
     public void ShouldSaveOnce() {
@@ -79,13 +87,16 @@ public class AnnonceFirebaseSenderTest {
         verify(annonceRepository, times(1)).markAsSending(any());
         verify(annonceRepository, times(1)).markAsSend(any());
         verify(firebaseAnnonceRepository, times(1)).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, times(1)).sendPhotosToRemote(anyList());
+
+        resetMock();
     }
 
     /**
      * If getUidAndTimestampFromFirebase throw an error, should mark the annonce to Failed to send.
      */
     @Test
-    public void ShouldThrowError() {
+    public void ShouldMarkAsFailedToSend_When_GetUidAndTimestampFromFirebase_Fail() {
 
         TestScheduler testScheduler = new TestScheduler();
 
@@ -101,13 +112,19 @@ public class AnnonceFirebaseSenderTest {
         testScheduler.triggerActions();
 
         verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, times(0)).markAsSending(any());
-        verify(annonceRepository, times(0)).markAsSend(any());
-        verify(firebaseAnnonceRepository, times(0)).saveAnnonceToFirebase(any());
+        verify(annonceRepository, never()).markAsSending(any());
+        verify(annonceRepository, never()).markAsSend(any());
+        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+
+        resetMock();
     }
 
+    /**
+     * Si le service markAsSending échoue on veut que l'annonce soit passée au statut markAsFailedToSend
+     */
     @Test
-    public void ShouldThrowError2() {
+    public void ShouldMarkAsFailedToSend_When_MarkAsSending_Fail() {
 
         TestScheduler testScheduler = new TestScheduler();
 
@@ -129,7 +146,102 @@ public class AnnonceFirebaseSenderTest {
 
         verify(annonceRepository, times(1)).markAsSending(any());
         verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, times(0)).markAsSend(any());
-        verify(firebaseAnnonceRepository, times(0)).saveAnnonceToFirebase(any());
+        verify(annonceRepository, never()).markAsSend(any());
+        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+
+        resetMock();
+    }
+
+    @Test
+    public void ShouldMarkAsFailedToSend_When_FindMaybeByUidAnnonceAndFavorite_Return_Empty() {
+
+        TestScheduler testScheduler = new TestScheduler();
+
+        // Annonce entity renvoyée
+        AnnonceFull annonceFull = Utility.createAnnonceFull();
+        AnnonceEntity annonceEntity = annonceFull.getAnnonce();
+
+        // Firebase Annonce Repo nous renvoie trois AnnonceDto
+        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
+
+        // Création de mon service à tester
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+
+        // Appel de ma fonction à tester
+        annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
+
+        testScheduler.triggerActions();
+
+        verify(annonceRepository, times(1)).markAsSending(any());
+        verify(annonceRepository, times(1)).markAsFailedToSend(any());
+        verify(annonceRepository, never()).markAsSend(any());
+        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+
+        resetMock();
+    }
+
+    @Test
+    public void ShouldMarkAsFailedToSend_When_FindAnnonceFullByAnnonceEntity_Return_Empty() {
+
+        TestScheduler testScheduler = new TestScheduler();
+
+        // Annonce entity renvoyée
+        AnnonceFull annonceFull = Utility.createAnnonceFull();
+        AnnonceEntity annonceEntity = annonceFull.getAnnonce();
+
+        // Firebase Annonce Repo nous renvoie trois AnnonceDto
+        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
+        when(annonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR")));
+
+        // Création de mon service à tester
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+
+        // Appel de ma fonction à tester
+        annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
+
+        testScheduler.triggerActions();
+
+        verify(annonceRepository, times(1)).markAsSending(any());
+        verify(annonceRepository, times(1)).markAsFailedToSend(any());
+        verify(annonceRepository, never()).markAsSend(any());
+        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+
+        resetMock();
+    }
+
+    @Test
+    public void ShouldMarkAsFailedToSend_When_FindAnnoncesByIdAnnonce_Return_Error() {
+
+        TestScheduler testScheduler = new TestScheduler();
+
+        // Annonce entity renvoyée
+        AnnonceFull annonceFull = Utility.createAnnonceFull();
+        AnnonceEntity annonceEntity = annonceFull.getAnnonce();
+
+        // Firebase Annonce Repo nous renvoie trois AnnonceDto
+        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(annonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
+        when(annonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
+
+        // Création de mon service à tester
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+
+        // Appel de ma fonction à tester
+        annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
+
+        testScheduler.triggerActions();
+
+        verify(annonceRepository, times(1)).markAsSending(any());
+        verify(annonceRepository, times(1)).markAsFailedToSend(any());
+        verify(annonceRepository, never()).markAsSend(any());
+        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+
+        resetMock();
     }
 }

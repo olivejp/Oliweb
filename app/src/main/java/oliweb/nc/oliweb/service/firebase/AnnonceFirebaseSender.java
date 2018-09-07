@@ -7,7 +7,6 @@ import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
@@ -79,7 +78,7 @@ public class AnnonceFirebaseSender {
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)
                 .switchMap(annonceDto -> firebaseAnnonceRepository.saveAnnonceToFirebase(annonceDto)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .subscribeOn(scheduler).observeOn(scheduler)
                         .toObservable())
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception));
     }
