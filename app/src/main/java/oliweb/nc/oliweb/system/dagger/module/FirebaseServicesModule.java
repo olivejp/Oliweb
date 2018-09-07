@@ -68,8 +68,9 @@ public class FirebaseServicesModule {
     public AnnonceFirebaseSender annonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                        AnnonceRepository annonceRepository,
                                                        PhotoFirebaseSender photoFirebaseSender,
-                                                       AnnonceFullRepository annonceFullRepository) {
-        return new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository);
+                                                       AnnonceFullRepository annonceFullRepository,
+                                                       @Named("processScheduler") Scheduler processScheduler) {
+        return new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, processScheduler);
     }
 
     @Provides

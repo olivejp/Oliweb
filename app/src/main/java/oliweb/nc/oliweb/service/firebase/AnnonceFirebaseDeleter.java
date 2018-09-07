@@ -15,10 +15,10 @@ import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
@@ -105,7 +105,7 @@ public class AnnonceFirebaseDeleter {
     }
 
     public Single<AtomicBoolean> deleteOnePhoto(PhotoEntity photo) {
-        // 1 - Suppression du Firebase Storage, si la photo n'est pas présente dans Firebase, on renverra quand même true.
+        // 1 - Suppression du Firebase Storage, si la photo n'est pas présente dans Firebase, on continue pour supprimer la photo du device et de la DB.
         return Single.create(emitter -> firebasePhotoStorage.delete(photo)
                 .doOnError(e -> {
                     Log.e(TAG, e.getLocalizedMessage(), e);

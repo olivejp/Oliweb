@@ -143,6 +143,11 @@ public class AnnonceEntity extends AbstractEntity<Long> implements Parcelable {
         this.statut = statut;
     }
 
+    public AnnonceEntity setStatutAndReturn(StatusRemote statut) {
+        this.statut = statut;
+        return this;
+    }
+
     @Exclude
     public String getUidUser() {
         return uidUser;

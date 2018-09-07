@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -25,13 +26,19 @@ public class AnnonceFirebaseSender {
     private AnnonceRepository annonceRepository;
     private PhotoFirebaseSender photoFirebaseSender;
     private AnnonceFullRepository annonceFullRepository;
+    private Scheduler scheduler;
 
     @Inject
-    public AnnonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository, AnnonceRepository annonceRepository, PhotoFirebaseSender photoFirebaseSender, AnnonceFullRepository annonceFullRepository) {
+    public AnnonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository,
+                                 AnnonceRepository annonceRepository,
+                                 PhotoFirebaseSender photoFirebaseSender,
+                                 AnnonceFullRepository annonceFullRepository,
+                                 Scheduler scheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;
         this.photoFirebaseSender = photoFirebaseSender;
         this.annonceFullRepository = annonceFullRepository;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -43,7 +50,7 @@ public class AnnonceFirebaseSender {
     public void processToSendAnnonceToFirebase(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting processToSendAnnonceToFirebase annonceEntity : " + annonceEntity);
         firebaseAnnonceRepository.getUidAndTimestampFromFirebase(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(scheduler).observeOn(scheduler)
                 .doOnError(e -> annonceRepository.markAsFailedToSend(annonceEntity))
                 .toObservable()
                 .switchMap(annonceRepository::markAsSending)
@@ -68,7 +75,7 @@ public class AnnonceFirebaseSender {
     public Observable<String> convertToFullAndSendToFirebase(AnnonceEntity annonceEntity) {
         Log.d(TAG, "convertToFullAndSendToFirebase idAnnonce : " + annonceEntity);
         return annonceFullRepository.findAnnoncesByIdAnnonce(annonceEntity.getIdAnnonce())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(scheduler).observeOn(scheduler)
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .toObservable()
                 .map(AnnonceConverter::convertFullEntityToDto)
