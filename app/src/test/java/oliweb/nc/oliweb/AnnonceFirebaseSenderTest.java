@@ -81,6 +81,8 @@ public class AnnonceFirebaseSenderTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         when(annonceFullRepository.findAnnoncesByIdAnnonce(55L)).thenReturn(Single.just(annonceFull));
 
+        when(firebaseAnnonceRepository.saveAnnonceToFirebase(any())).thenReturn(Single.just(UID_ANNONCE));
+
         // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
@@ -89,8 +91,8 @@ public class AnnonceFirebaseSenderTest {
 
         testScheduler.triggerActions();
 
-        // TODO Finir ce test qui ne passe pas encore
         verify(annonceRepository, times(1)).markAsSending(any());
         verify(annonceRepository, times(1)).markAsSend(any());
+        verify(firebaseAnnonceRepository, times(1)).saveAnnonceToFirebase(any());
     }
 }
