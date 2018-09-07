@@ -59,8 +59,9 @@ public class FirebaseServicesModule {
     public FirebaseChatService firebaseChatService(FirebaseChatRepository firebaseChatRepository,
                                                    ChatRepository chatRepository,
                                                    MessageRepository messageRepository,
-                                                   FirebaseUserRepository firebaseUserRepository) {
-        return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository);
+                                                   FirebaseUserRepository firebaseUserRepository,
+                                                   @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository, processScheduler);
     }
 
     @Provides

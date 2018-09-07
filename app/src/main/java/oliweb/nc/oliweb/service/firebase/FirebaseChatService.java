@@ -8,12 +8,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
@@ -33,16 +32,19 @@ public class FirebaseChatService {
     private FirebaseUserRepository firebaseUserRepository;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private Scheduler scheduler;
 
     @Inject
     public FirebaseChatService(FirebaseChatRepository firebaseChatRepository,
                                ChatRepository chatRepository,
                                MessageRepository messageRepository,
-                               FirebaseUserRepository firebaseUserRepository) {
+                               FirebaseUserRepository firebaseUserRepository,
+                               Scheduler scheduler) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.firebaseUserRepository = firebaseUserRepository;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -54,28 +56,15 @@ public class FirebaseChatService {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
         if (chatEntity.getUidChat() == null) {
             firebaseChatRepository.getUidAndTimestampFromFirebase(chatEntity)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .subscribeOn(scheduler).observeOn(scheduler)
                     .toObservable()
-                    .switchMap(this::markChatAsSending)
+                    .switchMap(chatRepository::markChatAsSending)
                     .switchMap(this::sendChatToFirebase)
-                    .switchMap(this::markChatAsSend)
+                    .switchMap(chatRepository::markChatAsSend)
                     .switchMap(this::updateAllMessages)
+                    .doOnError(throwable -> chatRepository.markChatAsFailedToSend(chatEntity))
                     .subscribe();
         }
-    }
-
-    /**
-     * 1 - Marque le chat comme étant en train d'être envoyé
-     *
-     * @param chatEntity
-     * @return
-     */
-    private Observable<ChatEntity> markChatAsSending(ChatEntity chatEntity) {
-        Log.d(TAG, "markChatAsSending chatEntity : " + chatEntity);
-        chatEntity.setStatusRemote(StatusRemote.SENDING);
-        return chatRepository.singleSave(chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
     }
 
     /**
@@ -88,25 +77,11 @@ public class FirebaseChatService {
         Log.d(TAG, "sendChatToFirebase chatEntity : " + chatEntity);
         return firebaseChatRepository
                 .saveChat(ChatConverter.convertEntityToDto(chatEntity))
+                .map(chatFirebase -> chatEntity)
                 .doOnError(e -> {
                     Log.e(TAG, e.getLocalizedMessage(), e);
-                    markChatAsFailedToSend(chatEntity);
+                    chatRepository.markChatAsFailedToSend(chatEntity);
                 })
-                .map(chatFirebase -> chatEntity)
-                .toObservable();
-    }
-
-    /**
-     * 3 - Marque le chat comme étant envoyé
-     *
-     * @param chatEntity
-     * @return
-     */
-    private Observable<ChatEntity> markChatAsSend(ChatEntity chatEntity) {
-        Log.d(TAG, "markChatAsSend chatEntity : " + chatEntity);
-        chatEntity.setStatusRemote(StatusRemote.SEND);
-        return chatRepository.singleSave(chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
 
@@ -119,7 +94,6 @@ public class FirebaseChatService {
     private Observable<MessageEntity> updateAllMessages(ChatEntity chatEntity) {
         Log.d(TAG, "Update all the messages to retreive the UID Chat : " + chatEntity);
         return messageRepository.getSingleByIdChat(chatEntity.getIdChat())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(list -> list)
                 .doOnNext(messageEntity -> {
                     messageEntity.setUidChat(chatEntity.getUidChat());
@@ -130,27 +104,13 @@ public class FirebaseChatService {
     }
 
     /**
-     * Cas d'une erreur dans l'envoi, on passe le chat en statut Failed To Send.
-     *
-     * @param chatEntity
-     */
-    private void markChatAsFailedToSend(final ChatEntity chatEntity) {
-        Log.d(TAG, "Mark chat Failed To Send chatEntity : " + chatEntity);
-        chatEntity.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        chatRepository.singleSave(chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
-    }
-
-    /**
      * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
      * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
      */
     public Single<HashMap<String, UserEntity>> getPhotoUrlsByUidUser(String uidUser) {
         HashMap<String, UserEntity> map = new HashMap<>();
         return Single.create(emitter -> firebaseChatRepository.getByUidUser(uidUser)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .observeOn(scheduler).subscribeOn(scheduler)
                 .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(chatFirebase -> chatFirebase.getMembers().keySet())
                 .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
@@ -161,6 +121,7 @@ public class FirebaseChatService {
                     return map;
                 })
                 .doOnComplete(() -> emitter.onSuccess(map))
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe()
         );
     }

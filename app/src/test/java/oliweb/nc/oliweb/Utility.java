@@ -5,6 +5,7 @@ import java.util.Collections;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -70,5 +71,9 @@ public class Utility {
         annonceFull.setUtilisateur(Collections.singletonList(userEntity));
 
         return annonceFull;
+    }
+
+    public static ChatEntity createChatEntity() {
+        return new ChatEntity();
     }
 }
