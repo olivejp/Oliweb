@@ -78,10 +78,6 @@ public class FirebaseChatService {
         return firebaseChatRepository
                 .saveChat(ChatConverter.convertEntityToDto(chatEntity))
                 .map(chatFirebase -> chatEntity)
-                .doOnError(e -> {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                    chatRepository.markChatAsFailedToSend(chatEntity);
-                })
                 .toObservable();
     }
 
