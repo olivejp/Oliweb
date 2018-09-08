@@ -110,8 +110,8 @@ public class FirebaseChatService {
                 .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(chatFirebase -> chatFirebase.getMembers().keySet())
                 .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)
-                .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
                 .distinct()
+                .flatMap(foreignUidUserFromChat -> firebaseUserRepository.getUtilisateurByUid(foreignUidUserFromChat).toObservable())
                 .map(utilisateurEntity -> {
                     map.put(utilisateurEntity.getUid(), utilisateurEntity);
                     return map;

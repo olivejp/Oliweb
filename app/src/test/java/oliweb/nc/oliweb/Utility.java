@@ -12,6 +12,9 @@ import oliweb.nc.oliweb.database.entity.UserEntity;
 
 public class Utility {
 
+    public static final Long ID_CHAT = 123L;
+    public static final String UID_CHAT = "456";
+
     public static final String UID_USER = "123";
     public static final String UID_ANNONCE = "456";
     public static final String MON_TITRE = "Mon titre";
@@ -74,6 +77,8 @@ public class Utility {
     }
 
     public static ChatEntity createChatEntity() {
-        return new ChatEntity();
+        ChatEntity chatEntity = new ChatEntity();
+        chatEntity.setIdChat(ID_CHAT);
+        return chatEntity;
     }
 }
