@@ -50,10 +50,10 @@ public class FirebaseRetrieverService {
     public LiveDataOnce<AtomicBoolean> checkFirebaseRepository(final String uidUser) {
         return observer -> firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
                 .subscribeOn(scheduler).observeOn(scheduler)
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .switchMapSingle(annonceDto -> annonceRepository.countByUidUserAndUidAnnonce(uidUser, annonceDto.getUuid()))
                 .filter(integer -> integer != null && integer == 0)
                 .doOnNext(integer -> observer.onChanged(new AtomicBoolean(true)))
+                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
 

@@ -30,7 +30,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
- * This class will create Listeners to some points in Firebase database
+ * This class will create listeners to some points in Firebase database
  * And sync those items into the local database.
  * Items synced :
  * - Chats
@@ -56,9 +56,9 @@ public class FirebaseSyncListenerService extends Service {
                         ChatEntity chatEntity = ChatConverter.convertDtoToEntity(chatFirebase);
                         chatRepository.insertIfNotExist(chatEntity)
                                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .doOnComplete(() -> Log.d(TAG, "Chat already exist chatEntity : " + chatEntity))
                                 .doOnSuccess(chatEntity1 -> Log.d(TAG, "Chat was not present, creation successful chatEntity : " + chatEntity1))
+                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                 .subscribe();
                     }
                 }
