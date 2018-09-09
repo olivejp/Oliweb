@@ -76,7 +76,10 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebaseMessageService firebaseMessageService(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
-        return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository);
+    public FirebaseMessageService firebaseMessageService(FirebaseMessageRepository firebaseMessageRepository,
+                                                         FirebaseChatRepository firebaseChatRepository,
+                                                         MessageRepository messageRepository,
+                                                         @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository, processScheduler);
     }
 }

@@ -2,10 +2,12 @@ package oliweb.nc.oliweb.system.dagger.module;
 
 import android.content.Context;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
@@ -15,7 +17,7 @@ import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 
-@Module(includes = {ContextModule.class})
+@Module(includes = {ContextModule.class, SchedulerModule.class})
 public class DatabaseRepositoriesModule {
 
     @Provides
@@ -38,8 +40,10 @@ public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public MessageRepository messageRepository(Context context, ChatRepository chatRepository) {
-        return new MessageRepository(context, chatRepository);
+    public MessageRepository messageRepository(Context context,
+                                               ChatRepository chatRepository,
+                                               @Named("processScheduler") Scheduler processScheduler) {
+        return new MessageRepository(context, chatRepository, processScheduler);
     }
 
     @Provides

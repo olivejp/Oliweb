@@ -11,11 +11,13 @@ import javax.inject.Singleton;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.dao.MessageDao;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 
 /**
@@ -27,13 +29,15 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     private MessageDao messageDao;
 
     private ChatRepository chatRepository;
+    private Scheduler scheduler;
 
     @Inject
-    public MessageRepository(Context context, ChatRepository chatRepository) {
+    public MessageRepository(Context context, ChatRepository chatRepository, Scheduler scheduler) {
         super(context);
         this.dao = this.db.getMessageDao();
         this.messageDao = (MessageDao) this.dao;
         this.chatRepository = chatRepository;
+        this.scheduler = scheduler;
     }
 
     public Maybe<MessageEntity> findSingleByUid(String uidMessage) {
@@ -60,14 +64,12 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     public void saveMessageIfNotExist(MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessageIfNotExist messageFirebase : " + messageFirebase);
         messageDao.findSingleByUid(messageFirebase.getUidMessage())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribeOn(scheduler).observeOn(scheduler)
                 .doOnSuccess(messageEntity -> Log.d(TAG, "Message trouvé, inutile de le recréer"))
                 .doOnComplete(() -> {
                     Log.d(TAG, "Message non trouvé, tentative d'insertion");
                     chatRepository.findByUid(messageFirebase.getUidChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .subscribeOn(scheduler).observeOn(scheduler)
                             .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
                             .flatMapSingle(this::singleSave)
                             .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
@@ -76,8 +78,56 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
                                 chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
                                 return chatRepository.singleSave(chatEntity1);
                             })
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                             .subscribe();
                 })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+
+    /**
+     * On enregistre en local le message avec l'UID et le Timestamp récupéré dans la 1ère étape
+     * On passe également le statut à SENDING pour gar
+     *
+     * @param messageSaved
+     */
+    public Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
+        Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
+        messageSaved.setStatusRemote(StatusRemote.SENDING);
+        return singleUpdate(messageSaved)
+                .subscribeOn(scheduler).observeOn(scheduler)
+                .doOnError(e -> markMessageAsFailedToSend(messageSaved))
+                .doOnComplete(() -> markMessageAsFailedToSend(messageSaved))
+                .toObservable();
+    }
+
+    /**
+     * Le message a bien été envoyé sur Firebase, je change son statut à SEND
+     * dans la DB locale pour ne pas le renvoyer.
+     *
+     * @param messageEntity
+     */
+    public Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
+        Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
+        messageEntity.setStatusRemote(StatusRemote.SEND);
+        return singleUpdate(messageEntity)
+                .subscribeOn(scheduler).observeOn(scheduler)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    /**
+     * Cas d'une erreur dans l'envoi, on passe le message en statut Failed To Send.
+     *
+     * @param messageFailedToSend
+     */
+    public void markMessageAsFailedToSend(final MessageEntity messageFailedToSend) {
+        Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
+        messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
+        singleUpdate(messageFailedToSend)
+                .subscribeOn(scheduler).observeOn(scheduler)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 }
