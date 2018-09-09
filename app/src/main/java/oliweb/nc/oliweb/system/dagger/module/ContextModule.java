@@ -10,10 +10,12 @@ public class ContextModule {
 
     private Context context;
 
-    public ContextModule(Context context){
+    public ContextModule(Context context) {
         this.context = context;
     }
 
     @Provides
-    public Context context(){ return context.getApplicationContext(); }
+    public Context context() {
+        return context.getApplicationContext();
+    }
 }

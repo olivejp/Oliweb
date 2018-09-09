@@ -71,7 +71,6 @@ public class FirebaseMessageService {
         return firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
                 .subscribeOn(scheduler).observeOn(scheduler)
                 .doOnSuccess(messageFirebase -> messageRepository.markMessageHasBeenSend(messageRead))
-                .doOnError(e -> messageRepository.markMessageAsFailedToSend(messageRead))
                 .toObservable();
     }
 

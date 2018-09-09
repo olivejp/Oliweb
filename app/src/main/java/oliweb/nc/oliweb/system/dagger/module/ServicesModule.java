@@ -26,8 +26,7 @@ import oliweb.nc.oliweb.service.sync.ScheduleSync;
 
 @Module(includes = {ContextModule.class,
         DatabaseRepositoriesModule.class,
-        FirebaseServicesModule.class,
-        SchedulerModule.class})
+        FirebaseServicesModule.class})
 public class ServicesModule {
 
     @Provides

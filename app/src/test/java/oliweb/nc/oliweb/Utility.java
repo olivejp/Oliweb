@@ -6,6 +6,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -80,5 +81,9 @@ public class Utility {
         ChatEntity chatEntity = new ChatEntity();
         chatEntity.setIdChat(ID_CHAT);
         return chatEntity;
+    }
+
+    public static MessageEntity createMessageEntity(){
+        return new MessageEntity();
     }
 }

@@ -12,8 +12,8 @@ import javax.inject.Singleton;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.dao.MessageDao;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -29,15 +29,13 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     private MessageDao messageDao;
 
     private ChatRepository chatRepository;
-    private Scheduler scheduler;
 
     @Inject
-    public MessageRepository(Context context, ChatRepository chatRepository, Scheduler scheduler) {
+    public MessageRepository(Context context, ChatRepository chatRepository) {
         super(context);
         this.dao = this.db.getMessageDao();
         this.messageDao = (MessageDao) this.dao;
         this.chatRepository = chatRepository;
-        this.scheduler = scheduler;
     }
 
     public Maybe<MessageEntity> findSingleByUid(String uidMessage) {
@@ -64,12 +62,12 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     public void saveMessageIfNotExist(MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessageIfNotExist messageFirebase : " + messageFirebase);
         messageDao.findSingleByUid(messageFirebase.getUidMessage())
-                .subscribeOn(scheduler).observeOn(scheduler)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(messageEntity -> Log.d(TAG, "Message trouvé, inutile de le recréer"))
                 .doOnComplete(() -> {
                     Log.d(TAG, "Message non trouvé, tentative d'insertion");
                     chatRepository.findByUid(messageFirebase.getUidChat())
-                            .subscribeOn(scheduler).observeOn(scheduler)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                             .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
                             .flatMapSingle(this::singleSave)
                             .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
@@ -96,7 +94,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
         messageSaved.setStatusRemote(StatusRemote.SENDING);
         return singleUpdate(messageSaved)
-                .subscribeOn(scheduler).observeOn(scheduler)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> markMessageAsFailedToSend(messageSaved))
                 .doOnComplete(() -> markMessageAsFailedToSend(messageSaved))
                 .toObservable();
@@ -112,7 +110,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
         return singleUpdate(messageEntity)
-                .subscribeOn(scheduler).observeOn(scheduler)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -126,7 +124,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
         messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
         singleUpdate(messageFailedToSend)
-                .subscribeOn(scheduler).observeOn(scheduler)
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
