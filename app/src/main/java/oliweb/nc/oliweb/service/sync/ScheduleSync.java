@@ -64,9 +64,9 @@ public class ScheduleSync {
     private void sendAnnonces() {
         annonceRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(annonceEntities -> annonceEntities)
                 .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
@@ -74,26 +74,25 @@ public class ScheduleSync {
     private void sendChats() {
         chatRepository.findAllByStatusIn(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .flattenAsObservable(chatEntities -> chatEntities)
                 .doOnNext(firebaseChatService::sendNewChat)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
     private void sendMessages() {
         messageRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable()
                 .flatMapIterable(list -> list)
                 .switchMap(firebaseMessageService::sendMessage)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
     private void sendUtilisateurs() {
         userRepository.findAllByStatus(Utility.allStatusToSend())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .flattenAsObservable(userEntities -> userEntities)
                 .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
                         .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
@@ -106,6 +105,7 @@ public class ScheduleSync {
                             }
                         })
                 )
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                 .subscribe();
     }
 }

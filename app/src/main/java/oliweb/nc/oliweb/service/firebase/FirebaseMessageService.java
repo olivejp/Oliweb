@@ -13,11 +13,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
-import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
@@ -33,45 +33,42 @@ public class FirebaseMessageService {
     private FirebaseMessageRepository firebaseMessageRepository;
     private FirebaseChatRepository firebaseChatRepository;
     private MessageRepository messageRepository;
-    private Scheduler scheduler;
 
     @Inject
     public FirebaseMessageService(FirebaseMessageRepository firebaseMessageRepository,
                                   FirebaseChatRepository firebaseChatRepository,
-                                  MessageRepository messageRepository,
-                                  Scheduler scheduler) {
+                                  MessageRepository messageRepository) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.firebaseMessageRepository = firebaseMessageRepository;
         this.messageRepository = messageRepository;
-        this.scheduler = scheduler;
     }
 
+    /**
+     * If we already have an Uid and a timestamp, we return directly a markAsSendingAndTryToSendToFirebase()
+     * Otherwise we try to get a new uid and a timestamp.
+     *
+     * @param messageEntity
+     * @return
+     */
     public Observable<ChatFirebase> sendMessage(final MessageEntity messageEntity) {
         Log.d(TAG, "SendMessage messageEntity : " + messageEntity);
         if (messageEntity.getUidMessage() == null) {
-            // Je n'ai pas encore de UID Message, je vais en chercher un
             return firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
-                    .subscribeOn(scheduler).observeOn(scheduler)
                     .toObservable()
-                    .switchMap(messageEntity1 -> messageRepository.markMessageIsSending(messageEntity1))
-                    .switchMap(this::sendMessageToFirebase)
-                    .switchMap(firebaseChatRepository::updateLastMessageChat)
+                    .switchMap(this::markAsSendingAndTryToSendToFirebase)
                     .doOnError(e -> messageRepository.markMessageAsFailedToSend(messageEntity));
         } else {
-            // J'ai déjà un UID Message, je vais directement à l'étape 2
-            return messageRepository.markMessageIsSending(messageEntity)
-                    .switchMap(this::sendMessageToFirebase)
-                    .switchMap(firebaseChatRepository::updateLastMessageChat)
+            return markAsSendingAndTryToSendToFirebase(messageEntity)
                     .doOnError(e -> messageRepository.markMessageAsFailedToSend(messageEntity));
         }
     }
 
-    private Observable<MessageFirebase> sendMessageToFirebase(final MessageEntity messageRead) {
-        Log.d(TAG, "Send message to Firebase message to send : " + messageRead);
-        return firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
-                .subscribeOn(scheduler).observeOn(scheduler)
-                .doOnSuccess(messageFirebase -> messageRepository.markMessageHasBeenSend(messageRead))
-                .toObservable();
+    private Observable<ChatFirebase> markAsSendingAndTryToSendToFirebase(MessageEntity messageEntity) {
+        return messageRepository.markMessageIsSending(messageEntity)
+                .map(MessageConverter::convertEntityToDto)
+                .switchMapSingle(firebaseMessageRepository::saveMessage)
+                .switchMap(messageFirebase -> messageRepository.markMessageHasBeenSend(messageEntity))
+                .switchMap(firebaseChatRepository::updateLastMessageChat);
     }
 
     public LiveData<Long> getCountMessageByUidUser(String uidUser) {
@@ -79,21 +76,30 @@ public class FirebaseMessageService {
             @Override
             public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
                 super.observe(owner, observer);
-                List<Long> countTotal = new ArrayList<>();
-                firebaseChatRepository.getByUidUser(uidUser)
-                        .flattenAsObservable(chatFirebases -> chatFirebases)
-                        .flatMapSingle(chatFirebase -> firebaseMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
-                        .doOnNext(countTotal::add)
-                        .doOnComplete(() -> {
-                            Long total = 0L;
-                            for (Long count : countTotal) {
-                                total = total + count;
-                            }
-                            observer.onChanged(total);
-                        })
+                getCount(uidUser).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(integer -> observer.onChanged(integer.longValue()))
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe();
             }
         };
+    }
+
+    public Single<Integer> getCount(String uidUser) {
+        return Single.create(emitter -> {
+            List<Integer> countTotal = new ArrayList<>();
+            firebaseChatRepository.getByUidUser(uidUser)
+                    .flattenAsObservable(chatFirebases -> chatFirebases)
+                    .flatMapSingle(chatFirebase -> firebaseMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
+                    .doOnNext(count -> countTotal.add(count.intValue()))
+                    .doOnComplete(() -> {
+                        Integer total = 0;
+                        for (Integer count : countTotal) {
+                            total = total + count;
+                        }
+                        emitter.onSuccess(total);
+                    })
+                    .doOnError(emitter::onError)
+                    .subscribe();
+        });
     }
 }

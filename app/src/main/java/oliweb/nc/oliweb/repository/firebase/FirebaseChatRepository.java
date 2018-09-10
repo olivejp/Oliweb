@@ -22,8 +22,8 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
-import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_CHATS_REF;
@@ -104,16 +104,16 @@ public class FirebaseChatRepository {
     /**
      * Update the update date and the last message of a chat
      *
-     * @param messageFirebase
+     * @param messageEntity
      * @return
      */
-    public Observable<ChatFirebase> updateLastMessageChat(MessageFirebase messageFirebase) {
-        Log.d(TAG, "Starting updateLastMessageChat messageFirebase : " + messageFirebase);
-        return getByUidChat(messageFirebase.getUidChat())
+    public Observable<ChatFirebase> updateLastMessageChat(MessageEntity messageEntity) {
+        Log.d(TAG, "Starting updateLastMessageChat messageFirebase : " + messageEntity);
+        return getByUidChat(messageEntity.getUidChat())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .toObservable()
                 .zipWith(utilityService.getServerTimestamp().toObservable(), ChatFirebase::setUpdateTimestamp)
-                .map(chatFirebaseTimed -> chatFirebaseTimed.setLastMessage(messageFirebase.getMessage()))
+                .map(chatFirebaseTimed -> chatFirebaseTimed.setLastMessage(messageEntity.getMessage()))
                 .switchMap(chatFirebaseToSave -> this.saveChat(chatFirebaseToSave).toObservable());
     }
 
