@@ -6,8 +6,8 @@ import dagger.Component;
 import oliweb.nc.oliweb.system.dagger.module.BusinessModule;
 import oliweb.nc.oliweb.ui.activity.business.MyChatsActivityBusiness;
 
-@Component(modules = {BusinessModule.class})
 @Singleton
+@Component(modules = {BusinessModule.class})
 public interface BusinessComponent {
     MyChatsActivityBusiness getMyChatsActivityBusiness();
 }

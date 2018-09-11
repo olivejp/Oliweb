@@ -79,7 +79,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:16.0.3'
     implementation 'com.google.firebase:firebase-storage:16.0.1'
 
-    // Ne pas toucher à la version de firebase-invites car pas rétro compatibilité
+    // Ne pas toucher à la version de firebase-invites car pas rétro compatible
     implementation 'com.google.firebase:firebase-core:16.0.1'
     implementation 'com.google.firebase:firebase-invites:16.0.1'
     implementation 'com.google.firebase:firebase-messaging:17.3.0'
@@ -103,9 +103,6 @@ dependencies {
     implementation 'com.google.dagger:dagger:2.15'
     implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha05'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-
-    // Cropping image
-    implementation 'com.theartofdev.edmodo:android-image-cropper:2.7.0'
 
     // Dagger 2
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'

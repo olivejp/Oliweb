@@ -1,8 +1,6 @@
 package oliweb.nc.oliweb.database.converter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
@@ -25,15 +23,6 @@ public class ChatConverter {
         chatEntity.setTitreAnnonce(chatFirebase.getTitreAnnonce());
         chatEntity.setStatusRemote(StatusRemote.SEND);
         return chatEntity;
-    }
-
-
-    public static List<ChatEntity> convertDtoToEntity(List<ChatFirebase> listChatFirebase) {
-        ArrayList<ChatEntity> listResult = new ArrayList<>();
-        for (ChatFirebase chatFirebase : listChatFirebase) {
-            listResult.add(convertDtoToEntity(chatFirebase));
-        }
-        return listResult;
     }
 
     public static ChatFirebase convertEntityToDto(ChatEntity chatEntity) {

@@ -16,7 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -28,10 +28,12 @@ import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
+import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
-import oliweb.nc.oliweb.utility.FirebaseUtility;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
@@ -64,6 +66,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private AnnonceService annonceService;
     private Gson gson = new Gson();
     private DatabaseReference requestReference;
+    private FirebaseUtilityService utilityService;
     private ValueEventListener requestValueListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -99,7 +102,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
         ServicesComponent componentServices = DaggerServicesComponent.builder().contextModule(new ContextModule(application)).build();
+        FirebaseServicesComponent firebaseServicesComponent = DaggerFirebaseServicesComponent.builder().build();
 
+        utilityService = firebaseServicesComponent.getFirebaseUtilityService();
         annonceService = componentServices.getAnnonceService();
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
@@ -139,6 +144,41 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
+    public void makeAnAdvancedSearch(String libelleCategorie, boolean withPhotoOnly, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
+        updateLoadingStatus(true);
+        utilityService.getServerTimestamp()
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnError(throwable -> {
+                    Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                    updateLoadingStatus(false);
+                })
+                .doOnSuccess(timestamp -> {
+                    if (from == 0) {
+                        listAnnonce.clear();
+                    }
+
+                    ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
+                    if (query != null) {
+                        builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
+                    }
+                    if (libelleCategorie != null) {
+                        builder.setCategorie(libelleCategorie);
+                    }
+                    if (lowestPrice != null && highestPrice != null) {
+                        builder.setRangePrice(lowestPrice, highestPrice);
+                    }
+                    builder.setWithPhotoOnly(withPhotoOnly);
+
+                    // Création d'une nouvelle request dans la table request
+                    newRequestRef = requestReference.push();
+                    newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
+
+                    // Ensuite on va écouter les changements pour cette nouvelle requête
+                    newRequestRef.addValueEventListener(requestValueListener);
+                })
+                .subscribe();
+    }
+
     /**
      * Launch a search with the Query
      *
@@ -150,7 +190,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
      */
     public void makeASearch(String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
-        FirebaseUtility.getServerTimestamp()
+        utilityService.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
@@ -161,32 +201,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         listAnnonce.clear();
                     }
 
-                    List<String> listField = new ArrayList<>();
-                    listField.add("titre");
-                    listField.add("description");
-
-                    String directionStr;
-                    if (direction == ASC) {
-                        directionStr = "asc";
-                    } else {
-                        directionStr = "desc";
-                    }
-
-                    String field;
-                    if (tri == SORT_TITLE) {
-                        field = "titre";
-                    } else if (tri == SORT_PRICE) {
-                        field = "prix";
-                    } else {
-                        field = "datePublication";
-                    }
-
-                    ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
-                    builder.setSize(pagingSize)
-                            .setTimestamp(timestamp)
-                            .setFrom(from)
-                            .setMultiMatchQuery(listField, query)
-                            .addSortingFields(field, directionStr);
+                    ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
+                    builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
@@ -196,5 +212,31 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     newRequestRef.addValueEventListener(requestValueListener);
                 })
                 .subscribe();
+    }
+
+    private ElasticsearchQueryBuilder initQueryBuilder(Long timestamp, int pagingSize, int direction, int from, int tri) {
+        String directionStr;
+        if (direction == ASC) {
+            directionStr = "asc";
+        } else {
+            directionStr = "desc";
+        }
+
+        String field;
+        if (tri == SORT_TITLE) {
+            field = "titre";
+        } else if (tri == SORT_PRICE) {
+            field = "prix";
+        } else {
+            field = "datePublication";
+        }
+
+        ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
+        builder.setSize(pagingSize)
+                .setTimestamp(timestamp)
+                .setFrom(from)
+                .addSortingFields(field, directionStr);
+
+        return builder;
     }
 }

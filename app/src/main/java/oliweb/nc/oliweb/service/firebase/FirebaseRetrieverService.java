@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
@@ -27,14 +27,17 @@ public class FirebaseRetrieverService {
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private AnnonceRepository annonceRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
+    private Scheduler scheduler;
 
     @Inject
     public FirebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                     AnnonceRepository annonceRepository,
-                                    FirebasePhotoStorage firebasePhotoStorage) {
+                                    FirebasePhotoStorage firebasePhotoStorage,
+                                    Scheduler scheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -46,11 +49,11 @@ public class FirebaseRetrieverService {
      */
     public LiveDataOnce<AtomicBoolean> checkFirebaseRepository(final String uidUser) {
         return observer -> firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
+                .subscribeOn(scheduler).observeOn(scheduler)
                 .switchMapSingle(annonceDto -> annonceRepository.countByUidUserAndUidAnnonce(uidUser, annonceDto.getUuid()))
                 .filter(integer -> integer != null && integer == 0)
                 .doOnNext(integer -> observer.onChanged(new AtomicBoolean(true)))
+                .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
 
@@ -60,11 +63,11 @@ public class FirebaseRetrieverService {
      */
     public void synchronize(Context context, String uidUser) {
         firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(scheduler).observeOn(scheduler)
                 .doOnNext(annonceDto -> {
                     Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
                     annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .subscribeOn(scheduler).observeOn(scheduler)
                             .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
                             .filter(integer -> integer == null || integer.equals(0))
                             .map(integer -> {

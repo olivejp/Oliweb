@@ -22,6 +22,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
@@ -63,7 +64,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         MessageViewHolder holder = (MessageViewHolder) viewHolder;
         MessageEntity model = messageEntities.get(position);
         holder.message.setText(model.getMessage());
-        if (model.getTimestamp() != null) {
+        if (StatusRemote.SEND.equals(model.getStatusRemote()) && model.getTimestamp() != null) {
             Timestamp timestamp = new Timestamp(model.getTimestamp());
             holder.timestamp.setText(DateConverter.simpleUiMessageDateFormat.format(new java.sql.Date(timestamp.getTime())));
         } else {

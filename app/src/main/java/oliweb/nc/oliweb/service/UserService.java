@@ -52,10 +52,10 @@ public class UserService {
     public Single<UserEntity> saveSingleUserFromFirebase(FirebaseUser firebaseUser) {
         return Single.create(emitter ->
                 userRepository.findMaybeByUid(firebaseUser.getUid())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .subscribeOn(processScheduler).observeOn(androidScheduler)
                         .map(userEntity -> saveUserFromFirebase(emitter, userEntity, firebaseUser, false))
                         .doOnComplete(() -> saveUserFromFirebase(emitter, null, firebaseUser, true))
-                        .subscribeOn(processScheduler).observeOn(androidScheduler)
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe()
         );
     }

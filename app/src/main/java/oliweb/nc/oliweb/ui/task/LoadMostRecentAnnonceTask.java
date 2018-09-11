@@ -90,7 +90,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
         return 0;
     };
 
-    public static void sortList(List<AnnonceFull> listAnnonce, int tri, int direction) {
+    private static void sortList(List<AnnonceFull> listAnnonce, int tri, int direction) {
         switch (tri) {
             case SORT_DATE:
                 Collections.sort(listAnnonce, (direction == ASC) ? compareDateAsc : compareDateDesc);
@@ -106,40 +106,37 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
 
     @Override
     protected ArrayList<AnnonceFull> doInBackground(LoadMoreTaskBundle[] bundles) {
-        ArrayList<AnnonceFull> listPhotosResult = new ArrayList<>();
+        ArrayList<AnnonceFull> annonceFulls = new ArrayList<>();
 
         LoadMoreTaskBundle bundle = bundles[0];
         List<AnnonceFull> oldList = bundle.getListPhotosResult();
         DataSnapshot dataSnapshot = bundle.getDataSnapshot();
 
         if (oldList != null && dataSnapshot != null) {
-            listPhotosResult.addAll(oldList);
+            annonceFulls.addAll(oldList);
             for (DataSnapshot child : dataSnapshot.getChildren()) {
                 try {
                     AnnonceDto annonceDto = child.getValue(AnnonceDto.class);
-                    if (annonceDto != null) {
-                        boolean trouve = false;
-                        for (AnnonceFull anno : oldList) {
-                            if (anno.getAnnonce().getUid().equals(annonceDto.getUuid())) {
-                                trouve = true;
-                                break;
-                            }
-                        }
-                        if (!trouve) {
-                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
-                            Log.d(TAG, "Annonce récupérée => " + annonceDto.toString());
-                            listPhotosResult.add(annonceFull);
-                        }
+                    if (annonceDto != null && !existInTheList(annonceFulls, annonceDto)) {
+                        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
+                        annonceFulls.add(annonceFull);
                     }
                 } catch (DatabaseException databaseException) {
                     Log.e(TAG, databaseException.getLocalizedMessage(), databaseException);
                 }
             }
         }
+        sortList(annonceFulls, bundle.getTri(), bundle.getDirection());
+        return annonceFulls;
+    }
 
-        sortList(listPhotosResult, bundle.getTri(), bundle.getDirection());
-
-        return listPhotosResult;
+    private boolean existInTheList(List<AnnonceFull> listAnnonceFull, AnnonceDto annonceDto) {
+        for (AnnonceFull anno : listAnnonceFull) {
+            if (anno.getAnnonce().getUid().equals(annonceDto.getUuid())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

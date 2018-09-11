@@ -28,6 +28,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -36,6 +37,7 @@ import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static android.support.v4.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
@@ -50,6 +52,14 @@ public class SearchActivity extends AppCompatActivity {
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
     private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
     private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
+
+    public static final String CATEGORIE = "CATEGORIE";
+    public static final String LOWER_PRICE = "LOWER_PRICE";
+    public static final String HIGHER_PRICE = "HIGHER_PRICE";
+    public static final String WITH_PHOTO_ONLY = "WITH_PHOTO_ONLY";
+    public static final String KEYWORD = "KEYWORD";
+    public static final String ACTION_ADVANCED_SEARCH = "ACTION_ADVANCED_SEARCH";
+
 
     @BindView(R.id.recycler_search_annonce)
     RecyclerView recyclerView;
@@ -70,6 +80,12 @@ public class SearchActivity extends AppCompatActivity {
     private int tri;
     private int direction;
     private int currentPage = 0;
+    private String action;
+
+    private CategorieEntity categorieEntity;
+    private int lowerPrice;
+    private int higherPrice;
+    private boolean withPhotoOnly;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +100,28 @@ public class SearchActivity extends AppCompatActivity {
 
         // Get the intent, verify the action and get the query string
         Intent intentParam = getIntent();
-        if (Intent.ACTION_SEARCH.equals(intentParam.getAction())) {
+        action = intentParam.getAction();
+        if (Intent.ACTION_SEARCH.equals(action)) {
             query = intentParam.getStringExtra(SearchManager.QUERY);
+            setTitle(String.format("%s %s", getString(R.string.looking_for), query));
+        } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
+            setTitle("Recherche avancée");
+            if (intentParam.hasExtra(KEYWORD)) {
+                query = intentParam.getStringExtra(KEYWORD);
+            }
+            if (intentParam.hasExtra(CATEGORIE)) {
+                categorieEntity = intentParam.getParcelableExtra(CATEGORIE);
+            }
+            if (intentParam.hasExtra(LOWER_PRICE)) {
+                lowerPrice = intentParam.getIntExtra(LOWER_PRICE, 0);
+            }
+            if (intentParam.hasExtra(HIGHER_PRICE)) {
+                higherPrice = intentParam.getIntExtra(HIGHER_PRICE, Integer.MAX_VALUE);
+            }
+            if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
+                withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
+            }
         }
-
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -95,9 +129,6 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        setTitle(String.format("%s %s", getString(R.string.looking_for), query));
-
-        // Recherche du mode display actuellement dans les préférences.
         annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
                 onClickListener,
                 onClickListenerShare,
@@ -195,11 +226,16 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void launchNewSearch(int currentPage) {
-        if (searchActivityViewModel.isConnected()) {
-            int from = currentPage * Constants.PER_PAGE_REQUEST;
-            searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
-        } else {
+        if (!searchActivityViewModel.isConnected()) {
             Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
+        } else {
+            if (Intent.ACTION_SEARCH.equals(action)) {
+                int from = currentPage * Constants.PER_PAGE_REQUEST;
+                searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+            } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
+                int from = currentPage * Constants.PER_PAGE_REQUEST;
+                searchActivityViewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+            }
         }
     }
 
@@ -239,8 +275,8 @@ public class SearchActivity extends AppCompatActivity {
         AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, viewHolder.getAnnonceFull());
-        Pair<View, String> pairImage = new Pair<>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage);
+        Pair pairImage = new Pair<View, String>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
+        ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
         startActivity(intent, options.toBundle());
     };
 

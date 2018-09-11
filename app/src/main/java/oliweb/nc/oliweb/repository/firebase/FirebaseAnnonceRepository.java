@@ -27,7 +27,7 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
-import oliweb.nc.oliweb.utility.FirebaseUtility;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
@@ -37,11 +37,13 @@ public class FirebaseAnnonceRepository {
     private static final String TAG = FirebaseAnnonceRepository.class.getName();
 
     private DatabaseReference annonceRef;
+    private FirebaseUtilityService utilityService;
 
     private GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass;
 
     @Inject
-    public FirebaseAnnonceRepository() {
+    public FirebaseAnnonceRepository(FirebaseUtilityService firebaseUtilityService) {
+        utilityService = firebaseUtilityService;
         annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
         genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
         };
@@ -145,7 +147,7 @@ public class FirebaseAnnonceRepository {
     public Single<AnnonceEntity> getUidAndTimestampFromFirebase(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting getUidAndTimestampFromFirebase annonceEntity : " + annonceEntity);
         return Single.create(emitter ->
-                FirebaseUtility.getServerTimestamp()
+                utilityService.getServerTimestamp()
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnError(emitter::onError)
                         .doOnSuccess(timestamp -> {

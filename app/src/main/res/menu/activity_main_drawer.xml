@@ -28,23 +28,19 @@
         </menu>
     </item>
 
-    <item android:title="@string/param_tres">
-        <menu>
-            <item
-                android:id="@+id/nav_settings"
-                android:icon="@drawable/ic_settings_grey_900_48dp"
-                android:title="@string/param_tres" />
+    <item
+        android:id="@+id/nav_advanced_search"
+        android:icon="@drawable/ic_zoom_in_grey_900_48dp"
+        android:title="@string/advanced_search" />
 
-        </menu>
-    </item>
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_settings_grey_900_48dp"
+        android:title="@string/param_tres" />
 
-    <item android:title="@string/connexion">
-        <menu>
-            <item
-                android:id="@+id/nav_connect"
-                android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
-                android:title="@string/se_connecter" />
-        </menu>
-    </item>
+    <item
+        android:id="@+id/nav_connect"
+        android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
+        android:title="@string/se_connecter" />
 
 </menu>

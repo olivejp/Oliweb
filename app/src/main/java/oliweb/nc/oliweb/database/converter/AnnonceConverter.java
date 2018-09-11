@@ -17,8 +17,6 @@ import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 
 public class AnnonceConverter {
 
-    private static final String TAG = AnnonceConverter.class.getName();
-
     private AnnonceConverter() {
     }
 
@@ -27,25 +25,28 @@ public class AnnonceConverter {
      * @return
      */
     public static AnnonceFull convertDtoToAnnonceFull(AnnonceDto annonceDto) {
-        AnnonceFull annonceFull = new AnnonceFull();
-        annonceFull.setPhotos(new ArrayList<>());
         AnnonceEntity annonceEntity = convertDtoToEntity(annonceDto);
+        if (annonceEntity != null) {
+            AnnonceFull annonceFull = new AnnonceFull();
+            annonceFull.setPhotos(new ArrayList<>());
 
-        UtilisateurDto utilisateurDto = annonceDto.getUtilisateur();
-        UserEntity userEntity = UserConverter.convertDtoToEntity(utilisateurDto);
-        annonceFull.setUtilisateur(Collections.singletonList(userEntity));
-        annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
+            UtilisateurDto utilisateurDto = annonceDto.getUtilisateur();
+            UserEntity userEntity = UserConverter.convertDtoToEntity(utilisateurDto);
+            annonceFull.setUtilisateur(Collections.singletonList(userEntity));
+            annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
 
-        if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
-            for (String photoUrl : annonceDto.getPhotos()) {
-                PhotoEntity photoEntity = new PhotoEntity();
-                photoEntity.setFirebasePath(photoUrl);
-                annonceFull.getPhotos().add(photoEntity);
+            if (annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty()) {
+                for (String photoUrl : annonceDto.getPhotos()) {
+                    PhotoEntity photoEntity = new PhotoEntity();
+                    photoEntity.setFirebasePath(photoUrl);
+                    annonceFull.getPhotos().add(photoEntity);
+                }
             }
-        }
-        annonceFull.setAnnonce(annonceEntity);
+            annonceFull.setAnnonce(annonceEntity);
 
-        return annonceFull;
+            return annonceFull;
+        }
+        return null;
     }
 
     /**

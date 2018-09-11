@@ -41,7 +41,6 @@ import java.util.HashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -266,6 +265,8 @@ public class MainActivity extends AppCompatActivity
             callChatsActivity();
         } else if (id == R.id.nav_annonces) {
             callMyAnnoncesActivity();
+        } else if (id == R.id.nav_advanced_search) {
+            callAdvancedSearchActivity();
         }
 
         drawer.closeDrawer(GravityCompat.START);
@@ -290,6 +291,13 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
+    }
+
+    private void callAdvancedSearchActivity() {
+        Intent intent = new Intent();
+        intent.setClass(this, AdvancedSearchActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
     private void callChatsActivity() {
@@ -336,7 +344,7 @@ public class MainActivity extends AppCompatActivity
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
-        NetworkReceiver.getInstance().removeListener(this);
+        NetworkReceiver.removeListener(this);
     }
 
     @Override

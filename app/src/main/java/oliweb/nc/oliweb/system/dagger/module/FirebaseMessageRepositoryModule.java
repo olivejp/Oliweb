@@ -5,13 +5,14 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
-@Module
+@Module(includes = FirebaseUtilityModule.class)
 public class FirebaseMessageRepositoryModule {
 
     @Provides
     @Singleton
-    public FirebaseMessageRepository firebaseMessageRepository() {
-        return new FirebaseMessageRepository();
+    public FirebaseMessageRepository firebaseMessageRepository(FirebaseUtilityService firebaseUtilityService) {
+        return new FirebaseMessageRepository(firebaseUtilityService);
     }
 }

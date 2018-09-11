@@ -111,4 +111,29 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
                 });
     }
 
+    public Observable<ChatEntity> markChatAsSending(ChatEntity chatEntity) {
+        Log.d(TAG, "markChatAsSending chatEntity : " + chatEntity);
+        chatEntity.setStatusRemote(StatusRemote.SENDING);
+        return singleSave(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public Observable<ChatEntity> markChatAsSend(ChatEntity chatEntity) {
+        Log.d(TAG, "markChatAsSend chatEntity : " + chatEntity);
+        chatEntity.setStatusRemote(StatusRemote.SEND);
+        return singleSave(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .toObservable();
+    }
+
+    public void markChatAsFailedToSend(final ChatEntity chatEntity) {
+        Log.d(TAG, "Mark chat Failed To Send chatEntity : " + chatEntity);
+        chatEntity.setStatusRemote(StatusRemote.FAILED_TO_SEND);
+        singleSave(chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+
 }

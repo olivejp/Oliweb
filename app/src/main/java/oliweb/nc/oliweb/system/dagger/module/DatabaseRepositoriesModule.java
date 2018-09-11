@@ -38,7 +38,8 @@ public class DatabaseRepositoriesModule {
 
     @Provides
     @Singleton
-    public MessageRepository messageRepository(Context context, ChatRepository chatRepository) {
+    public MessageRepository messageRepository(Context context,
+                                               ChatRepository chatRepository) {
         return new MessageRepository(context, chatRepository);
     }
 

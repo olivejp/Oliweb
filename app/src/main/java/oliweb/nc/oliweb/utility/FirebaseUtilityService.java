@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.utility;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -9,19 +10,28 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import io.reactivex.Single;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_TIME_REF;
 
-public class FirebaseUtility {
+@Singleton
+public class FirebaseUtilityService {
 
-    private static final String TAG = FirebaseUtility.class.getName();
+    private static final String TAG = FirebaseUtilityService.class.getName();
 
-    public static Single<Long> getServerTimestamp() {
+    @Inject
+    public FirebaseUtilityService() {
+        // Do nothing
+    }
+
+    public Single<Long> getServerTimestamp() {
         Log.d(TAG, "Starting getServerTimestamp");
-        DatabaseReference TIME_REF = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_TIME_REF);
+        DatabaseReference timeRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_TIME_REF);
         return Single.create(emitter ->
-                TIME_REF.child("now").setValue(ServerValue.TIMESTAMP)
+                timeRef.child("now").setValue(ServerValue.TIMESTAMP)
                         .addOnFailureListener(exception -> {
                             Log.d(TAG, "getServerTimestamp setValue.onFailure exception : " + exception.getLocalizedMessage(), exception);
                             emitter.onError(exception);
@@ -29,16 +39,16 @@ public class FirebaseUtility {
                         .addOnSuccessListener(aVoid ->
                                 {
                                     Log.d(TAG, "getServerTimestamp setValue.onSuccess");
-                                    TIME_REF.child("now").addListenerForSingleValueEvent(new ValueEventListener() {
+                                    timeRef.child("now").addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                             Long timestamp = dataSnapshot.getValue(Long.class);
                                             Log.d(TAG, "getServerTimestamp getValue.onSuccess datasnapshot.getValue() : " + timestamp);
                                             emitter.onSuccess(timestamp);
                                         }
 
                                         @Override
-                                        public void onCancelled(DatabaseError databaseError) {
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
                                             Log.d(TAG, "getServerTimestamp getValue.onCancelled databaseError : " + databaseError.getMessage());
                                             emitter.onError(new RuntimeException(databaseError.getMessage()));
                                         }

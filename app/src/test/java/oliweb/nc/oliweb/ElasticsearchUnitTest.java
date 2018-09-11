@@ -15,7 +15,7 @@ import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 
 @RunWith(JUnit4.class)
-public class ElasticsearchRequestBuilderUnitTest {
+public class ElasticsearchUnitTest {
 
     @Test
     public void test_elasticsearch_query_builder() {

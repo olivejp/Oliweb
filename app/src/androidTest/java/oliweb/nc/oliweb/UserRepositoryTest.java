@@ -37,7 +37,6 @@ import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -124,8 +123,10 @@ public class UserRepositoryTest {
     public void test_saveUserFromFirebase_insert() {
         test_deleteAll();
 
-        userService.saveUserFromFirebase(mockUser).observeOnce(observer);
-        verify(observer).onChanged(new AtomicBoolean(true));
+        TestObserver<UserEntity> singleObserverUserEntity = new TestObserver<>();
+
+        userService.saveSingleUserFromFirebase(mockUser).subscribe(singleObserverUserEntity);
+        singleObserverUserEntity.assertNoErrors();
 
         TestObserver<UserEntity> subscribeFind = new TestObserver<>();
         userRepository.findMaybeByUid(USER_UID).subscribe(subscribeFind);
@@ -145,8 +146,10 @@ public class UserRepositoryTest {
 
         test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
-        userService.saveUserFromFirebase(mockUser).observeOnce(observer);
-        verify(observer).onChanged(new AtomicBoolean(false));
+        TestObserver<UserEntity> testObserver = new TestObserver<>();
+
+        userService.saveSingleUserFromFirebase(mockUser).subscribe(testObserver);
+        testObserver.assertNoErrors();
 
         TestObserver<UserEntity> subscribeFind = new TestObserver<>();
         userRepository.findMaybeByUid(USER_UID).subscribe(subscribeFind);

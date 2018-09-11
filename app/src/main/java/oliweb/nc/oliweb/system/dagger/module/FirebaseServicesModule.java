@@ -2,10 +2,12 @@ package oliweb.nc.oliweb.system.dagger.module;
 
 import android.content.Context;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
@@ -41,8 +43,9 @@ public class FirebaseServicesModule {
     @Singleton
     public FirebaseRetrieverService firebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                              AnnonceRepository annonceRepository,
-                                                             FirebasePhotoStorage photoStorage) {
-        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage);
+                                                             FirebasePhotoStorage photoStorage,
+                                                             @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage, processScheduler);
     }
 
     @Provides
@@ -53,8 +56,12 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebaseChatService chatFirebaseSender(FirebaseChatRepository firebaseChatRepository, ChatRepository chatRepository, MessageRepository messageRepository, FirebaseUserRepository firebaseUserRepository) {
-        return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository);
+    public FirebaseChatService firebaseChatService(FirebaseChatRepository firebaseChatRepository,
+                                                   ChatRepository chatRepository,
+                                                   MessageRepository messageRepository,
+                                                   FirebaseUserRepository firebaseUserRepository,
+                                                   @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebaseChatService(firebaseChatRepository, chatRepository, messageRepository, firebaseUserRepository, processScheduler);
     }
 
     @Provides
@@ -62,13 +69,22 @@ public class FirebaseServicesModule {
     public AnnonceFirebaseSender annonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                        AnnonceRepository annonceRepository,
                                                        PhotoFirebaseSender photoFirebaseSender,
-                                                       AnnonceFullRepository annonceFullRepository) {
-        return new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository);
+                                                       AnnonceFullRepository annonceFullRepository,
+                                                       @Named("processScheduler") Scheduler processScheduler) {
+        return new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, processScheduler);
     }
 
     @Provides
     @Singleton
-    public FirebaseMessageService messageFirebaseSender(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
+    public FirebaseMessageService firebaseMessageService(FirebaseMessageRepository firebaseMessageRepository,
+                                                         FirebaseChatRepository firebaseChatRepository,
+                                                         MessageRepository messageRepository) {
         return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository);
+    }
+
+    @Provides
+    @Singleton
+    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository) {
+        return new FirebasePhotoStorage(photoRepository);
     }
 }

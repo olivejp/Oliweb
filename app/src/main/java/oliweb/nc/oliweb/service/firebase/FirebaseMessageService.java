@@ -13,12 +13,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
-import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
@@ -36,95 +35,41 @@ public class FirebaseMessageService {
     private MessageRepository messageRepository;
 
     @Inject
-    public FirebaseMessageService(FirebaseMessageRepository firebaseMessageRepository, FirebaseChatRepository firebaseChatRepository, MessageRepository messageRepository) {
+    public FirebaseMessageService(FirebaseMessageRepository firebaseMessageRepository,
+                                  FirebaseChatRepository firebaseChatRepository,
+                                  MessageRepository messageRepository) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.firebaseMessageRepository = firebaseMessageRepository;
         this.messageRepository = messageRepository;
     }
 
-
     /**
-     * Envoi d'un message sur Firebase Database
+     * If we already have an Uid and a timestamp, we return directly a markAsSendingAndTryToSendToFirebase()
+     * Otherwise we try to get a new uid and a timestamp.
      *
      * @param messageEntity
+     * @return
      */
     public Observable<ChatFirebase> sendMessage(final MessageEntity messageEntity) {
         Log.d(TAG, "SendMessage messageEntity : " + messageEntity);
         if (messageEntity.getUidMessage() == null) {
-            // Je n'ai pas encore de UID Message, je vais en chercher un
             return firebaseMessageRepository.getUidAndTimestampFromFirebase(messageEntity.getUidChat(), messageEntity)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .doOnError(e -> markMessageAsFailedToSend(messageEntity))
                     .toObservable()
-                    .switchMap(this::markMessageIsSending)
-                    .switchMap(this::sendMessageToFirebase)
-                    .switchMap(firebaseChatRepository::updateLastMessageChat);
+                    .switchMap(this::markAsSendingAndTryToSendToFirebase)
+                    .doOnError(e -> messageRepository.markMessageAsFailedToSend(messageEntity));
         } else {
-            // J'ai déjà un UID Message, je vais directement à l'étape 2
-            return markMessageIsSending(messageEntity)
-                    .doOnError(e -> markMessageAsFailedToSend(messageEntity))
-                    .switchMap(this::sendMessageToFirebase)
-                    .switchMap(firebaseChatRepository::updateLastMessageChat);
+            return markAsSendingAndTryToSendToFirebase(messageEntity)
+                    .doOnError(e -> messageRepository.markMessageAsFailedToSend(messageEntity));
         }
     }
 
-    /**
-     * 3eme étape : On tente d'envoyer le message sur Firebase
-     *
-     * @param messageRead
-     */
-    private Observable<MessageFirebase> sendMessageToFirebase(final MessageEntity messageRead) {
-        Log.d(TAG, "Send message to Firebase message to send : " + messageRead);
-        return firebaseMessageRepository.saveMessage(MessageConverter.convertEntityToDto(messageRead))
+    private Observable<ChatFirebase> markAsSendingAndTryToSendToFirebase(MessageEntity messageEntity) {
+        return messageRepository.markMessageIsSending(messageEntity)
+                .map(MessageConverter::convertEntityToDto)
+                .switchMapSingle(firebaseMessageRepository::saveMessage)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> markMessageAsFailedToSend(messageRead))
-                .doOnSuccess(messageFirebase -> markMessageHasBeenSend(messageRead))
-                .toObservable();
-    }
-
-    /**
-     * On enregistre en local le message avec l'UID et le Timestamp récupéré dans la 1ère étape
-     * On passe également le statut à SENDING pour gar
-     *
-     * @param messageSaved
-     */
-    private Observable<MessageEntity> markMessageIsSending(final MessageEntity messageSaved) {
-        Log.d(TAG, "Mark message as Sending message to mark : " + messageSaved);
-        messageSaved.setStatusRemote(StatusRemote.SENDING);
-        return messageRepository.singleUpdate(messageSaved)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> markMessageAsFailedToSend(messageSaved))
-                .doOnComplete(() -> markMessageAsFailedToSend(messageSaved))
-                .toObservable();
-    }
-
-    /**
-     * Le message a bien été envoyé sur Firebase, je change son statut à SEND
-     * dans la DB locale pour ne pas le renvoyer.
-     *
-     * @param messageEntity
-     */
-    private Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
-        Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
-        messageEntity.setStatusRemote(StatusRemote.SEND);
-        return messageRepository.singleUpdate(messageEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
-    }
-
-    /**
-     * Cas d'une erreur dans l'envoi, on passe le message en statut Failed To Send.
-     *
-     * @param messageFailedToSend
-     */
-    private void markMessageAsFailedToSend(final MessageEntity messageFailedToSend) {
-        Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
-        messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        messageRepository.singleUpdate(messageFailedToSend)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
+                .switchMap(messageFirebase -> messageRepository.markMessageHasBeenSend(messageEntity))
+                .switchMap(firebaseChatRepository::updateLastMessageChat);
     }
 
     public LiveData<Long> getCountMessageByUidUser(String uidUser) {
@@ -132,20 +77,30 @@ public class FirebaseMessageService {
             @Override
             public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
                 super.observe(owner, observer);
-                List<Long> countTotal = new ArrayList<>();
-                firebaseChatRepository.getByUidUser(uidUser)
-                        .flattenAsObservable(chatFirebases -> chatFirebases)
-                        .flatMapSingle(chatFirebase -> firebaseMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
-                        .doOnNext(countTotal::add)
-                        .doOnComplete(() -> {
-                            Long total = 0L;
-                            for (Long count : countTotal) {
-                                total = total + count;
-                            }
-                            observer.onChanged(total);
-                        })
+                getCount(uidUser).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(integer -> observer.onChanged(integer.longValue()))
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe();
             }
         };
+    }
+
+    public Single<Integer> getCount(String uidUser) {
+        return Single.create(emitter -> {
+            List<Integer> countTotal = new ArrayList<>();
+            firebaseChatRepository.getByUidUser(uidUser)
+                    .flattenAsObservable(chatFirebases -> chatFirebases)
+                    .flatMapSingle(chatFirebase -> firebaseMessageRepository.getCountMessageByUidUserAndUidChat(uidUser, chatFirebase.getUid()))
+                    .doOnNext(count -> countTotal.add(count.intValue()))
+                    .doOnComplete(() -> {
+                        Integer total = 0;
+                        for (Integer count : countTotal) {
+                            total = total + count;
+                        }
+                        emitter.onSuccess(total);
+                    })
+                    .doOnError(emitter::onError)
+                    .subscribe();
+        });
     }
 }

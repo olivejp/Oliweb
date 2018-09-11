@@ -158,5 +158,8 @@
     <string name="add_photo_question">Vous pouvez prendre une nouvelle photo ou choisir une photo existante depuis votre galerie.</string>
     <string name="take_new_picture">Prendre photo</string>
     <string name="choose_from_galery">Choisir dans la galerie</string>
+    <string name="search">Recherche</string>
+    <string name="advanced_search">Recherche avancée</string>
+    <string name="answer">Répondre</string>
 
 </resources>

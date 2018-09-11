@@ -221,19 +221,23 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
-        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
-                    uidUser = (userEntity != null) ? userEntity.getUid() : null;
-                    viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
-                        listUidFavorites.clear();
-                        if (annonceFulls != null) {
-                            for (AnnonceFull annonceFull : annonceFulls) {
-                                listUidFavorites.add(annonceFull.getAnnonce().getUid());
+
+        if (savedInstanceState == null) {
+            viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
+                        uidUser = (userEntity != null) ? userEntity.getUid() : null;
+                        viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
+                            listUidFavorites.clear();
+                            if (annonceFulls != null) {
+                                for (AnnonceFull annonceFull : annonceFulls) {
+                                    listUidFavorites.add(annonceFull.getAnnonce().getUid());
+                                }
                             }
-                        }
-                        updateListWithFavorite(listUidFavorites);
-                    });
-                }
-        );
+                            updateListWithFavorite(listUidFavorites);
+                            updateListAdapter();
+                        });
+                    }
+            );
+        }
     }
 
     @Override
@@ -258,6 +262,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (savedInstanceState != null) {
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+            updateListAdapter();
         }
 
         swipeRefreshLayout.setOnRefreshListener(this);
@@ -372,39 +377,37 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
-            query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (directionSelected == DESC) {
+            return query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
+        } else {
             Integer lastPrice = Integer.MAX_VALUE;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (lastPrice < annoncePhotos.getAnnonce().getPrix()) {
+                if (annoncePhotos.getAnnonce().getPrix() < lastPrice) {
                     lastPrice = annoncePhotos.getAnnonce().getPrix();
                 }
             }
-            query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
+            return query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
         }
-        return query;
     }
 
     private Query loadSortDate() {
         Query query = annoncesReference.orderByChild("datePublication");
-        if (directionSelected == ASC) {
+        if (directionSelected == DESC) {
             Long lastDate = 0L;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
                 if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
                     lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
-            query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else if (directionSelected == DESC) {
+            return query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
+        } else {
             Long lastDate = Long.MAX_VALUE;
             for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (lastDate < annoncePhotos.getAnnonce().getDatePublication()) {
+                if (annoncePhotos.getAnnonce().getDatePublication() < lastDate) {
                     lastDate = annoncePhotos.getAnnonce().getDatePublication();
                 }
             }
-            query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
+            return query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
         }
-        return query;
     }
 
     private ValueEventListener loadSortListener = new ValueEventListener() {
@@ -430,6 +433,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 annonceFull.getAnnonce().setFavorite(0);
             }
         }
+    }
+
+    private void updateListAdapter() {
         annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         annonceBeautyAdapter.notifyDataSetChanged();
     }
@@ -438,5 +444,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
         updateListWithFavorite(listUidFavorites);
+        updateListAdapter();
     };
 }

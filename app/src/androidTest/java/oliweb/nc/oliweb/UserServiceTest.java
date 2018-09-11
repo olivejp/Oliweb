@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb;
 
 import android.arch.core.executor.testing.InstantTaskExecutorRule;
-import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
@@ -16,7 +15,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -24,18 +22,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.UserService;
-import oliweb.nc.oliweb.utility.CustomLiveData;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -50,7 +47,6 @@ public class UserServiceTest {
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-
     @Mock
     private FirebaseUserRepository firebaseUserRepository;
 
@@ -60,13 +56,8 @@ public class UserServiceTest {
     @Mock
     private FirebaseUser firebaseUser;
 
-    @Mock
-    private Observer<AtomicBoolean> observer;
-
     @Captor
     private ArgumentCaptor<AtomicBoolean> captor;
-
-    private TestScheduler testScheduler;
 
     private UserService userService;
 
@@ -74,7 +65,7 @@ public class UserServiceTest {
     public void init() {
         when(firebaseUserRepository.getToken()).thenReturn(Single.just("TOKEN"));
         when(userRepository.singleSave(any())).thenReturn(Single.just(new UserEntity()));
-        testScheduler = new TestScheduler();
+        TestScheduler testScheduler = new TestScheduler();
         userService = new UserService(userRepository, firebaseUserRepository, testScheduler, testScheduler);
     }
 
@@ -89,12 +80,9 @@ public class UserServiceTest {
         when(firebaseUser.getUid()).thenReturn("bilbo");
         when(userRepository.findMaybeByUid(argThat("bilbo"::equals))).thenReturn(Maybe.empty());
 
-        CustomLiveData<AtomicBoolean> live = userService.saveUserFromFirebase(firebaseUser);
-        live.observeOnce(observer);
-
-        testScheduler.triggerActions();
-
-        verify(observer, Mockito.atLeastOnce()).onChanged(captor.capture());
+        TestObserver<UserEntity> testObserver = new TestObserver<>();
+        userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
+        testObserver.assertNoErrors();
 
         assertTrue(captor.getValue().get());
     }
@@ -104,12 +92,9 @@ public class UserServiceTest {
         when(firebaseUser.getUid()).thenReturn("frodo");
         when(userRepository.findMaybeByUid(argThat("frodo"::equals))).thenReturn(Maybe.just(new UserEntity()));
 
-        CustomLiveData<AtomicBoolean> live = userService.saveUserFromFirebase(firebaseUser);
-        live.observeOnce(observer);
-
-        testScheduler.triggerActions();
-
-        verify(observer, Mockito.atLeastOnce()).onChanged(captor.capture());
+        TestObserver<UserEntity> testObserver = new TestObserver<>();
+        userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
+        testObserver.assertNoErrors();
 
         assertFalse(captor.getValue().get());
     }

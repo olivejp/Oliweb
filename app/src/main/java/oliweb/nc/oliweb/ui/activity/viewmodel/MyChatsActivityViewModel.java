@@ -126,8 +126,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         selectedIdChat = idChat;
         chatRepository.findById(idChat)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatEntity -> currentChat = chatEntity)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
@@ -135,11 +135,11 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
         chatRepository.findByUid(uidChat)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatEntity -> {
                     currentChat = chatEntity;
                     selectedIdChat = chatEntity.getIdChat();
                 })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 
@@ -161,12 +161,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
         business.findOrCreateLiveNewChat(firebaseUserUid, annonce)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatFound -> {
                     currentChat = chatFound;
                     selectedIdChat = chatFound.getIdChat();
                     chatEntityCustomLiveData.postValue(currentChat);
                 })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
         return chatEntityCustomLiveData;
     }
@@ -194,9 +194,9 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
         messageRepository.singleSave(messageEntity)
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(messageEntity1 -> new AtomicBoolean(true))
                 .doOnSuccess(atomicBooleanCustomLiveData::postValue)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
 
         return atomicBooleanCustomLiveData;
@@ -213,8 +213,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     public void getPhotoUrlsByUidUser() {
         this.fbChatService.getPhotoUrlsByUidUser(firebaseUserUid)
                 .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(map -> liveDataPhotoUrlUsers.postValue(map))
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
     }
 }
