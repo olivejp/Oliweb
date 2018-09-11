@@ -160,5 +160,6 @@
     <string name="choose_from_galery">Choisir dans la galerie</string>
     <string name="search">Recherche</string>
     <string name="advanced_search">Recherche avancée</string>
+    <string name="answer">Répondre</string>
 
 </resources>
