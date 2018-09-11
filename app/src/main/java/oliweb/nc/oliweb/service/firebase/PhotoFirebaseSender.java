@@ -37,10 +37,10 @@ public class PhotoFirebaseSender {
         Log.d(TAG, "sendPhotosToRemote listPhoto : " + listPhoto);
         return Single.create(emitter ->
                 Observable.fromIterable(listPhoto)
-                        .doOnError(emitter::onError)
                         .filter(photoEntity -> Utility.allStatusToSend().contains(photoEntity.getStatut().getValue()))
                         .concatMap(this::sendPhotoToRemote)
                         .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .doOnError(emitter::onError)
                         .subscribe()
         );
     }

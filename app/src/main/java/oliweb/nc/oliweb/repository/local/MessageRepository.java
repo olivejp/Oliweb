@@ -109,10 +109,7 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     public Observable<MessageEntity> markMessageHasBeenSend(final MessageEntity messageEntity) {
         Log.d(TAG, "Mark message as has been SEND messageEntity :" + messageEntity);
         messageEntity.setStatusRemote(StatusRemote.SEND);
-        return singleUpdate(messageEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable();
+        return singleUpdate(messageEntity).toObservable();
     }
 
     /**
@@ -123,9 +120,6 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
     public void markMessageAsFailedToSend(final MessageEntity messageFailedToSend) {
         Log.d(TAG, "Mark message Failed To Send message : " + messageFailedToSend);
         messageFailedToSend.setStatusRemote(StatusRemote.FAILED_TO_SEND);
-        singleUpdate(messageFailedToSend)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
+        singleUpdate(messageFailedToSend).subscribe();
     }
 }

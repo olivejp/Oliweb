@@ -5,15 +5,14 @@ import android.util.Log;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.repository.local.ChatRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
@@ -27,21 +26,27 @@ public class MyChatsActivityBusiness {
 
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
     private ChatRepository chatRepository;
+    private Scheduler processScheduler;
+    private Scheduler androidScheduler;
 
     @Inject
     public MyChatsActivityBusiness(FirebaseAnnonceRepository firebaseAnnonceRepository,
-                                   ChatRepository chatRepository) {
+                                   ChatRepository chatRepository,
+                                   Scheduler processScheduler,
+                                   Scheduler androidScheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.chatRepository = chatRepository;
+        this.processScheduler = processScheduler;
+        this.androidScheduler = androidScheduler;
     }
 
     public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
         CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
-        this.firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+        firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnSuccess(customLiveData::postValue)
                 .doOnComplete(() -> customLiveData.postValue(null))
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
                 .subscribe();
         return customLiveData;
     }
@@ -49,7 +54,7 @@ public class MyChatsActivityBusiness {
     public LiveDataOnce<ChatEntity> findLiveChatByUidUserAndUidAnnonce(String uidUser, String uidAnonce) {
         CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
         chatRepository.findByUidUserAndUidAnnonce(uidUser, uidAnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnSuccess(chatEntityCustomLiveData::postValue)
                 .doOnComplete(() -> chatEntityCustomLiveData.postValue(null))
@@ -75,16 +80,16 @@ public class MyChatsActivityBusiness {
     public Single<ChatEntity> findOrCreateLiveNewChat(String uidUser, AnnonceEntity annonce) {
         return Single.create(emitter ->
                 chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .subscribeOn(processScheduler).observeOn(processScheduler)
                         .doOnSuccess(emitter::onSuccess)
                         .doOnComplete(() ->
                                 chatRepository.singleSave(initializeNewChatEntity(uidUser, annonce))
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .subscribeOn(processScheduler).observeOn(processScheduler)
                                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                                         .doOnSuccess(emitter::onSuccess)
                                         .subscribe()
                         )
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe()
         );
     }
