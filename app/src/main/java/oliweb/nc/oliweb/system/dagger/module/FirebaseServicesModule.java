@@ -81,4 +81,10 @@ public class FirebaseServicesModule {
                                                          MessageRepository messageRepository) {
         return new FirebaseMessageService(firebaseMessageRepository, firebaseChatRepository, messageRepository);
     }
+
+    @Provides
+    @Singleton
+    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository) {
+        return new FirebasePhotoStorage(photoRepository);
+    }
 }

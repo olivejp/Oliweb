@@ -28,14 +28,25 @@ import static oliweb.nc.oliweb.utility.MediaUtility.createNewImagePairUriFile;
 public class FirebasePhotoStorage {
 
     private static final String TAG = FirebasePhotoStorage.class.getName();
+    public static final String ERROR_MISSED_URI = "URI nécessaire pour sauvegarder une photo";
 
     private StorageReference fireStorage;
     private PhotoRepository photoRepository;
 
     @Inject
     public FirebasePhotoStorage(PhotoRepository photoRepository) {
-        this.fireStorage = FirebaseStorage.getInstance().getReference();
         this.photoRepository = photoRepository;
+    }
+
+    // Cette méthode sert pour les tests afin de pouvoir injecter notre storageReference
+    private void checkFirebaseStorage() {
+        if (fireStorage == null) {
+            fireStorage = FirebaseStorage.getInstance().getReference();
+        }
+    }
+
+    public void setFireStorage(StorageReference fireStorage) {
+        this.fireStorage = fireStorage;
     }
 
     /**
@@ -50,7 +61,7 @@ public class FirebasePhotoStorage {
         Log.d(TAG, "Starting sendPhotoToRemote photo : " + photo);
         return Single.create(e -> {
             if (photo.getUriLocal() == null || photo.getUriLocal().isEmpty()) {
-                e.onError(new RuntimeException("URI nécessaire pour sauvegarder une photo"));
+                e.onError(new RuntimeException(ERROR_MISSED_URI));
             } else {
                 File file = new File(photo.getUriLocal());
                 String fileName = file.getName();
@@ -58,7 +69,6 @@ public class FirebasePhotoStorage {
                         .doOnSuccess(e::onSuccess)
                         .doOnError(e::onError)
                         .subscribe();
-
             }
         });
     }
@@ -72,6 +82,8 @@ public class FirebasePhotoStorage {
      * @return Will return the URI of the file in Firebase Storage. You could use this URI to download the file from Internet
      */
     private Single<Uri> saveFileToStorage(String fileName, Uri uriLocalFile) {
+        checkFirebaseStorage();
+
         return Single.create(e -> {
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.putFile(uriLocalFile)
@@ -194,6 +206,7 @@ public class FirebasePhotoStorage {
      * will return a exception in case of error
      */
     private Single<AtomicBoolean> deleteFromStorage(String fileName) {
+        checkFirebaseStorage();
         return Single.create(emitter -> {
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.delete()
