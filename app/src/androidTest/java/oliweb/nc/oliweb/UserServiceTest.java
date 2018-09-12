@@ -12,13 +12,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -29,8 +26,6 @@ import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.UserService;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
@@ -56,9 +51,6 @@ public class UserServiceTest {
     @Mock
     private FirebaseUser firebaseUser;
 
-    @Captor
-    private ArgumentCaptor<AtomicBoolean> captor;
-
     private UserService userService;
 
     @Before
@@ -73,6 +65,7 @@ public class UserServiceTest {
     public void cleanDatabase() {
         Context appContext = InstrumentationRegistry.getTargetContext();
         UtilityTest.cleanBase(appContext);
+        Mockito.reset(firebaseUser, firebaseUserRepository, userRepository);
     }
 
     @Test
@@ -83,8 +76,6 @@ public class UserServiceTest {
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
         testObserver.assertNoErrors();
-
-        assertTrue(captor.getValue().get());
     }
 
     @Test
@@ -95,7 +86,5 @@ public class UserServiceTest {
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
         testObserver.assertNoErrors();
-
-        assertFalse(captor.getValue().get());
     }
 }

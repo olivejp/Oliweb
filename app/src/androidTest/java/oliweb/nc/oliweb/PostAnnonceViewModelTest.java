@@ -6,8 +6,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,6 +20,10 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 
+import static oliweb.nc.oliweb.UtilityTest.CATEGORIE_NAME;
+import static oliweb.nc.oliweb.UtilityTest.UID_USER;
+import static org.junit.Assert.assertEquals;
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -31,8 +33,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 public class PostAnnonceViewModelTest {
 
     private PostAnnonceActivityViewModel viewModel;
-    private static final String UID_USER = "12345";
-    private static final String CATEGORIE_NAME = "CAT_NAME";
 
     @Rule
     public ActivityTestRule<PostAnnonceActivity> postAnnonceActivity = new ActivityTestRule<>(PostAnnonceActivity.class);
@@ -60,7 +60,7 @@ public class PostAnnonceViewModelTest {
         testSaveAnnonce.assertNoErrors();
         testSaveAnnonce.assertValueCount(1);
         List<AnnonceEntity> listAnnonce = testSaveAnnonce.values();
-        Assert.assertEquals(UID_USER, listAnnonce.get(0).getUidUser());
+        assertEquals(UID_USER, listAnnonce.get(0).getUidUser());
     }
 
     @After

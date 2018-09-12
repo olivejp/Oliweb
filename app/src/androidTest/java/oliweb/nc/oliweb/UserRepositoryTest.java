@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb;
 
-import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -13,30 +12,40 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.Answer;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.schedulers.TestScheduler;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.UserService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
+import static oliweb.nc.oliweb.UtilityTest.UID_USER;
 import static oliweb.nc.oliweb.UtilityTest.checkCount;
 import static oliweb.nc.oliweb.UtilityTest.initUtilisateur;
 import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -56,26 +65,47 @@ public class UserRepositoryTest {
     private static final String USER_TELEPHONE = "790723";
     private static final String TOKEN = "TOKEN";
 
-    private FirebaseUser mockUser;
-    private UserRepository userRepository;
-    private UserService userService;
+    @Rule
+    public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
-    private Observer<AtomicBoolean> observer;
+    private UserRepository mockUserRepository;
+
+    @Mock
+    FirebaseUserRepository mockFirebaseUserRepository;
+
+    private UserRepository userRepository;
+
+    @Mock
+    private FirebaseUser mockUser;
+
+    private UserService userService;
+
+    private TestScheduler testScheduler;
 
     @Before
     public void init() {
-        mockUser = mock(FirebaseUser.class);
-        FirebaseUserRepository mockFirebaseUserRepository = mock(FirebaseUserRepository.class);
-
         Context appContext = InstrumentationRegistry.getTargetContext();
 
         ContextModule contextModule = new ContextModule(appContext);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        ServicesComponent servicesComponent = DaggerServicesComponent.builder().contextModule(contextModule).build();
-
-        userService = servicesComponent.getUserService();
         userRepository = component.getUserRepository();
+
+        testScheduler = new TestScheduler();
+
+        UserEntity userEntity= new UserEntity();
+        userEntity.setIdUser(1L);
+        userEntity.setUid(UID_USER);
+        userEntity.setEmail(USER_EMAIL);
+        userEntity.setProfile(USER_PROFILE);
+        userEntity.setPhotoUrl(USER_PHOTO_URL);
+        userEntity.setTelephone(USER_TELEPHONE);
+
+        when(mockUserRepository.findMaybeByUid(anyString())).thenReturn(Maybe.just(userEntity));
+        when(mockUserRepository.singleSave(any())).then((Answer<Single<UserEntity>>) invocation -> userRepository.singleSave(userEntity));
+        when(mockFirebaseUserRepository.getToken()).thenReturn(Single.just(TOKEN));
+
+        userService = new UserService(mockUserRepository, mockFirebaseUserRepository, testScheduler, testScheduler);
 
         UtilityTest.cleanBase(appContext);
 
@@ -84,8 +114,6 @@ public class UserRepositoryTest {
         when(mockUser.getEmail()).thenReturn(USER_EMAIL);
         when(mockUser.getPhotoUrl()).thenReturn(Uri.parse(USER_PHOTO_URL));
         when(mockUser.getPhoneNumber()).thenReturn(USER_TELEPHONE);
-
-        when(mockFirebaseUserRepository.getToken()).thenReturn(Single.just(TOKEN));
     }
 
     @After
@@ -102,6 +130,15 @@ public class UserRepositoryTest {
 
     private void test_singleSave(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
         UserEntity userEntity = initUtilisateur(uidUser, profile, email);
+        TestObserver<UserEntity> subscriberInsert = new TestObserver<>();
+        userRepository.singleSave(userEntity).subscribe(subscriberInsert);
+        waitTerminalEvent(subscriberInsert, 5);
+        subscriberInsert.assertNoErrors();
+        subscriberInsert.assertValueCount(1);
+    }
+
+    private void test_singleSave(@NonNull Long id, @NonNull String uidUser, @NonNull String profile, @NonNull String email) {
+        UserEntity userEntity = initUtilisateur(id, uidUser, profile, email);
         TestObserver<UserEntity> subscriberInsert = new TestObserver<>();
         userRepository.singleSave(userEntity).subscribe(subscriberInsert);
         waitTerminalEvent(subscriberInsert, 5);
@@ -127,6 +164,12 @@ public class UserRepositoryTest {
 
         userService.saveSingleUserFromFirebase(mockUser).subscribe(singleObserverUserEntity);
         singleObserverUserEntity.assertNoErrors();
+
+        testScheduler.triggerActions();
+
+        verify(mockUserRepository, after(1000).atLeastOnce()).singleSave(any());
+
+        checkCount(1, userRepository.count());
 
         TestObserver<UserEntity> subscribeFind = new TestObserver<>();
         userRepository.findMaybeByUid(USER_UID).subscribe(subscribeFind);
@@ -210,6 +253,7 @@ public class UserRepositoryTest {
         userRepository.findMaybeByUid(USER_UID).subscribe(subscriberFindByUid);
         waitTerminalEvent(subscriberFindByUid, 5);
         subscriberFindByUid.assertNoErrors();
+        subscriberFindByUid.assertValueCount(1);
         subscriberFindByUid.assertValueAt(0, utilisateurEntity -> Objects.equals(utilisateurEntity.getEmail(), USER_EMAIL)
                 && Objects.equals(utilisateurEntity.getProfile(), USER_PROFILE)
                 && Objects.equals(utilisateurEntity.getUid(), USER_UID));
@@ -222,14 +266,20 @@ public class UserRepositoryTest {
         // Create a new user
         test_singleSave(USER_UID, USER_PROFILE, USER_EMAIL);
 
+        checkCount(1, userRepository.count());
+
         // Retrieve user
         TestObserver<UserEntity> subscribeFindSingle = new TestObserver<>();
         userRepository.findMaybeByUid(USER_UID).subscribe(subscribeFindSingle);
         waitTerminalEvent(subscribeFindSingle, 5);
         subscribeFindSingle.assertNoErrors();
+        subscribeFindSingle.assertValueAt(0, userEntity -> USER_UID.equals(userEntity.getUid()));
+        UserEntity userEntity = subscribeFindSingle.values().get(0);
+        Long id = userEntity.getId();
+        assertNotNull(id);
 
         // Updated the user
-        test_singleSave(USER_UID, UPDATED_PROFILE, UPDATED_EMAIL);
+        test_singleSave(id, USER_UID, UPDATED_PROFILE, UPDATED_EMAIL);
 
         // Check that we don't create a second user
         checkCount(1, userRepository.count());
@@ -262,7 +312,7 @@ public class UserRepositoryTest {
         waitTerminalEvent(subscriberGetAll, 5);
         subscriberGetAll.assertNoErrors();
         List<UserEntity> listRetour = subscriberGetAll.values().get(0);
-        Assert.assertEquals(2, listRetour.size());
+        assertEquals(2, listRetour.size());
         boolean isFirstTrue = false;
         boolean isSecondTrue = false;
         for (UserEntity user : listRetour) {

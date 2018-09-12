@@ -27,11 +27,11 @@ import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 public class UtilityTest {
 
-    private static final String UID_USER = "123456";
-    private static final String CATEGORIE_NAME = "CATEGORIE_NAME";
-    private static final String DEFAULT_PROFILE = "orlanth23";
-    private static final String DEFAULT_EMAIL = "orlanth23@hotmail.com";
-    private static final String DEFAULT_COLOR = "123456";
+    public static final String UID_USER = "123456";
+    public static final String CATEGORIE_NAME = "CATEGORIE_NAME";
+    public static final String DEFAULT_PROFILE = "orlanth23";
+    public static final String DEFAULT_EMAIL = "orlanth23@hotmail.com";
+    public static final String DEFAULT_COLOR = "123456";
 
     private UtilityTest() {
 
@@ -51,6 +51,16 @@ public class UtilityTest {
 
     public static UserEntity initUtilisateur(@NonNull String uidUser, @NonNull String profile, @NonNull String email) {
         UserEntity userEntity = new UserEntity();
+        userEntity.setProfile((profile.isEmpty()) ? DEFAULT_PROFILE : profile);
+        userEntity.setUid((uidUser.isEmpty()) ? UID_USER : uidUser);
+        userEntity.setEmail((email.isEmpty()) ? DEFAULT_EMAIL : email);
+        userEntity.setFavorite(0);
+        return userEntity;
+    }
+
+    public static UserEntity initUtilisateur(@NonNull Long id, @NonNull String uidUser, @NonNull String profile, @NonNull String email) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setIdUser(id);
         userEntity.setProfile((profile.isEmpty()) ? DEFAULT_PROFILE : profile);
         userEntity.setUid((uidUser.isEmpty()) ? UID_USER : uidUser);
         userEntity.setEmail((email.isEmpty()) ? DEFAULT_EMAIL : email);
@@ -107,7 +117,7 @@ public class UtilityTest {
 
         TestObserver<CategorieEntity> subscriberInsertCategorie = new TestObserver<>();
         categorieRepository.singleSave(categorieEntity).subscribe(subscriberInsertCategorie);
-        waitTerminalEvent(subscriberInsertCategorie, 5);
+        waitTerminalEvent(subscriberInsertCategorie, 10);
 
         subscriberInsertCategorie.dispose();
     }
