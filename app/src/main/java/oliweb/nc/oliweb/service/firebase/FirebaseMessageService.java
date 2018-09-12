@@ -14,6 +14,7 @@ import javax.inject.Singleton;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.MessageConverter;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
@@ -76,7 +77,7 @@ public class FirebaseMessageService {
             @Override
             public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
                 super.observe(owner, observer);
-                getCount(uidUser).subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                getCount(uidUser).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnSuccess(integer -> observer.onChanged(integer.longValue()))
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe();

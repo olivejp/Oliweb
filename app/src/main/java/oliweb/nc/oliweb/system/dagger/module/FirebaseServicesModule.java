@@ -24,13 +24,14 @@ import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
+import oliweb.nc.oliweb.system.dagger.ApplicationContext;
 
-@Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class})
+@Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class, SchedulerModule.class})
 public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public AnnonceFirebaseDeleter annonceFirebaseDeleter(Context context,
+    public AnnonceFirebaseDeleter annonceFirebaseDeleter(@ApplicationContext Context context,
                                                          FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                          AnnonceRepository annonceRepository,
                                                          PhotoRepository photoRepository,
