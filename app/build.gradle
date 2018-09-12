@@ -12,7 +12,7 @@ props.load(new FileInputStream(propFile))
 
 android {
     testOptions{
-        unitTests.returnDefaultValues = true;
+        unitTests.returnDefaultValues = true
     }
     signingConfigs {
         config {
