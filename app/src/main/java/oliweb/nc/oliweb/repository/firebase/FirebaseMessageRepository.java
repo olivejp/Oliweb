@@ -11,6 +11,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,6 +23,7 @@ import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_MESSAGES_REF;
+import static oliweb.nc.oliweb.utility.Utility.getNewExecutor;
 
 @Singleton
 public class FirebaseMessageRepository {
@@ -109,10 +111,11 @@ public class FirebaseMessageRepository {
      */
     public Single<MessageFirebase> saveMessage(MessageFirebase messageFirebase) {
         Log.d(TAG, "Starting saveMessage messageFirebase : " + messageFirebase);
+        Executor executor = getNewExecutor();
         return Single.create(emitter ->
                 msgRef.child(messageFirebase.getUidChat()).child(messageFirebase.getUidMessage()).setValue(messageFirebase)
-                        .addOnSuccessListener(aVoid -> emitter.onSuccess(messageFirebase))
-                        .addOnFailureListener(emitter::onError)
+                        .addOnSuccessListener(executor, aVoid -> emitter.onSuccess(messageFirebase))
+                        .addOnFailureListener(executor, emitter::onError)
         );
     }
 }
