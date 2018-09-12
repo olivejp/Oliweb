@@ -167,6 +167,7 @@ public class UserEntity extends AbstractEntity<Long> implements Parcelable {
     }
 
     public UserEntity() {
+        this.favorite = 0;
     }
 
     protected UserEntity(Parcel in) {
