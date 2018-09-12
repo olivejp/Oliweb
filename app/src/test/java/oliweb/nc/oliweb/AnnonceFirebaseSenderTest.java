@@ -1,7 +1,5 @@
 package oliweb.nc.oliweb;
 
-import android.content.Context;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -38,10 +36,6 @@ public class AnnonceFirebaseSenderTest {
 
     private static final String UID_ANNONCE = "UID";
 
-
-    @Mock
-    Context context;
-
     @Mock
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
 
@@ -54,20 +48,26 @@ public class AnnonceFirebaseSenderTest {
     @Mock
     private AnnonceFullRepository annonceFullRepository;
 
+    private TestScheduler testScheduler = new TestScheduler();
+
     private void resetMock() {
         Mockito.reset(annonceFullRepository, annonceRepository, firebaseAnnonceRepository, photoFirebaseSender);
     }
 
+    /**
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  Nominal case
+     * Expectations :
+     * - The annonce is marked as sending
+     * - The annonce is saved in Firebase
+     * - The annonce is marked as send
+     * - The  photoFirebaseSender.sendPhotosToRemote() is called one time
+     */
     @Test
     public void ShouldSaveOnce() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Annonce entity renvoyée
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
         when(annonceRepository.findMaybeByUidAndFavorite(argThat(UID_ANNONCE::equals), anyInt())).thenReturn(Maybe.just(annonceEntity));
         when(annonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
@@ -76,10 +76,8 @@ public class AnnonceFirebaseSenderTest {
         when(annonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.just(annonceFull));
         when(firebaseAnnonceRepository.saveAnnonceToFirebase(any())).thenReturn(Single.just(UID_ANNONCE));
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
@@ -93,20 +91,21 @@ public class AnnonceFirebaseSenderTest {
     }
 
     /**
-     * If getUidAndTimestampFromFirebase throw an error, should mark the annonce to Failed to send.
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  FirebaseAnnonceRepository.getUidAndTimestampFromFirebase() fails
+     * Expectations :
+     * - The annonce is marked as failed to send
+     * - The method AnnonceRepository.markAsSending() is never call
+     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
+     * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
     @Test
     public void ShouldMarkAsFailedToSend_When_GetUidAndTimestampFromFirebase_Fail() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(new AnnonceEntity());
 
         testScheduler.triggerActions();
@@ -121,25 +120,25 @@ public class AnnonceFirebaseSenderTest {
     }
 
     /**
-     * Si le service markAsSending échoue on veut que l'annonce soit passée au statut markAsFailedToSend
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  FirebaseAnnonceRepository.getUidAndTimestampFromFirebase() fails
+     * Expectations :
+     * - The annonce is marked as failed to send
+     * - The method AnnonceRepository.markAsSending() is never call
+     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
+     * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
     @Test
     public void ShouldMarkAsFailedToSend_When_MarkAsSending_Fail() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Annonce entity renvoyée
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
         when(annonceRepository.markAsSending(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR 2")));
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
@@ -153,23 +152,26 @@ public class AnnonceFirebaseSenderTest {
         resetMock();
     }
 
+    /**
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  FirebaseAnnonceRepository.findMaybeByUidAndFavorite() return an empty maybe
+     * Expectations :
+     * - The method AnnonceRepository.markAsFailedToSend() is called one time
+     * - The method AnnonceRepository.markAsSending() is called one time
+     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
+     * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
+     */
     @Test
     public void ShouldMarkAsFailedToSend_When_FindMaybeByUidAnnonceAndFavorite_Return_Empty() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Annonce entity renvoyée
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
         when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
@@ -183,24 +185,27 @@ public class AnnonceFirebaseSenderTest {
         resetMock();
     }
 
+    /**
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  AnnonceFullRepository.findAnnonceFullByAnnonceEntity() return an Exception
+     * Expectations :
+     * - The method AnnonceRepository.markAsSending() is called one time
+     * - The method AnnonceRepository.markAsFailedToSend() is called one time
+     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
+     * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
+     */
     @Test
     public void ShouldMarkAsFailedToSend_When_FindAnnonceFullByAnnonceEntity_Return_Empty() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Annonce entity renvoyée
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
         when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
         when(annonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
@@ -214,24 +219,27 @@ public class AnnonceFirebaseSenderTest {
         resetMock();
     }
 
+    /**
+     * Method tested : AnnonceFirebaseSender.processToSendAnnonceToFirebase()
+     * Conditions :  AnnonceFullRepository.findAnnoncesByIdAnnonce() return an Exception
+     * Expectations :
+     * - The method AnnonceRepository.markAsSending() is called one time
+     * - The method AnnonceRepository.markAsFailedToSend() is called one time
+     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
+     * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
+     */
     @Test
     public void ShouldMarkAsFailedToSend_When_FindAnnoncesByIdAnnonce_Return_Error() {
-
-        TestScheduler testScheduler = new TestScheduler();
-
-        // Annonce entity renvoyée
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        // Firebase Annonce Repo nous renvoie trois AnnonceDto
         when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
         when(annonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
         when(annonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        // Création de mon service à tester
         AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
 
-        // Appel de ma fonction à tester
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
