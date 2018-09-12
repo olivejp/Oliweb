@@ -23,6 +23,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
@@ -44,8 +48,17 @@ public class Utility {
 
     private static final String TAG = Utility.class.getName();
     public static final String DIALOG_FIREBASE_RETRIEVE = "DIALOG_FIREBASE_RETRIEVE";
+    private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private Utility() {
+    }
+
+    public static Executor getNewExecutor() {
+        return new ThreadPoolExecutor(NUMBER_OF_CORES * 2,
+                NUMBER_OF_CORES * 2,
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>());
     }
 
     public static void signOut(Context context) {
