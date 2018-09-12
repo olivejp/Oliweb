@@ -123,6 +123,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     }
 
     private void initActivity(Bundle params) {
+
         // Récupération des arguments
         annonceFull = params.getParcelable(ARG_ANNONCE);
         if (params.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
@@ -189,20 +190,22 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     }
 
     private void initAnnonceViews(AnnonceFull annonceFull) {
-        AnnonceEntity annonce = annonceFull.getAnnonce();
+        if (annonceFull.getAnnonce() != null) {
+            AnnonceEntity annonce = annonceFull.getAnnonce();
 
-        prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
-        description.setText(annonce.getDescription());
-        collapsingToolbarLayout.setTitle(annonce.getTitre());
-        textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
+            prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
+            description.setText(annonce.getDescription());
+            collapsingToolbarLayout.setTitle(annonce.getTitre());
+            textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
 
-        if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
-            viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
-            indicator.setViewPager(viewPager);
-        }
+            if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
+                viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
+                indicator.setViewPager(viewPager);
+            }
 
-        if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
-            initViewsSeller(annonceFull.getUtilisateur().get(0));
+            if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
+                initViewsSeller(annonceFull.getUtilisateur().get(0));
+            }
         }
     }
 
