@@ -46,7 +46,7 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
     public abstract Maybe<UserEntity> findMaybeFavoriteByUid(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur")
+    @Query("SELECT * FROM utilisateur WHERE uid = :uuidUtilisateur AND favorite = 0")
     public abstract Maybe<UserEntity> findMaybeByUid(String uuidUtilisateur);
 
     @Transaction
