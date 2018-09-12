@@ -67,7 +67,6 @@ public class FirebaseMessageService {
         return messageRepository.markMessageIsSending(messageEntity)
                 .map(MessageConverter::convertEntityToDto)
                 .switchMapSingle(firebaseMessageRepository::saveMessage)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .switchMap(messageFirebase -> messageRepository.markMessageHasBeenSend(messageEntity))
                 .switchMap(firebaseChatRepository::updateLastMessageChat);
     }

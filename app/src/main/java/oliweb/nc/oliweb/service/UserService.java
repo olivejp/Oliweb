@@ -81,6 +81,7 @@ public class UserService {
                                             FirebaseUser firebaseUser,
                                             boolean isAnCreation) {
         return firebaseUserRepository.getToken()
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .map(token -> UserConverter.convertFbToEntity(firebaseUser, token, isAnCreation))
                 .map(userEntity -> {
                     if (utilisateurEntity != null) {
@@ -90,7 +91,6 @@ public class UserService {
                 })
                 .flatMap(userRepository::singleSave)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnSuccess(emitter::onSuccess)
                 .subscribe();
     }
