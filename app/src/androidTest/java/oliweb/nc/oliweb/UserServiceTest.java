@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class UserServiceTest {
 
+    public static final String BILBO = "bilbo";
     @Rule
     public InstantTaskExecutorRule instantRule = new InstantTaskExecutorRule();
 
@@ -70,12 +71,14 @@ public class UserServiceTest {
 
     @Test
     public void test_1() {
-        when(firebaseUser.getUid()).thenReturn("bilbo");
-        when(userRepository.findMaybeByUid(argThat("bilbo"::equals))).thenReturn(Maybe.empty());
+        when(firebaseUser.getUid()).thenReturn(BILBO);
+        when(userRepository.findMaybeByUid(argThat(BILBO::equals))).thenReturn(Maybe.empty());
 
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
         testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+        testObserver.assertValue(userEntity -> userEntity.getUid().equals(BILBO));
     }
 
     @Test
@@ -86,5 +89,6 @@ public class UserServiceTest {
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
         testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
     }
 }
