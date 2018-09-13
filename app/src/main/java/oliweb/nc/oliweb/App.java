@@ -67,7 +67,10 @@ public class App extends Application {
                 .firebaseServicesModule(firebaseServicesModule)
                 .build();
 
-        this.firebaseRepositoriesComponent = DaggerFirebaseRepositoriesComponent.create();
+        this.firebaseRepositoriesComponent = DaggerFirebaseRepositoriesComponent.builder()
+                .contextModule(contextModule)
+                .firebaseRepositoriesModule(firebaseRepositoriesModule)
+                .build();
 
         this.servicesComponent = DaggerServicesComponent.builder().contextModule(contextModule)
                 .schedulerModule(schedulerModule)

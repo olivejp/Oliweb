@@ -16,6 +16,7 @@ import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
+import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 
 @Component(modules = {DatabaseRepositoriesModule.class, SchedulerModule.class})
 @Singleton
@@ -41,4 +42,6 @@ public interface DatabaseRepositoriesComponent {
     void inject(FavoriteActivityViewModel favoriteActivityViewModel);
 
     void inject(PostAnnonceActivityViewModel postAnnonceActivityViewModel);
+
+    void inject(ProfilViewModel profilViewModel);
 }

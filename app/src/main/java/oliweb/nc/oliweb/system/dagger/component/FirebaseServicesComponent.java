@@ -13,6 +13,7 @@ import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseServicesModule;
 import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
+import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 @Component(modules = {FirebaseServicesModule.class, SchedulerModule.class})
@@ -36,4 +37,6 @@ public interface FirebaseServicesComponent {
     ScheduleSync getScheduleSync();
 
     void inject(MyAnnoncesViewModel myAnnoncesViewModel);
+
+    void inject(ProfilViewModel profilViewModel);
 }
