@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb;
+package oliweb.nc.oliweb.viewModel;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
+import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;

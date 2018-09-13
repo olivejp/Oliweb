@@ -7,8 +7,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v4.util.Pair;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,9 +16,11 @@ import java.io.InputStream;
 
 import oliweb.nc.oliweb.utility.MediaUtility;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Created by orlanth23 on 28/01/2018.
- * TODO finir ce test
  */
 @RunWith(AndroidJUnit4.class)
 public class DeletingFileTest {
@@ -32,19 +32,32 @@ public class DeletingFileTest {
         context = InstrumentationRegistry.getTargetContext();
     }
 
+    /**
+     * Method tested :
+     * - MediaUtility.createNewMediaFileUri()
+     * - MediaUtility.saveInputStreamToContentProvider()
+     * <p>
+     * Create a new File Uri
+     * Then save a file in this Uri
+     * Then delete the file from the Uri
+     */
     @Test
     public void createAndDeleteFile() {
+        // Create a file Uri
         Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(context, false, MediaUtility.MediaType.IMAGE);
         context.grantUriPermission(context.getApplicationContext().getPackageName(), pair.first, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        Assert.assertNotNull(pair.first);
-        Assert.assertNotNull(pair.second);
+        assertNotNull(pair.first);
+        assertNotNull(pair.second);
 
-        // Sauvegarde d'une image dans le Content Provider
+        // Save the image in the Content Provider
         InputStream inputStream = context.getApplicationContext().getResources().openRawResource(R.drawable.ic_access_time_grey_900_48dp);
         MediaUtility.saveInputStreamToContentProvider(inputStream, pair.second);
 
+        // Call the delete method
         int delete = context.getContentResolver().delete(pair.first, null, null);
-        Assert.assertEquals(1, delete);
+
+        // Check that the delete method returned 1 (number of record deleted)
+        assertEquals(1, delete);
     }
 }

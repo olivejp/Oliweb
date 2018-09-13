@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb;
+package oliweb.nc.oliweb.service;
 
 import android.arch.core.executor.testing.InstantTaskExecutorRule;
 import android.content.Context;
@@ -21,10 +21,10 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.service.UserService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
