@@ -13,6 +13,7 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.system.dagger.module.DatabaseRepositoriesModule;
 import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
+import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 
 @Component(modules = {DatabaseRepositoriesModule.class, SchedulerModule.class})
@@ -35,4 +36,6 @@ public interface DatabaseRepositoriesComponent {
     PhotoRepository getPhotoRepository();
 
     void inject(MyAnnoncesViewModel myAnnoncesViewModel);
+
+    void inject(FavoriteActivityViewModel favoriteActivityViewModel);
 }
