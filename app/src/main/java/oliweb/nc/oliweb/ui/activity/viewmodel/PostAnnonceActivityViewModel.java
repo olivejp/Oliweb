@@ -13,9 +13,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -25,9 +28,6 @@ import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
@@ -40,10 +40,17 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     private static final int NBR_MAX = 4;
 
-    private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
-    private UserRepository userRepository;
-    private CategorieRepository categorieRepository;
+    @Inject
+    AnnonceRepository annonceRepository;
+
+    @Inject
+    PhotoRepository photoRepository;
+
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    CategorieRepository categorieRepository;
 
     private AnnonceEntity currentAnnonce;
     private CategorieEntity currentCategorie;
@@ -54,13 +61,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder()
-                .contextModule(new ContextModule(application))
-                .build();
-        categorieRepository = component.getCategorieRepository();
-        photoRepository = component.getPhotoRepository();
-        annonceRepository = component.getAnnonceRepository();
-        userRepository = component.getUserRepository();
+        ((App) application).getDatabaseRepositoriesComponent().inject(this);
     }
 
     public LiveData<UserEntity> getConnectedUser(String uid) {
