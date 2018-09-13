@@ -96,7 +96,7 @@ public class AnnonceFirebaseSenderTest {
      * Expectations :
      * - The annonce is marked as failed to send
      * - The method AnnonceRepository.markAsSending() is never call
-     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method AnnonceRepository.markAsToSend() is never call
      * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
      * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
@@ -125,7 +125,7 @@ public class AnnonceFirebaseSenderTest {
      * Expectations :
      * - The annonce is marked as failed to send
      * - The method AnnonceRepository.markAsSending() is never call
-     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method AnnonceRepository.markAsToSend() is never call
      * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
      * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
@@ -158,7 +158,7 @@ public class AnnonceFirebaseSenderTest {
      * Expectations :
      * - The method AnnonceRepository.markAsFailedToSend() is called one time
      * - The method AnnonceRepository.markAsSending() is called one time
-     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method AnnonceRepository.markAsToSend() is never call
      * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
      * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
@@ -191,7 +191,7 @@ public class AnnonceFirebaseSenderTest {
      * Expectations :
      * - The method AnnonceRepository.markAsSending() is called one time
      * - The method AnnonceRepository.markAsFailedToSend() is called one time
-     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method AnnonceRepository.markAsToSend() is never call
      * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
      * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */
@@ -225,7 +225,7 @@ public class AnnonceFirebaseSenderTest {
      * Expectations :
      * - The method AnnonceRepository.markAsSending() is called one time
      * - The method AnnonceRepository.markAsFailedToSend() is called one time
-     * - The method AnnonceRepository.markAsSend() is never call
+     * - The method AnnonceRepository.markAsToSend() is never call
      * - The method FirebaseAnnonceRepository.saveAnnonceToFirebase() is never call
      * - The method PhotoFirebaseSender.sentPhotosToRemote() is never call
      */

@@ -14,6 +14,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.UtilisateurDao;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 
 /**
@@ -56,5 +57,10 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
 
     public Single<List<UserEntity>> findAllByStatus(List<String> status) {
         return utilisateurDao.findAllByStatus(status);
+    }
+
+    public Single<UserEntity> markAsToSend(UserEntity userEntity) {
+        userEntity.setStatut(StatusRemote.TO_SEND);
+        return this.singleSave(userEntity);
     }
 }
