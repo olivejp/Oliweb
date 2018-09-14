@@ -19,8 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
@@ -28,11 +31,6 @@ import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
@@ -59,14 +57,18 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
 
+    @Inject
+    AnnonceService annonceService;
+
+    @Inject
+    FirebaseUtilityService utilityService;
+
     private ArrayList<AnnonceFull> listAnnonce;
     private MutableLiveData<ArrayList<AnnonceFull>> liveListAnnonce;
     private DatabaseReference newRequestRef;
     private MutableLiveData<AtomicBoolean> loading;
-    private AnnonceService annonceService;
     private Gson gson = new Gson();
     private DatabaseReference requestReference;
-    private FirebaseUtilityService utilityService;
     private ValueEventListener requestValueListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -101,11 +103,11 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
-        ServicesComponent componentServices = DaggerServicesComponent.builder().contextModule(new ContextModule(application)).build();
-        FirebaseServicesComponent firebaseServicesComponent = DaggerFirebaseServicesComponent.builder().build();
 
-        utilityService = firebaseServicesComponent.getFirebaseUtilityService();
-        annonceService = componentServices.getAnnonceService();
+        ((App)application).getFirebaseServicesComponent().inject(this);
+        ((App)application).getServicesComponent().inject(this);
+
+
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
         genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {
