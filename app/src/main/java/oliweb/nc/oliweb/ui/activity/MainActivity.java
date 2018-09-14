@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity
 
         // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le
         // cas où il y a du réseau.
-        NetworkReceiver.getInstance().listen(this);
+        NetworkReceiver.listen(this);
 
         viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 

@@ -125,17 +125,13 @@ public class AnnonceService {
         );
     }
 
-    private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnonceFull annoncePhotos) {
-        Log.d(TAG, "Starting removeFromFavorite called with annoncePhotos = " + annoncePhotos.toString());
-        return Single.create(emitter ->
-                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annoncePhotos.getAnnonce().getUid())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(annoncePhotos1 -> {
-                            photoService.deleteListPhoto(annoncePhotos.getPhotos());
-                            annonceRepository.removeFromFavorite(uidUser, annoncePhotos1);
-                            emitter.onSuccess(new AtomicBoolean(true));
-                        })
-                        .subscribe()
-        );
+    private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnonceFull annonceFull) {
+        Log.d(TAG, "Starting removeFromFavorite called with annonceFull = " + annonceFull.toString());
+        return annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
+                .map(annoncePhotos -> {
+                    photoService.deleteListPhoto(annonceFull.getPhotos());
+                    annonceRepository.removeFromFavorite(uidUser, annoncePhotos);
+                    return new AtomicBoolean(true);
+                }).toSingle();
     }
 }
