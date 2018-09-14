@@ -48,10 +48,14 @@ import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
+
     private static final String TAG = SearchActivity.class.getName();
+
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
     private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
     private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
+    private static final String SAVED_TRI = "SAVED_TRI";
+    private static final String SAVED_DIRECTION = "SAVED_DIRECTION";
 
     public static final String CATEGORIE = "CATEGORIE";
     public static final String LOWER_PRICE = "LOWER_PRICE";
@@ -157,6 +161,12 @@ public class SearchActivity extends AppCompatActivity {
                 listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
                 initAdapter(listAnnonce);
             }
+            if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
+                direction = savedInstanceState.getInt(SAVED_DIRECTION);
+            }
+            if (savedInstanceState.containsKey(SAVED_TRI)) {
+                tri = savedInstanceState.getInt(SAVED_TRI);
+            }
         } else {
             currentPage = 0;
             launchNewSearch(currentPage);
@@ -223,6 +233,8 @@ public class SearchActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putInt(SAVED_CURRENT_PAGE, currentPage);
         outState.putParcelableArrayList(SAVED_LIST_ANNONCE, listAnnonce);
+        outState.putInt(SAVED_TRI, tri);
+        outState.putInt(SAVED_DIRECTION, direction);
     }
 
     private void launchNewSearch(int currentPage) {
