@@ -18,6 +18,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
+import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 
 @Component(modules = {DatabaseRepositoriesModule.class})
 @Singleton
@@ -39,6 +40,8 @@ public interface DatabaseRepositoriesComponent {
     PhotoRepository getPhotoRepository();
 
     void inject(DatabaseSyncListenerService databaseSyncListenerService);
+
+    void inject(SearchActivityViewModel searchActivityViewModel);
 
     void inject(MyAnnoncesViewModel myAnnoncesViewModel);
 

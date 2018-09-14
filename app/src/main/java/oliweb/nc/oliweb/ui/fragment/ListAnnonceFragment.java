@@ -235,7 +235,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                         listUidFavorites.add(annonceFull.getAnnonce().getUid());
                     }
                 }
-                updateListWithFavorite(listUidFavorites);
+                updateListWithFavorite(annoncePhotosList, listUidFavorites);
                 updateListAdapter();
             });
         });
@@ -426,8 +426,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
-    private void updateListWithFavorite(List<String> listUidFavorites) {
-        for (AnnonceFull annonceFull : annoncePhotosList) {
+    private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
+        for (AnnonceFull annonceFull : listAnnonces) {
             if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
                 annonceFull.getAnnonce().setFavorite(1);
             } else {
@@ -444,7 +444,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
-        updateListWithFavorite(listUidFavorites);
+        updateListWithFavorite(annoncePhotosList, listUidFavorites);
         updateListAdapter();
     };
 }

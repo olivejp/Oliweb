@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
+import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
@@ -59,6 +61,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     @Inject
     AnnonceService annonceService;
+
+    @Inject
+    AnnonceFullRepository annonceFullRepository;
 
     @Inject
     FirebaseUtilityService utilityService;
@@ -104,9 +109,9 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public SearchActivityViewModel(@NonNull Application application) {
         super(application);
 
-        ((App)application).getFirebaseServicesComponent().inject(this);
-        ((App)application).getServicesComponent().inject(this);
-
+        ((App) application).getFirebaseServicesComponent().inject(this);
+        ((App) application).getServicesComponent().inject(this);
+        ((App) application).getDatabaseRepositoriesComponent().inject(this);
 
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
@@ -214,6 +219,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     newRequestRef.addValueEventListener(requestValueListener);
                 })
                 .subscribe();
+    }
+
+    public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {
+        return annonceFullRepository.findFavoritesByUidUser(uidUtilisateur);
     }
 
     private ElasticsearchQueryBuilder initQueryBuilder(Long timestamp, int pagingSize, int direction, int from, int tri) {

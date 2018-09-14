@@ -21,7 +21,10 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -79,8 +82,9 @@ public class SearchActivity extends AppCompatActivity {
     private String query;
     private ArrayList<AnnonceFull> listAnnonce;
     private LoadingDialogFragment loadingDialogFragment;
-    private SearchActivityViewModel searchActivityViewModel;
+    private SearchActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
+    private List<String> listUidFavorites = new ArrayList<>();
     private int tri;
     private int direction;
     private int currentPage = 0;
@@ -98,7 +102,7 @@ public class SearchActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        searchActivityViewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(SearchActivityViewModel.class);
 
         Utility.hideKeyboard(this);
 
@@ -238,22 +242,22 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void launchNewSearch(int currentPage) {
-        if (!searchActivityViewModel.isConnected()) {
+        if (!viewModel.isConnected()) {
             Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
         } else {
             if (Intent.ACTION_SEARCH.equals(action)) {
                 int from = currentPage * Constants.PER_PAGE_REQUEST;
-                searchActivityViewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+                viewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
                 int from = currentPage * Constants.PER_PAGE_REQUEST;
-                searchActivityViewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+                viewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             }
         }
     }
 
     private void initViewModelObservers() {
-        // Fait apparaitre un spinner pendant l'attente
-        searchActivityViewModel.getLoading().observe(this, atomicBoolean -> {
+        // Fait apparaitre un spinner pendant le chargement des annonces
+        viewModel.getLoading().observe(this, atomicBoolean -> {
                     if (atomicBoolean != null) {
                         if (atomicBoolean.get()) {
                             loadingDialogFragment = new LoadingDialogFragment();
@@ -269,12 +273,27 @@ public class SearchActivity extends AppCompatActivity {
         );
 
         // On écoute les changements sur la liste des annonces retournées par la recherche
-        searchActivityViewModel.getLiveListAnnonce().observe(this, this::initAdapter);
+        viewModel.getLiveListAnnonce().observe(this, this::initAdapter);
+
+        // Récupération de la liste des UID des annonces favorites de l'utilisateur en cours.
+        String uidUser = FirebaseAuth.getInstance().getUid();
+        if (StringUtils.isNotBlank(uidUser)) {
+            viewModel.getFavoritesByUidUser(uidUser).observe(this, annonceFullsFavorites -> {
+                listUidFavorites.clear();
+                if (annonceFullsFavorites != null) {
+                    for (AnnonceFull annonceFull : annonceFullsFavorites) {
+                        listUidFavorites.add(annonceFull.getAnnonce().getUid());
+                    }
+                    initAdapter(listAnnonce);
+                }
+            });
+        }
     }
 
     private void initAdapter(ArrayList<AnnonceFull> annonceWithPhotos) {
-        this.listAnnonce = annonceWithPhotos;
-        if (annonceWithPhotos != null && !annonceWithPhotos.isEmpty()) {
+        listAnnonce = annonceWithPhotos;
+        updateListWithFavorite(listAnnonce, listUidFavorites);
+        if (!annonceWithPhotos.isEmpty()) {
             linearLayout.setVisibility(View.GONE);
             annonceBeautyAdapter.setListAnnonces(this.listAnnonce);
             annonceBeautyAdapter.notifyDataSetChanged();
@@ -327,7 +346,7 @@ public class SearchActivity extends AppCompatActivity {
                     .show();
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            searchActivityViewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
+            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
                     .observeOnce(addRemoveFromFavorite -> {
                         if (addRemoveFromFavorite != null) {
                             switch (addRemoveFromFavorite) {
@@ -350,4 +369,14 @@ public class SearchActivity extends AppCompatActivity {
                     });
         }
     };
+
+    private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
+        for (AnnonceFull annonceFull : listAnnonces) {
+            if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
+                annonceFull.getAnnonce().setFavorite(1);
+            } else {
+                annonceFull.getAnnonce().setFavorite(0);
+            }
+        }
+    }
 }
