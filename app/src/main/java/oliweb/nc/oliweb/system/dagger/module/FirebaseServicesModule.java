@@ -26,7 +26,7 @@ import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 import oliweb.nc.oliweb.system.dagger.ApplicationContext;
 
-@Module(includes = {ContextModule.class, FirebaseRepositoriesModule.class, SchedulerModule.class})
+@Module(includes = {ContextModule.class, SchedulerModule.class, FirebaseRepositoriesModule.class})
 public class FirebaseServicesModule {
 
     @Provides
@@ -67,7 +67,8 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public AnnonceFirebaseSender annonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository,
+    public AnnonceFirebaseSender annonceFirebaseSender(@ApplicationContext Context context,
+                                                       FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                        AnnonceRepository annonceRepository,
                                                        PhotoFirebaseSender photoFirebaseSender,
                                                        AnnonceFullRepository annonceFullRepository,

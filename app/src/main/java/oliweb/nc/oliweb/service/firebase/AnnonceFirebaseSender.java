@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.service.firebase;
 import android.util.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
@@ -32,6 +33,7 @@ public class AnnonceFirebaseSender {
                                  AnnonceRepository annonceRepository,
                                  PhotoFirebaseSender photoFirebaseSender,
                                  AnnonceFullRepository annonceFullRepository,
+                                 @Named("processScheduler")
                                  Scheduler scheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;

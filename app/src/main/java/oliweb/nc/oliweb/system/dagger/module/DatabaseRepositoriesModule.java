@@ -16,7 +16,7 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.system.dagger.ApplicationContext;
 
-@Module(includes = {ContextModule.class})
+@Module(includes = {ContextModule.class, SchedulerModule.class})
 public class DatabaseRepositoriesModule {
 
     @Provides

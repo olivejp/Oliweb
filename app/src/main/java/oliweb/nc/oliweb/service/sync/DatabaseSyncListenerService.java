@@ -6,8 +6,11 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import javax.inject.Inject;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
@@ -19,13 +22,6 @@ import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -39,6 +35,36 @@ public class DatabaseSyncListenerService extends Service {
     public static final String CHAT_SYNC_UID_USER = "CHAT_SYNC_UID_USER";
 
     private final CompositeDisposable disposables = new CompositeDisposable();
+
+    @Inject
+    ChatRepository chatRepository;
+
+    @Inject
+    MessageRepository messageRepository;
+
+    @Inject
+    AnnonceRepository annonceRepository;
+
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    PhotoRepository photoRepository;
+
+    @Inject
+    AnnonceFirebaseSender annonceFirebaseSender;
+
+    @Inject
+    AnnonceFirebaseDeleter annonceFirebaseDeleter;
+
+    @Inject
+    FirebaseMessageService firebaseMessageService;
+
+    @Inject
+    FirebaseChatService firebaseChatService;
+
+    @Inject
+    FirebaseUserRepository firebaseUserRepository;
 
     @Nullable
     @Override
@@ -57,21 +83,10 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        ContextModule contextModule = new ContextModule(this);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseServicesComponent componentFbService = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
-
-        ChatRepository chatRepository = component.getChatRepository();
-        MessageRepository messageRepository = component.getMessageRepository();
-        AnnonceRepository annonceRepository = component.getAnnonceRepository();
-        UserRepository userRepository = component.getUserRepository();
-        PhotoRepository photoRepository = component.getPhotoRepository();
-        AnnonceFirebaseSender annonceFirebaseSender = componentFbService.getAnnonceFirebaseSender();
-        AnnonceFirebaseDeleter annonceFirebaseDeleter = componentFbService.getAnnonceFirebaseDeleter();
-        FirebaseMessageService firebaseMessageService = componentFbService.getFirebaseMessageService();
-        FirebaseChatService firebaseChatService = componentFbService.getFirebaseChatService();
-        FirebaseUserRepository firebaseUserRepository = componentFb.getFirebaseUserRepository();
+        ((App)getApplication()).getFirebaseServicesComponent().inject(this);
+        ((App)getApplication()).getFirebaseRepositoriesComponent().inject(this);
+        ((App)getApplication()).getDatabaseRepositoriesComponent().inject(this);
+        ((App)getApplication()).getServicesComponent().inject(this);
 
         // Suppression des listeners
         disposables.clear();
