@@ -97,7 +97,7 @@ public class UserServiceTest {
     @Test
     public void testUpdate() {
         when(firebaseUser.getUid()).thenReturn(FRODO);
-        when(userRepository.singleSave(any())).thenReturn(Single.just(createUser(FRODO)));
+        when(userRepository.singleSave(argThat(argument -> FRODO.equals(argument.getUid())))).thenReturn(Single.just(createUser(FRODO)));
         when(userRepository.findMaybeByUid(argThat(FRODO::equals))).thenReturn(Maybe.just(new UserEntity()));
 
         TestObserver<UserEntity> testObserver = new TestObserver<>();
@@ -107,6 +107,6 @@ public class UserServiceTest {
 
         testObserver.assertNoErrors();
         testObserver.assertValueCount(1);
-        testObserver.assertValue(userEntity -> userEntity.getUid().equals(BILBO));
+        testObserver.assertValue(userEntity -> userEntity.getUid().equals(FRODO));
     }
 }

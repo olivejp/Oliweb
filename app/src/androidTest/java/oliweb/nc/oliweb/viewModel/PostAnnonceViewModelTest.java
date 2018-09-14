@@ -33,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(AndroidJUnit4.class)
 public class PostAnnonceViewModelTest {
 
+    private Context appContext;
     private PostAnnonceActivityViewModel viewModel;
 
     @Rule
@@ -40,7 +41,7 @@ public class PostAnnonceViewModelTest {
 
     @Before
     public void init() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        appContext = InstrumentationRegistry.getTargetContext();
         viewModel = ViewModelProviders.of(postAnnonceActivity.getActivity()).get(PostAnnonceActivityViewModel.class);
         UtilityTest.cleanBase(appContext);
     }
@@ -66,6 +67,7 @@ public class PostAnnonceViewModelTest {
 
     @After
     public void close() {
+        UtilityTest.cleanBase(appContext);
         postAnnonceActivity.finishActivity();
     }
 }
