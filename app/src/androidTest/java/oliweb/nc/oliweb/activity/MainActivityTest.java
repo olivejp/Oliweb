@@ -12,8 +12,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.ui.activity.ProfilActivity;
-import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
+import oliweb.nc.oliweb.ui.activity.MainActivity;
+import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -29,12 +29,12 @@ import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
-public class ProfilActivityTest {
+public class MainActivityTest {
 
-    private ProfilViewModel viewModel;
+    private MainActivityViewModel viewModel;
 
     @Rule
-    public ActivityTestRule<ProfilActivity> profilActivityTestRule;
+    public ActivityTestRule<MainActivity> activityTestRule;
 
     @Before
     public void init() {
@@ -42,20 +42,20 @@ public class ProfilActivityTest {
         intent.putExtra(PROFIL_ACTIVITY_UID_USER, UID_USER);
         intent.putExtra(UPDATE, false);
 
-        profilActivityTestRule = new ActivityTestRule<>(ProfilActivity.class);
-        ProfilActivity profilActivity = profilActivityTestRule.launchActivity(intent);
+        activityTestRule = new ActivityTestRule<>(MainActivity.class);
+        MainActivity mainActivity = activityTestRule.launchActivity(intent);
 
-        viewModel = ViewModelProviders.of(profilActivity).get(ProfilViewModel.class);
+        viewModel = ViewModelProviders.of(mainActivity).get(MainActivityViewModel.class);
     }
 
     @Test
     public void saveUserTest() {
         // Vérification que le profil de l'utilisateur apparaît correctement
-        onView(withId(R.id.profil_email)).check(matches(isDisplayed()));
+        onView(withId(R.id.nav_view)).check(matches(isDisplayed()));
     }
 
     @After
     public void close() {
-        profilActivityTestRule.finishActivity();
+        activityTestRule.finishActivity();
     }
 }
