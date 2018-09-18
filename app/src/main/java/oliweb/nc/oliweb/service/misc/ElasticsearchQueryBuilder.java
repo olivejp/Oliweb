@@ -97,7 +97,7 @@ public class ElasticsearchQueryBuilder {
         return this;
     }
 
-    public String build() {
-        return jsonRequest.toString();
+    public JsonObject build() {
+        return jsonRequest;
     }
 }

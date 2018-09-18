@@ -14,6 +14,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,9 +23,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -49,6 +50,12 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
 public class SearchActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = SearchActivityViewModel.class.getName();
+    public static final String NO_RESULTS = "no_results";
+    public static final String RESULTS = "results";
+    public static final String FIELD_TITRE = "titre";
+    public static final String FILED_PRIX = "prix";
+    public static final String FIELD_DATE_PUBLICATION = "datePublication";
+    public static final String FIELD_DESCRIPTION = "description";
 
     public enum AddRemoveFromFavorite {
         ONE_OF_YOURS,
@@ -69,6 +76,13 @@ public class SearchActivityViewModel extends AndroidViewModel {
     @Inject
     FirebaseUtilityService utilityService;
 
+    @Inject
+    @Named("processScheduler")
+    Scheduler processScheduler;
+    @Inject
+    @Named("androidScheduler")
+    Scheduler androidScheduler;
+
     private ArrayList<AnnonceFull> listAnnonce;
     private MutableLiveData<ArrayList<AnnonceFull>> liveListAnnonce;
     private DatabaseReference newRequestRef;
@@ -78,14 +92,14 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private ValueEventListener requestValueListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            if (dataSnapshot.child("no_results").exists()) {
+            if (dataSnapshot.child(NO_RESULTS).exists()) {
                 liveListAnnonce.postValue(listAnnonce);
                 newRequestRef.removeEventListener(this);
                 newRequestRef.removeValue();
                 updateLoadingStatus(false);
             } else {
-                if (dataSnapshot.child("results").exists()) {
-                    DataSnapshot snapshotResults = dataSnapshot.child("results");
+                if (dataSnapshot.child(RESULTS).exists()) {
+                    DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
                     for (DataSnapshot child : snapshotResults.getChildren()) {
                         ElasticsearchResult<AnnonceFirebase> elasticsearchResult = child.getValue(genericClassDetail);
                         if (elasticsearchResult != null) {
@@ -155,7 +169,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public void makeAnAdvancedSearch(String libelleCategorie, boolean withPhotoOnly, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
         utilityService.getServerTimestamp()
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .timeout(30, TimeUnit.SECONDS)
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
@@ -168,7 +182,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
                     ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
                     if (query != null) {
-                        builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
+                        builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
                     }
                     if (libelleCategorie != null) {
                         builder.setCategorie(libelleCategorie);
@@ -198,28 +212,26 @@ public class SearchActivityViewModel extends AndroidViewModel {
      * @param direction
      */
     public void makeASearch(String query, int pagingSize, int from, int tri, int direction) {
+        if (from == 0) listAnnonce.clear();
         updateLoadingStatus(true);
         utilityService.getServerTimestamp()
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .timeout(30, TimeUnit.SECONDS)
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
                     updateLoadingStatus(false);
                 })
                 .doOnSuccess(timestamp -> {
-                    if (from == 0) {
-                        listAnnonce.clear();
-                    }
-
                     ElasticsearchQueryBuilder builder = initQueryBuilder(timestamp, pagingSize, direction, from, tri);
-                    builder.setMultiMatchQuery(Arrays.asList("titre", "description"), query);
+                    builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
+                    JsonObject requestAsJson = builder.build();
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
-                    newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
-
-                    // Ensuite on va écouter les changements pour cette nouvelle requête
-                    newRequestRef.addValueEventListener(requestValueListener);
+                    newRequestRef.setValue(gson.fromJson(requestAsJson, Object.class)).addOnSuccessListener(aVoid ->
+                            // Ensuite on va écouter les changements pour cette nouvelle requête
+                            newRequestRef.addValueEventListener(requestValueListener)
+                    );
                 })
                 .subscribe();
     }
@@ -238,11 +250,11 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
         String field;
         if (tri == SORT_TITLE) {
-            field = "titre";
+            field = FIELD_TITRE;
         } else if (tri == SORT_PRICE) {
-            field = "prix";
+            field = FILED_PRIX;
         } else {
-            field = "datePublication";
+            field = FIELD_DATE_PUBLICATION;
         }
 
         ElasticsearchQueryBuilder builder = new ElasticsearchQueryBuilder();
