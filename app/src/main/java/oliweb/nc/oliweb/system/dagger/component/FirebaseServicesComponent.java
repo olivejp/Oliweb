@@ -11,6 +11,7 @@ import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
+import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseServicesModule;
 import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -48,4 +49,6 @@ public interface FirebaseServicesComponent {
     void inject(SearchActivityViewModel searchActivityViewModel);
 
     void inject(MainActivityViewModel mainActivityViewModel);
+
+    void inject(SyncService syncService);
 }

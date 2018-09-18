@@ -9,10 +9,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import javax.inject.Inject;
+
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
@@ -33,10 +33,16 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
     public static final String ARG_UID_USER = "ARG_UID_USER";
 
-    private FirebaseServicesComponent componentFbServices;
+    @Inject
+    ScheduleSync scheduleSync;
+
+    @Inject
+    FirebaseRetrieverService firebaseRetrieverService;
 
     public SyncService() {
         super("SyncService");
+        ((App) getApplication()).getServicesComponent().inject(this);
+        ((App) getApplication()).getFirebaseServicesComponent().inject(this);
     }
 
     /**
@@ -75,22 +81,16 @@ public class SyncService extends IntentService {
     }
 
     private void handleActionSyncAll() {
-        ScheduleSync scheduleSync = componentFbServices.getScheduleSync();
         scheduleSync.synchronize();
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
-        FirebaseRetrieverService firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
         firebaseRetrieverService.synchronize(this, uidUtilisateur);
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent == null) return;
-
-        ContextModule contextModule = new ContextModule(this);
-        componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
-
         Bundle bundle = intent.getExtras();
         if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
