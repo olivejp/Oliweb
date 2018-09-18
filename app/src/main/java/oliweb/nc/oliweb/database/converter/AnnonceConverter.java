@@ -10,9 +10,9 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.dto.firebase.CategorieFirebase;
+import oliweb.nc.oliweb.dto.firebase.UserFirebase;
 
 
 public class AnnonceConverter {
@@ -30,8 +30,8 @@ public class AnnonceConverter {
             AnnonceFull annonceFull = new AnnonceFull();
             annonceFull.setPhotos(new ArrayList<>());
 
-            UtilisateurDto utilisateurDto = annonceFirebase.getUtilisateur();
-            UserEntity userEntity = UserConverter.convertDtoToEntity(utilisateurDto);
+            UserFirebase userFirebase = annonceFirebase.getUtilisateur();
+            UserEntity userEntity = UserConverter.convertDtoToEntity(userFirebase);
             annonceFull.setUtilisateur(Collections.singletonList(userEntity));
             annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
 
@@ -56,8 +56,8 @@ public class AnnonceConverter {
     public static AnnonceFirebase convertFullEntityToDto(AnnonceFull annonceFull) {
         AnnonceFirebase annonceFirebase = new AnnonceFirebase();
         UserEntity userEntity = annonceFull.getUtilisateur().get(0);
-        UtilisateurDto utilisateurDto = new UtilisateurDto(userEntity.getProfile(), userEntity.getUid(), userEntity.getTelephone(), userEntity.getEmail(), userEntity.getPhotoUrl());
-        annonceFirebase.setUtilisateur(utilisateurDto);
+        UserFirebase userFirebase = new UserFirebase(userEntity.getProfile(), userEntity.getUid(), userEntity.getTelephone(), userEntity.getEmail(), userEntity.getPhotoUrl());
+        annonceFirebase.setUtilisateur(userFirebase);
 
         CategorieEntity categorieEntity = annonceFull.getCategorie().get(0);
         annonceFirebase.setCategorie(new CategorieFirebase(categorieEntity.getId(), categorieEntity.getName()));

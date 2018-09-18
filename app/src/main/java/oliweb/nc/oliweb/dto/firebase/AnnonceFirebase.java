@@ -4,15 +4,13 @@ import com.google.firebase.database.PropertyName;
 
 import java.util.List;
 
-import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
-
 /**
  * Created by 2761oli on 20/02/2018.
  *
  * Firebase Annonce Model
  */
 public class AnnonceFirebase {
-    private UtilisateurDto utilisateur;
+    private UserFirebase utilisateur;
     private List<String> photos;
     private CategorieFirebase categorie;
     private String uuid;
@@ -31,11 +29,11 @@ public class AnnonceFirebase {
     public AnnonceFirebase() {
     }
 
-    public UtilisateurDto getUtilisateur() {
+    public UserFirebase getUtilisateur() {
         return utilisateur;
     }
 
-    public void setUtilisateur(UtilisateurDto utilisateur) {
+    public void setUtilisateur(UserFirebase utilisateur) {
         this.utilisateur = utilisateur;
     }
 

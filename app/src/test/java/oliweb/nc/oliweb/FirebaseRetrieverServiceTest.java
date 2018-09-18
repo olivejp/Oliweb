@@ -15,8 +15,8 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.TestScheduler;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
+import oliweb.nc.oliweb.dto.firebase.UserFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
@@ -58,7 +58,7 @@ public class FirebaseRetrieverServiceTest {
         testScheduler = new TestScheduler();
 
         // Utilisateur
-        UtilisateurDto userDto = new UtilisateurDto();
+        UserFirebase userDto = new UserFirebase();
         userDto.setUuid(UID_USER);
         userDto.setEmail("orlanth23@hotmail.com");
         userDto.setProfile("Profile");

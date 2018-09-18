@@ -9,8 +9,8 @@ import java.util.Arrays;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
+import oliweb.nc.oliweb.dto.firebase.UserFirebase;
 
 import static oliweb.nc.oliweb.Utility.EMAIL;
 import static oliweb.nc.oliweb.Utility.MA_DESCRIPTION;
@@ -39,12 +39,12 @@ public class AnnonceConverterTest {
     @Test
     public void testConvertDtoToEntity() {
 
-        UtilisateurDto utilisateurDto = new UtilisateurDto();
-        utilisateurDto.setEmail(EMAIL);
-        utilisateurDto.setPhotoUrl(PHOTO_URL_USER);
-        utilisateurDto.setProfile(PROFILE_USER);
-        utilisateurDto.setTelephone(TELEPHONE_USER);
-        utilisateurDto.setUuid(UID_USER);
+        UserFirebase userFirebase = new UserFirebase();
+        userFirebase.setEmail(EMAIL);
+        userFirebase.setPhotoUrl(PHOTO_URL_USER);
+        userFirebase.setProfile(PROFILE_USER);
+        userFirebase.setTelephone(TELEPHONE_USER);
+        userFirebase.setUuid(UID_USER);
 
         AnnonceFirebase annonceFirebase = new AnnonceFirebase();
         annonceFirebase.setUuid(UID_ANNONCE);
@@ -54,7 +54,7 @@ public class AnnonceConverterTest {
         annonceFirebase.setContactTel(false);
         annonceFirebase.setContactMsg(true);
         annonceFirebase.setPrix(PRIX);
-        annonceFirebase.setUtilisateur(utilisateurDto);
+        annonceFirebase.setUtilisateur(userFirebase);
         annonceFirebase.setPhotos(Arrays.asList(PHOTO_FIREBASE_URL, PHOTO_FIREBASE_URL2));
 
         AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceFirebase);

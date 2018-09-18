@@ -26,7 +26,6 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.util.Date;
 import java.util.Locale;
 
 import butterknife.BindView;
@@ -196,7 +195,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
             description.setText(annonce.getDescription());
             collapsingToolbarLayout.setTitle(annonce.getTitre());
-            textDatePublication.setText(DateConverter.simpleUiMessageDateFormat.format(new Date(annonce.getDatePublication())));
+            textDatePublication.setText(DateConverter.convertDateToUiDate(annonce.getDatePublication()));
 
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
