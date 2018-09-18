@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.activity.business;
 import android.util.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Scheduler;
@@ -32,7 +33,9 @@ public class MyChatsActivityBusiness {
     @Inject
     public MyChatsActivityBusiness(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                    ChatRepository chatRepository,
+                                   @Named("processScheduler")
                                    Scheduler processScheduler,
+                                   @Named("androidScheduler")
                                    Scheduler androidScheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.chatRepository = chatRepository;
