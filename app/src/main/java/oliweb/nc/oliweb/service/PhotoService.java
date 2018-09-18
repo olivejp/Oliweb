@@ -2,6 +2,8 @@ package oliweb.nc.oliweb.service;
 
 import android.content.Context;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 
 import javax.inject.Inject;
@@ -30,7 +32,9 @@ public class PhotoService {
     public void deleteListPhoto(List<PhotoEntity> listToDelete) {
         if (listToDelete != null && !listToDelete.isEmpty()) {
             for (PhotoEntity photo : listToDelete) {
-                MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
+                if (StringUtils.isNotBlank(photo.getUriLocal())) {
+                    MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
+                }
                 photoRepository.delete(photo);
             }
         }

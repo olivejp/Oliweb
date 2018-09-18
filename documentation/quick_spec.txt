@@ -54,3 +54,15 @@ Je créé donc une alerte pour la catégorie "Technologique" + avec le mot clé 
 
 Le service de Machine Learning aurait pu servir à identifier des labels sur les photos prises par les utilisateurs.
 Cependant les labels générés par le ML Kit sont en anglais et ne sont pas toujours pertinents.
+
+
+
+ ____________________________________________
+|                                            |
+|               Remote Config                |
+|____________________________________________|
+
+Possibilité de changer le nombre de colonne des listes en mode portrait ou paysage.
+Les valeurs peuvent se modifier avec les variables :
+-column_number_portrait
+-column_number_landscape

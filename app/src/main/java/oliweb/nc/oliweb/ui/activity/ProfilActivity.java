@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity;
 
 
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,8 +21,11 @@ import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.service.sync.SyncService;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
@@ -71,6 +75,10 @@ public class ProfilActivity extends AppCompatActivity {
     private ProfilViewModel viewModel;
 
     private UserEntity userEntity;
+    private LiveData<UserEntity> liveDataUser;
+    private LiveData<Long> liveDataNbChat;
+    private LiveData<Long> liveDataNbAnnonce;
+    private LiveData<Long> liveDataNbMessage;
 
     public ProfilActivity() {
         // Required empty public constructor
@@ -98,7 +106,12 @@ public class ProfilActivity extends AppCompatActivity {
 
         viewModel = ViewModelProviders.of(ProfilActivity.this).get(ProfilViewModel.class);
 
-        viewModel.getUtilisateurByUid(uidUser).observe(this, userFound -> {
+        liveDataUser = viewModel.getUtilisateurByUid(uidUser);
+        liveDataNbAnnonce = viewModel.getFirebaseUserNbAnnoncesCount(uidUser);
+        liveDataNbChat = viewModel.getFirebaseUserNbChatsCount(uidUser);
+        liveDataNbMessage = viewModel.getFirebaseUserNbMessagesCount(uidUser);
+
+        liveDataUser.observe(this, userFound -> {
             if (userFound != null) {
                 this.userEntity = userFound;
                 textName.setText(this.userEntity.getProfile());
@@ -107,12 +120,9 @@ public class ProfilActivity extends AppCompatActivity {
                 GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
             }
         });
-
-        viewModel.getFirebaseUserNbAnnoncesCount(uidUser).observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
-
-        viewModel.getFirebaseUserNbChatsCount(uidUser).observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
-
-        viewModel.getFirebaseUserNbMessagesCount(uidUser).observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
+        liveDataNbAnnonce.observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
+        liveDataNbChat.observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
+        liveDataNbMessage.observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
 
         mainConstraint.setTop(Utility.getStatusBarHeight(this));
 
@@ -155,11 +165,13 @@ public class ProfilActivity extends AppCompatActivity {
 
             userEntity.setTelephone(textTelephone.getText().toString());
 
-            viewModel.saveUtilisateur(userEntity)
+            viewModel.markAsToSend(userEntity)
+                    .observeOn(AndroidSchedulers.mainThread())
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                    .doOnSuccess(atomicBoolean -> {
-                        if (atomicBoolean.get()) {
-                            Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show();
+                    .doOnSuccess(userEntitySaved -> {
+                        Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show();
+                        if (NetworkReceiver.checkConnection(getApplication())) {
+                            SyncService.launchSynchroForUser(getApplication());
                         }
                     })
                     .subscribe();
@@ -181,5 +193,14 @@ public class ProfilActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+    }
+
+    @Override
+    protected void onDestroy() {
+        liveDataUser.removeObservers(this);
+        liveDataNbAnnonce.removeObservers(this);
+        liveDataNbChat.removeObservers(this);
+        liveDataNbMessage.removeObservers(this);
+        super.onDestroy();
     }
 }

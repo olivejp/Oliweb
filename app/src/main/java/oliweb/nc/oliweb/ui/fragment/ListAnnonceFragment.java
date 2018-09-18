@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -169,29 +168,28 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
-            viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), annonceFull)
-                    .observeOnce(addRemoveFromFavorite -> {
-                        if (addRemoveFromFavorite != null) {
-                            switch (addRemoveFromFavorite) {
-                                case ONE_OF_YOURS:
-                                    Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
-                                    break;
-                                case ADD_SUCCESSFUL:
-                                    Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                            .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                            .show();
-                                    break;
-                                case REMOVE_SUCCESSFUL:
-                                    Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
-                                    break;
-                                case REMOVE_FAILED:
-                                    Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                    });
+            viewModel.addOrRemoveFromFavorite(uidUser, annonceFull).observeOnce(addRemoveFromFavorite -> {
+                if (addRemoveFromFavorite != null) {
+                    switch (addRemoveFromFavorite) {
+                        case ONE_OF_YOURS:
+                            Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                            break;
+                        case ADD_SUCCESSFUL:
+                            Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                    .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                    .show();
+                            break;
+                        case REMOVE_SUCCESSFUL:
+                            Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                            break;
+                        case REMOVE_FAILED:
+                            Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
         }
     };
 
@@ -222,22 +220,25 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         super.onCreate(savedInstanceState);
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
 
-        if (savedInstanceState == null) {
-            viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
-                        uidUser = (userEntity != null) ? userEntity.getUid() : null;
-                        viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
-                            listUidFavorites.clear();
-                            if (annonceFulls != null) {
-                                for (AnnonceFull annonceFull : annonceFulls) {
-                                    listUidFavorites.add(annonceFull.getAnnonce().getUid());
-                                }
-                            }
-                            updateListWithFavorite(listUidFavorites);
-                            updateListAdapter();
-                        });
-                    }
-            );
+        if (savedInstanceState != null) {
+            sortSelected = savedInstanceState.getInt(SAVE_SORT);
+            directionSelected = savedInstanceState.getInt(SAVE_DIRECTION);
+            annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
         }
+
+        viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
+            uidUser = (userEntity != null) ? userEntity.getUid() : null;
+            viewModel.getFavoritesByUidUser(uidUser).observe(appCompatActivity, annonceFulls -> {
+                listUidFavorites.clear();
+                if (annonceFulls != null) {
+                    for (AnnonceFull annonceFull : annonceFulls) {
+                        listUidFavorites.add(annonceFull.getAnnonce().getUid());
+                    }
+                }
+                updateListWithFavorite(annoncePhotosList, listUidFavorites);
+                updateListAdapter();
+            });
+        });
     }
 
     @Override
@@ -425,8 +426,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
-    private void updateListWithFavorite(List<String> listUidFavorites) {
-        for (AnnonceFull annonceFull : annoncePhotosList) {
+    private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
+        for (AnnonceFull annonceFull : listAnnonces) {
             if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
                 annonceFull.getAnnonce().setFavorite(1);
             } else {
@@ -443,7 +444,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
         annoncePhotosList = listAnnoncePhotos;
         annoncesReference.removeEventListener(loadSortListener);
-        updateListWithFavorite(listUidFavorites);
+        updateListWithFavorite(annoncePhotosList, listUidFavorites);
         updateListAdapter();
     };
 }

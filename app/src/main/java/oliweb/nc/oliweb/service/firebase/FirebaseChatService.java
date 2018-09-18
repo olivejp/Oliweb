@@ -5,6 +5,7 @@ import android.util.Log;
 import java.util.HashMap;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Observable;
@@ -39,6 +40,7 @@ public class FirebaseChatService {
                                ChatRepository chatRepository,
                                MessageRepository messageRepository,
                                FirebaseUserRepository firebaseUserRepository,
+                               @Named("processScheduler")
                                Scheduler scheduler) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.chatRepository = chatRepository;

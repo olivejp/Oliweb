@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb;
+package oliweb.nc.oliweb.viewModel;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
+import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.PostAnnonceActivity;
@@ -32,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(AndroidJUnit4.class)
 public class PostAnnonceViewModelTest {
 
+    private Context appContext;
     private PostAnnonceActivityViewModel viewModel;
 
     @Rule
@@ -39,7 +41,7 @@ public class PostAnnonceViewModelTest {
 
     @Before
     public void init() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        appContext = InstrumentationRegistry.getTargetContext();
         viewModel = ViewModelProviders.of(postAnnonceActivity.getActivity()).get(PostAnnonceActivityViewModel.class);
         UtilityTest.cleanBase(appContext);
     }
@@ -65,6 +67,7 @@ public class PostAnnonceViewModelTest {
 
     @After
     public void close() {
+        UtilityTest.cleanBase(appContext);
         postAnnonceActivity.finishActivity();
     }
 }

@@ -2,8 +2,11 @@ package oliweb.nc.oliweb.system.dagger.module;
 
 import android.content.Context;
 
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
+import oliweb.nc.oliweb.system.dagger.ApplicationContext;
 
 @Module
 public class ContextModule {
@@ -15,7 +18,15 @@ public class ContextModule {
     }
 
     @Provides
-    public Context context() {
+    @Singleton
+    Context providesApp() {
+        return context;
+    }
+
+    @ApplicationContext
+    @Provides
+    @Singleton
+    Context providesContext() {
         return context.getApplicationContext();
     }
 }

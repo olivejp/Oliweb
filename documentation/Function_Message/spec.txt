@@ -1,0 +1,11 @@
+Function_02 : Post an annonce
+
+RG01 : User should be authenticated to post an annonce
+RG02 : Update of an annonce could be only possible if the author is the updater
+RG03 : Annonce may have a title, description, price, have been categorized
+RG04 : Annonce could only have as maximum 4 photos
+
+Function Post annonce is only available for authenticated user.
+In the post annonce screen, he should fill the title, description and price fields.
+A default category is proposed but user can change it at any time.
+User can choose to attach an existing photo to its annonce through the chooser photo or to take an new picture.

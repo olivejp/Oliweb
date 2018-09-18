@@ -6,6 +6,7 @@ import android.util.Log;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Scheduler;
@@ -33,7 +34,7 @@ public class FirebaseRetrieverService {
     public FirebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                     AnnonceRepository annonceRepository,
                                     FirebasePhotoStorage firebasePhotoStorage,
-                                    Scheduler scheduler) {
+                                    @Named("processScheduler") Scheduler scheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;

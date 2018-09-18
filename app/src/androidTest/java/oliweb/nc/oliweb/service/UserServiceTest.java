@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb;
+package oliweb.nc.oliweb.service;
 
 import android.arch.core.executor.testing.InstantTaskExecutorRule;
 import android.content.Context;
@@ -21,10 +21,10 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.service.UserService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -36,6 +36,9 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class UserServiceTest {
 
+    public static final String BILBO = "bilbo";
+    public static final String FRODO = "frodo";
+    public static final String TOKEN = "TOKEN";
     @Rule
     public InstantTaskExecutorRule instantRule = new InstantTaskExecutorRule();
 
@@ -53,11 +56,18 @@ public class UserServiceTest {
 
     private UserService userService;
 
+    private TestScheduler testScheduler;
+
+    private UserEntity createUser(String uid){
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUid(uid);
+        return userEntity;
+    }
+
     @Before
     public void init() {
-        when(firebaseUserRepository.getToken()).thenReturn(Single.just("TOKEN"));
-        when(userRepository.singleSave(any())).thenReturn(Single.just(new UserEntity()));
-        TestScheduler testScheduler = new TestScheduler();
+        when(firebaseUserRepository.getToken()).thenReturn(Single.just(TOKEN));
+        testScheduler = new TestScheduler();
         userService = new UserService(userRepository, firebaseUserRepository, testScheduler, testScheduler);
     }
 
@@ -69,22 +79,34 @@ public class UserServiceTest {
     }
 
     @Test
-    public void test_1() {
-        when(firebaseUser.getUid()).thenReturn("bilbo");
-        when(userRepository.findMaybeByUid(argThat("bilbo"::equals))).thenReturn(Maybe.empty());
+    public void testCreation() {
+        when(firebaseUser.getUid()).thenReturn(BILBO);
+        when(userRepository.singleSave(any())).thenReturn(Single.just(createUser(BILBO)));
+        when(userRepository.findMaybeByUid(argThat(BILBO::equals))).thenReturn(Maybe.empty());
 
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
+
+        testScheduler.triggerActions();
+
         testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+        testObserver.assertValue(userEntity -> userEntity.getUid().equals(BILBO));
     }
 
     @Test
-    public void test_2() {
-        when(firebaseUser.getUid()).thenReturn("frodo");
-        when(userRepository.findMaybeByUid(argThat("frodo"::equals))).thenReturn(Maybe.just(new UserEntity()));
+    public void testUpdate() {
+        when(firebaseUser.getUid()).thenReturn(FRODO);
+        when(userRepository.singleSave(argThat(argument -> FRODO.equals(argument.getUid())))).thenReturn(Single.just(createUser(FRODO)));
+        when(userRepository.findMaybeByUid(argThat(FRODO::equals))).thenReturn(Maybe.just(new UserEntity()));
 
         TestObserver<UserEntity> testObserver = new TestObserver<>();
         userService.saveSingleUserFromFirebase(firebaseUser).subscribe(testObserver);
+
+        testScheduler.triggerActions();
+
         testObserver.assertNoErrors();
+        testObserver.assertValueCount(1);
+        testObserver.assertValue(userEntity -> userEntity.getUid().equals(FRODO));
     }
 }

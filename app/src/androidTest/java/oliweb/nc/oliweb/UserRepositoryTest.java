@@ -72,20 +72,19 @@ public class UserRepositoryTest {
     private UserRepository mockUserRepository;
 
     @Mock
-    FirebaseUserRepository mockFirebaseUserRepository;
-
-    private UserRepository userRepository;
+    private FirebaseUserRepository mockFirebaseUserRepository;
 
     @Mock
     private FirebaseUser mockUser;
 
+    private UserRepository userRepository;
     private UserService userService;
-
     private TestScheduler testScheduler;
+    private Context appContext;
 
     @Before
     public void init() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        appContext = InstrumentationRegistry.getTargetContext();
 
         ContextModule contextModule = new ContextModule(appContext);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
@@ -93,7 +92,7 @@ public class UserRepositoryTest {
 
         testScheduler = new TestScheduler();
 
-        UserEntity userEntity= new UserEntity();
+        UserEntity userEntity = new UserEntity();
         userEntity.setIdUser(1L);
         userEntity.setUid(UID_USER);
         userEntity.setEmail(USER_EMAIL);
@@ -118,7 +117,7 @@ public class UserRepositoryTest {
 
     @After
     public void deleteDatabase() {
-        test_deleteAll();
+        UtilityTest.cleanBase(appContext);
     }
 
     private void test_deleteAll() {

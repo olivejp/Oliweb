@@ -5,47 +5,36 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import javax.inject.Inject;
 
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.service.sync.SyncService;
-import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 
 public class ProfilViewModel extends AndroidViewModel {
 
-    private UserRepository userRepository;
-    private FirebaseChatRepository firebaseChatRepository;
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private FirebaseMessageService firebaseMessageService;
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    FirebaseChatRepository firebaseChatRepository;
+
+    @Inject
+    FirebaseAnnonceRepository firebaseAnnonceRepository;
+
+    @Inject
+    FirebaseMessageService firebaseMessageService;
 
     public ProfilViewModel(@NonNull Application application) {
         super(application);
-
-        ContextModule contextModule = new ContextModule(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
-
-        firebaseMessageService = componentFbServices.getFirebaseMessageService();
-
-        userRepository = component.getUserRepository();
-        firebaseChatRepository = componentFb.getFirebaseChatRepository();
-        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
+        ((App) application).getDatabaseRepositoriesComponent().inject(this);
+        ((App) application).getFirebaseServicesComponent().inject(this);
+        ((App) application).getFirebaseRepositoriesComponent().inject(this);
     }
 
     public LiveData<Long> getFirebaseUserNbMessagesCount(String uidUser) {
@@ -64,19 +53,7 @@ public class ProfilViewModel extends AndroidViewModel {
         return this.userRepository.findByUid(uidUser);
     }
 
-    public Single<AtomicBoolean> saveUtilisateur(UserEntity userEntity) {
-        return Single.create(emitter -> {
-            userEntity.setStatut(StatusRemote.TO_SEND);
-            this.userRepository.singleSave(userEntity)
-                    .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
-                    .doOnError(emitter::onError)
-                    .doOnSuccess(utilisateurEntity1 -> {
-                        if (NetworkReceiver.checkConnection(getApplication())) {
-                            SyncService.launchSynchroForUser(getApplication());
-                        }
-                        emitter.onSuccess(new AtomicBoolean(true));
-                    })
-                    .subscribe();
-        });
+    public Single<UserEntity> markAsToSend(UserEntity userEntity) {
+        return this.userRepository.markAsToSend(userEntity).subscribeOn(Schedulers.io());
     }
 }

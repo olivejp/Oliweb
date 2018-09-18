@@ -15,8 +15,11 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -31,15 +34,6 @@ import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
-import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
-import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
-import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
-import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
@@ -52,17 +46,32 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = MainActivityViewModel.class.getName();
 
-    private AnnonceFullRepository annonceFullRepository;
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
-    private FirebaseRetrieverService firebaseRetrieverService;
-    private AnnonceRepository annonceRepository;
-    private UserRepository userRepository;
-    private AnnonceService annonceService;
-    private UserService userService;
+    @Inject
+    AnnonceFullRepository annonceFullRepository;
+
+    @Inject
+    FirebaseAnnonceRepository firebaseAnnonceRepository;
+
+    @Inject
+    FirebaseRetrieverService firebaseRetrieverService;
+
+    @Inject
+    AnnonceRepository annonceRepository;
+
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    ChatRepository chatRepository;
+
+    @Inject
+    AnnonceService annonceService;
+
+    @Inject
+    UserService userService;
+
     private UserEntity userConnected;
     private boolean isNetworkAvailable;
-
-    private ChatRepository chatRepository;
     private MutableLiveData<Integer> sorting;
     private MutableLiveData<UserEntity> liveUserConnected;
     private MutableLiveData<AtomicBoolean> liveNetworkAvailable;
@@ -82,20 +91,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         intentLocalDbService = new Intent(application, DatabaseSyncListenerService.class);
         intentFirebaseDbService = new Intent(application, FirebaseSyncListenerService.class);
 
-        ContextModule contextModule = new ContextModule(application);
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
-        ServicesComponent componentServices = DaggerServicesComponent.builder().contextModule(contextModule).build();
-        FirebaseServicesComponent componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
-        FirebaseRepositoriesComponent componentFb = DaggerFirebaseRepositoriesComponent.builder().build();
-
-        annonceRepository = component.getAnnonceRepository();
-        annonceFullRepository = component.getAnnonceFullRepository();
-        userRepository = component.getUserRepository();
-        chatRepository = component.getChatRepository();
-        firebaseAnnonceRepository = componentFb.getFirebaseAnnonceRepository();
-        firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
-        annonceService = componentServices.getAnnonceService();
-        userService = componentServices.getUserService();
+        ((App) application).getDatabaseRepositoriesComponent().inject(this);
+        ((App) application).getFirebaseRepositoriesComponent().inject(this);
+        ((App) application).getServicesComponent().inject(this);
+        ((App) application).getFirebaseServicesComponent().inject(this);
     }
 
     public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {

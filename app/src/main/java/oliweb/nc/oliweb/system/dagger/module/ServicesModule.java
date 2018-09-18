@@ -23,15 +23,17 @@ import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
+import oliweb.nc.oliweb.system.dagger.ApplicationContext;
 
 @Module(includes = {ContextModule.class,
+        SchedulerModule.class,
         DatabaseRepositoriesModule.class,
         FirebaseServicesModule.class})
 public class ServicesModule {
 
     @Provides
     @Singleton
-    public AnnonceService annonceService(Context context,
+    public AnnonceService annonceService(@ApplicationContext Context context,
                                          AnnonceRepository annonceRepository,
                                          AnnonceWithPhotosRepository annonceWithPhotosRepository,
                                          FirebasePhotoStorage firebasePhotoStorage,

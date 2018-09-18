@@ -28,11 +28,11 @@ import static oliweb.nc.oliweb.UtilityTest.waitTerminalEvent;
 public class ChatRepositoryTest {
 
     private ChatRepository chatRepository;
-
+    private Context appContext;
 
     @Before
     public void init() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        appContext = InstrumentationRegistry.getTargetContext();
         ContextModule contextModule = new ContextModule(appContext);
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
         chatRepository = component.getChatRepository();
