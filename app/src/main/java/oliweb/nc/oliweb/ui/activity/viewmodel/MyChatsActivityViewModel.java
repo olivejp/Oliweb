@@ -17,7 +17,7 @@ import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
@@ -89,7 +89,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return chatRepository.findByUidAnnonceAndStatusNotInWithOrderByTitreAnnonce(annonce.getUid(), Utility.allStatusToAvoid());
     }
 
-    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+    public LiveDataOnce<AnnonceFirebase> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
         return business.findLiveFirebaseByUidAnnonce(uidAnnonce);
     }
 

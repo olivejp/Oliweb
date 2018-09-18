@@ -26,7 +26,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
@@ -39,13 +39,13 @@ public class FirebaseAnnonceRepository {
     private DatabaseReference annonceRef;
     private FirebaseUtilityService utilityService;
 
-    private GenericTypeIndicator<HashMap<String, AnnonceDto>> genericClass;
+    private GenericTypeIndicator<HashMap<String, AnnonceFirebase>> genericClass;
 
     @Inject
     public FirebaseAnnonceRepository(FirebaseUtilityService firebaseUtilityService) {
         utilityService = firebaseUtilityService;
         annonceRef = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
-        genericClass = new GenericTypeIndicator<HashMap<String, AnnonceDto>>() {
+        genericClass = new GenericTypeIndicator<HashMap<String, AnnonceFirebase>>() {
         };
     }
 
@@ -76,12 +76,12 @@ public class FirebaseAnnonceRepository {
     }
 
     /**
-     * Will emits all the AnnonceDto from Firebase for a given uid User
+     * Will emits all the AnnonceFirebase from Firebase for a given uid User
      *
      * @param uidUser uid of the user, we're looking for
-     * @return Observable<AnnonceDto> wich will emit AnnonceDto
+     * @return Observable<AnnonceFirebase> wich will emit AnnonceFirebase
      */
-    public Observable<AnnonceDto> observeAllAnnonceByUidUser(String uidUser) {
+    public Observable<AnnonceFirebase> observeAllAnnonceByUidUser(String uidUser) {
         Log.d(TAG, "Starting observeAllAnnonceByUidUser uidUser : " + uidUser);
         return Observable.create(emitter -> queryByUidUser(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -91,13 +91,13 @@ public class FirebaseAnnonceRepository {
                     return;
                 }
 
-                HashMap<String, AnnonceDto> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
+                HashMap<String, AnnonceFirebase> mapAnnonceSearchDto = dataSnapshot.getValue(genericClass);
                 if (mapAnnonceSearchDto == null || mapAnnonceSearchDto.isEmpty()) {
                     emitter.onError(new RuntimeException("MapAnnonceSearchDto is empty"));
                     return;
                 }
 
-                for (Map.Entry<String, AnnonceDto> entry : mapAnnonceSearchDto.entrySet()) {
+                for (Map.Entry<String, AnnonceFirebase> entry : mapAnnonceSearchDto.entrySet()) {
                     emitter.onNext(entry.getValue());
                 }
                 emitter.onComplete();
@@ -115,16 +115,16 @@ public class FirebaseAnnonceRepository {
      * Retrieve an annonce on Firebase Database based on its uidAnnonce
      *
      * @param uidAnnonce to retrieve
-     * @return AnnonceDto
+     * @return AnnonceFirebase
      */
-    public Maybe<AnnonceDto> findMaybeByUidAnnonce(String uidAnnonce) {
+    public Maybe<AnnonceFirebase> findMaybeByUidAnnonce(String uidAnnonce) {
         Log.d(TAG, "Starting findMaybeByUidAnnonce uidAnnonce : " + uidAnnonce);
         return Maybe.create(e -> annonceRef.child(uidAnnonce).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        AnnonceDto annonceDto = dataSnapshot.getValue(AnnonceDto.class);
-                        if (annonceDto != null) {
-                            e.onSuccess(annonceDto);
+                        AnnonceFirebase annonceFirebase = dataSnapshot.getValue(AnnonceFirebase.class);
+                        if (annonceFirebase != null) {
+                            e.onSuccess(annonceFirebase);
                         } else {
                             e.onComplete();
                         }
@@ -170,19 +170,19 @@ public class FirebaseAnnonceRepository {
     /**
      * Insert or Update an annonce into the Firebase Database
      *
-     * @param annonceDto
+     * @param annonceFirebase
      * @return UID de l'annonce DTO enregistré
      */
-    public Single<String> saveAnnonceToFirebase(AnnonceDto annonceDto) {
-        Log.d(TAG, "Starting saveAnnonceToFirebase annonceDto : " + annonceDto);
+    public Single<String> saveAnnonceToFirebase(AnnonceFirebase annonceFirebase) {
+        Log.d(TAG, "Starting saveAnnonceToFirebase annonceFirebase : " + annonceFirebase);
         return Single.create(emitter -> {
-            if (annonceDto == null) {
-                emitter.onError((new RuntimeException("Can't save null annonceDto object to Firebase")));
-            } else if (annonceDto.getUuid() == null || annonceDto.getUuid().isEmpty()) {
+            if (annonceFirebase == null) {
+                emitter.onError((new RuntimeException("Can't save null annonceFirebase object to Firebase")));
+            } else if (annonceFirebase.getUuid() == null || annonceFirebase.getUuid().isEmpty()) {
                 emitter.onError((new RuntimeException("UID is mandatory to save in Firebase")));
             } else {
-                annonceRef.child(annonceDto.getUuid()).setValue(annonceDto)
-                        .addOnSuccessListener(o -> emitter.onSuccess(annonceDto.getUuid()))
+                annonceRef.child(annonceFirebase.getUuid()).setValue(annonceFirebase)
+                        .addOnSuccessListener(o -> emitter.onSuccess(annonceFirebase.getUuid()))
                         .addOnFailureListener(emitter::onError);
             }
         });

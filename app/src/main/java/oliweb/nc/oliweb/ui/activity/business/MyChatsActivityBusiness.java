@@ -10,7 +10,7 @@ import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
@@ -40,8 +40,8 @@ public class MyChatsActivityBusiness {
         this.androidScheduler = androidScheduler;
     }
 
-    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
-        CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
+    public LiveDataOnce<AnnonceFirebase> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnonceFirebase> customLiveData = new CustomLiveData<>();
         firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnSuccess(customLiveData::postValue)

@@ -27,8 +27,8 @@ import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
@@ -57,7 +57,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         ADD_FAILED
     }
 
-    private GenericTypeIndicator<ElasticsearchResult<AnnonceDto>> genericClassDetail;
+    private GenericTypeIndicator<ElasticsearchResult<AnnonceFirebase>> genericClassDetail;
 
     @Inject
     AnnonceService annonceService;
@@ -86,7 +86,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 if (dataSnapshot.child("results").exists()) {
                     DataSnapshot snapshotResults = dataSnapshot.child("results");
                     for (DataSnapshot child : snapshotResults.getChildren()) {
-                        ElasticsearchResult<AnnonceDto> elasticsearchResult = child.getValue(genericClassDetail);
+                        ElasticsearchResult<AnnonceFirebase> elasticsearchResult = child.getValue(genericClassDetail);
                         if (elasticsearchResult != null) {
                             AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
                             listAnnonce.add(annonceFull);
@@ -115,7 +115,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
         requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
         listAnnonce = new ArrayList<>();
-        genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceDto>>() {
+        genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceFirebase>>() {
         };
     }
 
