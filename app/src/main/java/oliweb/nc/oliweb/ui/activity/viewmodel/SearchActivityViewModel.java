@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -155,6 +156,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         updateLoadingStatus(true);
         utilityService.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .timeout(30, TimeUnit.SECONDS)
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
                     updateLoadingStatus(false);
@@ -199,6 +201,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         updateLoadingStatus(true);
         utilityService.getServerTimestamp()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .timeout(30, TimeUnit.SECONDS)
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
                     updateLoadingStatus(false);

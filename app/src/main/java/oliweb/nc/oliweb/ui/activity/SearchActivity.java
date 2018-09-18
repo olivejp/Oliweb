@@ -163,7 +163,9 @@ public class SearchActivity extends AppCompatActivity {
             }
             if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
                 listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
-                initAdapter(listAnnonce);
+                if (listAnnonce != null) {
+                    initAdapter(listAnnonce);
+                }
             }
             if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
                 direction = savedInstanceState.getInt(SAVED_DIRECTION);
