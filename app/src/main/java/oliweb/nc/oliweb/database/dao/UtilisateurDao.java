@@ -58,6 +58,10 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
     public abstract Flowable<UserEntity> getAllUtilisateursByStatus(List<String> statutList);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
-    public abstract Single<List<UserEntity>> findAllByStatus(List<String> statutList);
+    @Query("SELECT * FROM utilisateur WHERE uid = :uid")
+    public abstract Single<UserEntity> findSingleByUid(String uid);
+
+    @Transaction
+    @Query("SELECT * FROM utilisateur WHERE uid = :uid")
+    public abstract Flowable<UserEntity> findFlowableByUid(String uid);
 }

@@ -65,7 +65,7 @@ public class DatabaseSyncListenerService extends Service {
         disposables.add(scheduleSync.getFlowableMessageToSend().subscribe());
 
         // Envoi tous les utilisateurs
-        disposables.add(scheduleSync.getFlowableUserToSend().subscribe());
+        disposables.add(scheduleSync.getFlowableUserToSend(uidUser).subscribe());
 
         // DELETERS
         // Suppression des annonces

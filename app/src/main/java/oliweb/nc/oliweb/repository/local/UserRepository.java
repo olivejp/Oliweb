@@ -39,6 +39,10 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
         return this.utilisateurDao.findMaybeByUid(uuidUtilisateur);
     }
 
+    public Flowable<UserEntity> findFlowableByUid(String uuidUtilisateur) {
+        return this.utilisateurDao.findFlowableByUid(uuidUtilisateur);
+    }
+
     public Maybe<UserEntity> findMaybeFavoriteByUid(String uuidUtilisateur) {
         return this.utilisateurDao.findMaybeFavoriteByUid(uuidUtilisateur);
     }
@@ -55,12 +59,17 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
         return utilisateurDao.getAllUtilisateursByStatus(status);
     }
 
-    public Single<List<UserEntity>> findAllByStatus(List<String> status) {
-        return utilisateurDao.findAllByStatus(status);
+    public Single<UserEntity> findSingleByUid(String uid) {
+        return utilisateurDao.findSingleByUid(uid);
     }
 
     public Single<UserEntity> markAsToSend(UserEntity userEntity) {
         userEntity.setStatut(StatusRemote.TO_SEND);
+        return this.singleSave(userEntity);
+    }
+
+    public Single<UserEntity> markAsSend(UserEntity userEntity) {
+        userEntity.setStatut(StatusRemote.SEND);
         return this.singleSave(userEntity);
     }
 }

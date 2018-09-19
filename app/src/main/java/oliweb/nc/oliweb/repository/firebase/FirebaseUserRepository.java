@@ -30,9 +30,13 @@ public class FirebaseUserRepository {
     }
 
     public Single<UserEntity> insertUserIntoFirebase(UserEntity userEntity) {
+        Log.d(TAG, "Try to insert this user in firebase " + userEntity);
         return Single.create(emitter -> userRef.child(userEntity.getUid()).setValue(userEntity)
                 .addOnSuccessListener(aVoid -> emitter.onSuccess(userEntity))
-                .addOnFailureListener(emitter::onError)
+                .addOnFailureListener(error -> {
+                    Log.e(TAG, "Fail to send this user " + userEntity);
+                    emitter.onError(error);
+                })
         );
     }
 
