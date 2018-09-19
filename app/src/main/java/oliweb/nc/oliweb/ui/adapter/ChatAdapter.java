@@ -148,15 +148,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return listChats.size();
     }
 
-    private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity model) {
+    private void retreivePhoto(@NonNull ChatViewHolder holder, @NonNull ChatEntity chat) {
 
         if (mapUrlByUtilisateur == null || mapUrlByUtilisateur.isEmpty()) {
             holder.imagePhotoAuthor.setImageResource(R.drawable.ic_person_grey_900_48dp);
             return;
         }
 
-        String uidUser = firebaseUserUid;
-        UserEntity userEntity = mapUrlByUtilisateur.get(model.getUidBuyer().equals(uidUser) ? model.getUidSeller() : model.getUidBuyer());
+        String uidCurrentUser = firebaseUserUid;
+        String uidOtherUser = chat.getUidBuyer().equals(uidCurrentUser) ? chat.getUidSeller() : chat.getUidBuyer();
+        UserEntity userEntity = mapUrlByUtilisateur.get(uidOtherUser);
         if (userEntity != null) {
             String urlPhoto = userEntity.getPhotoUrl();
             if (urlPhoto != null && !urlPhoto.isEmpty()) {

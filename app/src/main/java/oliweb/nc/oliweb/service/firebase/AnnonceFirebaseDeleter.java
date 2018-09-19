@@ -73,7 +73,6 @@ public class AnnonceFirebaseDeleter {
     private Observable<AtomicBoolean> deleteAnnonceAllService(AnnonceFull annonceFull) {
         Log.d(TAG, "Starting deleteAnnonceAllService annonceFull : " + annonceFull);
         return firebaseAnnonceRepository.delete(annonceFull.getAnnonce().getUid())
-                .doOnError(exception -> annonceRepository.markAsFailedToDelete(annonceFull.getAnnonce()).subscribe())
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         annonceRepository.delete(dataReturn -> {
@@ -87,6 +86,7 @@ public class AnnonceFirebaseDeleter {
                         Log.e(TAG, "Failed to delete from the local DB");
                     }
                 })
+                .doOnError(exception -> annonceRepository.markAsFailedToDelete(annonceFull.getAnnonce()).subscribe())
                 .toObservable();
     }
 

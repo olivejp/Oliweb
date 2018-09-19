@@ -34,9 +34,9 @@ public class MyChatsActivityBusiness {
     public MyChatsActivityBusiness(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                    ChatRepository chatRepository,
                                    @Named("processScheduler")
-                                   Scheduler processScheduler,
+                                           Scheduler processScheduler,
                                    @Named("androidScheduler")
-                                   Scheduler androidScheduler) {
+                                           Scheduler androidScheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.chatRepository = chatRepository;
         this.processScheduler = processScheduler;
@@ -81,20 +81,9 @@ public class MyChatsActivityBusiness {
      * @return
      */
     public Single<ChatEntity> findOrCreateLiveNewChat(String uidUser, AnnonceEntity annonce) {
-        return Single.create(emitter ->
-                chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
-                        .subscribeOn(processScheduler).observeOn(processScheduler)
-                        .doOnSuccess(emitter::onSuccess)
-                        .doOnComplete(() ->
-                                chatRepository.singleSave(initializeNewChatEntity(uidUser, annonce))
-                                        .subscribeOn(processScheduler).observeOn(processScheduler)
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(emitter::onSuccess)
-                                        .subscribe()
-                        )
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .subscribe()
-        );
+        return chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .switchIfEmpty(chatRepository.singleSave(initializeNewChatEntity(uidUser, annonce)))
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e));
     }
-
 }

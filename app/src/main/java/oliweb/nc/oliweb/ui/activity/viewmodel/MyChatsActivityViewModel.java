@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -63,6 +64,10 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
     @Inject
     FirebaseChatService fbChatService;
+
+    @Inject
+    @Named("processScheduler")
+    Scheduler processScheduler;
 
     public MyChatsActivityViewModel(@NonNull Application application) {
         super(application);
@@ -125,7 +130,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
         selectedIdChat = idChat;
         chatRepository.findById(idChat)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnSuccess(chatEntity -> currentChat = chatEntity)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
@@ -134,7 +139,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     public void rechercheMessageByUidChat(String uidChat) {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
         chatRepository.findByUid(uidChat)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnSuccess(chatEntity -> {
                     currentChat = chatEntity;
                     selectedIdChat = chatEntity.getIdChat();
@@ -160,7 +165,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     public LiveDataOnce<ChatEntity> findOrCreateLiveNewChat() {
         CustomLiveData<ChatEntity> chatEntityCustomLiveData = new CustomLiveData<>();
         business.findOrCreateLiveNewChat(firebaseUserUid, annonce)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnSuccess(chatFound -> {
                     currentChat = chatFound;
                     selectedIdChat = chatFound.getIdChat();
@@ -193,10 +198,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         messageEntity.setTimestamp(Long.MAX_VALUE);
 
         messageRepository.singleSave(messageEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .map(messageEntity1 -> new AtomicBoolean(true))
-                .doOnSuccess(atomicBooleanCustomLiveData::postValue)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .doOnSuccess(atomicBoolean -> atomicBooleanCustomLiveData.postValue(new AtomicBoolean(true)))
+                .doOnError(e -> {
+                    atomicBooleanCustomLiveData.postValue(new AtomicBoolean(false));
+                    Log.e(TAG, e.getLocalizedMessage(), e);
+                })
                 .subscribe();
 
         return atomicBooleanCustomLiveData;
@@ -212,7 +219,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
      */
     public void getPhotoUrlsByUidUser() {
         this.fbChatService.getPhotoUrlsByUidUser(firebaseUserUid)
-                .observeOn(Schedulers.io()).subscribeOn(Schedulers.io())
+                .observeOn(processScheduler).subscribeOn(processScheduler)
                 .doOnSuccess(map -> liveDataPhotoUrlUsers.postValue(map))
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();

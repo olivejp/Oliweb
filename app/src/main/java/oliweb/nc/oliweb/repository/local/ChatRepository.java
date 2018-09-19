@@ -54,6 +54,10 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return this.chatDao.findFlowableByUidUserAndStatusIn(uidBuyerOrSeller, status);
     }
 
+    public Single<List<ChatEntity>> findObservableByUidUserAndStatusIn(String uidBuyerOrSeller, List<String> status) {
+        return this.chatDao.findObservableByUidUserAndStatusIn(uidBuyerOrSeller, status);
+    }
+
     public Maybe<ChatEntity> findByUidUserAndUidAnnonce(String uidUser, String uidAnnonce) {
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }

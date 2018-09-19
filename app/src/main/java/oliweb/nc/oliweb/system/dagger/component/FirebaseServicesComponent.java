@@ -3,9 +3,8 @@ package oliweb.nc.oliweb.system.dagger.component;
 import javax.inject.Singleton;
 
 import dagger.Component;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
+import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseServicesModule;
@@ -15,19 +14,14 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
-import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 @Component(modules = {FirebaseServicesModule.class, SchedulerModule.class})
 @Singleton
 public interface FirebaseServicesComponent {
 
-    FirebaseChatService getFirebaseChatService();
-
-    AnnonceFirebaseSender getAnnonceFirebaseSender();
-
     FirebaseMessageService getFirebaseMessageService();
 
-    FirebaseUtilityService getFirebaseUtilityService();
+    FirebaseRetrieverService getFirebaseRetrieverService();
 
     void inject(DatabaseSyncListenerService databaseSyncListenerService);
 

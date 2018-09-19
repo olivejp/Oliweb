@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
@@ -30,16 +31,18 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     private PhotoRepository photoRepository;
     private ChatRepository chatRepository;
+    private Scheduler processScheduler;
 
     private AnnonceDao annonceDao;
 
     @Inject
-    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository) {
+    public AnnonceRepository(Context context, PhotoRepository photoRepository, ChatRepository chatRepository, @Named("processScheduler") Scheduler processScheduler) {
         super(context);
         this.dao = this.db.getAnnonceDao();
         this.annonceDao = (AnnonceDao) this.dao;
         this.photoRepository = photoRepository;
         this.chatRepository = chatRepository;
+        this.processScheduler = processScheduler;
     }
 
     public LiveData<AnnonceEntity> findLiveById(long idAnnonce) {
@@ -59,8 +62,8 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return annonceDao.findFlowableByUidUserAndStatusIn(uidUser, status);
     }
 
-    public Single<List<AnnonceEntity>> findAllByStatus(List<String> status) {
-        return this.annonceDao.getAllAnnonceByStatus(status);
+    public Single<List<AnnonceEntity>> findSingleByUidUserAndStatusIn(String uidUser, List<String> status) {
+        return annonceDao.findSingleByUidUserAndStatusIn(uidUser, status);
     }
 
     public LiveData<Integer> countAllAnnoncesByUser(String uidUser, List<String> statusToAvoid) {
@@ -96,6 +99,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
+    // TODO peut mieux faire
     public Single<AtomicBoolean> markAsToDelete(Long idAnnonce) {
         return Single.create(emitter ->
                 findById(idAnnonce)
@@ -104,10 +108,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
                         .switchMap(this::markAsToDelete)
                         .doOnNext(annonceEntity -> {
                             photoRepository.markToDeleteByAnnonce(annonceEntity)
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .subscribeOn(processScheduler).observeOn(processScheduler)
                                     .subscribe();
                             chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .subscribeOn(processScheduler).observeOn(processScheduler)
                                     .subscribe();
                             emitter.onSuccess(new AtomicBoolean(true));
                         })
@@ -118,7 +122,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {
         annonceEntity.setStatut(StatusRemote.SENDING);
         return this.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -126,7 +130,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsSend(AnnonceEntity annonceEntity) {
         annonceEntity.setStatut(StatusRemote.SEND);
         return this.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -134,7 +138,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     private Observable<AnnonceEntity> markAsToDelete(AnnonceEntity annonceEntity) {
         annonceEntity.setStatut(StatusRemote.TO_DELETE);
         return this.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -142,7 +146,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsFailedToSend(AnnonceEntity annonceEntity) {
         annonceEntity.setStatut(StatusRemote.FAILED_TO_SEND);
         return this.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }
@@ -150,7 +154,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
     public Observable<AnnonceEntity> markAsFailedToDelete(AnnonceEntity annonceEntity) {
         annonceEntity.setStatut(StatusRemote.FAILED_TO_DELETE);
         return this.singleSave(annonceEntity)
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .toObservable();
     }

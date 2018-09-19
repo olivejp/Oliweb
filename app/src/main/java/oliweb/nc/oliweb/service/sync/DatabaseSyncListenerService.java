@@ -12,20 +12,6 @@ import javax.inject.Named;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
 import oliweb.nc.oliweb.App;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
-import oliweb.nc.oliweb.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.repository.local.ChatRepository;
-import oliweb.nc.oliweb.repository.local.MessageRepository;
-import oliweb.nc.oliweb.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
-import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-
-import static oliweb.nc.oliweb.utility.Utility.allStatusToDelete;
-import static oliweb.nc.oliweb.utility.Utility.allStatusToSend;
 
 /**
  * Created by orlanth23 on 14/05/2018.
@@ -40,34 +26,7 @@ public class DatabaseSyncListenerService extends Service {
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Inject
-    ChatRepository chatRepository;
-
-    @Inject
-    MessageRepository messageRepository;
-
-    @Inject
-    AnnonceRepository annonceRepository;
-
-    @Inject
-    UserRepository userRepository;
-
-    @Inject
-    PhotoRepository photoRepository;
-
-    @Inject
-    AnnonceFirebaseSender annonceFirebaseSender;
-
-    @Inject
-    AnnonceFirebaseDeleter annonceFirebaseDeleter;
-
-    @Inject
-    FirebaseMessageService firebaseMessageService;
-
-    @Inject
-    FirebaseChatService firebaseChatService;
-
-    @Inject
-    FirebaseUserRepository firebaseUserRepository;
+    ScheduleSync scheduleSync;
 
     @Inject
     @Named("processScheduler")
@@ -90,9 +49,6 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        ((App) getApplication()).getFirebaseServicesComponent().inject(this);
-        ((App) getApplication()).getFirebaseRepositoriesComponent().inject(this);
-        ((App) getApplication()).getDatabaseRepositoriesComponent().inject(this);
         ((App) getApplication()).getServicesComponent().inject(this);
 
         // Suppression des listeners
@@ -100,59 +56,23 @@ public class DatabaseSyncListenerService extends Service {
 
         // SENDERS
         // Envoi toutes les annonces
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToSend())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .distinct()
-                .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableAnnonceToSend(uidUser).subscribe());
 
         // Envoi tous les chats
-        disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToSend())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .distinct()
-                .doOnNext(firebaseChatService::sendNewChat)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableChat(uidUser).subscribe());
 
         // Envoi tous les messages
-        disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(allStatusToSend())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .toObservable()
-                .flatMapIterable(list -> list)
-                .distinct()
-                .switchMap(firebaseMessageService::sendMessage)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableMessageToSend().subscribe());
 
         // Envoi tous les utilisateurs
-        disposables.add(userRepository.getAllUtilisateursByStatus(allStatusToSend())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .flatMapSingle(firebaseUserRepository::insertUserIntoFirebase)
-                .flatMapSingle(userRepository::markAsToSend)
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableUserToSend().subscribe());
 
         // DELETERS
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToDelete())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .doOnNext(annonceFirebaseDeleter::processToDeleteAnnonce)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe());
+        // Suppression des annonces
+        disposables.add(scheduleSync.getFlowableAnnonceToDelete(uidUser).subscribe());
 
-        disposables.add(photoRepository.getAllPhotosByStatus(allStatusToDelete())
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .toObservable()
-                .map(photoEntity ->
-                        annonceFirebaseDeleter.deleteOnePhoto(photoEntity).toObservable()
-                                .subscribeOn(processScheduler).observeOn(processScheduler)
-                                .switchMap(atomicBoolean -> annonceRepository.findById(photoEntity.getIdAnnonce()).toObservable())
-                                .filter(annonceEntity -> annonceEntity.getStatut() == StatusRemote.SEND)
-                                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
-                                .subscribe()
-                )
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe());
+        // Suppression des photos
+        disposables.add(scheduleSync.getPhotoToDelete().subscribe());
 
         return START_NOT_STICKY;
     }
