@@ -55,12 +55,8 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
                 .subscribe());
     }
 
-    public Flowable<UserEntity> getAllUtilisateursByStatus(List<String> status) {
-        return utilisateurDao.getAllUtilisateursByStatus(status);
-    }
-
-    public Single<UserEntity> findSingleByUid(String uid) {
-        return utilisateurDao.findSingleByUid(uid);
+    public Single<UserEntity> findSingleByUidAndStatus(String uid, List<String> status) {
+        return utilisateurDao.findSingleByUidAndStatus(uid, status);
     }
 
     public Single<UserEntity> markAsToSend(UserEntity userEntity) {

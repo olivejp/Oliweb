@@ -165,10 +165,9 @@ public class ScheduleSync {
     }
 
     private Single<UserEntity> getSingleUserToSend(String uidUser) {
-        return userRepository.findSingleByUid(uidUser)
+        return userRepository.findSingleByUidAndStatus(uidUser, allStatusToSend())
                 .subscribeOn(processScheduler).observeOn(processScheduler)
-                .filter(userEntity -> allStatusToSend().contains(userEntity.getStatut().getValue()))
-                .flatMapSingle(firebaseUserRepository::insertUserIntoFirebase)
+                .flatMap(firebaseUserRepository::insertUserIntoFirebase)
                 .flatMap(userRepository::markAsSend)
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception));
     }
