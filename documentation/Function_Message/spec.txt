@@ -1,11 +1,9 @@
-Function_02 : Post an annonce
+Function_04 : Create a chat
 
-RG01 : User should be authenticated to post an annonce
-RG02 : Update of an annonce could be only possible if the author is the updater
-RG03 : Annonce may have a title, description, price, have been categorized
-RG04 : Annonce could only have as maximum 4 photos
+RG01 : User should be authenticated to create a chat
+RG02 : Only two persons can share on one chat
+RG03 : A chat is related to one annonce
+RG04 : If an annonce is deleted, then all the chat related to this annonce will be deleted
 
-Function Post annonce is only available for authenticated user.
-In the post annonce screen, he should fill the title, description and price fields.
-A default category is proposed but user can change it at any time.
-User can choose to attach an existing photo to its annonce through the chooser photo or to take an new picture.
+Function Create a chat is only available for authenticated user.
+In the annonce detail activity, buyer can choose to send a message (if the seller has chose this option)
