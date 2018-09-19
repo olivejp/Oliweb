@@ -7,9 +7,10 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
@@ -22,7 +23,9 @@ import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.utility.Utility.allStatusToDelete;
+import static oliweb.nc.oliweb.utility.Utility.allStatusToSend;
 
 /**
  * Created by orlanth23 on 14/05/2018.
@@ -66,6 +69,10 @@ public class DatabaseSyncListenerService extends Service {
     @Inject
     FirebaseUserRepository firebaseUserRepository;
 
+    @Inject
+    @Named("processScheduler")
+    Scheduler processScheduler;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -83,78 +90,68 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        ((App)getApplication()).getFirebaseServicesComponent().inject(this);
-        ((App)getApplication()).getFirebaseRepositoriesComponent().inject(this);
-        ((App)getApplication()).getDatabaseRepositoriesComponent().inject(this);
-        ((App)getApplication()).getServicesComponent().inject(this);
+        ((App) getApplication()).getFirebaseServicesComponent().inject(this);
+        ((App) getApplication()).getFirebaseRepositoriesComponent().inject(this);
+        ((App) getApplication()).getDatabaseRepositoriesComponent().inject(this);
+        ((App) getApplication()).getServicesComponent().inject(this);
 
         // Suppression des listeners
         disposables.clear();
 
         // SENDERS
         // Envoi toutes les annonces
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToSend())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .distinct()
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe());
 
         // Envoi tous les chats
-        disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
+        disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToSend())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .distinct()
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .doOnNext(firebaseChatService::sendNewChat)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe());
 
         // Envoi tous les messages
-        disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+        disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(allStatusToSend())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .toObservable()
                 .flatMapIterable(list -> list)
                 .distinct()
                 .switchMap(firebaseMessageService::sendMessage)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe());
 
         // Envoi tous les utilisateurs
-        disposables.add(userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+        disposables.add(userRepository.getAllUtilisateursByStatus(allStatusToSend())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .flatMapSingle(firebaseUserRepository::insertUserIntoFirebase)
+                .flatMapSingle(userRepository::markAsToSend)
                 .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
-                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                        .doOnSuccess(success -> {
-                            if (success.get()) {
-                                Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
-                                utilisateur.setStatut(StatusRemote.SEND);
-                                userRepository.singleSave(utilisateur)
-                                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                                        .subscribe();
-                            }
-                        })
-                )
                 .subscribe());
 
         // DELETERS
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, allStatusToDelete())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnNext(annonceFirebaseDeleter::processToDeleteAnnonce)
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe());
 
-        disposables.add(photoRepository.getAllPhotosByStatus(Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+        disposables.add(photoRepository.getAllPhotosByStatus(allStatusToDelete())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
                 .toObservable()
                 .map(photoEntity ->
                         annonceFirebaseDeleter.deleteOnePhoto(photoEntity).toObservable()
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .subscribeOn(processScheduler).observeOn(processScheduler)
                                 .switchMap(atomicBoolean -> annonceRepository.findById(photoEntity.getIdAnnonce()).toObservable())
                                 .filter(annonceEntity -> annonceEntity.getStatut() == StatusRemote.SEND)
                                 .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
                                 .subscribe()
                 )
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe());
 
         return START_NOT_STICKY;
