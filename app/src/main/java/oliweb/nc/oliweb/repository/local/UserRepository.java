@@ -55,8 +55,8 @@ public class UserRepository extends AbstractRepository<UserEntity, Long> {
                 .subscribe());
     }
 
-    public Single<UserEntity> findSingleByUidAndStatus(String uid, List<String> status) {
-        return utilisateurDao.findSingleByUidAndStatus(uid, status);
+    public Maybe<UserEntity> findMaybeByUidAndStatus(String uid, List<String> status) {
+        return utilisateurDao.findMaybeByUidAndStatus(uid, status);
     }
 
     public Single<UserEntity> markAsToSend(UserEntity userEntity) {

@@ -54,12 +54,8 @@ public abstract class UtilisateurDao implements AbstractDao<UserEntity, Long> {
     public abstract Single<Integer> countByUid(String uuidUtilisateur);
 
     @Transaction
-    @Query("SELECT * FROM utilisateur WHERE statut IN (:statutList)")
-    public abstract Flowable<UserEntity> getAllUtilisateursByStatus(List<String> statutList);
-
-    @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uid and statut IN (:statutList)")
-    public abstract Single<UserEntity> findSingleByUidAndStatus(String uid, List<String> statutList);
+    public abstract Maybe<UserEntity> findMaybeByUidAndStatus(String uid, List<String> statutList);
 
     @Transaction
     @Query("SELECT * FROM utilisateur WHERE uid = :uid")

@@ -7,9 +7,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Flowable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
-import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -164,12 +164,15 @@ public class ScheduleSync {
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e));
     }
 
-    private Single<UserEntity> getSingleUserToSend(String uidUser) {
-        return userRepository.findSingleByUidAndStatus(uidUser, allStatusToSend())
+    private Maybe<UserEntity> getSingleUserToSend(String uidUser) {
+        return userRepository.findMaybeByUidAndStatus(uidUser, allStatusToSend())
                 .subscribeOn(processScheduler).observeOn(processScheduler)
-                .flatMap(firebaseUserRepository::insertUserIntoFirebase)
-                .flatMap(userRepository::markAsSend)
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception));
+                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                .doOnSuccess(userEntity -> firebaseUserRepository.insertUserIntoFirebase(userEntity)
+                        .subscribeOn(processScheduler).observeOn(processScheduler)
+                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                        .flatMap(userRepository::markAsSend)
+                        .subscribe());
     }
 
     private void sendAnnonces(String uidUser) {
