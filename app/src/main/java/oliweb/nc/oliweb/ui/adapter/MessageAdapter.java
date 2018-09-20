@@ -32,8 +32,6 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final String TAG = MessageAdapter.class.getName();
-
     private static final int TYPE_OWNER = 100;
     private static final int TYPE_CLIENT = 200;
 
@@ -100,7 +98,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     MessageEntity oldMessage = messageEntities.get(oldItemPosition);
                     return newMessage.getMessage().equals(oldMessage.getMessage())
                             && newMessage.getUidAuthor().equals(oldMessage.getUidAuthor())
-                            && (newMessage.getTimestamp() != null && oldMessage.getTimestamp() != null && newMessage.getTimestamp().equals(oldMessage.getTimestamp()));
+                            && (newMessage.getTimestamp() != null && oldMessage.getTimestamp() != null && newMessage.getTimestamp().equals(oldMessage.getTimestamp())
+                            && newMessage.getStatusRemote().equals(oldMessage.getStatusRemote()));
                 }
             });
             this.messageEntities = list;
