@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb;
 
-import junit.framework.Assert;
+import com.google.gson.JsonObject;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +13,10 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.fail;
 
 @RunWith(JUnit4.class)
 public class ElasticsearchUnitTest {
@@ -31,9 +35,9 @@ public class ElasticsearchUnitTest {
 
         elasticsearchQueryBuilder.addSortingFields("datePublication", "ASC");
 
-        String valueReturned = elasticsearchQueryBuilder.build();
-        Assert.assertNotNull(valueReturned);
-        Assert.assertEquals("{\"from\":2,\"size\":10,\"query\":{\"multi_match\":{\"query\":\"recherche\",\"fields\":[\"titre\",\"description\"]}},\"sort\":[{\"datePublication\":{\"order\":\"ASC\"}}]}", valueReturned);
+        JsonObject valueReturned = elasticsearchQueryBuilder.build();
+        assertNotNull(valueReturned);
+        assertEquals("{\"from\":2,\"size\":10,\"query\":{\"multi_match\":{\"query\":\"recherche\",\"fields\":[\"titre\",\"description\"]}},\"sort\":[{\"datePublication\":{\"order\":\"ASC\"}}]}", valueReturned.getAsString());
     }
 
     @Test
@@ -52,7 +56,7 @@ public class ElasticsearchUnitTest {
                 .subscribe(subscriber);
 
         if (!subscriber.awaitTerminalEvent(5, TimeUnit.SECONDS)) {
-            Assert.fail();
+            fail();
         } else {
             subscriber.assertNoErrors();
             subscriber.assertComplete();
