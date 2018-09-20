@@ -11,10 +11,11 @@ import java.util.List;
 public class ElasticsearchQueryBuilder {
     private JsonObject jsonRequest;
 
-    private void checkJsonObjectExist() {
+    private JsonObject checkJsonObjectExist() {
         if (jsonRequest == null) {
             jsonRequest = new JsonObject();
         }
+        return jsonRequest;
     }
 
     private void checkJsonSortArray() {
@@ -23,6 +24,20 @@ public class ElasticsearchQueryBuilder {
             JsonArray sort = new JsonArray();
             jsonRequest.add("sort", sort);
         }
+    }
+
+    private JsonArray initMustFromQuery() {
+        checkJsonObjectExist();
+
+        if (!jsonRequest.has("query")) {
+            JsonObject bool = new JsonObject();
+            bool.add("must", new JsonArray());
+            JsonObject query = new JsonObject();
+            query.add("bool", bool);
+            jsonRequest.add("query", query);
+        }
+
+        return jsonRequest.get("query").getAsJsonObject().get("bool").getAsJsonObject().get("must").getAsJsonArray();
     }
 
     public ElasticsearchQueryBuilder setTimestamp(Long timestamp) {
@@ -43,8 +58,19 @@ public class ElasticsearchQueryBuilder {
         return this;
     }
 
+
+    /**
+     * "multi_match":   {
+     * "query":"query",
+     * "fields":["field1", "field2",...]
+     * }
+     *
+     * @param fields
+     * @param query
+     * @return
+     */
     public ElasticsearchQueryBuilder setMultiMatchQuery(List<String> fields, String query) {
-        checkJsonObjectExist();
+        JsonArray must = initMustFromQuery();
 
         JsonArray jsonFieldArray = new JsonArray();
         for (String field : fields) {
@@ -55,28 +81,106 @@ public class ElasticsearchQueryBuilder {
         jsonMultiMatch.addProperty("query", query);
         jsonMultiMatch.add("fields", jsonFieldArray);
 
-        JsonObject jsonQuery = new JsonObject();
-        jsonQuery.add("multi_match", jsonMultiMatch);
-        jsonRequest.add("query", jsonQuery);
+        JsonObject multiMatch = new JsonObject();
+        multiMatch.add("multi_match", jsonMultiMatch);
+
+        must.add(multiMatch);
         return this;
     }
 
-    public ElasticsearchQueryBuilder setCategorie(String libelleCategorie) {
-        checkJsonObjectExist();
-        jsonRequest.addProperty("categorie", libelleCategorie);
+    /**
+     * "bool":{
+     * "should":[
+     * {
+     * "match":{
+     * "categorie.libelle":"Fleur"
+     * }
+     * },
+     * {
+     * "match":{
+     * "categorie.libelle":"Automobile"
+     * }
+     * }
+     * ]
+     * }
+     *
+     * @param libelleCategorie
+     * @return
+     */
+    public ElasticsearchQueryBuilder setCategorie(List<String> libelleCategorie) {
+        JsonArray must = initMustFromQuery();
+
+        JsonArray should = new JsonArray();
+
+        for (String labelCategory : libelleCategorie) {
+            JsonObject categorie = new JsonObject();
+            categorie.addProperty("categorie.libelle", labelCategory);
+
+            JsonObject match = new JsonObject();
+            match.add("match", categorie);
+
+            should.add(match);
+        }
+
+        JsonObject bool = new JsonObject();
+        bool.add("should", should);
+
+        JsonObject categorieCondition = new JsonObject();
+        categorieCondition.add("bool", bool);
+
+        must.add(categorieCondition);
         return this;
     }
 
-    public ElasticsearchQueryBuilder setRangePrice(int lowerPrice, int higherPrice) {
-        checkJsonObjectExist();
-        jsonRequest.addProperty("lower", lowerPrice);
-        jsonRequest.addProperty("higher", higherPrice);
+    /**
+     * Create a JsonObject in the current jsonRequest
+     * <p>
+     * "range":{
+     * "prix":{
+     * "gte":higherPrice,
+     * "lte":lowerPrice
+     * }
+     * }
+     * </p>
+     *
+     * @param lowerPrice
+     * @param higherPrice
+     * @return
+     */
+    public ElasticsearchQueryBuilder setRangePrice(Integer lowerPrice, Integer higherPrice) {
+        JsonArray must = initMustFromQuery();
+
+        JsonObject priceElement = new JsonObject();
+        priceElement.addProperty("lte", higherPrice.toString());
+        priceElement.addProperty("gte", lowerPrice.toString());
+
+        JsonObject rangeElement = new JsonObject();
+        rangeElement.add("prix", priceElement);
+
+        JsonObject priceCondition = new JsonObject();
+        priceCondition.add("range", rangeElement);
+
+        must.add(priceCondition);
         return this;
     }
 
-    public ElasticsearchQueryBuilder setWithPhotoOnly(boolean withPhotoOnly) {
-        checkJsonObjectExist();
-        jsonRequest.addProperty("withPhotoOnly", withPhotoOnly);
+    /**
+     * "exists": {
+     * "field":"photos"
+     * }
+     *
+     * @return
+     */
+    public ElasticsearchQueryBuilder setWithPhotoOnly() {
+        JsonArray must = initMustFromQuery();
+
+        JsonObject field = new JsonObject();
+        field.addProperty("field", "photos");
+
+        JsonObject photoCondition = new JsonObject();
+        photoCondition.add("exists", field);
+
+        must.add(photoCondition);
         return this;
     }
 

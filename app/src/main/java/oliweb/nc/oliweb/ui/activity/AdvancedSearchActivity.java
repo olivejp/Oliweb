@@ -14,6 +14,8 @@ import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 
 import butterknife.BindView;
@@ -114,18 +116,14 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         } else {
             String higher = higherPrice.getText().toString();
             String lower = lowerPrice.getText().toString();
-
-            int priceLow = (lower.isEmpty()) ? 0 : Integer.valueOf(lowerPrice.getText().toString());
-            int priceHigh = (higher.isEmpty()) ? Integer.MAX_VALUE : Integer.valueOf(higherPrice.getText().toString());
-            boolean isPhoto = withPhotoOnly.isChecked();
-            String keywordSearched = keyword.getText().toString();
+            String keywordSearch = keyword.getText().toString();
 
             Intent intent = new Intent();
             intent.putExtra(CATEGORIE, currentCategorie);
-            intent.putExtra(LOWER_PRICE, priceLow);
-            intent.putExtra(HIGHER_PRICE, priceHigh);
-            intent.putExtra(WITH_PHOTO_ONLY, isPhoto);
-            intent.putExtra(KEYWORD, keywordSearched);
+            intent.putExtra(WITH_PHOTO_ONLY, withPhotoOnly.isChecked());
+            intent.putExtra(LOWER_PRICE, StringUtils.isBlank(lower) ? null : Integer.valueOf(lower));
+            intent.putExtra(HIGHER_PRICE, StringUtils.isBlank(higher) ? null : Integer.valueOf(higher));
+            intent.putExtra(KEYWORD, StringUtils.isBlank(keywordSearch) ? null : keywordSearch);
 
             intent.setAction(ACTION_ADVANCED_SEARCH);
 

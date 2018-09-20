@@ -121,10 +121,10 @@ public class SearchActivity extends AppCompatActivity {
                 categorieEntity = intentParam.getParcelableExtra(CATEGORIE);
             }
             if (intentParam.hasExtra(LOWER_PRICE)) {
-                lowerPrice = intentParam.getIntExtra(LOWER_PRICE, 0);
+                lowerPrice = intentParam.getIntExtra(LOWER_PRICE,0);
             }
             if (intentParam.hasExtra(HIGHER_PRICE)) {
-                higherPrice = intentParam.getIntExtra(HIGHER_PRICE, Integer.MAX_VALUE);
+                higherPrice = intentParam.getIntExtra(HIGHER_PRICE,0);
             }
             if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
                 withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
@@ -247,11 +247,10 @@ public class SearchActivity extends AppCompatActivity {
         if (!viewModel.isConnected()) {
             Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
         } else {
+            int from = currentPage * Constants.PER_PAGE_REQUEST;
             if (Intent.ACTION_SEARCH.equals(action)) {
-                int from = currentPage * Constants.PER_PAGE_REQUEST;
                 viewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
-                int from = currentPage * Constants.PER_PAGE_REQUEST;
                 viewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             }
         }

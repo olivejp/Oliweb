@@ -166,7 +166,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
-    public void makeAnAdvancedSearch(String libelleCategorie, boolean withPhotoOnly, Integer lowestPrice, Integer highestPrice, String query, int pagingSize, int from, int tri, int direction) {
+    public void makeAnAdvancedSearch(String libelleCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
         utilityService.getServerTimestamp()
                 .subscribeOn(processScheduler).observeOn(androidScheduler)
@@ -185,16 +185,20 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
                     }
                     if (libelleCategorie != null) {
-                        builder.setCategorie(libelleCategorie);
+                        // builder.setCategorie(Collections.singletonList(libelleCategorie));
                     }
-                    if (lowestPrice != null && highestPrice != null) {
+                    if (lowestPrice >= 0 && highestPrice > 0) {
                         builder.setRangePrice(lowestPrice, highestPrice);
                     }
-                    builder.setWithPhotoOnly(withPhotoOnly);
+                    if (withPhotoOnly) {
+                        builder.setWithPhotoOnly();
+                    }
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
-                    newRequestRef.setValue(gson.fromJson(builder.build(), Object.class));
+                    Object request = gson.fromJson(builder.build(), Object.class);
+                    Log.d(TAG, request.toString());
+                    newRequestRef.setValue(request);
 
                     // Ensuite on va écouter les changements pour cette nouvelle requête
                     newRequestRef.addValueEventListener(requestValueListener);

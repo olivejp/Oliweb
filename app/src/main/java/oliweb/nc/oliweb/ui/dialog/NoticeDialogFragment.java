@@ -7,9 +7,9 @@ import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +20,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.DialogInfos;
 
 
-public class NoticeDialogFragment extends DialogFragment {
+public class NoticeDialogFragment extends AppCompatDialogFragment {
 
     public static final String P_MESSAGE = "message";
     public static final String P_TYPE = "type";
