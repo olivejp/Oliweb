@@ -1,53 +1,30 @@
 package oliweb.nc.oliweb.dto.elasticsearch;
 
-import java.util.List;
-
-/**
- * Created by 2761oli on 22/02/2018.
- */
-
 public class ElasticsearchRequest {
-    private int page;
-    private int perPage;
-    private String searchQuery;
-    private List<ElasticsearchSortingField> sortingFields;
+    private Long timestamp;
+    private String request;
 
-    public ElasticsearchRequest(int page, int perPage, String searchQuery, List<ElasticsearchSortingField> sortingFields) {
-        this.page = page;
-        this.perPage = perPage;
-        this.searchQuery = searchQuery;
-        this.sortingFields = sortingFields;
+    public ElasticsearchRequest() {
     }
 
-    public int getPage() {
-        return page;
+    public ElasticsearchRequest(Long timestamp, String request) {
+        this.timestamp = timestamp;
+        this.request = request;
     }
 
-    public void setPage(int page) {
-        this.page = page;
+    public Long getTimestamp() {
+        return timestamp;
     }
 
-    public int getPerPage() {
-        return perPage;
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 
-    public void setPerPage(int perPage) {
-        this.perPage = perPage;
+    public String getRequest() {
+        return request;
     }
 
-    public String getSearchQuery() {
-        return searchQuery;
-    }
-
-    public void setSearchQuery(String searchQuery) {
-        this.searchQuery = searchQuery;
-    }
-
-    public List<ElasticsearchSortingField> getSorts() {
-        return sortingFields;
-    }
-
-    public void setSorts(List<ElasticsearchSortingField> sorts) {
-        this.sortingFields = sorts;
+    public void setRequest(String request) {
+        this.request = request;
     }
 }

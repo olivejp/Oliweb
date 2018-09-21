@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,10 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchRequest;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
@@ -89,6 +92,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     private MutableLiveData<AtomicBoolean> loading;
     private Gson gson = new Gson();
     private DatabaseReference requestReference;
+    private Observable<Long> obsDelay = Observable.timer(30, TimeUnit.SECONDS);
     private ValueEventListener requestValueListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -185,7 +189,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                         builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
                     }
                     if (libelleCategorie != null) {
-                        // builder.setCategorie(Collections.singletonList(libelleCategorie));
+                        builder.setCategorie(Collections.singletonList(libelleCategorie));
                     }
                     if (lowestPrice >= 0 && highestPrice > 0) {
                         builder.setRangePrice(lowestPrice, highestPrice);
@@ -195,13 +199,28 @@ public class SearchActivityViewModel extends AndroidViewModel {
                     }
 
                     // Création d'une nouvelle request dans la table request
+                    String requestJson = gson.toJson(builder.build());
+
                     newRequestRef = requestReference.push();
-                    Object request = gson.fromJson(builder.build(), Object.class);
-                    Log.d(TAG, request.toString());
-                    newRequestRef.setValue(request);
+                    newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
 
                     // Ensuite on va écouter les changements pour cette nouvelle requête
                     newRequestRef.addValueEventListener(requestValueListener);
+                    delayBeforeDeleteRequest();
+
+
+                })
+                .subscribe();
+    }
+
+    /**
+     * Création d'un délai 30 sec pour supprimer la requête si elle n'a rien retournée.
+     */
+    private void delayBeforeDeleteRequest() {
+        obsDelay.observeOn(androidScheduler)
+                .doOnNext(aLong -> {
+                    newRequestRef.removeValue();
+                    updateLoadingStatus(false);
                 })
                 .subscribe();
     }
@@ -232,9 +251,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
                     // Création d'une nouvelle request dans la table request
                     newRequestRef = requestReference.push();
-                    newRequestRef.setValue(gson.fromJson(requestAsJson, Object.class)).addOnSuccessListener(aVoid ->
-                            // Ensuite on va écouter les changements pour cette nouvelle requête
-                            newRequestRef.addValueEventListener(requestValueListener)
+                    newRequestRef.setValue(gson.fromJson(requestAsJson, Object.class)).addOnSuccessListener(aVoid -> {
+                                newRequestRef.addValueEventListener(requestValueListener);
+                                delayBeforeDeleteRequest();
+                            }
                     );
                 })
                 .subscribe();
