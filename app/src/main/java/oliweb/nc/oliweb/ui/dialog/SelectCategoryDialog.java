@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by 2761oli on 21/03/2018.
@@ -23,19 +22,12 @@ public class SelectCategoryDialog extends DialogFragment {
 
     private AppCompatActivity appCompatActivity;
     private SelectCategoryDialogListener listener;
-    private List<String> listCategories;
-    private List<String> selectedCategories;
+    private String[] listCategories;
+    private ArrayList<String> selectedCategories;
 
-    public SelectCategoryDialog() {
-        if (getArguments() != null) {
-            this.listCategories = getArguments().getStringArrayList(BUNDLE_LIST_CATEGORIE);
-        }
-        selectedCategories = new ArrayList<>();
-    }
-
-    public SelectCategoryDialog createInstance(ArrayList<String> listCategories) {
+    public static SelectCategoryDialog createInstance(String[] listCategories) {
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList(BUNDLE_LIST_CATEGORIE, listCategories);
+        bundle.putStringArray(BUNDLE_LIST_CATEGORIE, listCategories);
 
         SelectCategoryDialog instance = new SelectCategoryDialog();
         instance.setArguments(bundle);
@@ -65,11 +57,15 @@ public class SelectCategoryDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        if (getArguments() != null) {
+            this.listCategories = getArguments().getStringArray(BUNDLE_LIST_CATEGORIE);
+        }
+        selectedCategories = new ArrayList<>();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
         builder.setTitle("Catégories");
-        CharSequence[] sequences = listCategories.toArray(new CharSequence[0]);
-        builder.setMultiChoiceItems(sequences, null, (dialogInterface, i, isChecked) -> {
-            String categorieUsed = sequences[i].toString();
+        builder.setMultiChoiceItems(listCategories, null, (dialogInterface, i, isChecked) -> {
+            String categorieUsed = listCategories[i];
             if (isChecked) {
                 if (selectedCategories.contains(categorieUsed)) {
                     selectedCategories.remove(categorieUsed);
@@ -78,10 +74,11 @@ public class SelectCategoryDialog extends DialogFragment {
                 }
             }
         });
+        builder.setPositiveButton("Choisir", (dialogInterface, i) -> this.listener.choose(selectedCategories));
         return builder.create();
     }
 
     public interface SelectCategoryDialogListener {
-        void selectedCategories(List<String> categories);
+        void choose(ArrayList<String> categories);
     }
 }

@@ -7,16 +7,15 @@ import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatSpinner;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,9 +24,8 @@ import butterknife.OnTextChanged;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AdvancedSearchActivityViewModel;
-import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
+import oliweb.nc.oliweb.ui.dialog.SelectCategoryDialog;
 
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.ACTION_ADVANCED_SEARCH;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.CATEGORIE;
@@ -37,12 +35,13 @@ import static oliweb.nc.oliweb.ui.activity.SearchActivity.LOWER_PRICE;
 import static oliweb.nc.oliweb.ui.activity.SearchActivity.WITH_PHOTO_ONLY;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
-public class AdvancedSearchActivity extends AppCompatActivity {
+public class AdvancedSearchActivity extends AppCompatActivity implements SelectCategoryDialog.SelectCategoryDialogListener {
 
     public static final String TAG = AdvancedSearchActivity.class.getCanonicalName();
+    public static final String DIALOG_SELECT_CATEGORY = "DIALOG_SELECT_CATEGORY";
 
     @BindView(R.id.categorie_spinner)
-    AppCompatSpinner spinnerCategorie;
+    TextView spinnerCategorie;
 
     @BindView(R.id.photo_switch)
     CheckBox withPhotoOnly;
@@ -59,7 +58,9 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     @BindView(R.id.constraint_advanced_saerch)
     ConstraintLayout constraintLayout;
 
-    private CategorieEntity currentCategorie;
+    private AdvancedSearchActivityViewModel viewModel;
+    private String[] categorieLibelles;
+    private ArrayList<String> listCategorieSelected;
     private boolean error;
 
     public AdvancedSearchActivity() {
@@ -69,12 +70,13 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AdvancedSearchActivityViewModel viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
         setContentView(R.layout.activity_advanced_search);
         ButterKnife.bind(this);
 
-        viewModel.getListCategorie().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess(this::defineSpinnerCategorie)
+        viewModel.getListCategorieLibelle()
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(list -> categorieLibelles = list.toArray(new String[0]))
                 .subscribe();
     }
 
@@ -91,6 +93,12 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+    }
+
+    @OnClick(R.id.categorie_spinner)
+    public void chooseCategory(View v) {
+        SelectCategoryDialog dialog = SelectCategoryDialog.createInstance(categorieLibelles);
+        dialog.show(getSupportFragmentManager(), DIALOG_SELECT_CATEGORY);
     }
 
     @OnTextChanged({R.id.higher_price, R.id.lower_price})
@@ -119,7 +127,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             String keywordSearch = keyword.getText().toString();
 
             Intent intent = new Intent();
-            intent.putExtra(CATEGORIE, currentCategorie);
+            intent.putStringArrayListExtra(CATEGORIE, listCategorieSelected);
             intent.putExtra(WITH_PHOTO_ONLY, withPhotoOnly.isChecked());
             intent.putExtra(LOWER_PRICE, StringUtils.isBlank(lower) ? null : Integer.valueOf(lower));
             intent.putExtra(HIGHER_PRICE, StringUtils.isBlank(higher) ? null : Integer.valueOf(higher));
@@ -133,19 +141,13 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         }
     }
 
-    private void defineSpinnerCategorie(List<CategorieEntity> categorieEntities) {
-        SpinnerAdapter adapter = new SpinnerAdapter(this, categorieEntities);
-        spinnerCategorie.setAdapter(adapter);
-        spinnerCategorie.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currentCategorie = (CategorieEntity) parent.getItemAtPosition(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Do nothing
-            }
-        });
+    @Override
+    public void choose(ArrayList<String> categories) {
+        listCategorieSelected = categories;
+        String libelleConcat = "";
+        for (String libelle : listCategorieSelected) {
+            libelleConcat = libelleConcat.concat(libelle).concat(" ");
+        }
+        spinnerCategorie.setText(libelleConcat);
     }
 }

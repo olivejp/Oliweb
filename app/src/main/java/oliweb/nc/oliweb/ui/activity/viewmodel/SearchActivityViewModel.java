@@ -17,7 +17,6 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -170,7 +169,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
-    public void search(String libelleCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
+    public void search(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
 
         // Préparation de la requête
@@ -181,8 +180,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
         if (query != null) {
             builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
         }
-        if (libelleCategorie != null) {
-            builder.setCategorie(Collections.singletonList(libelleCategorie));
+        if (libellesCategorie != null) {
+            builder.setCategorie(libellesCategorie);
         }
         if (lowestPrice >= 0 && highestPrice > 0) {
             builder.setRangePrice(lowestPrice, highestPrice);

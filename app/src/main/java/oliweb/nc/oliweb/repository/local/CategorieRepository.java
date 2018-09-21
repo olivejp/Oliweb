@@ -29,4 +29,9 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity, Lon
     public Single<List<CategorieEntity>> getListCategorie() {
         return this.categorieDao.getListCategorie();
     }
+
+
+    public Single<List<String>> getListCategorieLibelle() {
+        return this.categorieDao.getListCategorieLibelle();
+    }
 }
