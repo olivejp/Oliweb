@@ -249,9 +249,9 @@ public class SearchActivity extends AppCompatActivity {
         } else {
             int from = currentPage * Constants.PER_PAGE_REQUEST;
             if (Intent.ACTION_SEARCH.equals(action)) {
-                viewModel.makeASearch(query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+                viewModel.search(null, false, 0, 0, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
-                viewModel.makeAnAdvancedSearch(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+                viewModel.search(categorieEntity.getName(), withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             }
         }
     }

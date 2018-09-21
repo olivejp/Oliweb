@@ -40,12 +40,6 @@ public class ElasticsearchQueryBuilder {
         return jsonRequest.get("query").getAsJsonObject().get("bool").getAsJsonObject().get("must").getAsJsonArray();
     }
 
-    public ElasticsearchQueryBuilder setTimestamp(Long timestamp) {
-        checkJsonObjectExist();
-        jsonRequest.addProperty("timestamp", timestamp);
-        return this;
-    }
-
     public ElasticsearchQueryBuilder setFrom(int from) {
         checkJsonObjectExist();
         jsonRequest.addProperty("from", from);
