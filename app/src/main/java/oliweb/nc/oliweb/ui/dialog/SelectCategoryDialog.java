@@ -24,11 +24,13 @@ public class SelectCategoryDialog extends DialogFragment {
     private AppCompatActivity appCompatActivity;
     private SelectCategoryDialogListener listener;
     private List<String> listCategories;
+    private List<String> selectedCategories;
 
     public SelectCategoryDialog() {
         if (getArguments() != null) {
             this.listCategories = getArguments().getStringArrayList(BUNDLE_LIST_CATEGORIE);
         }
+        selectedCategories = new ArrayList<>();
     }
 
     public SelectCategoryDialog createInstance(ArrayList<String> listCategories) {
@@ -66,8 +68,15 @@ public class SelectCategoryDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
         builder.setTitle("Catégories");
         CharSequence[] sequences = listCategories.toArray(new CharSequence[0]);
-        builder.setMultiChoiceItems(sequences, null, (dialogInterface, i, b) -> {
-
+        builder.setMultiChoiceItems(sequences, null, (dialogInterface, i, isChecked) -> {
+            String categorieUsed = sequences[i].toString();
+            if (isChecked) {
+                if (selectedCategories.contains(categorieUsed)) {
+                    selectedCategories.remove(categorieUsed);
+                } else {
+                    selectedCategories.add(categorieUsed);
+                }
+            }
         });
         return builder.create();
     }
