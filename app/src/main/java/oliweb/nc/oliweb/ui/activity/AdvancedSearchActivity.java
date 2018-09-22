@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
@@ -58,9 +59,10 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     @BindView(R.id.constraint_advanced_saerch)
     ConstraintLayout constraintLayout;
 
+    private boolean[] checkedCategorie;
+    private String[] listCategorieComplete;
+    private ArrayList<String> listCategorieSelected = new ArrayList<>();
     private AdvancedSearchActivityViewModel viewModel;
-    private String[] categorieLibelles;
-    private ArrayList<String> listCategorieSelected;
     private boolean error;
 
     public AdvancedSearchActivity() {
@@ -73,11 +75,6 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
         setContentView(R.layout.activity_advanced_search);
         ButterKnife.bind(this);
-
-        viewModel.getListCategorieLibelle()
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess(list -> categorieLibelles = list.toArray(new String[0]))
-                .subscribe();
     }
 
     @Override
@@ -97,8 +94,15 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
 
     @OnClick(R.id.categorie_spinner)
     public void chooseCategory(View v) {
-        SelectCategoryDialog dialog = SelectCategoryDialog.createInstance(categorieLibelles);
-        dialog.show(getSupportFragmentManager(), DIALOG_SELECT_CATEGORY);
+        viewModel.getListCategorieLibelle()
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(list -> {
+                    listCategorieComplete = list.toArray(new String[0]);
+                    SelectCategoryDialog dialog = SelectCategoryDialog.createInstance(listCategorieComplete, checkedCategorie);
+                    dialog.show(getSupportFragmentManager(), DIALOG_SELECT_CATEGORY);
+                })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
     }
 
     @OnTextChanged({R.id.higher_price, R.id.lower_price})
@@ -142,11 +146,15 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     }
 
     @Override
-    public void choose(ArrayList<String> categories) {
-        listCategorieSelected = categories;
+    public void choose(boolean[] checkedCat) {
         String libelleConcat = "";
-        for (String libelle : listCategorieSelected) {
-            libelleConcat = libelleConcat.concat(libelle).concat(" ");
+        listCategorieSelected.clear();
+        checkedCategorie = checkedCat;
+        for (int i = 0; i <= listCategorieComplete.length - 1; i++) {
+            if (checkedCategorie[i]) {
+                libelleConcat = libelleConcat.concat(listCategorieComplete[i]).concat(" ");
+                listCategorieSelected.add(listCategorieComplete[i]);
+            }
         }
         spinnerCategorie.setText(libelleConcat);
     }
