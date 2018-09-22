@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -41,8 +40,8 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     public static final String TAG = AdvancedSearchActivity.class.getCanonicalName();
     public static final String DIALOG_SELECT_CATEGORY = "DIALOG_SELECT_CATEGORY";
 
-    @BindView(R.id.categorie_spinner)
-    TextView spinnerCategorie;
+    @BindView(R.id.text_categorie)
+    EditText textCategorie;
 
     @BindView(R.id.photo_switch)
     CheckBox withPhotoOnly;
@@ -56,7 +55,7 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     @BindView(R.id.keyword)
     EditText keyword;
 
-    @BindView(R.id.constraint_advanced_saerch)
+    @BindView(R.id.constraint_advanced_search)
     ConstraintLayout constraintLayout;
 
     private boolean[] checkedCategorie;
@@ -92,7 +91,12 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-    @OnClick(R.id.categorie_spinner)
+    @OnClick(R.id.with_photos_only)
+    public void changePhotoOnly(View v){
+        withPhotoOnly.setChecked(!withPhotoOnly.isChecked());
+    }
+
+    @OnClick(R.id.text_layout_categorie)
     public void chooseCategory(View v) {
         viewModel.getListCategorieLibelle()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
@@ -111,12 +115,12 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         String higher = higherPrice.getText().toString();
         String lower = lowerPrice.getText().toString();
         if (!higher.isEmpty() && !lower.isEmpty() && Integer.valueOf(lower) > Integer.valueOf((higher))) {
-            higherPrice.setError("Le maximum doit être supérieur au minimum");
+            higherPrice.setError(getString(R.string.error_max_gte_min));
             error = true;
         }
 
         if (higher.isEmpty() && !lower.isEmpty() || !higher.isEmpty() && lower.isEmpty()) {
-            higherPrice.setError("La fourchette de prix est incomplète");
+            higherPrice.setError(getString(R.string.error_price_interval_incorrect));
             error = true;
         }
     }
@@ -124,7 +128,7 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     @OnClick(R.id.fab_advanced_search)
     public void onClickSearch(View v) {
         if (error) {
-            Snackbar.make(constraintLayout, "Erreur dans la recherche", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(constraintLayout, R.string.search_error, Snackbar.LENGTH_LONG).show();
         } else {
             String higher = higherPrice.getText().toString();
             String lower = lowerPrice.getText().toString();
@@ -156,6 +160,6 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
                 listCategorieSelected.add(listCategorieComplete[i]);
             }
         }
-        spinnerCategorie.setText(libelleConcat);
+        textCategorie.setText(libelleConcat);
     }
 }
