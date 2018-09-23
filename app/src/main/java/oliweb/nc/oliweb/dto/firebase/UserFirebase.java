@@ -1,20 +1,20 @@
-package oliweb.nc.oliweb.dto.elasticsearch;
+package oliweb.nc.oliweb.dto.firebase;
 
 /**
  * Created by orlanth23 on 20/02/2018.
  */
 
-public class UtilisateurDto {
+public class UserFirebase {
     private String profile;
     private String uuid;
     private String telephone;
     private String email;
     private String photoUrl;
 
-    public UtilisateurDto() {
+    public UserFirebase() {
     }
 
-    public UtilisateurDto(String profile, String uuid, String telephone, String email, String photoUrl) {
+    public UserFirebase(String profile, String uuid, String telephone, String email, String photoUrl) {
         this.profile = profile;
         this.uuid = uuid;
         this.telephone = telephone;
@@ -64,7 +64,7 @@ public class UtilisateurDto {
 
     @Override
     public String toString() {
-        return "UtilisateurDto{" +
+        return "UserFirebase{" +
                 "profile='" + profile + '\'' +
                 ", uuid='" + uuid + '\'' +
                 ", telephone='" + telephone + '\'' +

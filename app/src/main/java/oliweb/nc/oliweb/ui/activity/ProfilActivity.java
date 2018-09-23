@@ -24,8 +24,6 @@ import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.service.sync.SyncService;
-import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
@@ -170,9 +168,6 @@ public class ProfilActivity extends AppCompatActivity {
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                     .doOnSuccess(userEntitySaved -> {
                         Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show();
-                        if (NetworkReceiver.checkConnection(getApplication())) {
-                            SyncService.launchSynchroForUser(getApplication());
-                        }
                     })
                     .subscribe();
 

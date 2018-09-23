@@ -33,7 +33,7 @@ public class FirebaseChatService {
     private FirebaseUserRepository firebaseUserRepository;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private Scheduler scheduler;
+    private Scheduler processScheduler;
 
     @Inject
     public FirebaseChatService(FirebaseChatRepository firebaseChatRepository,
@@ -41,12 +41,12 @@ public class FirebaseChatService {
                                MessageRepository messageRepository,
                                FirebaseUserRepository firebaseUserRepository,
                                @Named("processScheduler")
-                               Scheduler scheduler) {
+                               Scheduler processScheduler) {
         this.firebaseChatRepository = firebaseChatRepository;
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.firebaseUserRepository = firebaseUserRepository;
-        this.scheduler = scheduler;
+        this.processScheduler = processScheduler;
     }
 
     /**
@@ -58,7 +58,7 @@ public class FirebaseChatService {
         Log.d(TAG, "sendNewChat chatEntity : " + chatEntity);
         if (chatEntity.getUidChat() == null) {
             firebaseChatRepository.getUidAndTimestampFromFirebase(chatEntity)
-                    .subscribeOn(scheduler).observeOn(scheduler)
+                    .subscribeOn(processScheduler).observeOn(processScheduler)
                     .toObservable()
                     .switchMap(chatRepository::markChatAsSending)
                     .switchMap(this::sendChatToFirebase)
@@ -70,13 +70,12 @@ public class FirebaseChatService {
     }
 
     /**
-     * 2 - Tente d'envoyer le chat sur firebase
+     * Tente d'envoyer le chat sur firebase
      *
      * @param chatEntity
      * @return
      */
     private Observable<ChatEntity> sendChatToFirebase(ChatEntity chatEntity) {
-        Log.d(TAG, "sendChatToFirebase chatEntity : " + chatEntity);
         return firebaseChatRepository
                 .saveChat(ChatConverter.convertEntityToDto(chatEntity))
                 .map(chatFirebase -> chatEntity)
@@ -84,13 +83,12 @@ public class FirebaseChatService {
     }
 
     /**
-     * 4 - Met à jour tous les messages attachés à ce chat pour leur attribuer l'UID du chat
+     * Met à jour tous les messages attachés à ce chat pour leur attribuer l'UID du chat
      *
      * @param chatEntity
      * @return
      */
     private Observable<MessageEntity> updateAllMessages(ChatEntity chatEntity) {
-        Log.d(TAG, "Update all the messages to retreive the UID Chat : " + chatEntity);
         return messageRepository.getSingleByIdChat(chatEntity.getIdChat())
                 .flattenAsObservable(list -> list)
                 .doOnNext(messageEntity -> {
@@ -102,13 +100,13 @@ public class FirebaseChatService {
     }
 
     /**
-     * Va lire tous les chats pour l'uid user, puis pour tout ces chats va
+     * Va lire tous les chats avec l'uid user comme membre, puis pour tout ces chats va
      * récupérer tous les membres et pour tous ces membres va récupérer leur photo URL
      */
     public Single<HashMap<String, UserEntity>> getPhotoUrlsByUidUser(String uidUser) {
         HashMap<String, UserEntity> map = new HashMap<>();
         return Single.create(emitter -> firebaseChatRepository.getByUidUser(uidUser)
-                .observeOn(scheduler).subscribeOn(scheduler)
+                .observeOn(processScheduler).subscribeOn(processScheduler)
                 .flattenAsObservable(chatFirebases -> chatFirebases)
                 .map(chatFirebase -> chatFirebase.getMembers().keySet())
                 .flatMapIterable(uidsUserFromChats -> uidsUserFromChats)

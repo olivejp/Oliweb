@@ -12,14 +12,14 @@ import javax.inject.Singleton;
 import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
 /**
  * Created by orlanth23 on 03/03/2018.
- * This class allows to retrieve {@link AnnonceDto} from Firebase corresponding to the given UID User.
+ * This class allows to retrieve {@link AnnonceFirebase} from Firebase corresponding to the given UID User.
  */
 @Singleton
 public class FirebaseRetrieverService {

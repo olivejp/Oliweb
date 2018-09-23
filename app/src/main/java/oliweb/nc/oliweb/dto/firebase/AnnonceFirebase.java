@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.dto.elasticsearch;
+package oliweb.nc.oliweb.dto.firebase;
 
 import com.google.firebase.database.PropertyName;
 
@@ -9,10 +9,10 @@ import java.util.List;
  *
  * Firebase Annonce Model
  */
-public class AnnonceDto {
-    private UtilisateurDto utilisateur;
+public class AnnonceFirebase {
+    private UserFirebase utilisateur;
     private List<String> photos;
-    private CategorieDto categorie;
+    private CategorieFirebase categorie;
     private String uuid;
     private String titre;
     private String description;
@@ -26,14 +26,14 @@ public class AnnonceDto {
     @PropertyName("date_publication")
     private long datePublication;
 
-    public AnnonceDto() {
+    public AnnonceFirebase() {
     }
 
-    public UtilisateurDto getUtilisateur() {
+    public UserFirebase getUtilisateur() {
         return utilisateur;
     }
 
-    public void setUtilisateur(UtilisateurDto utilisateur) {
+    public void setUtilisateur(UserFirebase utilisateur) {
         this.utilisateur = utilisateur;
     }
 
@@ -45,11 +45,11 @@ public class AnnonceDto {
         this.uuid = uuid;
     }
 
-    public CategorieDto getCategorie() {
+    public CategorieFirebase getCategorie() {
         return categorie;
     }
 
-    public void setCategorie(CategorieDto categorie) {
+    public void setCategorie(CategorieFirebase categorie) {
         this.categorie = categorie;
     }
 
@@ -119,7 +119,7 @@ public class AnnonceDto {
 
     @Override
     public String toString() {
-        return "AnnonceDto{" +
+        return "AnnonceFirebase{" +
                 "utilisateur=" + utilisateur +
                 ", photos=" + photos +
                 ", categorie=" + categorie +

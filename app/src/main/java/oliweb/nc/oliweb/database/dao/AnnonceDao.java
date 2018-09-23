@@ -70,6 +70,12 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     public abstract Flowable<AnnonceEntity> findFlowableByUidUserAndStatusIn(String uidUser, List<String> status);
 
     @Transaction
+    @Query("SELECT *  FROM annonce WHERE uidUser = :uidUser AND statut IN (:status)")
+    public abstract Single<List<AnnonceEntity>> findSingleByUidUserAndStatusIn(String uidUser, List<String> status);
+
+    @Transaction
     @Query("DELETE FROM annonce WHERE uidUserFavorite = :uidUser AND uid = :uidAnnonce AND favorite = 1")
     public abstract void deleteFromFavorite(String uidUser, String uidAnnonce);
+
+
 }

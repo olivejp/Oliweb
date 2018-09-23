@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.activity.business;
 import android.util.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import io.reactivex.Scheduler;
@@ -10,7 +11,7 @@ import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
@@ -32,16 +33,18 @@ public class MyChatsActivityBusiness {
     @Inject
     public MyChatsActivityBusiness(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                    ChatRepository chatRepository,
-                                   Scheduler processScheduler,
-                                   Scheduler androidScheduler) {
+                                   @Named("processScheduler")
+                                           Scheduler processScheduler,
+                                   @Named("androidScheduler")
+                                           Scheduler androidScheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.chatRepository = chatRepository;
         this.processScheduler = processScheduler;
         this.androidScheduler = androidScheduler;
     }
 
-    public LiveDataOnce<AnnonceDto> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
-        CustomLiveData<AnnonceDto> customLiveData = new CustomLiveData<>();
+    public LiveDataOnce<AnnonceFirebase> findLiveFirebaseByUidAnnonce(String uidAnnonce) {
+        CustomLiveData<AnnonceFirebase> customLiveData = new CustomLiveData<>();
         firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
                 .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnSuccess(customLiveData::postValue)
@@ -78,20 +81,9 @@ public class MyChatsActivityBusiness {
      * @return
      */
     public Single<ChatEntity> findOrCreateLiveNewChat(String uidUser, AnnonceEntity annonce) {
-        return Single.create(emitter ->
-                chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
-                        .subscribeOn(processScheduler).observeOn(processScheduler)
-                        .doOnSuccess(emitter::onSuccess)
-                        .doOnComplete(() ->
-                                chatRepository.singleSave(initializeNewChatEntity(uidUser, annonce))
-                                        .subscribeOn(processScheduler).observeOn(processScheduler)
-                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                        .doOnSuccess(emitter::onSuccess)
-                                        .subscribe()
-                        )
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .subscribe()
-        );
+        return chatRepository.findByUidUserAndUidAnnonce(uidUser, annonce.getUid())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .switchIfEmpty(chatRepository.singleSave(initializeNewChatEntity(uidUser, annonce)))
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e));
     }
-
 }

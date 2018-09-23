@@ -18,6 +18,7 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.PhotoService;
 import oliweb.nc.oliweb.service.UserService;
+import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
 import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
@@ -63,14 +64,18 @@ public class ServicesModule {
                                      UserRepository userRepository,
                                      AnnonceRepository annonceRepository,
                                      AnnonceFirebaseSender annonceFirebaseSender,
+                                     AnnonceFirebaseDeleter annonceFirebaseDeleter,
                                      ChatRepository chatRepository,
+                                     PhotoRepository photoRepository,
                                      MessageRepository messageRepository,
                                      FirebaseMessageService firebaseMessageService,
-                                     FirebaseChatService firebaseChatService) {
+                                     FirebaseChatService firebaseChatService,
+                                     @Named("processScheduler") Scheduler processScheduler) {
         return new ScheduleSync(firebaseUserRepository,
                 userRepository, annonceRepository,
-                annonceFirebaseSender, chatRepository,
+                annonceFirebaseSender, annonceFirebaseDeleter, chatRepository, photoRepository,
                 messageRepository, firebaseMessageService,
-                firebaseChatService);
+                firebaseChatService,
+                processScheduler);
     }
 }

@@ -7,22 +7,11 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.App;
-import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
-import oliweb.nc.oliweb.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.repository.local.ChatRepository;
-import oliweb.nc.oliweb.repository.local.MessageRepository;
-import oliweb.nc.oliweb.repository.local.PhotoRepository;
-import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseDeleter;
-import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
-import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
-import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
-import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 14/05/2018.
@@ -37,34 +26,11 @@ public class DatabaseSyncListenerService extends Service {
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Inject
-    ChatRepository chatRepository;
+    ScheduleSync scheduleSync;
 
     @Inject
-    MessageRepository messageRepository;
-
-    @Inject
-    AnnonceRepository annonceRepository;
-
-    @Inject
-    UserRepository userRepository;
-
-    @Inject
-    PhotoRepository photoRepository;
-
-    @Inject
-    AnnonceFirebaseSender annonceFirebaseSender;
-
-    @Inject
-    AnnonceFirebaseDeleter annonceFirebaseDeleter;
-
-    @Inject
-    FirebaseMessageService firebaseMessageService;
-
-    @Inject
-    FirebaseChatService firebaseChatService;
-
-    @Inject
-    FirebaseUserRepository firebaseUserRepository;
+    @Named("processScheduler")
+    Scheduler processScheduler;
 
     @Nullable
     @Override
@@ -83,79 +49,30 @@ public class DatabaseSyncListenerService extends Service {
 
         String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
 
-        ((App)getApplication()).getFirebaseServicesComponent().inject(this);
-        ((App)getApplication()).getFirebaseRepositoriesComponent().inject(this);
-        ((App)getApplication()).getDatabaseRepositoriesComponent().inject(this);
-        ((App)getApplication()).getServicesComponent().inject(this);
+        ((App) getApplication()).getServicesComponent().inject(this);
 
         // Suppression des listeners
         disposables.clear();
 
         // SENDERS
         // Envoi toutes les annonces
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
-                .distinct()
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(annonceFirebaseSender::processToSendAnnonceToFirebase)
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableAnnonceToSend(uidUser).subscribe());
 
         // Envoi tous les chats
-        disposables.add(chatRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToSend())
-                .distinct()
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(firebaseChatService::sendNewChat)
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableChat(uidUser).subscribe());
 
         // Envoi tous les messages
-        disposables.add(messageRepository.findFlowableByStatusAndUidChatNotNull(Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable()
-                .flatMapIterable(list -> list)
-                .distinct()
-                .switchMap(firebaseMessageService::sendMessage)
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableMessageToSend().subscribe());
 
         // Envoi tous les utilisateurs
-        disposables.add(userRepository.getAllUtilisateursByStatus(Utility.allStatusToSend())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                .flatMapSingle(utilisateur -> firebaseUserRepository.insertUserIntoFirebase(utilisateur)
-                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                        .doOnSuccess(success -> {
-                            if (success.get()) {
-                                Log.d(TAG, "insertUserIntoFirebase successfully send user : " + utilisateur);
-                                utilisateur.setStatut(StatusRemote.SEND);
-                                userRepository.singleSave(utilisateur)
-                                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                                        .subscribe();
-                            }
-                        })
-                )
-                .subscribe());
+        disposables.add(scheduleSync.getFlowableUserToSend(uidUser).subscribe());
 
         // DELETERS
-        disposables.add(annonceRepository.findFlowableByUidUserAndStatusIn(uidUser, Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnNext(annonceFirebaseDeleter::processToDeleteAnnonce)
-                .subscribe());
+        // Suppression des annonces
+        disposables.add(scheduleSync.getFlowableAnnonceToDelete(uidUser).subscribe());
 
-        disposables.add(photoRepository.getAllPhotosByStatus(Utility.allStatusToDelete())
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .toObservable()
-                .map(photoEntity ->
-                        annonceFirebaseDeleter.deleteOnePhoto(photoEntity).toObservable()
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                                .switchMap(atomicBoolean -> annonceRepository.findById(photoEntity.getIdAnnonce()).toObservable())
-                                .filter(annonceEntity -> annonceEntity.getStatut() == StatusRemote.SEND)
-                                .switchMap(annonceFirebaseSender::convertToFullAndSendToFirebase)
-                                .subscribe()
-                )
-                .subscribe());
+        // Suppression des photos
+        disposables.add(scheduleSync.getPhotoToDelete().subscribe());
 
         return START_NOT_STICKY;
     }

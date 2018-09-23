@@ -1,8 +1,12 @@
 Function_01 : Post an annonce
 
-RG01 : User should be authenticated to post an annonce
-RG02 : Annonce may have a title, description, price, have been categorized
-RG03 : Annonce could only have as maximum 4 photos
+RG11 : User should be authenticated to post an annonce
+RG12 : Annonce may have a title, description, price, have been categorized
+RG13 : Annonce could only have as maximum 4 photos
+RG14 : Author can choose between 3 ways to contact (tel, email, message)
+RG15 : Message is by default and it's always available
+RG16 : Email is only available if the author has entered his telephone number
+RG17 : One contact way is mandatory
 
 Function Post annonce is only available for authenticated user.
 In the post annonce screen, he should fill the title, description and price fields.
@@ -13,7 +17,7 @@ User can choose to attach an existing photo to its annonce through the chooser p
 
 Function_02 : Update an annonce
 
-RG04 : Update of an annonce could be only possible if the author is the updater
+RG21 : Update of an annonce could be only possible if the author is the updater
 
 Function Update annonce is only available for authenticated user.
 User can update any field of the annonce (title, description, price, category).
@@ -24,7 +28,7 @@ A photo can't be updated. User should delete the old one then add a new photo.
 
 Function_03 : Delete an annonce
 
-RG05 : Deletion of an annonce could be only possible if the author is the deleter
+RG31 : Deletion of an annonce could be only possible if the author is the deleter
 
 Function Delete annonce is only available for authenticated user.
 User can choose to delete one of his annonces. A popup window will inform him that the deletion will also delete all

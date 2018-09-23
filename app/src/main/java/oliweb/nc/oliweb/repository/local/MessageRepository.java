@@ -50,13 +50,12 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         return this.messageDao.getSingleByIdChat(idChat);
     }
 
-    public Single<List<MessageEntity>> findAllByStatus(List<String> status) {
-        return this.messageDao.findSingleByStatus(status);
+    public Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status) {
+        return this.messageDao.findFlowableByStatusAndUidChatNotNull(status);
     }
 
-    public Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status) {
-        Log.d(TAG, "Starting findFlowableByStatusAndUidChatNotNull " + status);
-        return this.messageDao.findFlowableByStatusAndUidChatNotNull(status);
+    public Single<List<MessageEntity>> findSingleByStatusAndUidChatNotNull(List<String> status) {
+        return this.messageDao.findSingleByStatusAndUidChatNotNull(status);
     }
 
     public void saveMessageIfNotExist(MessageFirebase messageFirebase) {

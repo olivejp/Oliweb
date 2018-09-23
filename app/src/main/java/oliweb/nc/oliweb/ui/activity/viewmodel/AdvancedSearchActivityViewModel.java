@@ -32,4 +32,8 @@ public class AdvancedSearchActivityViewModel extends AndroidViewModel {
     public Single<List<CategorieEntity>> getListCategorie() {
         return categorieRepository.getListCategorie();
     }
+
+    public Single<List<String>> getListCategorieLibelle() {
+        return categorieRepository.getListCategorieLibelle();
+    }
 }

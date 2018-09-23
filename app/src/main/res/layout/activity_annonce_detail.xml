@@ -49,6 +49,7 @@
                         app:ci_drawable="@xml/circle_indicator_color"
                         app:ci_drawable_unselected="@xml/circle_indicator_color"
                         app:layout_constraintTop_toTopOf="parent" />
+
                 </android.support.constraint.ConstraintLayout>
 
                 <android.support.v7.widget.Toolbar
@@ -105,7 +106,8 @@
                         app:fabSize="mini"
                         app:layout_constraintRight_toRightOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_mode_edit_white_48dp" />
+                        app:srcCompat="@drawable/ic_mode_edit_white_48dp"
+                        tools:visibility="visible" />
 
                     <android.support.design.widget.FloatingActionButton
                         android:id="@+id/fab_action_telephone"
@@ -115,7 +117,8 @@
                         android:layout_margin="7dp"
                         android:visibility="gone"
                         app:fabSize="mini"
-                        app:srcCompat="@drawable/ic_phone_white_48dp" />
+                        app:srcCompat="@drawable/ic_phone_white_48dp"
+                        tools:visibility="visible" />
 
                     <android.support.design.widget.FloatingActionButton
                         android:id="@+id/fab_action_email"
@@ -125,7 +128,8 @@
                         android:layout_margin="7dp"
                         android:visibility="gone"
                         app:fabSize="mini"
-                        app:srcCompat="@drawable/ic_email_white_48dp" />
+                        app:srcCompat="@drawable/ic_email_white_48dp"
+                        tools:visibility="visible" />
 
                     <android.support.design.widget.FloatingActionButton
                         android:id="@+id/fab_action_message"
@@ -135,7 +139,8 @@
                         android:layout_margin="7dp"
                         android:visibility="gone"
                         app:fabSize="mini"
-                        app:srcCompat="@drawable/ic_message_white_48dp" />
+                        app:srcCompat="@drawable/ic_message_white_48dp"
+                        tools:visibility="visible" />
                 </LinearLayout>
 
 
@@ -174,6 +179,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/text_date_publication"
                     tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI." />
+
 
             </android.support.constraint.ConstraintLayout>
         </android.support.v4.widget.NestedScrollView>

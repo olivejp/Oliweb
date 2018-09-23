@@ -9,8 +9,8 @@ import java.util.Arrays;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
-import oliweb.nc.oliweb.dto.elasticsearch.UtilisateurDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
+import oliweb.nc.oliweb.dto.firebase.UserFirebase;
 
 import static oliweb.nc.oliweb.Utility.EMAIL;
 import static oliweb.nc.oliweb.Utility.MA_DESCRIPTION;
@@ -39,25 +39,25 @@ public class AnnonceConverterTest {
     @Test
     public void testConvertDtoToEntity() {
 
-        UtilisateurDto utilisateurDto = new UtilisateurDto();
-        utilisateurDto.setEmail(EMAIL);
-        utilisateurDto.setPhotoUrl(PHOTO_URL_USER);
-        utilisateurDto.setProfile(PROFILE_USER);
-        utilisateurDto.setTelephone(TELEPHONE_USER);
-        utilisateurDto.setUuid(UID_USER);
+        UserFirebase userFirebase = new UserFirebase();
+        userFirebase.setEmail(EMAIL);
+        userFirebase.setPhotoUrl(PHOTO_URL_USER);
+        userFirebase.setProfile(PROFILE_USER);
+        userFirebase.setTelephone(TELEPHONE_USER);
+        userFirebase.setUuid(UID_USER);
 
-        AnnonceDto annonceDto = new AnnonceDto();
-        annonceDto.setUuid(UID_ANNONCE);
-        annonceDto.setTitre(MON_TITRE);
-        annonceDto.setDescription(MA_DESCRIPTION);
-        annonceDto.setContactEmail(true);
-        annonceDto.setContactTel(false);
-        annonceDto.setContactMsg(true);
-        annonceDto.setPrix(PRIX);
-        annonceDto.setUtilisateur(utilisateurDto);
-        annonceDto.setPhotos(Arrays.asList(PHOTO_FIREBASE_URL, PHOTO_FIREBASE_URL2));
+        AnnonceFirebase annonceFirebase = new AnnonceFirebase();
+        annonceFirebase.setUuid(UID_ANNONCE);
+        annonceFirebase.setTitre(MON_TITRE);
+        annonceFirebase.setDescription(MA_DESCRIPTION);
+        annonceFirebase.setContactEmail(true);
+        annonceFirebase.setContactTel(false);
+        annonceFirebase.setContactMsg(true);
+        annonceFirebase.setPrix(PRIX);
+        annonceFirebase.setUtilisateur(userFirebase);
+        annonceFirebase.setPhotos(Arrays.asList(PHOTO_FIREBASE_URL, PHOTO_FIREBASE_URL2));
 
-        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
+        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceFirebase);
 
         assertNotNull(annonceFull);
         assertNotNull(annonceFull.getAnnonce());
@@ -90,29 +90,29 @@ public class AnnonceConverterTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
 
         // Lancement du test
-        AnnonceDto annonceDto = AnnonceConverter.convertFullEntityToDto(annonceFull);
+        AnnonceFirebase annonceFirebase = AnnonceConverter.convertFullEntityToDto(annonceFull);
 
-        assertNotNull(annonceDto);
-        assertNotNull(annonceDto.getCategorie());
-        assertNotNull(annonceDto.getUtilisateur());
-        assertNotNull(annonceDto.getPhotos());
+        assertNotNull(annonceFirebase);
+        assertNotNull(annonceFirebase.getCategorie());
+        assertNotNull(annonceFirebase.getUtilisateur());
+        assertNotNull(annonceFirebase.getPhotos());
 
-        assertEquals(UID_ANNONCE, annonceDto.getUuid());
-        assertEquals(MON_TITRE, annonceDto.getTitre());
-        assertEquals(MA_DESCRIPTION, annonceDto.getDescription());
-        assertEquals(PRIX, annonceDto.getPrix());
+        assertEquals(UID_ANNONCE, annonceFirebase.getUuid());
+        assertEquals(MON_TITRE, annonceFirebase.getTitre());
+        assertEquals(MA_DESCRIPTION, annonceFirebase.getDescription());
+        assertEquals(PRIX, annonceFirebase.getPrix());
 
-        assertEquals(UID_USER, annonceDto.getUtilisateur().getUuid());
-        assertEquals(EMAIL, annonceDto.getUtilisateur().getEmail());
-        assertEquals(PHOTO_URL_USER, annonceDto.getUtilisateur().getPhotoUrl());
-        assertEquals(PROFILE_USER, annonceDto.getUtilisateur().getProfile());
-        assertEquals(TELEPHONE_USER, annonceDto.getUtilisateur().getTelephone());
+        assertEquals(UID_USER, annonceFirebase.getUtilisateur().getUuid());
+        assertEquals(EMAIL, annonceFirebase.getUtilisateur().getEmail());
+        assertEquals(PHOTO_URL_USER, annonceFirebase.getUtilisateur().getPhotoUrl());
+        assertEquals(PROFILE_USER, annonceFirebase.getUtilisateur().getProfile());
+        assertEquals(TELEPHONE_USER, annonceFirebase.getUtilisateur().getTelephone());
 
-        assertEquals(1, annonceDto.getPhotos().size());
-        assertEquals(PHOTO_FIREBASE_URL, annonceDto.getPhotos().get(0));
+        assertEquals(1, annonceFirebase.getPhotos().size());
+        assertEquals(PHOTO_FIREBASE_URL, annonceFirebase.getPhotos().get(0));
 
-        assertTrue(annonceDto.isContactEmail());
-        assertTrue(annonceDto.isContactMsg());
-        assertFalse(annonceDto.isContactTel());
+        assertTrue(annonceFirebase.isContactEmail());
+        assertTrue(annonceFirebase.isContactMsg());
+        assertFalse(annonceFirebase.isContactTel());
     }
 }

@@ -68,7 +68,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Bundle args = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
         ArgumentsChecker argumentsChecker = new ArgumentsChecker();
         argumentsChecker
@@ -116,7 +115,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         }
 
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            if (Build.VERSION.SDK_INT >= 23) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
                 } else {
@@ -147,6 +146,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             return true;
         }
         if (idItem == R.id.menu_synchronyze) {
+            SyncService.launchSynchroForUser(getApplicationContext(), uidUser);
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observeOnce(atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
                     sendNotificationToRetreiveData(getSupportFragmentManager(), this);

@@ -1,4 +1,4 @@
-package oliweb.nc.oliweb.dto.elasticsearch;
+package oliweb.nc.oliweb.dto.firebase;
 
 import com.google.firebase.database.PropertyName;
 
@@ -6,17 +6,17 @@ import com.google.firebase.database.PropertyName;
  * Created by orlanth23 on 20/02/2018.
  */
 
-public class CategorieDto {
+public class CategorieFirebase {
     @PropertyName("id_categorie")
     private long id;
 
     @PropertyName("libelle_categorie")
     private String libelle;
 
-    public CategorieDto() {
+    public CategorieFirebase() {
     }
 
-    public CategorieDto(long id, String libelle) {
+    public CategorieFirebase(long id, String libelle) {
         this.id = id;
         this.libelle = libelle;
     }
@@ -39,7 +39,7 @@ public class CategorieDto {
 
     @Override
     public String toString() {
-        return "CategorieDto{" +
+        return "CategorieFirebase{" +
                 "id=" + id +
                 ", libelle='" + libelle + '\'' +
                 '}';

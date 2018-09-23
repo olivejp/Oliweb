@@ -47,7 +47,7 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM message WHERE statusRemote IN (:status) AND uidChat <> ''")
-    public abstract Single<List<MessageEntity>> findSingleByStatus(List<String> status);
+    public abstract Single<List<MessageEntity>> findSingleByStatusAndUidChatNotNull(List<String> status);
 
     @Transaction
     @Query("SELECT * FROM message WHERE idChat =:idChat")

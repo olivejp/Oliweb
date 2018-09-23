@@ -13,7 +13,7 @@ import java.util.List;
 
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.dto.elasticsearch.AnnonceDto;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
 import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
@@ -116,9 +116,9 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
             annonceFulls.addAll(oldList);
             for (DataSnapshot child : dataSnapshot.getChildren()) {
                 try {
-                    AnnonceDto annonceDto = child.getValue(AnnonceDto.class);
-                    if (annonceDto != null && !existInTheList(annonceFulls, annonceDto)) {
-                        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
+                    AnnonceFirebase annonceFirebase = child.getValue(AnnonceFirebase.class);
+                    if (annonceFirebase != null && !existInTheList(annonceFulls, annonceFirebase)) {
+                        AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceFirebase);
                         annonceFulls.add(annonceFull);
                     }
                 } catch (DatabaseException databaseException) {
@@ -130,9 +130,9 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
         return annonceFulls;
     }
 
-    private boolean existInTheList(List<AnnonceFull> listAnnonceFull, AnnonceDto annonceDto) {
+    private boolean existInTheList(List<AnnonceFull> listAnnonceFull, AnnonceFirebase annonceFirebase) {
         for (AnnonceFull anno : listAnnonceFull) {
-            if (anno.getAnnonce().getUid().equals(annonceDto.getUuid())) {
+            if (anno.getAnnonce().getUid().equals(annonceFirebase.getUuid())) {
                 return true;
             }
         }

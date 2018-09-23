@@ -161,5 +161,15 @@
     <string name="search">Recherche</string>
     <string name="advanced_search">Recherche avancée</string>
     <string name="answer">Répondre</string>
+    <string name="search_error">Erreur dans la recherche</string>
+    <string name="error_max_gte_min">Le maximum doit être supérieur au minimum</string>
+    <string name="error_price_interval_incorrect">La fourchette de prix est incomplète</string>
+    <string name="with_photo_only">Avec photos uniquement</string>
+    <string name="categories">Catégories</string>
+    <string name="price_between">Prix compris entre</string>
+    <string name="keyword">Mots clés</string>
+    <string name="maximum">Maximum</string>
+    <string name="minimum">Minimum</string>
+    <string name="and">et</string>
 
 </resources>

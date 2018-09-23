@@ -5,7 +5,6 @@ import javax.inject.Singleton;
 import dagger.Component;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
-import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
@@ -16,6 +15,7 @@ import oliweb.nc.oliweb.system.dagger.module.DatabaseRepositoriesModule;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
+import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -32,8 +32,6 @@ public interface DatabaseRepositoriesComponent {
     MessageRepository getMessageRepository();
 
     CategorieRepository getCategorieRepository();
-
-    AnnonceWithPhotosRepository getAnnonceWithPhotosRepository();
 
     AnnonceFullRepository getAnnonceFullRepository();
 
@@ -52,4 +50,6 @@ public interface DatabaseRepositoriesComponent {
     void inject(ProfilViewModel profilViewModel);
 
     void inject(MainActivityViewModel mainActivityViewModel);
+
+    void inject(MyChatsActivityViewModel myChatsActivityViewModel);
 }

@@ -11,8 +11,11 @@ import android.util.Log;
 
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
 
@@ -33,7 +36,8 @@ public class SyncService extends IntentService {
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
     public static final String ARG_UID_USER = "ARG_UID_USER";
 
-    private FirebaseServicesComponent componentFbServices;
+    private ServicesComponent servicesComponent;
+    private FirebaseServicesComponent firebaseServicesComponent;
 
     public SyncService() {
         super("SyncService");
@@ -44,9 +48,10 @@ public class SyncService extends IntentService {
      *
      * @param context
      */
-    public static void launchSynchroForUser(@NonNull Context context) {
+    public static void launchSynchroForUser(@NonNull Context context, String uidUser) {
         Intent syncService = new Intent(context, SyncService.class);
         syncService.putExtra(SyncService.ARG_ACTION, SyncService.ARG_ACTION_SYNC_USER);
+        syncService.putExtra(SyncService.ARG_UID_UTILISATEUR, uidUser);
         context.startService(syncService);
     }
 
@@ -74,13 +79,13 @@ public class SyncService extends IntentService {
         context.startService(syncService);
     }
 
-    private void handleActionSyncAll() {
-        ScheduleSync scheduleSync = componentFbServices.getScheduleSync();
-        scheduleSync.synchronize();
+    private void handleActionSyncAll(String uidUser) {
+        ScheduleSync scheduleSync = servicesComponent.getScheduleSync();
+        scheduleSync.synchronize(uidUser);
     }
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
-        FirebaseRetrieverService firebaseRetrieverService = componentFbServices.getFirebaseRetrieverService();
+        FirebaseRetrieverService firebaseRetrieverService = firebaseServicesComponent.getFirebaseRetrieverService();
         firebaseRetrieverService.synchronize(this, uidUtilisateur);
     }
 
@@ -89,7 +94,8 @@ public class SyncService extends IntentService {
         if (intent == null) return;
 
         ContextModule contextModule = new ContextModule(this);
-        componentFbServices = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
+        servicesComponent = DaggerServicesComponent.builder().contextModule(contextModule).build();
+        firebaseServicesComponent = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
 
         Bundle bundle = intent.getExtras();
         if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
@@ -104,20 +110,23 @@ public class SyncService extends IntentService {
             }
         } else if (bundle != null && bundle.containsKey(ARG_ACTION)) {
             String action = bundle.getString(ARG_ACTION);
+            String uidUser;
             if (action != null) {
                 switch (action) {
                     case ARG_ACTION_SYNC_ALL_FROM_SCHEDULER:
-                        Log.d(TAG, "Lancement du batch par le Scheduler");
-                        handleActionSyncAll();
+                        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+                        Log.d(TAG, "Lancement du batch par le Scheduler pour l'utilisateur " + uidUser);
+                        handleActionSyncAll(uidUser);
                         break;
                     case ARG_ACTION_SYNC_FROM_FIREBASE:
-                        Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local");
-                        String uidUtilisateur = bundle.getString(ARG_UID_UTILISATEUR);
-                        handleActionSyncFromFirebase(uidUtilisateur);
+                        uidUser = bundle.getString(ARG_UID_UTILISATEUR);
+                        Log.d(TAG, "Lancement du batch pour récupérer les données sur Firebase et les importer en local pour l'utilisateur " + uidUser);
+                        handleActionSyncFromFirebase(uidUser);
                         break;
                     case ARG_ACTION_SYNC_USER:
-                        Log.d(TAG, "Lancement du batch pour envoyer les informations des utilisateurs sur Firebase");
-                        handleActionSyncAll();
+                        uidUser = bundle.getString(ARG_UID_UTILISATEUR);
+                        Log.d(TAG, "Lancement du batch pour envoyer sur Firebase les informations de l'utilisateur " + uidUser);
+                        handleActionSyncAll(uidUser);
                         break;
                     default:
                         break;

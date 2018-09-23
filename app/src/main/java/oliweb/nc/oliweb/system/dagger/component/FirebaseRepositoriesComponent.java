@@ -5,7 +5,6 @@ import javax.inject.Singleton;
 import dagger.Component;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseChatRepository;
-import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseRepositoriesModule;
@@ -21,8 +20,6 @@ public interface FirebaseRepositoriesComponent {
     FirebaseChatRepository getFirebaseChatRepository();
 
     FirebaseAnnonceRepository getFirebaseAnnonceRepository();
-
-    FirebaseMessageRepository getFirebaseMessageRepository();
 
     void inject(ProfilViewModel profilViewModel);
 

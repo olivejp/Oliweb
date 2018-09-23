@@ -36,12 +36,6 @@ public abstract class CategorieDao implements AbstractDao<CategorieEntity, Long>
     public abstract Single<List<CategorieEntity>> getListCategorie();
 
     @Transaction
-    @Query("SELECT * FROM categorie WHERE idCategorie = :idCategorie")
-    public abstract Single<CategorieEntity> findSingleById(Long idCategorie);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM categorie WHERE idCategorie = :idCategorie")
-    public abstract Single<Integer> countById(Long idCategorie);
-
-
+    @Query("SELECT name FROM categorie")
+    public abstract Single<List<String>> getListCategorieLibelle();
 }

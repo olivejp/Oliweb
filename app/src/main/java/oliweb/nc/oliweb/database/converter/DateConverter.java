@@ -115,5 +115,14 @@ public class DateConverter {
         return null;
     }
 
+    /**
+     * Transformation d'une date de type yyyyMMddHHmmss vers le format dd/MM/yyyy HH:mm:ss en Long
+     *
+     * @param dateEntity
+     * @return String
+     */
+    public static String convertDateToUiDate(Long dateEntity) {
+        return simpleUiMessageDateFormat.format(new Date(dateEntity));
+    }
 
 }
