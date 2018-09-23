@@ -36,7 +36,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:editable="false"
-                    android:hint="Catégories" />
+                    android:hint="@string/categories" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
@@ -48,7 +48,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="Avec photos uniquement"
+                android:text="@string/with_photo_only"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toTopOf="@id/text_layout_keywords"
@@ -81,7 +81,7 @@
                     android:id="@+id/keyword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Mots clés" />
+                    android:hint="@string/keyword" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
@@ -92,7 +92,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
                 android:gravity="start"
-                android:text="Prix compris entre"
+                android:text="@string/price_between"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -113,7 +113,7 @@
                     android:id="@+id/lower_price"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Minimum"
+                    android:hint="@string/minimum"
                     android:inputType="number"
                     android:maxLength="12" />
             </android.support.design.widget.TextInputLayout>
@@ -125,7 +125,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:text="et"
+                android:text="@string/and"
                 app:layout_constraintBottom_toBottomOf="@id/text_layout_minimum"
                 app:layout_constraintEnd_toStartOf="@id/text_layout_maximum"
                 app:layout_constraintStart_toEndOf="@id/text_layout_minimum"
@@ -145,7 +145,7 @@
                     android:id="@+id/higher_price"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Maximum"
+                    android:hint="@string/maximum"
                     android:inputType="number"
                     android:maxLength="12" />
             </android.support.design.widget.TextInputLayout>
@@ -160,6 +160,6 @@
         android:layout_marginBottom="20dp"
         android:background="@drawable/button_background"
         android:drawableStart="@drawable/ic_zoom_in_white_24dp"
-        android:text="Rechercher"
+        android:text="@string/search"
         android:textColor="@android:color/white" />
 </android.support.design.widget.CoordinatorLayout>
