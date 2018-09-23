@@ -120,6 +120,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
+            newRequestRef.removeValue();
             updateLoadingStatus(false);
         }
     };
@@ -172,7 +173,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
     public void search(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
 
-        // Préparation de la requête
         if (from == 0) {
             listAnnonce.clear();
         }
@@ -190,9 +190,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
             builder.setWithPhotoOnly();
         }
 
-        // Création d'une nouvelle request dans la table request
         String requestJson = gson.toJson(builder.build());
-
         utilityService.getServerTimestamp()
                 .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .timeout(30, TimeUnit.SECONDS)
@@ -203,8 +201,6 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 .doOnSuccess(timestamp -> {
                     newRequestRef = requestReference.push();
                     newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
-
-                    // Ensuite on va écouter les changements pour cette nouvelle requête
                     newRequestRef.addValueEventListener(requestValueListener);
                     delayBeforeDeleteRequest();
                 })
