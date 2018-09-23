@@ -39,6 +39,8 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
 
     public static final String TAG = AdvancedSearchActivity.class.getCanonicalName();
     public static final String DIALOG_SELECT_CATEGORY = "DIALOG_SELECT_CATEGORY";
+    public static final String BUNDLE_SAVED_CATEGORIE = "BUNDLE_SAVED_CATEGORIE";
+
 
     @BindView(R.id.text_categorie)
     EditText textCategorie;
@@ -74,6 +76,10 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
         setContentView(R.layout.activity_advanced_search);
         ButterKnife.bind(this);
+
+        if (savedInstanceState != null) {
+            checkedCategorie = savedInstanceState.getBooleanArray(BUNDLE_SAVED_CATEGORIE);
+        }
     }
 
     @Override
@@ -161,5 +167,11 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
             }
         }
         textCategorie.setText(libelleConcat);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBooleanArray(BUNDLE_SAVED_CATEGORIE, checkedCategorie);
+        super.onSaveInstanceState(outState);
     }
 }
