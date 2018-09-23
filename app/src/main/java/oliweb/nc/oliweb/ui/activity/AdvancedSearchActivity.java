@@ -92,11 +92,11 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     }
 
     @OnClick(R.id.with_photos_only)
-    public void changePhotoOnly(View v){
+    public void changePhotoOnly(View v) {
         withPhotoOnly.setChecked(!withPhotoOnly.isChecked());
     }
 
-    @OnClick(R.id.text_layout_categorie)
+    @OnClick(R.id.text_categorie)
     public void chooseCategory(View v) {
         viewModel.getListCategorieLibelle()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
@@ -156,7 +156,7 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         checkedCategorie = checkedCat;
         for (int i = 0; i <= listCategorieComplete.length - 1; i++) {
             if (checkedCategorie[i]) {
-                libelleConcat = libelleConcat.concat(listCategorieComplete[i]).concat(" ");
+                libelleConcat = libelleConcat.concat(listCategorieComplete[i]).concat((i < checkedCategorie.length - 1) ? ", " : "");
                 listCategorieSelected.add(listCategorieComplete[i]);
             }
         }
