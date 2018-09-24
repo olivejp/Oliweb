@@ -1,0 +1,60 @@
+{
+  "from": 2,
+  "size": 10,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "bool": {
+            "should": [
+              {
+                "match": {
+                  "categorie.libelle": "Immobilier"
+                }
+              },
+              {
+                "match": {
+                  "categorie.libelle": "Automobile"
+                }
+              },
+              {
+                "match": {
+                  "categorie.libelle": "Meuble"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "range": {
+            "prix": {
+              "lte": "2000",
+              "gte": "1000"
+            }
+          }
+        },
+        {
+          "exists": {
+            "field": "photos"
+          }
+        },
+        {
+          "multi_match": {
+            "query": "recherche",
+            "fields": [
+              "titre",
+              "description"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "datePublication": {
+        "order": "ASC"
+      }
+    }
+  ]
+}
