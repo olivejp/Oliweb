@@ -48,7 +48,7 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         return this.photoDao.getAllPhotosByStatus(status);
     }
 
-    public Observable<List<PhotoEntity>> markToDeleteByAnnonce(AnnonceEntity annonceEntity) {
+    Observable<List<PhotoEntity>> markToDeleteByAnnonce(AnnonceEntity annonceEntity) {
         Log.d(TAG, "Starting markToDeleteByAnnonce annonceEntity : " + annonceEntity);
         return findAllPhotosByIdAnnonce(annonceEntity.getIdAnnonce())
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
