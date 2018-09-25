@@ -55,32 +55,10 @@
         android:id="@+id/img_photo_raw"
         android:layout_width="18dp"
         android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/text_nb_conversations"
-        app:srcCompat="@drawable/ic_photo_camera_grey_900_48dp"
-        tools:ignore="contentDescription" />
-
-    <ImageView
-        android:id="@+id/img_conversation_raw"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:srcCompat="@drawable/ic_people_grey_900_48dp"
+        app:srcCompat="@drawable/ic_photo_camera_grey_900_48dp"
         tools:ignore="contentDescription" />
-
-    <TextView
-        android:id="@+id/text_nb_conversations"
-        style="@style/TextAppearance.AppCompat.Caption"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:gravity="center_vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/img_conversation_raw"
-        app:layout_constraintTop_toTopOf="@id/img_conversation_raw"
-        tools:text="4" />
 
     <TextView
         android:id="@+id/text_prix_annonce_raw"
