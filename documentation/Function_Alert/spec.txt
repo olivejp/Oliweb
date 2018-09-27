@@ -1,0 +1,17 @@
+Function_05 : Create an alert
+
+An alert is send to the user when a new annonce reach the criterias.
+
+RG51 : User can create an alert
+RG52 : An alert can be composed of an :
+- Range of price (min and max)
+- Keyword
+- List of categorie
+- An boolean meaning is th
+
+
+
+Function Post annonce is only available for authenticated user.
+In the post annonce screen, he should fill the title, description and price fields.
+A default category is proposed but user can change it at any time.
+User can choose to attach an existing photo to its annonce through the chooser photo or to take an new picture.
