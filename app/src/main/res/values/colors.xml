@@ -9,4 +9,5 @@
     <color name="colorLoadingBegin">#ffcc80</color>
     <color name="colorLoadingEnd">#ef6c00</color>
     <color name="colorBottomDark">#263238</color>
+    <color name="colorAnnonceElementBackground">#90a4ae</color>
 </resources>

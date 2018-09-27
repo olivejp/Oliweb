@@ -12,6 +12,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -250,8 +251,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, BaseTransientBottomBar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
-        layout.setBackgroundColor(appCompatActivity.getResources().getColor(R.color.colorAccentDarker));
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(appCompatActivity.getResources().getColor(R.color.colorPrimary),
+        layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(appCompatActivity, R.color.colorAnnonceElementBackground),
                 onClickListener,
                 onClickListenerShare,
                 onClickListenerFavorite);

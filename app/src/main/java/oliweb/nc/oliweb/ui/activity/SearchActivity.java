@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -121,10 +122,10 @@ public class SearchActivity extends AppCompatActivity {
                 listCategorieSelected = intentParam.getStringArrayListExtra(CATEGORIE);
             }
             if (intentParam.hasExtra(LOWER_PRICE)) {
-                lowerPrice = intentParam.getIntExtra(LOWER_PRICE,0);
+                lowerPrice = intentParam.getIntExtra(LOWER_PRICE, 0);
             }
             if (intentParam.hasExtra(HIGHER_PRICE)) {
-                higherPrice = intentParam.getIntExtra(HIGHER_PRICE,0);
+                higherPrice = intentParam.getIntExtra(HIGHER_PRICE, 0);
             }
             if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
                 withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
@@ -137,7 +138,7 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(this, R.color.colorAnnonceElementBackground),
                 onClickListener,
                 onClickListenerShare,
                 onClickListenerFavorite);
