@@ -3,18 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/fui_transparent">
 
     <TextView
         android:id="@+id/title_slide_1"
+        style="@style/IntroTextField.Heading.Subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/sinisuka"
         android:text="Garder le contact"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
-        android:textSize="40sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/img_telephone"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -28,7 +24,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
-        app:srcCompat="@drawable/ic_phone_grey_900_48dp" />
+        app:srcCompat="@drawable/ic_phone_white_48dp" />
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/img_mail"
@@ -37,7 +33,7 @@
         app:layout_constraintEnd_toStartOf="@+id/img_telephone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
-        app:srcCompat="@drawable/ic_email_grey_900_48dp" />
+        app:srcCompat="@drawable/ic_email_white_48dp" />
 
 
     <android.support.v7.widget.AppCompatImageView
@@ -47,20 +43,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/img_telephone"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
-        app:srcCompat="@drawable/ic_message_grey_900_48dp" />
+        app:srcCompat="@drawable/ic_message_white_48dp" />
 
 
     <TextView
         android:id="@+id/text_slide_1"
+        style="@style/IntroTextField.Tagline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:paddingLeft="@dimen/desc_padding"
-        android:paddingRight="@dimen/desc_padding"
         android:text="Mail, Téléphone, Messagerie\n\nC'est vous qui choisissez le moyen de communication pour vous contacter"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/slide_desc"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
