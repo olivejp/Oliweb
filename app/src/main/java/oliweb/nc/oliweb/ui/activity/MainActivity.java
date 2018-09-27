@@ -429,7 +429,7 @@ public class MainActivity extends AppCompatActivity
                     .load(userEntity.getPhotoUrl())
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_person_white_48dp)
+                    .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }
 
