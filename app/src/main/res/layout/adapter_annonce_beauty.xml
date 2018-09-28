@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_view"
     android:layout_width="match_parent"
-    android:layout_height="250dp"
+    android:layout_height="@dimen/annonce_card_adapter_element"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    app:cardCornerRadius="2dp">
+    app:cardCornerRadius="10dp">
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/firstLinear"
@@ -29,10 +29,22 @@
         <ImageView
             android:id="@+id/image_view_beauty"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="@dimen/annonce_image_view_adapter_element"
             android:contentDescription="Image annonce"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/image_view_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Image annonce empty"
+            android:src="@drawable/icon_resize_grey"
+            app:layout_constraintBottom_toBottomOf="@id/image_view_beauty"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -95,8 +107,8 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:gravity="center"
-            android:textSize="16sp"
             android:textColor="@color/colorAccent"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/image_share"
             app:layout_constraintStart_toStartOf="parent"
