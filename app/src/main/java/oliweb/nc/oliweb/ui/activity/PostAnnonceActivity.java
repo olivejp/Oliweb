@@ -31,7 +31,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.firebase.auth.FirebaseAuth;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
+import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -66,6 +68,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public static final String TAG_WORKING_IMAGE = "TAG_WORKING_IMAGE";
     public static final String BUNDLE_KEY_ID_ANNONCE = "ID_ANNONCE";
     public static final String BUNDLE_KEY_UID_ANNONCE = "BUNDLE_KEY_UID_ANNONCE";
+    public static final String BUNDLE_UID_USER = "BUNDLE_UID_USER";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
     public static final int DIALOG_REQUEST_IMAGE = 100;
@@ -73,16 +76,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
     private static final String SAVE_ANNONCE = "SAVE_ANNONCE";
-    private static final String SAVE_LIST_PHOTO = "SAVE_LIST_PHOTO";
     private static final String SAVE_FILE_URI_TEMP = "SAVE_FILE_URI_TEMP";
 
     private PostAnnonceActivityViewModel viewModel;
+
     private Uri mFileUriTemp;
-    private long idAnnonce = 0;
+    private Long idAnnonce;
     private boolean externalStorage;
     private String uidUser;
     private String uidAnnonce;
     private String mode;
+
+    private ArrayList<CategorieEntity> listCategorieEntities;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -181,31 +186,29 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
                 viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
             }
-
             if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
                 mFileUriTemp = savedInstanceState.getParcelable(SAVE_FILE_URI_TEMP);
-            }
-
-            if (savedInstanceState.containsKey(SAVE_LIST_PHOTO)) {
-                displayPhotos(savedInstanceState.getParcelableArrayList(SAVE_LIST_PHOTO));
             }
 
             // S'il y avait un fragment, je le remet
             if (savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
                 Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
-                        .commit();
+                if (frag != null) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
+                            .commit();
+                }
             }
         }
 
         Bundle bundle = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
-        if (!catchAndCheckParameter(bundle)) {
+        if (!checkAndCatchParameter(bundle)) {
             setResult(RESULT_CANCELED);
             finish();
-        } else if (savedInstanceState == null) {
-            initViewModel(bundle);
+        } else {
+            setTitle(mode.equals(Constants.PARAM_CRE) ? "Ajouter une annonce" : "Modifier une annonce");
+            initViewModel();
         }
     }
 
@@ -248,7 +251,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(annonce -> {
                     Log.d(TAG, "saveAnnonce.doOnSuccess annonce : " + annonce);
-                    viewModel.savePhotos(annonce)
+                    viewModel.savePhotos(annonce.getIdAnnonce())
                             .doOnSuccess(listPhotos -> {
                                 Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
                                 setResult(RESULT_OK);
@@ -328,12 +331,38 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
-        outState.putString(BUNDLE_KEY_UID_ANNONCE, uidAnnonce);
+        // Save the mode (CRE / MAJ)
         outState.putString(BUNDLE_KEY_MODE, mode);
-        outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
-        outState.putParcelable(SAVE_ANNONCE, viewModel.getCurrentAnnonce());
-        outState.putParcelableArrayList(SAVE_LIST_PHOTO, new ArrayList<>(viewModel.getCurrentListPhoto()));
+
+        // Save the Id or Uid of the annonce
+        if (idAnnonce != null) {
+            outState.putLong(BUNDLE_KEY_ID_ANNONCE, idAnnonce);
+        }
+        if (uidAnnonce != null) {
+            outState.putString(BUNDLE_KEY_UID_ANNONCE, uidAnnonce);
+        }
+
+        // Save the uid user
+        outState.putString(BUNDLE_UID_USER, uidUser);
+
+
+        // Save annonce infos
+        AnnoncePhotos currentAnnonce = viewModel.getCurrentAnnonce();
+        currentAnnonce.annonceEntity.setTitre(textViewTitre.getText().toString());
+        currentAnnonce.annonceEntity.setDescription(textViewDescription.getText().toString());
+        currentAnnonce.annonceEntity.setPrix(Integer.valueOf(textViewPrix.getText().toString()));
+        currentAnnonce.annonceEntity.setContactByMsg(checkBoxMsg.isChecked() ? "O" : "N");
+        currentAnnonce.annonceEntity.setContactByTel(checkBoxTel.isChecked() ? "O" : "N");
+        currentAnnonce.annonceEntity.setContactByEmail(checkBoxEmail.isChecked() ? "O" : "N");
+        currentAnnonce.annonceEntity.setIdCategorie(viewModel.getCurrentCategorie().getIdCategorie());
+        outState.putParcelable(SAVE_ANNONCE, currentAnnonce);
+
+        // Save the uri temporary
+        if (mFileUriTemp != null && StringUtils.isNotEmpty(mFileUriTemp.toString())) {
+            outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
+        }
+
+        // Save the fragment if any
         Fragment frag = getSupportFragmentManager().findFragmentByTag(TAG_WORKING_IMAGE);
         if (frag != null) {
             getSupportFragmentManager().putFragment(outState, TAG_WORKING_IMAGE, frag);
@@ -352,11 +381,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (v.getTag() == null) {
             // Mode création d'une nouvelle photo
             AlertDialog.Builder builder;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
-            } else {
-                builder = new AlertDialog.Builder(this);
-            }
+            builder = getBuilder();
             builder.setTitle(R.string.add_new_photo)
                     .setMessage(R.string.add_photo_question)
                     .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())
@@ -374,24 +399,29 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
                     .addToBackStack(null)
                     .commit();
-
-
         }
+    }
+
+    @NonNull
+    private AlertDialog.Builder getBuilder() {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_NoActionBar_MinWidth);
+        } else {
+            builder = new AlertDialog.Builder(this);
+        }
+        return builder;
     }
 
     @OnLongClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
     public boolean onLongClick(View v) {
         if (v.getTag() != null) {
             AlertDialog.Builder builder;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar_MinWidth);
-            } else {
-                builder = new AlertDialog.Builder(this);
-            }
+            builder = getBuilder();
 
             builder.setTitle(R.string.delete_photo)
                     .setMessage(R.string.delete_photo_are_you_sure)
-                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoToCurrentList((PhotoEntity) v.getTag()))
+                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoFromCurrentList((PhotoEntity) v.getTag()))
                     .setNegativeButton(R.string.no, (dialog, which) -> {
                     })
                     .setIcon(R.drawable.ic_add_a_photo_black_48dp)
@@ -407,16 +437,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * @param bundle to check
      * @return true if everything is ok, false otherwise
      */
-    private boolean catchAndCheckParameter(Bundle bundle) {
+    private boolean checkAndCatchParameter(Bundle bundle) {
         // Catch preferences
         externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
-
-        // Récupération du Uid de l'utilisateur connecté
-        uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
-        if (uidUser == null || uidUser.isEmpty()) {
-            Log.e(TAG, "Missing UID parameter");
-            return false;
-        }
 
         // Récupération des paramètres
         if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
@@ -427,13 +450,25 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (mode != null && mode.equals(Constants.PARAM_MAJ) && !bundle.containsKey(BUNDLE_KEY_ID_ANNONCE) && !bundle.containsKey(BUNDLE_KEY_UID_ANNONCE)) {
                 Log.e(TAG, "Aucun Id ou UID d'annonce passé en paramètre");
                 return false;
+            } else {
+                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
+                uidAnnonce = bundle.getString(BUNDLE_KEY_UID_ANNONCE);
+            }
+
+            // Récupération du Uid de l'utilisateur
+            uidUser = bundle.getString(BUNDLE_UID_USER);
+            if (uidUser == null || uidUser.isEmpty()) {
+                Log.e(TAG, "Missing UID parameter");
+                return false;
             }
         }
         return true;
     }
 
-    private void defineSpinnerCategorie(List<CategorieEntity> categorieEntities) {
-        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, categorieEntities);
+    private void defineSpinnerCategorie(ArrayList<CategorieEntity> categorieEntities) {
+        listCategorieEntities = categorieEntities;
+
+        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, listCategorieEntities);
         spinnerCategorie.setAdapter(adapter);
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
     }
@@ -455,41 +490,36 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void initObservers() {
-        // Récupération dynamique de la liste des photos
-        viewModel.getLiveListPhoto().observe(this, this::displayPhotos);
-
         // Alimentation du spinner avec la liste des catégories
-        viewModel.getListCategorie().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess(this::defineSpinnerCategorie)
-                .subscribe();
+        viewModel.getListCategorie().observeOnce(this::defineSpinnerCategorie);
 
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            viewModel.getConnectedUser(FirebaseAuth.getInstance().getCurrentUser().getUid()).observe(this, this::changeUserContactMethod);
-        }
+        // Initialise les moyens de contacts de l'utilisateur selon ses données.
+        viewModel.getConnectedUser(uidUser).observe(this, this::changeUserContactMethod);
+
+        // Initialisation pour écouter les changements sur les photos
+        viewModel.getLiveListPhoto().observe(this, this::displayPhotos);
     }
 
-    private void initViewModel(Bundle bundle) {
-        if (mode.equals(Constants.PARAM_CRE)) {
-            setTitle("Ajouter une annonce");
-            viewModel.createNewAnnonce();
-        } else if (mode.equals(Constants.PARAM_MAJ)) {
-            setTitle("Modifier une annonce");
-            if (bundle.containsKey(BUNDLE_KEY_ID_ANNONCE)) {
-                idAnnonce = bundle.getLong(BUNDLE_KEY_ID_ANNONCE);
-                viewModel.getAnnonceById(idAnnonce).observe(this, this::initAnnonce);
+    private void initViewModel() {
+        if (viewModel.getCurrentAnnonce() != null) {
+            displayCurrentAnnonce();
+        } else {
+            if (mode.equals(Constants.PARAM_CRE)) {
+                viewModel.createNewAnnonce();
+            } else {
+                if (idAnnonce != null) {
+                    viewModel.getAnnonceById(idAnnonce).observe(this, annoncePhotos -> {
+                        viewModel.setCurrentAnnonce(annoncePhotos);
+                        displayCurrentAnnonce();
+                    });
+                }
+                if (uidAnnonce != null) {
+                    viewModel.getAnnonceByUid(uidAnnonce).observe(this, annoncePhotos -> {
+                        viewModel.setCurrentAnnonce(annoncePhotos);
+                        displayCurrentAnnonce();
+                    });
+                }
             }
-            if (bundle.containsKey(BUNDLE_KEY_UID_ANNONCE)) {
-                uidAnnonce = bundle.getString(BUNDLE_KEY_UID_ANNONCE);
-                viewModel.getAnnonceByUid(uidAnnonce).observe(this, this::initAnnonce);
-            }
-        }
-    }
-
-    private void initAnnonce(AnnonceEntity annonceEntity) {
-        if (annonceEntity != null) {
-            displayAnnonce(annonceEntity);
-            viewModel.setCurrentAnnonce(annonceEntity);
-            viewModel.getListPhotoByIdAnnonce(annonceEntity.getId()).observe(this, this::displayPhotos);
         }
     }
 
@@ -509,7 +539,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private void displayPhotos(List<PhotoEntity> photoEntities) {
         clearImageViews();
         if (photoEntities != null && !photoEntities.isEmpty()) {
-            viewModel.setCurrentListPhoto(photoEntities);
             for (PhotoEntity photo : photoEntities) {
                 if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
                     boolean insertion = false;
@@ -523,7 +552,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    // TODO revoir la stratégie de cache
     private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
         ImageView imageView = pair.first;
         FrameLayout frameLayout = pair.second;
@@ -601,30 +629,35 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
 
-    private void displayAnnonce(AnnonceEntity annonce) {
+    private void displayCurrentAnnonce() {
+        AnnoncePhotos annoncePhotos = viewModel.getCurrentAnnonce();
+
+        // Display annonce
+        AnnonceEntity annonce = annoncePhotos.getAnnonceEntity();
         textViewTitre.setText(annonce.getTitre());
         textViewDescription.setText(annonce.getDescription());
         textViewPrix.setText(String.valueOf(annonce.getPrix()));
         checkBoxMsg.setChecked(annonce.getContactByMsg() != null && annonce.getContactByMsg().equals("O"));
         checkBoxEmail.setChecked(annonce.getContactByEmail() != null && annonce.getContactByEmail().equals("O"));
         checkBoxTel.setChecked(annonce.getContactByTel() != null && annonce.getContactByTel().equals("O"));
-        selectCategorieInSpinner(annonce);
+
+        // Display the categorie
+        selectCategorieInSpinner(annonce.getIdCategorie());
+
+        // Display the photos
+        displayPhotos(annoncePhotos.getPhotos());
     }
 
-    private void selectCategorieInSpinner(AnnonceEntity annonce) {
-        viewModel.getListCategorie()
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .doOnSuccess(categorieEntities -> {
-                    if (categorieEntities != null && annonce.getIdCategorie() != null) {
-                        for (CategorieEntity categorieEntity : categorieEntities) {
-                            if (categorieEntity.getId().equals(annonce.getIdCategorie())) {
-                                spinnerCategorie.setSelection(categorieEntities.indexOf(categorieEntity), true);
-                                break;
-                            }
-                        }
+    private void selectCategorieInSpinner(Long idCategorie) {
+        viewModel.getListCategorie().observeOnce(listCategorie -> {
+            if (listCategorie != null && idCategorie != null) {
+                for (CategorieEntity categorieEntity : listCategorie) {
+                    if (categorieEntity.getId().equals(idCategorie)) {
+                        spinnerCategorie.setSelection(listCategorie.indexOf(categorieEntity), true);
+                        break;
                     }
-                })
-                .subscribe();
+                }
+            }
+        });
     }
 }

@@ -225,6 +225,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         Bundle bundle = new Bundle();
         intent.setClass(this, PostAnnonceActivity.class);
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
+        bundle.putString(PostAnnonceActivity.BUNDLE_UID_USER, uidUser);
         bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getId());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CODE_POST);

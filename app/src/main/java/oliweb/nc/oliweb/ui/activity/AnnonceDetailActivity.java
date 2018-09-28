@@ -279,6 +279,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         intent.setClass(this, PostAnnonceActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, PARAM_MAJ);
+        bundle.putString(PostAnnonceActivity.BUNDLE_UID_USER, uidUser);
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_UID_ANNONCE, annonceFull.getAnnonce().getUid());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CALL_POST_ANNONCE);

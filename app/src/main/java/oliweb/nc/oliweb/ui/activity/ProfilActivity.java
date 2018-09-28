@@ -192,10 +192,18 @@ public class ProfilActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        liveDataUser.removeObservers(this);
-        liveDataNbAnnonce.removeObservers(this);
-        liveDataNbChat.removeObservers(this);
-        liveDataNbMessage.removeObservers(this);
         super.onDestroy();
+        if (liveDataUser != null) {
+            liveDataUser.removeObservers(this);
+        }
+        if (liveDataNbAnnonce != null) {
+            liveDataNbAnnonce.removeObservers(this);
+        }
+        if (liveDataNbChat != null) {
+            liveDataNbChat.removeObservers(this);
+        }
+        if (liveDataNbMessage != null) {
+            liveDataNbMessage.removeObservers(this);
+        }
     }
 }

@@ -339,12 +339,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         NetworkReceiver.removeListener(this);
+
+        if (liveCountAllActiveAnnonce != null) {
+            liveCountAllActiveAnnonce.removeObservers(this);
+        }
+        if (liveCountAllFavorite != null) {
+            liveCountAllFavorite.removeObservers(this);
+        }
+        if (liveCountAllChat != null) {
+            liveCountAllChat.removeObservers(this);
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -563,4 +573,6 @@ public class MainActivity extends AppCompatActivity
         viewModel.stopAllServices();
         viewModel.setIsNetworkAvailable(false);
     }
+
+
 }
