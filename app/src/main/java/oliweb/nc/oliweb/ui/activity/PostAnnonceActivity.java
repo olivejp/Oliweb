@@ -513,14 +513,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
             } else {
                 if (idAnnonce != null) {
                     viewModel.getAnnonceById(idAnnonce).observe(this, annoncePhotos -> {
-                        viewModel.setCurrentAnnonce(annoncePhotos);
-                        displayCurrentAnnonce();
+                        if (annoncePhotos != null) {
+                            viewModel.setCurrentAnnonce(annoncePhotos);
+                            displayCurrentAnnonce();
+                        }
                     });
                 }
                 if (uidAnnonce != null) {
                     viewModel.getAnnonceByUid(uidAnnonce).observe(this, annoncePhotos -> {
-                        viewModel.setCurrentAnnonce(annoncePhotos);
-                        displayCurrentAnnonce();
+                        if (annoncePhotos != null) {
+                            viewModel.setCurrentAnnonce(annoncePhotos);
+                            displayCurrentAnnonce();
+                        }
                     });
                 }
             }
