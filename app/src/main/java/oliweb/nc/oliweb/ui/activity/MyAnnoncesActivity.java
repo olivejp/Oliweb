@@ -32,6 +32,7 @@ import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
+import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_UID_USER;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -214,6 +215,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
+        bundle.putString(BUNDLE_UID_USER, uidUser);
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
         startActivityForResult(intent, REQUEST_CODE_POST);

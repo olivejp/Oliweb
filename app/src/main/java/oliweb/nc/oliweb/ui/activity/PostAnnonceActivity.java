@@ -266,15 +266,17 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private boolean checkIfAnnonceIsValid() {
         boolean isValid = true;
-        if (textViewTitre.getText().toString().isEmpty()) {
+        if (StringUtils.isEmpty(textViewTitre.getText().toString())) {
             textViewTitre.setError("Le titre est obligatoire.");
             isValid = false;
         }
-        if (textViewDescription.getText().toString().isEmpty()) {
+        if (StringUtils.isEmpty(textViewDescription.getText().toString())) {
             textViewDescription.setError("La description est obligatoire.");
             isValid = false;
         }
-        if (textViewPrix.getText().toString().isEmpty()) {
+
+        String prixStr = textViewPrix.getText().toString();
+        if (StringUtils.isEmpty(prixStr) || Integer.parseInt(prixStr) <= 0) {
             textViewPrix.setError("Le prix est obligatoire.");
             isValid = false;
         }
@@ -347,10 +349,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
 
         // Save annonce infos
+        String prixStr = textViewPrix.getText().toString();
+
         AnnoncePhotos currentAnnonce = viewModel.getCurrentAnnonce();
         currentAnnonce.annonceEntity.setTitre(textViewTitre.getText().toString());
         currentAnnonce.annonceEntity.setDescription(textViewDescription.getText().toString());
-        currentAnnonce.annonceEntity.setPrix(Integer.valueOf(textViewPrix.getText().toString()));
+        currentAnnonce.annonceEntity.setPrix((StringUtils.isEmpty(prixStr)) ? 0 : Integer.parseInt(prixStr));
         currentAnnonce.annonceEntity.setContactByMsg(checkBoxMsg.isChecked() ? "O" : "N");
         currentAnnonce.annonceEntity.setContactByTel(checkBoxTel.isChecked() ? "O" : "N");
         currentAnnonce.annonceEntity.setContactByEmail(checkBoxEmail.isChecked() ? "O" : "N");
