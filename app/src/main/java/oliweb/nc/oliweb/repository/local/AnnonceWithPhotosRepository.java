@@ -34,4 +34,12 @@ public class AnnonceWithPhotosRepository {
     public Maybe<AnnoncePhotos> findFavoriteAnnonceByUidAnnonce(String uidUser, String uidAnnonce) {
         return this.annonceWithPhotosDao.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce);
     }
+
+    public LiveData<AnnoncePhotos> findLiveById(long idAnnonce) {
+        return this.annonceWithPhotosDao.findLiveById(idAnnonce);
+    }
+
+    public LiveData<AnnoncePhotos> findByUid(String uidAnnonce) {
+        return this.annonceWithPhotosDao.findByUid(uidAnnonce);
+    }
 }
