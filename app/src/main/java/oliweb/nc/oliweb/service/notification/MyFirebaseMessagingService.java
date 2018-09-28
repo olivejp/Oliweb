@@ -90,7 +90,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
                 builder.setContentTitle(remoteMessage.getNotification().getTitle());
                 builder.setContentText(remoteMessage.getNotification().getBody());
-                builder.setSmallIcon(R.drawable.ic_launcher_round_splash);
+                builder.setSmallIcon(R.mipmap.ic_banana_launcher_round);
                 builder.setContentIntent(resultPendingIntent);
                 NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
             }
