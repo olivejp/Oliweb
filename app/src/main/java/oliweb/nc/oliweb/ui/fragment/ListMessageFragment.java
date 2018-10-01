@@ -74,6 +74,7 @@ public class ListMessageFragment extends Fragment {
 
         // Init recyclerView
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
+        // linearLayoutManager.setStackFromEnd(true);
         linearLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter(viewModel.getFirebaseUserUid());
@@ -114,7 +115,10 @@ public class ListMessageFragment extends Fragment {
         viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
             boolean emptyList = listMessages == null || listMessages.isEmpty();
             initializeList(emptyList);
-            if (!emptyList) adapter.setMessageEntities(listMessages);
+            if (!emptyList) {
+                adapter.setMessageEntities(listMessages);
+                recyclerView.scrollToPosition(0);
+            }
         });
 
         viewModel.getLiveDataPhotoUrlUsers().observe(appCompatActivity, stringUtilisateurEntityMap -> {

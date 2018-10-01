@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/fui_transparent">
+    android:background="@color/fui_transparent"
+    tools:background="@color/colorAccent">
 
     <TextView
         android:id="@+id/title_slide_1"
         style="@style/IntroTextField.Heading.Subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Garder le contact"
+        android:layout_marginTop="50dp"
+        android:text="@string/keep_contact"
         app:layout_constraintBottom_toTopOf="@id/img_telephone"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -18,8 +21,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/img_telephone"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         app:layout_constraintBottom_toTopOf="@+id/text_slide_1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,8 +31,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/img_mail"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         app:layout_constraintEnd_toStartOf="@+id/img_telephone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
@@ -38,8 +41,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/img_chat"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/img_telephone"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
@@ -52,7 +55,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Mail, Téléphone, Messagerie\n\nC'est vous qui choisissez le moyen de communication pour vous contacter"
+        android:layout_marginBottom="100dp"
+        android:text="@string/intro_3_tagline"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

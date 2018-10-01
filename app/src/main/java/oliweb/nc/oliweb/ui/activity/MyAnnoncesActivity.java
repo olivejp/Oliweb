@@ -150,7 +150,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             SyncService.launchSynchroForUser(getApplicationContext(), uidUser);
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observeOnce(atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this);
+                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             return true;

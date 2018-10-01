@@ -508,7 +508,7 @@ public class MainActivity extends AppCompatActivity
             viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {
                 if (shouldAsk != null && shouldAsk.get() && !questionHasBeenAsked) {
                     questionHasBeenAsked = true;
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this);
+                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             questionHasBeenAsked = false;

@@ -207,7 +207,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             setResult(RESULT_CANCELED);
             finish();
         } else {
-            setTitle(mode.equals(Constants.PARAM_CRE) ? "Ajouter une annonce" : "Modifier une annonce");
+            setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
             initViewModel();
         }
     }
