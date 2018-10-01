@@ -50,8 +50,8 @@ public class MyChatsActivity extends AppCompatActivity {
                 .check();
 
         viewModel = ViewModelProviders.of(this).get(MyChatsActivityViewModel.class);
-        viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
         setContentView(R.layout.activity_my_chats);
+        viewModel.setTwoPane(findViewById(R.id.frame_messages) != null);
 
         if (ARG_ACTION_OPEN_CHATS.equals(action)) {
             String argUidUser = getIntent().getStringExtra(DATA_FIREBASE_USER_UID);
@@ -114,11 +114,11 @@ public class MyChatsActivity extends AppCompatActivity {
         Fragment listMessageFragment1 = getSupportFragmentManager().findFragmentByTag(TAG_DETAIL_FRAGMENT);
         if (listMessageFragment1 != null) {
             getSupportFragmentManager().beginTransaction().remove(listMessageFragment1).commit();
-            ListMessageFragment listMessageFragment = new ListMessageFragment();
+            getSupportFragmentManager().executePendingTransactions();
             if (viewModel.isTwoPane()) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.frame_messages, listMessageFragment, TAG_DETAIL_FRAGMENT).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.frame_messages, listMessageFragment1, TAG_DETAIL_FRAGMENT).commit();
             } else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listMessageFragment, TAG_DETAIL_FRAGMENT).addToBackStack(null).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.frame_chats, listMessageFragment1, TAG_DETAIL_FRAGMENT).addToBackStack(null).commit();
             }
         }
     }
