@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:text="Photos"
+                android:text="@string/photos"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp" />
 
@@ -119,7 +119,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:text="Catégorie"
+                android:text="@string/categorie"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp" />
 
@@ -144,7 +144,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="5dp"
-                    android:hint="Titre"
+                    android:hint="@string/title"
                     android:imeOptions="actionNext"
                     android:inputType="textCapSentences|textImeMultiLine"
                     android:maxLength="100"
@@ -163,7 +163,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="5dp"
                     android:gravity="start"
-                    android:hint="Description"
+                    android:hint="@string/description"
                     android:imeOptions="actionNext"
                     android:inputType="textCapSentences|textMultiLine"
                     android:lines="15"
@@ -184,7 +184,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="5dp"
                     android:ems="10"
-                    android:hint="Prix"
+                    android:hint="@string/price"
                     android:imeOptions="actionDone"
                     android:inputType="number"
                     android:maxLength="9" />
@@ -196,7 +196,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginStart="10dp"
-                android:text="Contactez moi"
+                android:text="@string/contact_me"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp" />
 
@@ -236,7 +236,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
-                    android:text="Par message"
+                    android:text="@string/by_message"
                     android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -246,7 +246,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
-                    android:text="Par téléphone"
+                    android:text="@string/by_telephone"
                     android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/checkbox_message" />
@@ -256,7 +256,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
-                    android:text="Par email"
+                    android:text="@string/by_email"
                     android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/checkbox_telephone" />

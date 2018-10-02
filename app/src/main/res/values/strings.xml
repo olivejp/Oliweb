@@ -1,30 +1,29 @@
 <resources>
-    <string name="app_name">Oliweb</string>
+    <string name="app_name" translatable="false">Oliweb</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
+    <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
 
-    <string name="facebook_app_id">1556396067990675</string>
-    <string name="facebook_application_id">1556396067990675</string>
-    <string name="fb_login_protocol_scheme">fb1556396067990675</string>
+    <string name="facebook_app_id" translatable="false">1556396067990675</string>
+    <string name="facebook_application_id" translatable="false">1556396067990675</string>
+    <string name="fb_login_protocol_scheme" translatable="false">fb1556396067990675</string>
 
     <string name="pref_default_number_car" translatable="false">100</string>
-    <string name="title_activity_settings">Settings</string>
 
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
-    <string name="pref_header_general">General</string>
+    <string name="pref_header_general">Général</string>
 
-    <string name="pref_title_social_recommendations">Enable social recommendations</string>
-    <string name="pref_description_social_recommendations">Recommendations for people to contact
+    <string name="pref_title_social_recommendations" translatable="false">Enable social recommendations</string>
+    <string name="pref_description_social_recommendations" translatable="false">Recommendations for people to contact
         based on your message history
     </string>
 
-    <string name="pref_title_display_name">Display name</string>
-    <string name="pref_default_display_name">John Smith</string>
+    <string name="pref_title_display_name" translatable="false">Display name</string>
+    <string name="pref_default_display_name" translatable="false">John Smith</string>
 
-    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
+    <string name="pref_title_add_friends_to_messages" translatable="false">Add friends to messages</string>
     <string-array name="pref_example_list_titles">
         <item>Always</item>
         <item>When possible</item>
@@ -44,9 +43,9 @@
     </string-array>
 
     <!-- Example settings for Data & Sync -->
-    <string name="pref_header_data_sync">Data &amp; sync</string>
+    <string name="pref_header_data_sync" translatable="false">Data &amp; sync</string>
 
-    <string name="pref_title_sync_frequency">Sync frequency</string>
+    <string name="pref_title_sync_frequency" translatable="false">Sync frequency</string>
     <string-array name="pref_sync_frequency_titles">
         <item>15 minutes</item>
         <item>30 minutes</item>
@@ -78,27 +77,24 @@
 
     <string-array name="multi_select_list_preference_default_value" />
 
-    <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string name="pref_title_system_sync_settings" translatable="false">System sync settings</string>
 
     <!-- Example settings for Notifications -->
-    <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_header_notifications" translatable="false">Notifications</string>
 
-    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_new_message_notifications" translatable="false">New message notifications</string>
 
-    <string name="pref_title_ringtone">Ringtone</string>
-    <string name="pref_ringtone_silent">Silent</string>
+    <string name="pref_title_ringtone" translatable="false">Ringtone</string>
 
-    <string name="pref_title_vibrate">Vibrate</string>
-    <string name="image_detail_transition">IMAGE_DETAIL_TRANSITION</string>
-    <string name="prix_detail_transition">PRIX_DETAIL_TRANSITION</string>
-    <string name="titre_detail_transition">TITRE_DETAIL_TRANSITION</string>
-    <string name="image_working_transition">image_working_transition</string>
-    <string name="view_1_transition">view_1_transition</string>
-    <string name="view_2_transition">view_2_transition</string>
-    <string name="view_3_transition">view_3_transition</string>
-    <string name="view_4_transition">view_4_transition</string>
+    <string name="image_detail_transition" translatable="false">IMAGE_DETAIL_TRANSITION</string>
+    <string name="prix_detail_transition" translatable="false">PRIX_DETAIL_TRANSITION</string>
+    <string name="titre_detail_transition" translatable="false">TITRE_DETAIL_TRANSITION</string>
+    <string name="image_working_transition" translatable="false">image_working_transition</string>
+    <string name="view_1_transition" translatable="false">view_1_transition</string>
+    <string name="view_2_transition" translatable="false">view_2_transition</string>
+    <string name="view_3_transition" translatable="false">view_3_transition</string>
+    <string name="view_4_transition" translatable="false">view_4_transition</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="mon_profil">Mon profil</string>
     <string name="mes_annonces">Mes annonces</string>
     <string name="mes_favoris">Mes favoris</string>
@@ -106,10 +102,10 @@
     <string name="se_connecter">Se connecter</string>
     <string name="connexion">Connexion</string>
     <string name="param_tres">Paramètres</string>
-    <string name="content_description_profile_image">content_description_profile_image</string>
+    <string name="content_description_profile_image" translatable="false">content_description_profile_image</string>
     <string name="mes_conversations">Mes conversations</string>
     <string name="title_activity_chats">Mes conversations</string>
-    <string name="image_profil_transition">image_profil_transition</string>
+    <string name="image_profil_transition" translatable="false">image_profil_transition</string>
     <string name="description_slide_2">Il vous suffit de donner une description du bien à vendre, prendre une photo et poster votre annonce.</string>
     <string name="description_slide_3">Et grace aux liens dynamiques vous pourrez la partager à travers les réseaux sociaux.</string>
     <string name="sign_in_required">Un compte est requis</string>
@@ -168,8 +164,34 @@
     <string name="categories">Catégories</string>
     <string name="price_between">Prix compris entre</string>
     <string name="keyword">Mots clés</string>
-    <string name="maximum">Maximum</string>
-    <string name="minimum">Minimum</string>
+    <string name="maximum" translatable="false">Maximum</string>
+    <string name="minimum" translatable="false">Minimum</string>
     <string name="and">et</string>
+    <string name="keep_contact">Garder le contact</string>
+    <string name="intro_3_tagline">Mail, Téléphone, Messagerie  C\'est vous qui choisissez le moyen de communication pour vous contacter</string>
+    <string name="title_activity_settings">Paramètres</string>
+    <string name="pref_title_vibrate">Vibreur</string>
+    <string name="pref_ringtone_silent">Silencieux</string>
+    <string name="intro_1_tagline">L\'application Android qui gére vos petites annonces</string>
+    <string name="ads_found_on_network">Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?</string>
+    <string name="ads">Annonces</string>
+    <string name="chats">Conversations</string>
+    <string name="messages">Messages</string>
+    <string name="telephone">Telephone</string>
+    <string name="empty_search_result">Votre recherche n\'a retourné aucun résultat. Essayer la recherche avancée pour pouvoir rentrer plus de paramètres.</string>
+    <string name="post_an_ad">Ajouter une annonce</string>
+    <string name="update_an_ad">Modifier une annonce</string>
+    <string name="my_ads">Mes annonces</string>
+    <string name="photos">Photos</string>
+    <string name="categorie">Catégorie</string>
+    <string name="title">Titre</string>
+    <string name="description">Description</string>
+    <string name="price">Prix</string>
+    <string name="contact_me">Contactez moi</string>
+    <string name="by_message">Par message</string>
+    <string name="by_telephone">Par téléphone</string>
+    <string name="by_email">Par email</string>
+    <string name="send_message">Envoyer un message</string>
+    <string name="empty_message_list">Commencez à discuter avec le vendeur de ce bien en lui envoyant un message</string>
 
 </resources>

@@ -131,8 +131,8 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
                     builder.setPositiveButton("Ok", (dialog, which) -> mListener.onDialogPositiveClick(NoticeDialogFragment.this));
                     break;
                 case TYPE_BOUTON_YESNO:
-                    builder.setPositiveButton("Oui", (dialog, which) -> mListener.onDialogPositiveClick(NoticeDialogFragment.this))
-                            .setNegativeButton("Non", (dialog, which) -> mListener.onDialogNegativeClick(NoticeDialogFragment.this));
+                    builder.setPositiveButton(getString(R.string.yes), (dialog, which) -> mListener.onDialogPositiveClick(NoticeDialogFragment.this))
+                            .setNegativeButton(getString(R.string.no), (dialog, which) -> mListener.onDialogNegativeClick(NoticeDialogFragment.this));
                     break;
             }
 

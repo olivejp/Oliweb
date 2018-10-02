@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.lang3.StringUtils;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -30,6 +32,7 @@ import oliweb.nc.oliweb.utility.Utility;
  */
 public class ListMessageFragment extends Fragment {
     private static final String TAG = ListMessageFragment.class.getName();
+    public static final String SAVE_TEXT_TO_SEND = "SAVE_TEXT_TO_SEND";
 
     private AppCompatActivity appCompatActivity;
     private MessageAdapter adapter;
@@ -101,6 +104,11 @@ public class ListMessageFragment extends Fragment {
             initializeAdapterByIdChat(viewModel.getSearchedIdChat());
         }
 
+        // Récupération du texte à envoyer, s'il y en avait un
+        if (savedInstanceState != null && savedInstanceState.containsKey(SAVE_TEXT_TO_SEND)) {
+            textToSend.setText(savedInstanceState.getString(SAVE_TEXT_TO_SEND));
+        }
+
         return view;
     }
 
@@ -114,7 +122,10 @@ public class ListMessageFragment extends Fragment {
         viewModel.findAllMessageByIdChat(idChat).observe(appCompatActivity, listMessages -> {
             boolean emptyList = listMessages == null || listMessages.isEmpty();
             initializeList(emptyList);
-            if (!emptyList) adapter.setMessageEntities(listMessages);
+            if (!emptyList) {
+                adapter.setMessageEntities(listMessages);
+                recyclerView.scrollToPosition(0);
+            }
         });
 
         viewModel.getLiveDataPhotoUrlUsers().observe(appCompatActivity, stringUtilisateurEntityMap -> {
@@ -150,5 +161,14 @@ public class ListMessageFragment extends Fragment {
                 );
             }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        String textToSendStr = textToSend.getText().toString();
+        if (StringUtils.isNotBlank(textToSendStr)) {
+            outState.putString(SAVE_TEXT_TO_SEND, textToSendStr);
+        }
+        super.onSaveInstanceState(outState);
     }
 }

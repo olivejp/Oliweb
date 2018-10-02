@@ -16,7 +16,6 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
  */
 @Singleton
 public class CategorieRepository extends AbstractRepository<CategorieEntity, Long> {
-    private static final String TAG = CategorieRepository.class.getName();
     private CategorieDao categorieDao;
 
     @Inject

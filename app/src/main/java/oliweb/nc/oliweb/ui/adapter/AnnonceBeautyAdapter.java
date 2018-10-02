@@ -113,18 +113,13 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp);
 
         // Récupération de la date de publication
-        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annonceFull.getAnnonce().
-
-                getDatePublication()));
+        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annonceFull.getAnnonce().getDatePublication()));
 
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
         viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf"));
 
-        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().
-
-                isEmpty())
-
-        {
+        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
+            viewHolderBeauty.imageViewEmpty.setVisibility(View.GONE);
             viewHolderBeauty.imageView.setBackground(null);
             viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
             GlideApp.with(viewHolderBeauty.imageView)
@@ -147,10 +142,9 @@ public class AnnonceBeautyAdapter extends
                     .error(R.drawable.ic_error_white_48dp)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
-        } else
-
-        {
+        } else {
             viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
+            viewHolderBeauty.imageViewEmpty.setVisibility(View.VISIBLE);
             GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
         }
     }
@@ -218,6 +212,8 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.loading_progress)
         ProgressBar progressBar;
 
+        @BindView(R.id.image_view_empty)
+        ImageView imageViewEmpty;
 
         AnnonceFull annonceFull;
 

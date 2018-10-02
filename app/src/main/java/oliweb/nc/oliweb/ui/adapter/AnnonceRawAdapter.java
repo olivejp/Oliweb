@@ -174,9 +174,6 @@ public class AnnonceRawAdapter extends
         @BindView(R.id.text_nb_photos)
         TextView textNbPhotos;
 
-        @BindView(R.id.text_nb_conversations)
-        TextView textNbConversations;
-
         AnnonceEntity singleAnnonce;
 
         ViewHolderRaw(View itemLayoutView) {

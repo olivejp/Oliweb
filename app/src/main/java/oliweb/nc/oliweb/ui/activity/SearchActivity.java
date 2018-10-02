@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -65,6 +66,11 @@ public class SearchActivity extends AppCompatActivity {
     public static final String WITH_PHOTO_ONLY = "WITH_PHOTO_ONLY";
     public static final String KEYWORD = "KEYWORD";
     public static final String ACTION_ADVANCED_SEARCH = "ACTION_ADVANCED_SEARCH";
+    public static final String SAVE_LIST_CATEGORIE = "SAVE_LIST_CATEGORIE";
+    public static final String SAVE_WITH_PHOTO = "SAVE_WITH_PHOTO";
+    public static final String SAVE_PRICE_HIGH = "SAVE_PRICE_HIGH";
+    public static final String SAVE_PRICE_LOW = "SAVE_PRICE_LOW";
+    public static final String SAVE_QUERY = "SAVE_QUERY";
 
 
     @BindView(R.id.recycler_search_annonce)
@@ -113,7 +119,7 @@ public class SearchActivity extends AppCompatActivity {
             query = intentParam.getStringExtra(SearchManager.QUERY);
             setTitle(String.format("%s %s", getString(R.string.looking_for), query));
         } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
-            setTitle("Recherche avancée");
+            setTitle(getString(R.string.activity_name_advanced_search));
             if (intentParam.hasExtra(KEYWORD)) {
                 query = intentParam.getStringExtra(KEYWORD);
             }
@@ -121,10 +127,10 @@ public class SearchActivity extends AppCompatActivity {
                 listCategorieSelected = intentParam.getStringArrayListExtra(CATEGORIE);
             }
             if (intentParam.hasExtra(LOWER_PRICE)) {
-                lowerPrice = intentParam.getIntExtra(LOWER_PRICE,0);
+                lowerPrice = intentParam.getIntExtra(LOWER_PRICE, 0);
             }
             if (intentParam.hasExtra(HIGHER_PRICE)) {
-                higherPrice = intentParam.getIntExtra(HIGHER_PRICE,0);
+                higherPrice = intentParam.getIntExtra(HIGHER_PRICE, 0);
             }
             if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
                 withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
@@ -137,7 +143,7 @@ public class SearchActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(getResources().getColor(R.color.colorPrimary),
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(this, R.color.colorAnnonceElementBackground),
                 onClickListener,
                 onClickListenerShare,
                 onClickListenerFavorite);
@@ -172,6 +178,21 @@ public class SearchActivity extends AppCompatActivity {
             }
             if (savedInstanceState.containsKey(SAVED_TRI)) {
                 tri = savedInstanceState.getInt(SAVED_TRI);
+            }
+            if (savedInstanceState.containsKey(SAVE_LIST_CATEGORIE)) {
+                listCategorieSelected = savedInstanceState.getStringArrayList(SAVE_LIST_CATEGORIE);
+            }
+            if (savedInstanceState.containsKey(SAVE_WITH_PHOTO)) {
+                withPhotoOnly = savedInstanceState.getBoolean(SAVE_WITH_PHOTO);
+            }
+            if (savedInstanceState.containsKey(SAVE_PRICE_HIGH)) {
+                higherPrice = savedInstanceState.getInt(SAVE_PRICE_HIGH);
+            }
+            if (savedInstanceState.containsKey(SAVE_PRICE_LOW)) {
+                lowerPrice = savedInstanceState.getInt(SAVE_PRICE_LOW);
+            }
+            if (savedInstanceState.containsKey(SAVE_QUERY)) {
+                query = savedInstanceState.getString(SAVE_QUERY);
             }
         } else {
             currentPage = 0;
@@ -241,6 +262,12 @@ public class SearchActivity extends AppCompatActivity {
         outState.putParcelableArrayList(SAVED_LIST_ANNONCE, listAnnonce);
         outState.putInt(SAVED_TRI, tri);
         outState.putInt(SAVED_DIRECTION, direction);
+
+        outState.putStringArrayList(SAVE_LIST_CATEGORIE, listCategorieSelected);
+        outState.putBoolean(SAVE_WITH_PHOTO, withPhotoOnly);
+        outState.putInt(SAVE_PRICE_HIGH, higherPrice);
+        outState.putInt(SAVE_PRICE_LOW, lowerPrice);
+        outState.putString(SAVE_QUERY, query);
     }
 
     private void launchNewSearch(int currentPage) {

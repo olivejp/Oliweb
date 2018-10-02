@@ -21,7 +21,7 @@
                 android:id="@+id/profil_image_background"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="@color/colorPrimaryDark"
+                android:background="@drawable/intro_background"
                 app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -47,6 +47,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:fontFamily="@font/grinty_font_family"
+                android:textSize="64sp"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
@@ -95,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="5dp"
                     android:enabled="false"
-                    android:hint="Telephone"
+                    android:hint="@string/telephone"
                     android:imeOptions="actionSend"
                     android:inputType="number"
                     android:maxLength="6" />
@@ -130,7 +132,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:text="Annonces"
+                        android:text="@string/ads"
                         android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintLeft_toLeftOf="parent"
@@ -165,7 +167,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:text="Conversations"
+                        android:text="@string/chats"
                         android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
                         app:layout_constraintBaseline_toBaselineOf="@id/profil_text_nb_annonce"
                         app:layout_constraintLeft_toLeftOf="@id/barre_v_left"
@@ -199,7 +201,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:text="Messages"
+                        android:text="@string/messages"
                         android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
                         app:layout_constraintBaseline_toBaselineOf="@id/profil_text_nb_annonce"
                         app:layout_constraintLeft_toLeftOf="@id/barre_v_right"

@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/fui_transparent"
+    tools:background="@color/colorAccent">
 
     <TextView
         android:id="@+id/title_slide_1"
+        style="@style/IntroTextField.Heading.Subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/sinisuka"
         android:text="@string/sell_easily"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
-        android:textSize="40sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/text_slide_2"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -23,14 +21,10 @@
 
     <TextView
         android:id="@+id/text_slide_2"
+        style="@style/IntroTextField.Tagline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/desc_padding"
-        android:paddingRight="@dimen/desc_padding"
         android:text="@string/description_slide_2"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/slide_desc"
         app:layout_constraintBottom_toTopOf="@+id/text_slide_3"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -38,14 +32,11 @@
 
     <TextView
         android:id="@+id/text_slide_3"
+        style="@style/IntroTextField.Tagline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/desc_padding"
-        android:paddingRight="@dimen/desc_padding"
+        android:layout_marginBottom="100dp"
         android:text="@string/description_slide_3"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/slide_desc"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

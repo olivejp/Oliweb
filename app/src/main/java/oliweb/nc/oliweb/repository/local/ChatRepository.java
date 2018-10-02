@@ -62,10 +62,6 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         return this.chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
-    public Single<List<ChatEntity>> findAllByStatusIn(List<String> status) {
-        return this.chatDao.getAllChatByStatus(status);
-    }
-
     public LiveData<Integer> countAllChatsByUser(String uidUser, List<String> status) {
         return this.chatDao.countAllFavoritesByUser(uidUser, status);
     }
@@ -102,7 +98,7 @@ public class ChatRepository extends AbstractRepository<ChatEntity, Long> {
         );
     }
 
-    public Observable<ChatEntity> markToDeleteByUidAnnonceAndUidUser(String uidAnnonce, String uidUser) {
+    Observable<ChatEntity> markToDeleteByUidAnnonceAndUidUser(String uidAnnonce, String uidUser) {
         return chatDao.findByUidUserAndUidAnnonce(uidUser, uidAnnonce)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())

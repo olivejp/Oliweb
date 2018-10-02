@@ -5,6 +5,7 @@ import android.arch.persistence.room.Relation;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,6 +57,8 @@ public class AnnoncePhotos implements Parcelable {
     }
 
     public AnnoncePhotos() {
+        this.annonceEntity = new AnnonceEntity();
+        this.photos = new ArrayList<>();
     }
 
     protected AnnoncePhotos(Parcel in) {

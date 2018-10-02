@@ -30,4 +30,12 @@ public abstract class AnnonceWithPhotosDao {
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND uidUserFavorite = :uidUser AND favorite = 1")
     public abstract Maybe<AnnoncePhotos> findFavoriteAnnonceByUidAnnonce(String uidUser, String uidAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE idAnnonce = :idAnnonce")
+    public abstract LiveData<AnnoncePhotos> findLiveById(Long idAnnonce);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = 0")
+    public abstract LiveData<AnnoncePhotos> findByUid(String uidAnnonce);
 }

@@ -339,12 +339,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         NetworkReceiver.removeListener(this);
+
+        if (liveCountAllActiveAnnonce != null) {
+            liveCountAllActiveAnnonce.removeObservers(this);
+        }
+        if (liveCountAllFavorite != null) {
+            liveCountAllFavorite.removeObservers(this);
+        }
+        if (liveCountAllChat != null) {
+            liveCountAllChat.removeObservers(this);
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -429,7 +439,7 @@ public class MainActivity extends AppCompatActivity
                     .load(userEntity.getPhotoUrl())
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_person_white_48dp)
+                    .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }
 
@@ -498,7 +508,7 @@ public class MainActivity extends AppCompatActivity
             viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {
                 if (shouldAsk != null && shouldAsk.get() && !questionHasBeenAsked) {
                     questionHasBeenAsked = true;
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this);
+                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             questionHasBeenAsked = false;
@@ -563,4 +573,6 @@ public class MainActivity extends AppCompatActivity
         viewModel.stopAllServices();
         viewModel.setIsNetworkAvailable(false);
     }
+
+
 }

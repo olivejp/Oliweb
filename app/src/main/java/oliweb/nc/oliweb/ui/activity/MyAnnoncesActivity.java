@@ -32,6 +32,7 @@ import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Constants;
 
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
+import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_UID_USER;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -149,7 +150,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             SyncService.launchSynchroForUser(getApplicationContext(), uidUser);
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observeOnce(atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this);
+                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             return true;
@@ -214,6 +215,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);
+        bundle.putString(BUNDLE_UID_USER, uidUser);
         intent.putExtras(bundle);
         intent.setClass(this, PostAnnonceActivity.class);
         startActivityForResult(intent, REQUEST_CODE_POST);
@@ -225,6 +227,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         Bundle bundle = new Bundle();
         intent.setClass(this, PostAnnonceActivity.class);
         bundle.putString(PostAnnonceActivity.BUNDLE_KEY_MODE, Constants.PARAM_MAJ);
+        bundle.putString(PostAnnonceActivity.BUNDLE_UID_USER, uidUser);
         bundle.putLong(PostAnnonceActivity.BUNDLE_KEY_ID_ANNONCE, annonce.getId());
         intent.putExtras(bundle);
         startActivityForResult(intent, REQUEST_CODE_POST);

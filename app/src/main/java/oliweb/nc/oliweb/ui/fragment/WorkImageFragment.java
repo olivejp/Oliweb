@@ -100,7 +100,7 @@ public class WorkImageFragment extends Fragment {
 
     @OnClick(R.id.frag_work_image_button_delete_photo)
     public void onDelete(View v) {
-        viewModel.removePhotoToCurrentList(viewModel.getUpdatedPhoto());
+        viewModel.removePhotoFromCurrentList(viewModel.getUpdatedPhoto());
         this.appCompatActivity.getSupportFragmentManager().popBackStackImmediate();
     }
 }

@@ -31,11 +31,15 @@ public class AnnonceWithPhotosRepository {
         return this.annonceWithPhotosDao.findActiveAnnonceByUidUser(uuidUtilisateur);
     }
 
-    public LiveData<List<AnnoncePhotos>> findFavoritesByUidUser(String uuidUtilisateur) {
-        return this.annonceWithPhotosDao.findFavoritesByUidUser(uuidUtilisateur);
-    }
-
     public Maybe<AnnoncePhotos> findFavoriteAnnonceByUidAnnonce(String uidUser, String uidAnnonce) {
         return this.annonceWithPhotosDao.findFavoriteAnnonceByUidAnnonce(uidUser, uidAnnonce);
+    }
+
+    public LiveData<AnnoncePhotos> findLiveById(long idAnnonce) {
+        return this.annonceWithPhotosDao.findLiveById(idAnnonce);
+    }
+
+    public LiveData<AnnoncePhotos> findByUid(String uidAnnonce) {
+        return this.annonceWithPhotosDao.findByUid(uidAnnonce);
     }
 }

@@ -22,4 +22,27 @@
         <item name="android:text">@string/app_name</item>
     </style>
 
+    <style name="IntroTextField">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="IntroTextField.Heading" parent="IntroTextField">
+        <item name="android:fontFamily">@font/grinty_font_family</item>
+    </style>
+
+    <style name="IntroTextField.Heading.Title" parent="IntroTextField.Heading">
+        <item name="android:textSize">96sp</item>
+    </style>
+
+    <style name="IntroTextField.Heading.Subtitle" parent="IntroTextField.Heading">
+        <item name="android:textSize">64sp</item>
+    </style>
+
+    <style name="IntroTextField.Tagline" parent="IntroTextField">
+        <item name="android:paddingLeft">@dimen/desc_padding</item>
+        <item name="android:paddingRight">@dimen/desc_padding</item>
+        <item name="android:textSize">@dimen/slide_desc</item>
+    </style>
+
 </resources>

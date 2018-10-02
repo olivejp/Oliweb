@@ -285,9 +285,9 @@ public class Utility {
     }
 
     // TODO Permettre de paramétrer cette méthode
-    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager, NoticeDialogFragment.DialogListener listener) {
+    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager, NoticeDialogFragment.DialogListener listener, String textToDisplay) {
         DialogInfos dialogInfos = new DialogInfos();
-        dialogInfos.setMessage("Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?")
+        dialogInfos.setMessage(textToDisplay)
                 .setButtonType(TYPE_BOUTON_YESNO)
                 .setIdDrawable(R.drawable.ic_announcement_white_48dp)
                 .setTag(DIALOG_FIREBASE_RETRIEVE);
