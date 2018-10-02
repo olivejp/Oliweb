@@ -6,20 +6,13 @@ ext {
     supportLibrary = '28.0.0'
 }
 
-def propFile = file('signing.properties')
-Properties props = new Properties()
-props.load(new FileInputStream(propFile))
-
 android {
     testOptions{
         unitTests.returnDefaultValues = true
     }
     signingConfigs {
-        config {
-            keyPassword props['KEY_PASSWORD']
-            keyAlias props['KEY_ALIAS']
-            storeFile file('../../' + props['STORE_FILE'])
-            storePassword props['STORE_PASSWORD']
+        config{
+
         }
     }
     compileSdkVersion 28
