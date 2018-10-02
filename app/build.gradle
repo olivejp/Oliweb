@@ -6,21 +6,9 @@ ext {
     supportLibrary = '28.0.0'
 }
 
-def propFile = file('signing.properties')
-Properties props = new Properties()
-props.load(new FileInputStream(propFile))
-
 android {
     testOptions{
         unitTests.returnDefaultValues = true
-    }
-    signingConfigs {
-        config {
-            keyPassword props['KEY_PASSWORD']
-            keyAlias props['KEY_ALIAS']
-            storeFile file('../../' + props['STORE_FILE'])
-            storePassword props['STORE_PASSWORD']
-        }
     }
     compileSdkVersion 28
     defaultConfig {
@@ -30,8 +18,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "alpha-1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -47,7 +35,6 @@ android {
             renderscriptDebuggable false
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
-            signingConfig signingConfigs.config
         }
     }
     compileOptions {
