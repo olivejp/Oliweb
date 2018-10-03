@@ -60,7 +60,7 @@ public class UserService {
         );
     }
 
-    public void saveUserToFavorite(UserEntity user) {
+    void saveUserToFavorite(UserEntity user) {
         userRepository.findMaybeFavoriteByUid(user.getUid())
                 .subscribeOn(processScheduler).observeOn(processScheduler)
                 .switchIfEmpty(saveUserFavorite(user))
@@ -77,17 +77,18 @@ public class UserService {
 
     @NonNull
     private Disposable saveUserFromFirebase(SingleEmitter<UserEntity> emitter,
-                                            @Nullable UserEntity utilisateurEntity,
+                                            @Nullable UserEntity userFromLocalDb,
                                             FirebaseUser firebaseUser,
                                             boolean isAnCreation) {
         return firebaseUserRepository.getToken()
                 .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .map(token -> UserConverter.convertFbToEntity(firebaseUser, token, isAnCreation))
-                .map(userEntity -> {
-                    if (utilisateurEntity != null) {
-                        userEntity.setIdUser(utilisateurEntity.getIdUser());
+                .map(userFromFirebase -> {
+                    if (userFromLocalDb != null) {
+                        userFromFirebase.setIdUser(userFromLocalDb.getIdUser());
+                        userFromFirebase.setTelephone(userFromLocalDb.getTelephone());
                     }
-                    return userEntity;
+                    return userFromFirebase;
                 })
                 .flatMap(userRepository::singleSave)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
