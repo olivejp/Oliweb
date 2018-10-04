@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb;
 
+import android.arch.lifecycle.Observer;
 import android.content.Context;
 
 import org.junit.Before;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -21,11 +23,13 @@ import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.utility.LiveDataOnce;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,7 +43,7 @@ public class FirebaseRetrieverServiceTest {
     public static final String UID_USER = "123";
 
     @Mock
-    Context context;
+    private Context context;
 
     @Mock
     private FirebaseAnnonceRepository firebaseAnnonceRepository;
@@ -115,5 +119,27 @@ public class FirebaseRetrieverServiceTest {
 
         verify(annonceRepository, times(2)).singleSave(any());
         verify(firebasePhotoStorage, times(1)).savePhotoToLocalByListUrl(any(), anyLong(), anyList());
+    }
+
+    /**
+     * Vérification que dans le cas où on a plusieurs annonces absentes de notre base locale
+     * mais présente sur Firebase, on ne pose la question pour les récupérer qu'une seule fois.
+     */
+    @Test
+    public void ShouldCallOnlyOnceRetrieve() {
+        // Création de mon service à tester
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler);
+
+        // Appel de ma fonction à tester
+        LiveDataOnce<AtomicBoolean> liveData = firebaseRetrieverService.checkFirebaseRepository(UID_USER);
+
+        Observer observer = mock(Observer.class);
+
+        liveData.observeOnce(observer);
+
+        // Déclenchement du scheduler RxJava 2.
+        testScheduler.triggerActions();
+
+        verify(observer, times(1)).onChanged(any());
     }
 }

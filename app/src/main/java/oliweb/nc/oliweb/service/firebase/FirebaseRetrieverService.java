@@ -52,8 +52,8 @@ public class FirebaseRetrieverService {
         return observer -> firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
                 .subscribeOn(scheduler).observeOn(scheduler)
                 .switchMapSingle(annonceDto -> annonceRepository.countByUidUserAndUidAnnonce(uidUser, annonceDto.getUuid()))
-                .filter(integer -> integer != null && integer == 0)
-                .doOnNext(integer -> observer.onChanged(new AtomicBoolean(true)))
+                .any(integer -> integer != null && integer == 0)
+                .doOnSuccess(integer -> observer.onChanged(new AtomicBoolean(true)))
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
