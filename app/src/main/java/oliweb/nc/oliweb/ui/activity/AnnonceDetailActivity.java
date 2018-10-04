@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.ui.activity;
 
 
 import android.Manifest;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.view.ViewPager;
@@ -37,12 +39,16 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
+import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
@@ -52,6 +58,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     public static final String TAG = AnnonceDetailActivity.class.getCanonicalName();
 
+    private static final String LOADING_DIALOG = "LOADING_DIALOG";
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
     public static final int REQUEST_CALL_PHONE_CODE = 100;
@@ -100,14 +107,97 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.categorie_libelle)
     TextView categorieLibelle;
 
+    @BindView(R.id.annonce_detail_img_share)
+    ImageView imageShare;
+
+    @BindView(R.id.annonce_detail_img_favorite)
+    ImageView imageFavorite;
+
     private AnnonceFull annonceFull;
     private boolean comeFromChatFragment;
     private String uidUser;
     private UserEntity seller;
+    private LoadingDialogFragment loadingDialogFragment;
+    private AnnonceDetailActivityViewModel viewModel;
 
     public AnnonceDetailActivity() {
         // Required empty public constructor
     }
+
+    /**
+     * OnClickListener that share an annonce with a DynamicLink
+     */
+    private View.OnClickListener onClickListenerShare = v -> {
+        if (uidUser != null && !uidUser.isEmpty()) {
+
+            // Display a loading spinner
+            loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
+            loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
+
+            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
+
+            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+                @Override
+                public void getLink(Uri shortLink, Uri flowchartLink) {
+                    loadingDialogFragment.dismiss();
+                    Intent sendIntent = new Intent();
+                    String msg = getString(R.string.default_text_share_link) + shortLink;
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
+                    sendIntent.setType("text/plain");
+                    startActivity(sendIntent);
+                }
+
+                @Override
+                public void getLinkError() {
+                    loadingDialogFragment.dismiss();
+                    Snackbar.make(prix, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            Snackbar.make(prix, R.string.sign_in_required, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.sign_in, v1 -> Utility.signIn(this, RC_SIGN_IN))
+                    .show();
+        }
+    };
+
+    /**
+     * OnClickListener that adds an annonce and all of this photo into the favorite.
+     * This save all the photos of the annonce in the device and the annonce into the local database
+     * If the annonce was already into the database it remove all the photo from the device,
+     * delete all the photos from the database,
+     * delete the annonce from the database.
+     */
+    private View.OnClickListener onClickListenerFavorite = (View v) -> {
+        if (uidUser == null || uidUser.isEmpty()) {
+            Snackbar.make(prix, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
+                    .show();
+        } else {
+            viewModel.addOrRemoveFromFavorite(uidUser, annonceFull).observeOnce(addRemoveFromFavorite -> {
+                if (addRemoveFromFavorite != null) {
+                    switch (addRemoveFromFavorite) {
+                        case ONE_OF_YOURS:
+                            Toast.makeText(this, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                            break;
+                        case ADD_SUCCESSFUL:
+                            Snackbar.make(prix, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                    .show();
+                            break;
+                        case REMOVE_SUCCESSFUL:
+                            Snackbar.make(prix, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                            break;
+                        case REMOVE_FAILED:
+                            Toast.makeText(this, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -134,6 +224,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
         // Récupération de l'uid de l'utilisateur connecté
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
+
+        // Instanciation d'un viewmodel
+        viewModel = ViewModelProviders.of(this).get(AnnonceDetailActivityViewModel.class);
 
         // Création de la vue
         setContentView(R.layout.activity_annonce_detail);
@@ -166,6 +259,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
+        }
+
         if (requestCode == REQUEST_CODE_LOGIN && resultCode == RESULT_OK) {
             callListMessageFragment();
         }

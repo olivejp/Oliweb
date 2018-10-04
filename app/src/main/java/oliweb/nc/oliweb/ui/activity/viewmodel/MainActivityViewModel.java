@@ -190,6 +190,7 @@ public class MainActivityViewModel extends AndroidViewModel {
             public void observeOnce(Observer<AuthEventType> observer) {
                 super.observeOnce(observer);
 
+                // We define what type of auth event just happened
                 AuthEventType authEventType;
                 if (userConnected == null) {
                     authEventType = (firebaseUser == null) ? AuthEventType.NOTHING : AuthEventType.NEW_CONNECTION;
@@ -201,6 +202,9 @@ public class MainActivityViewModel extends AndroidViewModel {
                     }
                 }
 
+                // Discriminate the auth type and play one of the two scenario possible :
+                // DISCONNECTION
+                // NEW_CONNECTION
                 switch (authEventType) {
                     case DISCONNECT:
                         setUserConnected(null);

@@ -12,6 +12,7 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.system.dagger.module.DatabaseRepositoriesModule;
+import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MyAnnoncesViewModel;
@@ -52,4 +53,6 @@ public interface DatabaseRepositoriesComponent {
     void inject(MainActivityViewModel mainActivityViewModel);
 
     void inject(MyChatsActivityViewModel myChatsActivityViewModel);
+
+    void inject(AnnonceDetailActivityViewModel annonceDetailActivityViewModel);
 }
