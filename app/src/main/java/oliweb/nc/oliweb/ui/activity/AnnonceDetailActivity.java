@@ -97,6 +97,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.text_date_publication)
     TextView textDatePublication;
 
+    @BindView(R.id.categorie_libelle)
+    TextView categorieLibelle;
+
     private AnnonceFull annonceFull;
     private boolean comeFromChatFragment;
     private String uidUser;
@@ -196,6 +199,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             description.setText(annonce.getDescription());
             collapsingToolbarLayout.setTitle(annonce.getTitre());
             textDatePublication.setText(DateConverter.convertDateToUiDate(annonce.getDatePublication()));
+            categorieLibelle.setText(annonceFull.getCategorie().get(0).getName());
 
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
