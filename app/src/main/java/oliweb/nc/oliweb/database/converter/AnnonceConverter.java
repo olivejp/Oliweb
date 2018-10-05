@@ -49,8 +49,10 @@ public class AnnonceConverter {
 
             // Récupération de la catégorie
             CategorieEntity categorieEntity = new CategorieEntity();
-            categorieEntity.setIdCategorie(annonceFirebase.getCategorie().getId());
-            categorieEntity.setName(annonceFirebase.getCategorie().getLibelle());
+            if (annonceFirebase.getCategorie() != null) {
+                categorieEntity.setIdCategorie(annonceFirebase.getCategorie().getId());
+                categorieEntity.setName(annonceFirebase.getCategorie().getLibelle());
+            }
             annonceFull.setCategorie(Collections.singletonList(categorieEntity));
 
             // Récupération du statut

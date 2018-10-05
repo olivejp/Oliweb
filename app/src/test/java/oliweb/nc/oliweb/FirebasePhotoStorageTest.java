@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.reactivex.observers.TestObserver;
+import io.reactivex.schedulers.TestScheduler;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
@@ -33,6 +34,8 @@ public class FirebasePhotoStorageTest {
     @Mock
     private UploadTask uploadTask;
 
+    private TestScheduler testScheduler;
+
     private void resetMock() {
         Mockito.reset(photoRepository);
     }
@@ -40,11 +43,13 @@ public class FirebasePhotoStorageTest {
     @Test
     public void if_noPhotoUrl_fails() {
 
+        testScheduler = new TestScheduler();
+
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUriLocal(null);
 
         // Création de mon service à tester
-        FirebasePhotoStorage firebasePhotoStorage = new FirebasePhotoStorage(photoRepository);
+        FirebasePhotoStorage firebasePhotoStorage = new FirebasePhotoStorage(photoRepository, testScheduler);
         firebasePhotoStorage.setFireStorage(firestorageReference);
 
         // Appel de ma fonction à tester

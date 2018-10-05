@@ -110,7 +110,7 @@ public class FirebaseRetrieverServiceTest {
     @Test
     public void ShouldSaveOnce() {
         // Création de mon service à tester
-        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler);
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler, testScheduler);
 
         // Appel de ma fonction à tester
         firebaseRetrieverService.synchronize(context, UID_USER);
@@ -128,7 +128,7 @@ public class FirebaseRetrieverServiceTest {
     @Test
     public void ShouldCallOnlyOnceRetrieve() {
         // Création de mon service à tester
-        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler);
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler, testScheduler);
 
         // Appel de ma fonction à tester
         LiveDataOnce<AtomicBoolean> liveData = firebaseRetrieverService.checkFirebaseRepository(UID_USER);
