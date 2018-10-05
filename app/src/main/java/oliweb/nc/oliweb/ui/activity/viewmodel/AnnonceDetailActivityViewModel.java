@@ -6,8 +6,6 @@ import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import oliweb.nc.oliweb.App;
@@ -39,8 +37,8 @@ public class AnnonceDetailActivityViewModel extends AndroidViewModel {
         ((App) application).getServicesComponent().inject(this);
     }
 
-    public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {
-        return annonceFullRepository.findFavoritesByUidUser(uidUtilisateur);
+    public LiveData<Integer> getCountFavoritesByUidUserAndByUidAnnonce(String uidUtilisateur, String uidAnnonce) {
+        return annonceFullRepository.findFavoritesByUidUserAndByUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
     public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
