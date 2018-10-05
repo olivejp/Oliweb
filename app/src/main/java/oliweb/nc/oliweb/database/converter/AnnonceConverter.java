@@ -28,13 +28,14 @@ public class AnnonceConverter {
         AnnonceEntity annonceEntity = convertDtoToEntity(annonceFirebase);
         if (annonceEntity != null) {
             AnnonceFull annonceFull = new AnnonceFull();
-            annonceFull.setPhotos(new ArrayList<>());
 
+            // Récupération de l'utilisateur
             UserFirebase userFirebase = annonceFirebase.getUtilisateur();
             UserEntity userEntity = UserConverter.convertDtoToEntity(userFirebase);
             annonceFull.setUtilisateur(Collections.singletonList(userEntity));
-            annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
 
+            // Récupération des photos
+            annonceFull.setPhotos(new ArrayList<>());
             if (annonceFirebase.getPhotos() != null && !annonceFirebase.getPhotos().isEmpty()) {
                 for (String photoUrl : annonceFirebase.getPhotos()) {
                     PhotoEntity photoEntity = new PhotoEntity();
@@ -42,8 +43,18 @@ public class AnnonceConverter {
                     annonceFull.getPhotos().add(photoEntity);
                 }
             }
+
+            // Récupération de l'annonce
             annonceFull.setAnnonce(annonceEntity);
 
+            // Récupération de la catégorie
+            CategorieEntity categorieEntity = new CategorieEntity();
+            categorieEntity.setIdCategorie(annonceFirebase.getCategorie().getId());
+            categorieEntity.setName(annonceFirebase.getCategorie().getLibelle());
+            annonceFull.setCategorie(Collections.singletonList(categorieEntity));
+
+            // Récupération du statut
+            annonceEntity.setStatut(StatusRemote.NOT_TO_SEND);
             return annonceFull;
         }
         return null;
