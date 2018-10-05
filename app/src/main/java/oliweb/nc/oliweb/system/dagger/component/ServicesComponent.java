@@ -8,6 +8,7 @@ import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.system.dagger.module.ServicesModule;
+import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 
@@ -24,4 +25,6 @@ public interface ServicesComponent {
     void inject(DatabaseSyncListenerService databaseSyncListenerService);
 
     void inject(SyncService syncService);
+
+    void inject(AnnonceDetailActivityViewModel annonceDetailActivityViewModel);
 }

@@ -27,7 +27,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -89,7 +89,7 @@ public class FavoritesActivity extends AppCompatActivity {
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annoncePhotos.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annoncePhotos.photos, new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

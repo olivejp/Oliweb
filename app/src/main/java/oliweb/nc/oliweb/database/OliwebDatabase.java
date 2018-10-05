@@ -4,7 +4,6 @@ import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
-import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
@@ -25,12 +24,15 @@ import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 
+import static oliweb.nc.oliweb.utility.Constants.OLIWEB_DATABASE;
+
 /**
  * Created by orlanth23 on 28/01/2018.
  */
 
 @Database(version = 28, entities = {UserEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
 public abstract class OliwebDatabase extends RoomDatabase {
+
     private static OliwebDatabase instance;
 
     public static synchronized OliwebDatabase getInstance(Context context) {
@@ -41,54 +43,31 @@ public abstract class OliwebDatabase extends RoomDatabase {
     }
 
     private static OliwebDatabase buildDatabase(final Context context) {
-        return Room.databaseBuilder(context,
-                OliwebDatabase.class,
-                "oliweb-database")
+        return Room.databaseBuilder(context, OliwebDatabase.class, OLIWEB_DATABASE)
                 .fallbackToDestructiveMigration()
                 .addCallback(new Callback() {
                     @Override
                     public void onCreate(@NonNull SupportSQLiteDatabase db) {
                         super.onCreate(db);
-                        Executors.newSingleThreadScheduledExecutor().execute(() -> getInstance(context).getCategorieDao().insert(populateCategorie()));
-                    }
-
-                    @Override
-                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
-                        super.onOpen(db);
-
-                        // Vérification qu'on a bien la liste des Catégories avant de démarrer l'application
-                        Executors.newSingleThreadExecutor().execute(() ->
-                                getInstance(context)
-                                        .getCategorieDao()
-                                        .getListCategorie()
-                                        .subscribe(list -> {
-                                            if (list.isEmpty()) {
-                                                db.execSQL("INSERT INTO categorie (name) VALUES('Automobile'), ('Mobilier'), ('Jouet'), ('Fleur'), ('Sport')");
-                                            }
-                                        })
-                        );
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            getInstance(context).getCategorieDao().deleteAll();
+                            getInstance(context).getCategorieDao().insert(listDefaultCategories());
+                        });
                     }
                 })
-                .addMigrations(MIGRATION_1_11)
                 .build();
     }
 
-    private static CategorieEntity[] populateCategorie() {
+    private static CategorieEntity[] listDefaultCategories() {
         return new CategorieEntity[]{
                 new CategorieEntity("Automobile", null),
                 new CategorieEntity("Mobilier", null),
-                new CategorieEntity("Jouet", null),
-                new CategorieEntity("Fleur", null),
-                new CategorieEntity("Sport", null)
+                new CategorieEntity("Enfant", null),
+                new CategorieEntity("Sport", null),
+                new CategorieEntity("Immobilier", null),
+                new CategorieEntity("Technologie", null)
         };
     }
-
-    private static final Migration MIGRATION_1_11 = new Migration(1, 11) {
-        @Override
-        public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("INSERT INTO categorie (name) VALUES('Automobile'), ('Mobilier'), ('Jouet'), ('Fleur'), ('Sport')");
-        }
-    };
 
     public abstract UtilisateurDao getUtilisateurDao();
 

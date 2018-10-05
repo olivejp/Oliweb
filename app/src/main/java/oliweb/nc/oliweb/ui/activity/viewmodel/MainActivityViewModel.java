@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -69,6 +69,14 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     @Inject
     UserService userService;
+
+    @Inject
+    @Named("processScheduler")
+    Scheduler processScheduler;
+
+    @Inject
+    @Named("androidScheduler")
+    Scheduler androidScheduler;
 
     private UserEntity userConnected;
     private boolean isNetworkAvailable;
@@ -145,7 +153,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     public LiveDataOnce<AnnonceFull> getLiveFromFirebaseByUidAnnonce(String uidAnnonce) {
         CustomLiveData<AnnonceFull> customLiveData = new CustomLiveData<>();
         firebaseAnnonceRepository.findMaybeByUidAnnonce(uidAnnonce)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(processScheduler).observeOn(androidScheduler)
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .map(AnnonceConverter::convertDtoToAnnonceFull)
                 .doOnSuccess(customLiveData::postValue)
@@ -182,6 +190,7 @@ public class MainActivityViewModel extends AndroidViewModel {
             public void observeOnce(Observer<AuthEventType> observer) {
                 super.observeOnce(observer);
 
+                // We define what type of auth event just happened
                 AuthEventType authEventType;
                 if (userConnected == null) {
                     authEventType = (firebaseUser == null) ? AuthEventType.NOTHING : AuthEventType.NEW_CONNECTION;
@@ -193,6 +202,9 @@ public class MainActivityViewModel extends AndroidViewModel {
                     }
                 }
 
+                // Discriminate the auth type and play one of the two scenario possible :
+                // DISCONNECTION
+                // NEW_CONNECTION
                 switch (authEventType) {
                     case DISCONNECT:
                         setUserConnected(null);
@@ -202,7 +214,7 @@ public class MainActivityViewModel extends AndroidViewModel {
                     case NEW_CONNECTION:
                         SharedPreferencesHelper.getInstance(application).setRetrievePreviousAnnonces(true);
                         userService.saveSingleUserFromFirebase(firebaseUser)
-                                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                .subscribeOn(processScheduler).observeOn(processScheduler)
                                 .doOnError(e -> Log.e(TAG, "Saving user failed", e))
                                 .doOnSuccess(userSaved -> {
                                     setUserConnected(userSaved);

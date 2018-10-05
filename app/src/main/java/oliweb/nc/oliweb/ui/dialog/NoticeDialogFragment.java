@@ -8,6 +8,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
@@ -21,6 +22,8 @@ import oliweb.nc.oliweb.ui.DialogInfos;
 
 
 public class NoticeDialogFragment extends AppCompatDialogFragment {
+
+    private static final String TAG = NoticeDialogFragment.class.getCanonicalName();
 
     public static final String P_MESSAGE = "message";
     public static final String P_TYPE = "type";
@@ -42,7 +45,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     /**
      * @param fragmentManager Get from the context
      * @param message         The message to be send
-     * @param buttonType            Can be TYPE_BOUTON_OK or TYPE_BOUTON_YESNO
+     * @param buttonType      Can be TYPE_BOUTON_OK or TYPE_BOUTON_YESNO
      * @param idDrawable      Drawable that will be show in top of the window
      * @param tag             A text to be a tag
      */
@@ -141,6 +144,17 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
             imgView.setImageResource(idResource);
         }
         return builder.create();
+    }
+
+    @Override
+    public void show(FragmentManager manager, String tag) {
+        try {
+            FragmentTransaction ft = manager.beginTransaction();
+            ft.add(this, tag);
+            ft.commitAllowingStateLoss();
+        } catch (IllegalStateException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+        }
     }
 
     public Bundle getBundle() {

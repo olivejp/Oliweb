@@ -40,4 +40,10 @@ public class AnnonceFullRepository {
         return this.annonceFullDao.findFavoritesByUidUser(uuidUtilisateur);
     }
 
+
+    public LiveData<Integer> findFavoritesByUidUserAndByUidAnnonce(String uuidUtilisateur, String uidAnnonce) {
+        return this.annonceFullDao.findFavoritesByUidUserAndByUidAnnonce(uuidUtilisateur, uidAnnonce);
+    }
+
+
 }

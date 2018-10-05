@@ -18,9 +18,9 @@ import static oliweb.nc.oliweb.utility.Constants.OLIWEB_SITE;
 /**
  * Created by orlanth23 on 24/05/2018.
  */
-public class DynamicLynksGenerator {
+public class DynamicLinksGenerator {
 
-    private static final String TAG = DynamicLynksGenerator.class.getCanonicalName();
+    private static final String TAG = DynamicLinksGenerator.class.getCanonicalName();
 
     private static String generateLink(String uidUser, String uidAnnonce) {
         return OLIWEB_SITE + OLIWEB_ANNONCE_VIEW_PATH + uidAnnonce + "?from=" + uidUser;

@@ -39,7 +39,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
@@ -129,7 +129,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

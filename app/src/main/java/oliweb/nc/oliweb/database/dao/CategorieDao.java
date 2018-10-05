@@ -38,4 +38,8 @@ public abstract class CategorieDao implements AbstractDao<CategorieEntity, Long>
     @Transaction
     @Query("SELECT name FROM categorie")
     public abstract Single<List<String>> getListCategorieLibelle();
+
+    @Transaction
+    @Query("DELETE FROM categorie")
+    public abstract int deleteAll();
 }

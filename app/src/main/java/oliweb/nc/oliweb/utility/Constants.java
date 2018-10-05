@@ -2,6 +2,8 @@ package oliweb.nc.oliweb.utility;
 
 public class Constants {
 
+    public static final String OLIWEB_DATABASE = "oliweb-database";
+
     public static final String PARAM_MAJ = "MAJ";
     public static final String PARAM_CRE = "CRE";
     public static final int MAX_IMG_PIXEL_SIZE = 400;
