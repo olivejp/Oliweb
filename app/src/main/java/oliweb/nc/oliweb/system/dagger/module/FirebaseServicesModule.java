@@ -45,8 +45,9 @@ public class FirebaseServicesModule {
     public FirebaseRetrieverService firebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                              AnnonceRepository annonceRepository,
                                                              FirebasePhotoStorage photoStorage,
-                                                             @Named("processScheduler") Scheduler processScheduler) {
-        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage, processScheduler);
+                                                             @Named("processScheduler") Scheduler processScheduler,
+                                                             @Named("androidScheduler") Scheduler androidScheduler) {
+        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage, processScheduler, androidScheduler);
     }
 
     @Provides
@@ -67,8 +68,7 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public AnnonceFirebaseSender annonceFirebaseSender(@ApplicationContext Context context,
-                                                       FirebaseAnnonceRepository firebaseAnnonceRepository,
+    public AnnonceFirebaseSender annonceFirebaseSender(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                        AnnonceRepository annonceRepository,
                                                        PhotoFirebaseSender photoFirebaseSender,
                                                        AnnonceFullRepository annonceFullRepository,
@@ -86,7 +86,7 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository) {
-        return new FirebasePhotoStorage(photoRepository);
+    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler) {
+        return new FirebasePhotoStorage(photoRepository, processScheduler);
     }
 }

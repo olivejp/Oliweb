@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 
@@ -32,10 +33,12 @@ public class FirebasePhotoStorage {
 
     private StorageReference fireStorage;
     private PhotoRepository photoRepository;
+    private Scheduler processScheduler;
 
     @Inject
-    public FirebasePhotoStorage(PhotoRepository photoRepository) {
+    public FirebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler) {
         this.photoRepository = photoRepository;
+        this.processScheduler = processScheduler;
     }
 
     // Cette méthode sert pour les tests afin de pouvoir injecter notre storageReference
@@ -115,6 +118,9 @@ public class FirebasePhotoStorage {
     }
 
     /**
+     * Pour toutes les urls passées dans la liste,
+     * On va télécharger l'image
+     *
      * @param context
      * @param idAnnonce
      * @param listPhotoUrl
@@ -127,8 +133,10 @@ public class FirebasePhotoStorage {
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                     .doOnSuccess(atomicBoolean -> {
                         if (atomicBoolean.get()) {
-                            photoRepository.singleSave(createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString()))
-                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            PhotoEntity photoEntity = createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString());
+                            photoRepository.singleSave(photoEntity)
+                                    .subscribeOn(processScheduler).observeOn(processScheduler)
+                                    .doOnSuccess(photoEntity1 -> Log.d(TAG, "Insertion de la photo réussie"))
                                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
                                     .subscribe();
                         }
@@ -145,13 +153,17 @@ public class FirebasePhotoStorage {
             } else {
                 Pair<Uri, File> pairUriFile = createNewImagePairUriFile(context);
                 downloadFileFromStorage(pairUriFile.second, urlPhoto)
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(atomicBoolean ->
-                                photoRepository.singleSave(createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString()))
-                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(atomicBoolean -> {
+                            if (atomicBoolean.get()) {
+                                PhotoEntity photoEntity = createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString());
+                                photoRepository.singleSave(photoEntity)
+                                        .subscribeOn(processScheduler).observeOn(processScheduler)
                                         .doOnSuccess(emitter::onSuccess)
-                                        .subscribe()
-                        )
+                                        .doOnError(emitter::onError)
+                                        .subscribe();
+                            }
+                        })
+                        .doOnError(emitter::onError)
                         .subscribe();
             }
         });
@@ -162,14 +174,16 @@ public class FirebasePhotoStorage {
      *
      * @param resultFile    where the downloaded file will be recorded
      * @param urlToDownload where to find the file to download on the internet
-     * @return
+     * @return true if the task is successful
      */
     private Single<AtomicBoolean> downloadFileFromStorage(File resultFile, String urlToDownload) {
         return Single.create(emitter -> {
             StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(urlToDownload);
             httpsReference.getFile(resultFile)
                     .addOnFailureListener(emitter::onError)
-                    .addOnSuccessListener(taskSnapshot -> emitter.onSuccess(new AtomicBoolean(true)));
+                    .addOnSuccessListener(taskSnapshot ->
+                            emitter.onSuccess(new AtomicBoolean(taskSnapshot.getTask().isSuccessful()))
+                    );
         });
     }
 

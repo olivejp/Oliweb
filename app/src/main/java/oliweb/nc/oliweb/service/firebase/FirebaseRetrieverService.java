@@ -29,16 +29,19 @@ public class FirebaseRetrieverService {
     private AnnonceRepository annonceRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private Scheduler scheduler;
+    private Scheduler androidScheduler;
 
     @Inject
     public FirebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                     AnnonceRepository annonceRepository,
                                     FirebasePhotoStorage firebasePhotoStorage,
-                                    @Named("processScheduler") Scheduler scheduler) {
+                                    @Named("processScheduler") Scheduler scheduler,
+                                    @Named("androidScheduler") Scheduler androidScheduler) {
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.scheduler = scheduler;
+        this.androidScheduler = androidScheduler;
     }
 
     /**
@@ -50,10 +53,10 @@ public class FirebaseRetrieverService {
      */
     public LiveDataOnce<AtomicBoolean> checkFirebaseRepository(final String uidUser) {
         return observer -> firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
-                .subscribeOn(scheduler).observeOn(scheduler)
+                .subscribeOn(androidScheduler).observeOn(scheduler)
                 .switchMapSingle(annonceDto -> annonceRepository.countByUidUserAndUidAnnonce(uidUser, annonceDto.getUuid()))
                 .any(integer -> integer != null && integer == 0)
-                .doOnSuccess(integer -> observer.onChanged(new AtomicBoolean(true)))
+                .doOnSuccess(aBoolean -> observer.onChanged(new AtomicBoolean(aBoolean)))
                 .doOnError(throwable -> Log.e(TAG, throwable.getMessage()))
                 .subscribe();
     }
@@ -69,19 +72,23 @@ public class FirebaseRetrieverService {
                     Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
                     annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
                             .subscribeOn(scheduler).observeOn(scheduler)
-                            .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
-                            .filter(integer -> integer == null || integer.equals(0))
-                            .map(integer -> {
-                                AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
-                                String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
-                                annonceEntity.setUidUser(uidUtilisateur);
-                                return annonceEntity;
+                            .doOnSuccess(integer -> {
+                                if (integer == null || integer.equals(0)) {
+                                    AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
+                                    String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
+                                    annonceEntity.setUidUser(uidUtilisateur);
+
+                                    annonceRepository.singleSave(annonceEntity)
+                                            .filter(annonceEntity1 -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
+                                            .doOnSuccess(annonceEntity1 -> firebasePhotoStorage.savePhotoToLocalByListUrl(context, annonceEntity1.getIdAnnonce(), annonceDto.getPhotos()))
+                                            .doOnError(throwable -> Log.e(TAG, "singleSave.doOnError " + throwable.getMessage()))
+                                            .subscribe();
+                                }
                             })
-                            .flatMapSingle(annonceEntity -> annonceRepository.singleSave(annonceEntity))
-                            .filter(annonceEntity -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
-                            .doOnSuccess(annonceEntity1 -> firebasePhotoStorage.savePhotoToLocalByListUrl(context, annonceEntity1.getIdAnnonce(), annonceDto.getPhotos()))
+                            .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
                             .subscribe();
                 })
+                .doOnError(throwable -> Log.e(TAG, "synchronize.doOnError " + throwable.getMessage()))
                 .subscribe();
     }
 }
