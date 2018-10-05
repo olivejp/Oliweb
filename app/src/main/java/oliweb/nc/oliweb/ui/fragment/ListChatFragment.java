@@ -150,8 +150,8 @@ public class ListChatFragment extends Fragment {
         return view;
     }
 
-    private void openAnnonceDetail(ChatEntity chatchatEntity) {
-        viewModel.findLiveFirebaseByUidAnnonce(chatchatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
+    private void openAnnonceDetail(ChatEntity chatEntity) {
+        viewModel.findLiveFirebaseByUidAnnonce(chatEntity.getUidAnnonce()).observeOnce(annonceDto -> {
             if (annonceDto != null) {
                 AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceDto);
                 Intent intent = new Intent();

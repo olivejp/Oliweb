@@ -32,7 +32,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
@@ -346,7 +346,7 @@ public class SearchActivity extends AppCompatActivity {
             AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
-            DynamicLynksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos(), new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLinksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos(), new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     Intent sendIntent = new Intent();
