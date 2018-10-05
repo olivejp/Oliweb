@@ -39,7 +39,7 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
-import oliweb.nc.oliweb.service.sharing.DynamicLynksGenerator;
+import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -137,7 +137,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
             AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-            DynamicLynksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLynksGenerator.DynamicLinkListener() {
+            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();
@@ -263,6 +263,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
         }
 
+        if (requestCode == RC_SIGN_IN && resultCode == RESULT_OK) {
+            uidUser = FirebaseAuth.getInstance().getUid();
+        }
+
         if (requestCode == REQUEST_CODE_LOGIN && resultCode == RESULT_OK) {
             callListMessageFragment();
         }
@@ -298,6 +302,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             textDatePublication.setText(DateConverter.convertDateToUiDate(annonce.getDatePublication()));
             categorieLibelle.setText(annonceFull.getCategorie().get(0).getName());
 
+            imageFavorite.setOnClickListener(onClickListenerFavorite);
+            imageShare.setOnClickListener(onClickListenerShare);
+
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
                 indicator.setViewPager(viewPager);
@@ -305,6 +312,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
             if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
                 initViewsSeller(annonceFull.getUtilisateur().get(0));
+            }
+
+            if (uidUser != null) {
+                viewModel.getCountFavoritesByUidUserAndByUidAnnonce(uidUser, annonce.getUid()).observe(this, count ->
+                        imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp)
+                );
             }
         }
     }
