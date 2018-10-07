@@ -125,6 +125,7 @@ public class AnnonceService {
         );
     }
 
+    // TODO scinder les méthodes deleteListPhoto et removeFromFavorite
     private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnonceFull annonceFull) {
         Log.d(TAG, "Starting removeFromFavorite called with annonceFull = " + annonceFull.toString());
         return annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
