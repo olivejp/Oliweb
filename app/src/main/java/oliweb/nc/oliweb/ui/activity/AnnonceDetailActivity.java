@@ -170,10 +170,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
      * delete the annonce from the database.
      */
     private View.OnClickListener onClickListenerFavorite = (View v) -> {
+        v.setEnabled(false);
         if (uidUser == null || uidUser.isEmpty()) {
             Snackbar.make(prix, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
                     .show();
+            v.setEnabled(true);
         } else {
             viewModel.addOrRemoveFromFavorite(uidUser, annonceFull).observeOnce(addRemoveFromFavorite -> {
                 if (addRemoveFromFavorite != null) {
@@ -195,6 +197,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                             break;
                     }
                 }
+                v.setEnabled(true);
             });
         }
     };

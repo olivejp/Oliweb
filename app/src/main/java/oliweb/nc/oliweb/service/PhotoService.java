@@ -43,7 +43,7 @@ public class PhotoService {
         }
     }
 
-    public Single<AtomicBoolean> deleteFromDevice(PhotoEntity photo) {
+    private Single<AtomicBoolean> deleteFromDevice(PhotoEntity photo) {
         if (photo == null) {
             return Single.error(new RuntimeException("Photo to delete is null"));
         }

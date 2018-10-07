@@ -116,11 +116,10 @@ public class AnnonceService {
                                 annonceEntity.setUidUserFavorite(uidUser);
                                 annonceRepository.singleSave(annonceEntity)
                                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .flatMap(annonceEntity1 -> firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos()))
+                                        .flatMapMaybe(annonceRepository::findById)
+                                        .doOnSuccess(emitter::onSuccess)
                                         .doOnError(emitter::onError)
-                                        .doOnSuccess(annonceEntity1 -> {
-                                            firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos());
-                                            emitter.onSuccess(annonceEntity1);
-                                        })
                                         .subscribe();
                             }
 
@@ -133,8 +132,8 @@ public class AnnonceService {
         Log.d(TAG, "Starting removeFromFavorite called with annonceFull = " + annonceFull.toString());
         return Single.create(emitter ->
                 annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
-                        .doOnComplete(() -> emitter.onError(new RuntimeException("L'annonce à supprimer n'a pas été trouvée.")))
-                        .flatMapSingle(annoncePhotos -> photoService.deleteListFromDevice(annonceFull.getPhotos()))
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .flatMapSingle(annoncePhotos -> photoService.deleteListFromDevice(annoncePhotos.getPhotos()))
                         .map(atomicBoolean -> annonceRepository.removeFromFavorite(uidUser, annonceFull.getAnnonce().getUid()))
                         .doOnSuccess(integer -> emitter.onSuccess(new AtomicBoolean(integer >= 1)))
                         .doOnError(emitter::onError)

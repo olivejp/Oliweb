@@ -86,6 +86,7 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * @return
      */
     public int removeFromFavorite(String uidCurrentUser, String uidAnnonce) {
+        Log.d(TAG, "removeFromFavorite pour uidCurrentUser = " + uidCurrentUser + " uidAnnonce = " + uidAnnonce);
         return annonceDao.deleteFromFavorite(uidCurrentUser, uidAnnonce);
     }
 
