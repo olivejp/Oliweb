@@ -19,7 +19,6 @@ import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 
 /**
@@ -83,11 +82,11 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * Retire l'annonce des favoris
      *
      * @param uidCurrentUser
-     * @param annoncePhotos
+     * @param uidAnnonce
      * @return
      */
-    public void removeFromFavorite(String uidCurrentUser, AnnoncePhotos annoncePhotos) {
-        annonceDao.deleteFromFavorite(uidCurrentUser, annoncePhotos.getAnnonceEntity().getUid());
+    public int removeFromFavorite(String uidCurrentUser, String uidAnnonce) {
+        return annonceDao.deleteFromFavorite(uidCurrentUser, uidAnnonce);
     }
 
     /**

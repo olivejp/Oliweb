@@ -36,11 +36,12 @@ public class ServicesModule {
     @Singleton
     public AnnonceService annonceService(@ApplicationContext Context context,
                                          AnnonceRepository annonceRepository,
+                                         PhotoRepository photoRepository,
                                          AnnonceWithPhotosRepository annonceWithPhotosRepository,
                                          FirebasePhotoStorage firebasePhotoStorage,
                                          PhotoService photoService,
                                          UserService userService) {
-        return new AnnonceService(context, annonceRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userService);
+        return new AnnonceService(context, annonceRepository, photoRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userService);
     }
 
     @Provides
