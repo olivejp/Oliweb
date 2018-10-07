@@ -162,10 +162,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      * delete the annonce from the database.
      */
     private View.OnClickListener onClickListenerFavorite = (View v) -> {
+        v.setEnabled(false);
         if (uidUser == null || uidUser.isEmpty()) {
             Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
+            v.setEnabled(true);
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
@@ -190,6 +192,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                             break;
                     }
                 }
+                v.setEnabled(true);
             });
         }
     };

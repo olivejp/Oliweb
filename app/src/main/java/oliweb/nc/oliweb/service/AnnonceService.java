@@ -15,6 +15,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -35,6 +36,7 @@ public class AnnonceService {
 
     private Context context;
     private AnnonceRepository annonceRepository;
+    private PhotoRepository photoRepository;
     private PhotoService photoService;
     private UserService userService;
     private FirebasePhotoStorage firebasePhotoStorage;
@@ -43,12 +45,14 @@ public class AnnonceService {
     @Inject
     public AnnonceService(Context context,
                           AnnonceRepository annonceRepository,
+                          PhotoRepository photoRepository,
                           AnnonceWithPhotosRepository annonceWithPhotosRepository,
                           FirebasePhotoStorage firebasePhotoStorage,
                           PhotoService photoService,
                           UserService userService) {
         this.context = context;
         this.annonceRepository = annonceRepository;
+        this.photoRepository = photoRepository;
         this.userService = userService;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.annonceWithPhotosRepository = annonceWithPhotosRepository;
@@ -112,11 +116,10 @@ public class AnnonceService {
                                 annonceEntity.setUidUserFavorite(uidUser);
                                 annonceRepository.singleSave(annonceEntity)
                                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .flatMap(annonceEntity1 -> firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos()))
+                                        .flatMapMaybe(annonceRepository::findById)
+                                        .doOnSuccess(emitter::onSuccess)
                                         .doOnError(emitter::onError)
-                                        .doOnSuccess(annonceEntity1 -> {
-                                            firebasePhotoStorage.savePhotosFromRemoteToLocal(context, annonceEntity1.getId(), annonceFull.getPhotos());
-                                            emitter.onSuccess(annonceEntity1);
-                                        })
                                         .subscribe();
                             }
 
@@ -127,11 +130,14 @@ public class AnnonceService {
 
     private Single<AtomicBoolean> removeFromFavorite(String uidUser, AnnonceFull annonceFull) {
         Log.d(TAG, "Starting removeFromFavorite called with annonceFull = " + annonceFull.toString());
-        return annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
-                .map(annoncePhotos -> {
-                    photoService.deleteListPhoto(annonceFull.getPhotos());
-                    annonceRepository.removeFromFavorite(uidUser, annoncePhotos);
-                    return new AtomicBoolean(true);
-                }).toSingle();
+        return Single.create(emitter ->
+                annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .flatMapSingle(annoncePhotos -> photoService.deleteListFromDevice(annoncePhotos.getPhotos()))
+                        .map(atomicBoolean -> annonceRepository.removeFromFavorite(uidUser, annonceFull.getAnnonce().getUid()))
+                        .doOnSuccess(integer -> emitter.onSuccess(new AtomicBoolean(integer >= 1)))
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
     }
 }

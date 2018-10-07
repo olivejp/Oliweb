@@ -17,6 +17,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
@@ -105,16 +106,16 @@ public class FirebasePhotoStorage {
      * @param listPhoto
      * @return The number of photos correctly saved
      */
-    public void savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
+    public Single<Long> savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
         Log.d(TAG, "savePhotosFromRemoteToLocal : " + listPhoto);
-        for (PhotoEntity photo : listPhoto) {
-            if (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()) {
-                savePhotoToLocalByUrl(context, idAnnonce, photo.getFirebasePath())
-                        .doOnSuccess(photoEntity1 -> Log.d(TAG, "Photo correctly inserted " + photoEntity1.getUriLocal()))
-                        .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                        .subscribe();
-            }
-        }
+        return Single.create(emitter ->
+                Observable.fromIterable(listPhoto)
+                        .filter(photo -> (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()))
+                        .switchMapSingle(photoEntity -> savePhotoToLocalByUrl(context, idAnnonce, photoEntity.getFirebasePath()))
+                        .doOnComplete(() -> emitter.onSuccess(idAnnonce))
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
     }
 
     /**

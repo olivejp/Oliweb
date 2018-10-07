@@ -115,10 +115,12 @@ public class FavoritesActivity extends AppCompatActivity {
     };
 
     private View.OnClickListener onClickListenerFavorite = (View v) -> {
+        v.setEnabled(false);
         if (uidUser == null || uidUser.isEmpty()) {
             Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
                     .show();
+            v.setEnabled(true);
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             viewModel.removeFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
@@ -135,6 +137,7 @@ public class FavoritesActivity extends AppCompatActivity {
                                     break;
                             }
                         }
+                        v.setEnabled(true);
                     });
         }
     };

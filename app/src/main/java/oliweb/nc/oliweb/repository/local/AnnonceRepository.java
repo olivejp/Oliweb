@@ -16,9 +16,9 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
-import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 
 /**
@@ -82,11 +82,12 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
      * Retire l'annonce des favoris
      *
      * @param uidCurrentUser
-     * @param annoncePhotos
+     * @param uidAnnonce
      * @return
      */
-    public void removeFromFavorite(String uidCurrentUser, AnnoncePhotos annoncePhotos) {
-        annonceDao.deleteFromFavorite(uidCurrentUser, annoncePhotos.getAnnonceEntity().getUid());
+    public int removeFromFavorite(String uidCurrentUser, String uidAnnonce) {
+        Log.d(TAG, "removeFromFavorite pour uidCurrentUser = " + uidCurrentUser + " uidAnnonce = " + uidAnnonce);
+        return annonceDao.deleteFromFavorite(uidCurrentUser, uidAnnonce);
     }
 
     /**
@@ -99,24 +100,25 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
         return this.annonceDao.getAnnonceFavoriteByUidUserAndUidAnnonce(uidUser, uidAnnonce);
     }
 
-    // TODO peut mieux faire
     public Single<AtomicBoolean> markAsToDelete(Long idAnnonce) {
         return Single.create(emitter ->
                 findById(idAnnonce)
                         .doOnComplete(() -> emitter.onError(new RuntimeException("No annonce to mark to delete")))
                         .toObservable()
                         .switchMap(this::markAsToDelete)
-                        .doOnNext(annonceEntity -> {
-                            photoRepository.markToDeleteByAnnonce(annonceEntity)
-                                    .subscribeOn(processScheduler).observeOn(processScheduler)
-                                    .subscribe();
-                            chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
-                                    .subscribeOn(processScheduler).observeOn(processScheduler)
-                                    .subscribe();
-                            emitter.onSuccess(new AtomicBoolean(true));
-                        })
+                        .doOnNext(annonceEntity -> markAsToDeleteStep(annonceEntity, emitter))
                         .subscribe()
         );
+    }
+
+    private void markAsToDeleteStep(AnnonceEntity annonceEntity, SingleEmitter<AtomicBoolean> emitter) {
+        photoRepository.markToDeleteByAnnonce(annonceEntity)
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .subscribe();
+        chatRepository.markToDeleteByUidAnnonceAndUidUser(annonceEntity.getUidUser(), annonceEntity.getUid())
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .subscribe();
+        emitter.onSuccess(new AtomicBoolean(true));
     }
 
     public Observable<AnnonceEntity> markAsSending(AnnonceEntity annonceEntity) {

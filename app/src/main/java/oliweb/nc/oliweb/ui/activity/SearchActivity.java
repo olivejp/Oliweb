@@ -368,10 +368,12 @@ public class SearchActivity extends AppCompatActivity {
     };
 
     private View.OnClickListener onClickListenerFavorite = v -> {
+        v.setEnabled(false);
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Snackbar.make(recyclerView, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
                     .show();
+            v.setEnabled(true);
         } else {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
@@ -394,6 +396,7 @@ public class SearchActivity extends AppCompatActivity {
                                     break;
                             }
                         }
+                        v.setEnabled(true);
                     });
         }
     };

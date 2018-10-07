@@ -5,10 +5,13 @@ import android.content.Context;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -38,5 +41,31 @@ public class PhotoService {
                 photoRepository.delete(photo);
             }
         }
+    }
+
+    private Single<AtomicBoolean> deleteFromDevice(PhotoEntity photo) {
+        if (photo == null) {
+            return Single.error(new RuntimeException("Photo to delete is null"));
+        }
+        if (StringUtils.isEmpty(photo.getUriLocal())) {
+            return Single.error(new RuntimeException("Uri local to delete is null or empty"));
+        }
+        return Single.create(emitter -> {
+            boolean deleted = MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
+            emitter.onSuccess(new AtomicBoolean(deleted));
+        });
+    }
+
+    public Single<AtomicBoolean> deleteListFromDevice(List<PhotoEntity> photoList) {
+        if (photoList == null || photoList.isEmpty()) {
+            return Single.just(new AtomicBoolean(true));
+        }
+        return Single.create(emitter ->
+                Observable.fromIterable(photoList)
+                        .switchMapSingle(this::deleteFromDevice)
+                        .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
     }
 }
