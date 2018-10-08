@@ -30,6 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +130,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLinksGenerator.DynamicLinkListener() {
+            // Génération d'un lien
+            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.photos);
+            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

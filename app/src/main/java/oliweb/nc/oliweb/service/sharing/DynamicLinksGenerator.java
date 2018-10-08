@@ -64,21 +64,46 @@ public class DynamicLinksGenerator {
         );
     }
 
+    public static void generateShortWithLong(Uri longLink, DynamicLinkListener dynamicLinkListener) {
+        FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLongLink(longLink)
+                .buildShortDynamicLink()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Uri shortLink = task.getResult().getShortLink();
+                        Uri flowchartLink = task.getResult().getPreviewLink();
+                        dynamicLinkListener.getLink(shortLink, flowchartLink);
+                    } else {
+                        dynamicLinkListener.getLinkError();
+                    }
+                });
+    }
+
     /**
      * @param uidUser
-     * @param uidAnnonce
+     * @param annonce
      * @return
      */
-    public static Uri generateLong(String uidUser, String uidAnnonce) {
-        String generatedLink = generateLink(uidUser, uidAnnonce);
-        DynamicLink dynamicLink = FirebaseDynamicLinks.getInstance().createDynamicLink()
+    public static DynamicLink generateLong(String uidUser, AnnonceEntity annonce, List<PhotoEntity> listPhoto) {
+        String generatedLink = generateLink(uidUser, annonce.getUid());
+        Uri photoUri = null;
+
+        if (listPhoto != null && !listPhoto.isEmpty()) {
+            photoUri = Uri.parse(listPhoto.get(0).getFirebasePath());
+        }
+
+        return FirebaseDynamicLinks.getInstance()
+                .createDynamicLink()
                 .setLink(Uri.parse(generatedLink))
                 .setDynamicLinkDomain(OLIWEB_DYNAMIC_LINK_DOMAIN)
                 .setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
                 .setIosParameters(new DynamicLink.IosParameters.Builder(generatedLink).build())
+                .setSocialMetaTagParameters(new DynamicLink.SocialMetaTagParameters.Builder()
+                        .setTitle(annonce.getTitre())
+                        .setDescription(annonce.getDescription())
+                        .setImageUrl(photoUri)
+                        .build())
                 .buildDynamicLink();
-
-        return dynamicLink.getUri();
     }
 
     public interface DynamicLinkListener {

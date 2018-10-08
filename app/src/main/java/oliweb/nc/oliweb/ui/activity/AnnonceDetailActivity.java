@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.Locale;
 
@@ -137,7 +138,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
             AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annonceFull.photos, new DynamicLinksGenerator.DynamicLinkListener() {
+            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.photos);
+            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

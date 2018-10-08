@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.List;
 
@@ -81,15 +82,16 @@ public class FavoritesActivity extends AppCompatActivity {
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
+            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
+            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLinksGenerator.generateShortLink(uidUser, annonceEntity, annoncePhotos.photos, new DynamicLinksGenerator.DynamicLinkListener() {
+            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.getPhotos());
+            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
                     loadingDialogFragment.dismiss();

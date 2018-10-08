@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.dynamiclinks.DynamicLink;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -341,14 +342,22 @@ public class SearchActivity extends AppCompatActivity {
 
     private View.OnClickListener onClickListenerShare = v -> {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+
+            // Display a loading spinner
+            loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
+            loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
+
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
             AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
 
-            DynamicLinksGenerator.generateShortLink(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos(), new DynamicLinksGenerator.DynamicLinkListener() {
+            DynamicLink link = DynamicLinksGenerator.generateLong(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos());
+            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
                 @Override
                 public void getLink(Uri shortLink, Uri flowchartLink) {
+                    loadingDialogFragment.dismiss();
                     Intent sendIntent = new Intent();
                     String msg = getString(R.string.default_text_share_link) + shortLink;
                     sendIntent.setAction(Intent.ACTION_SEND);
@@ -359,6 +368,7 @@ public class SearchActivity extends AppCompatActivity {
 
                 @Override
                 public void getLinkError() {
+                    loadingDialogFragment.dismiss();
                     Snackbar.make(recyclerView, R.string.dynamic_link_failed, Snackbar.LENGTH_LONG).show();
                 }
             });
