@@ -95,4 +95,6 @@
     <string name="by_email">By email</string>
     <string name="send_message">Send message</string>
     <string name="empty_message_list">Start discuss with seller sending him a message</string>
+    <string name="AD_DONT_EXIST_ANYMORE">This ad dont exist anymore</string>
+    <string name="UPDATE_SUCCESSFUL">User successfully updated</string>
 </resources>
