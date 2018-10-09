@@ -193,5 +193,7 @@
     <string name="by_email">Par email</string>
     <string name="send_message">Envoyer un message</string>
     <string name="empty_message_list">Commencez à discuter avec le vendeur de ce bien en lui envoyant un message</string>
+    <string name="AD_DONT_EXIST_ANYMORE">Cette annonce n\'existe plus</string>
+    <string name="UPDATE_SUCCESSFUL">Mise à jour effectuée</string>
 
 </resources>

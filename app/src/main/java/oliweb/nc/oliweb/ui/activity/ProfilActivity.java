@@ -77,6 +77,7 @@ public class ProfilActivity extends AppCompatActivity {
     private LiveData<Long> liveDataNbChat;
     private LiveData<Long> liveDataNbAnnonce;
     private LiveData<Long> liveDataNbMessage;
+    private Bundle mBundle;
 
     public ProfilActivity() {
         // Required empty public constructor
@@ -86,43 +87,12 @@ public class ProfilActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ArgumentsChecker argumentsChecker = new ArgumentsChecker();
-        argumentsChecker.setArguments(getIntent().getExtras())
-                .isMandatory(PROFIL_ACTIVITY_UID_USER)
-                .isMandatory(UPDATE)
-                .setOnFailureListener(e -> finish())
-                .setOnSuccessListener(this::initViews)
-                .check();
-    }
-
-    private void initViews(@NonNull Bundle args) {
-        String uidUser = args.getString(PROFIL_ACTIVITY_UID_USER);
-        availableUpdate = args.getBoolean(UPDATE);
-
+        // Instanciation de la vue et binding des champs
         setContentView(R.layout.activity_profil);
         ButterKnife.bind(this);
 
+        // Création du viewModel
         viewModel = ViewModelProviders.of(ProfilActivity.this).get(ProfilViewModel.class);
-
-        liveDataUser = viewModel.getUtilisateurByUid(uidUser);
-        liveDataNbAnnonce = viewModel.getFirebaseUserNbAnnoncesCount(uidUser);
-        liveDataNbChat = viewModel.getFirebaseUserNbChatsCount(uidUser);
-        liveDataNbMessage = viewModel.getFirebaseUserNbMessagesCount(uidUser);
-
-        liveDataUser.observe(this, userFound -> {
-            if (userFound != null) {
-                this.userEntity = userFound;
-                textName.setText(this.userEntity.getProfile());
-                textEmail.setText(this.userEntity.getEmail());
-                textTelephone.setText(this.userEntity.getTelephone());
-                GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
-            }
-        });
-        liveDataNbAnnonce.observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
-        liveDataNbChat.observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
-        liveDataNbMessage.observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
-
-        mainConstraint.setTop(Utility.getStatusBarHeight(this));
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -132,10 +102,53 @@ public class ProfilActivity extends AppCompatActivity {
         }
 
         setTitle("");
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window w = getWindow();
             w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR);
+        }
+        mainConstraint.setTop(Utility.getStatusBarHeight(this));
+
+        // Check des paramètres d'entrée
+        ArgumentsChecker argumentsChecker = new ArgumentsChecker();
+        argumentsChecker.setArguments(getIntent().getExtras())
+                .isMandatory(PROFIL_ACTIVITY_UID_USER)
+                .isMandatory(UPDATE)
+                .setOnFailureListener(e -> finish())
+                .setOnSuccessListener(bundle -> {
+                    mBundle = bundle;
+                    onStart();
+                })
+                .check();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        initViews(mBundle);
+    }
+
+    private void initViews(@NonNull Bundle args) {
+        String uidUser = args.getString(PROFIL_ACTIVITY_UID_USER);
+        availableUpdate = args.getBoolean(UPDATE);
+
+        liveDataUser = viewModel.getUtilisateurByUid(uidUser);
+        liveDataNbAnnonce = viewModel.getFirebaseUserNbAnnoncesCount(uidUser);
+        liveDataNbChat = viewModel.getFirebaseUserNbChatsCount(uidUser);
+        liveDataNbMessage = viewModel.getFirebaseUserNbMessagesCount(uidUser);
+
+        liveDataUser.observe(this, this::initUserFields);
+        liveDataNbAnnonce.observe(this, countAnnonce -> textNbAnnonce.setText(String.valueOf(countAnnonce)));
+        liveDataNbChat.observe(this, countcountChats -> textNbChats.setText(String.valueOf(countcountChats)));
+        liveDataNbMessage.observe(this, countMessages -> textNbMessages.setText(String.valueOf(countMessages)));
+    }
+
+    private void initUserFields(UserEntity user){
+        if (user != null) {
+            this.userEntity = user;
+            textName.setText(this.userEntity.getProfile());
+            textEmail.setText(this.userEntity.getEmail());
+            textTelephone.setText(this.userEntity.getTelephone());
+            GlideApp.with(imageProfil).load(this.userEntity.getPhotoUrl()).placeholder(R.drawable.ic_person_grey_900_48dp).circleCrop().into(imageProfil);
         }
     }
 
@@ -166,9 +179,7 @@ public class ProfilActivity extends AppCompatActivity {
             viewModel.markAsToSend(userEntity)
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                    .doOnSuccess(userEntitySaved -> {
-                        Toast.makeText(getApplicationContext(), "Mise à jour effectuée", Toast.LENGTH_LONG).show();
-                    })
+                    .doOnSuccess(userEntitySaved -> Toast.makeText(this, R.string.UPDATE_SUCCESSFUL, Toast.LENGTH_LONG).show())
                     .subscribe();
 
             return true;
@@ -191,8 +202,7 @@ public class ProfilActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
         if (liveDataUser != null) {
             liveDataUser.removeObservers(this);
         }
@@ -205,5 +215,6 @@ public class ProfilActivity extends AppCompatActivity {
         if (liveDataNbMessage != null) {
             liveDataNbMessage.removeObservers(this);
         }
+        super.onStop();
     }
 }

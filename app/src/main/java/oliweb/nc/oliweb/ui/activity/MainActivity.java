@@ -128,10 +128,29 @@ public class MainActivity extends AppCompatActivity
         numberChatBadge.setText(String.valueOf(integer));
     };
 
+    private ActionBarDrawerToggle toggle;
+
+    private Bundle mBundle;
+
     @Override
     protected void onStart() {
         super.onStart();
+
+        // Récupération des liens dynamiques
         catchDynamicLink();
+
+        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le cas où il y a du réseau.
+        NetworkReceiver.listen(this);
+        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
+
+        // Récupération dans le config remote du nombre de colonne que l'on veut
+        initConfigDefaultValues();
+
+        // Init des widgets sur l'écran
+        initViews();
+
+        // Initialisation des fragments si il y en avait
+        initFragments(mBundle);
     }
 
     @Override
@@ -147,17 +166,12 @@ public class MainActivity extends AppCompatActivity
                 .setDeveloperModeEnabled(true)
                 .build());
 
-        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le
-        // cas où il y a du réseau.
-        NetworkReceiver.listen(this);
+        // Instanciation de notre vue
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
-
-        initConfigDefaultValues();
-
-        initViews();
-
-        initFragments(savedInstanceState);
+        // Sauvegarde du bundle pour l'utiliser dans le onStart()
+        mBundle = savedInstanceState;
     }
 
     private void initConfigDefaultValues() {
@@ -166,13 +180,10 @@ public class MainActivity extends AppCompatActivity
         defaults.put("column_number_landscape", 3);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
-        fetch.addOnSuccessListener(aVoid -> mFirebaseConfig.activateFetched());
+        fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
     }
 
     private void initViews() {
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
-
         View viewHeader = navigationView.getHeaderView(0);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
@@ -180,7 +191,7 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu = navigationView.getMenu();
 
         setSupportActionBar(toolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -339,12 +350,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
+
+        navigationView.setNavigationItemSelectedListener(null);
+        drawer.removeDrawerListener(toggle);
+
+        NetworkReceiver.removeListener(this);
+
         if (mFirebaseAuth != null && mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
-        NetworkReceiver.removeListener(this);
-
         if (liveCountAllActiveAnnonce != null) {
             liveCountAllActiveAnnonce.removeObservers(this);
         }
@@ -354,7 +369,7 @@ public class MainActivity extends AppCompatActivity
         if (liveCountAllChat != null) {
             liveCountAllChat.removeObservers(this);
         }
-        super.onDestroy();
+        super.onStop();
     }
 
     @Override
@@ -411,7 +426,7 @@ public class MainActivity extends AppCompatActivity
                                 if (annoncePhotos != null) {
                                     callAnnonceDetailActivity(annoncePhotos);
                                 } else {
-                                    Toast.makeText(this, "Cette annonce n'existe plus", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(this, R.string.AD_DONT_EXIST_ANYMORE, Toast.LENGTH_LONG).show();
                                 }
                             });
                         }
