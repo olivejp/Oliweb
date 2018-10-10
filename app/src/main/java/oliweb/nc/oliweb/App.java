@@ -15,10 +15,12 @@ import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesCompon
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerUtilityComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.UtilityComponent;
 import oliweb.nc.oliweb.system.dagger.module.BusinessModule;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
 import oliweb.nc.oliweb.system.dagger.module.DatabaseRepositoriesModule;
@@ -26,6 +28,7 @@ import oliweb.nc.oliweb.system.dagger.module.FirebaseRepositoriesModule;
 import oliweb.nc.oliweb.system.dagger.module.FirebaseServicesModule;
 import oliweb.nc.oliweb.system.dagger.module.SchedulerModule;
 import oliweb.nc.oliweb.system.dagger.module.ServicesModule;
+import oliweb.nc.oliweb.system.dagger.module.UtilityModule;
 
 
 /**
@@ -39,6 +42,7 @@ public class App extends Application {
     private DatabaseRepositoriesComponent databaseRepositoriesComponent;
     private ServicesComponent servicesComponent;
     private BusinessComponent businessComponent;
+    private UtilityComponent utilityComponent;
 
     @Override
     public void onCreate() {
@@ -51,6 +55,11 @@ public class App extends Application {
         DatabaseRepositoriesModule databaseRepositoriesModule = new DatabaseRepositoriesModule();
         ServicesModule servicesModule = new ServicesModule();
         BusinessModule businessModule = new BusinessModule();
+        UtilityModule utilityModule = new UtilityModule();
+
+        this.utilityComponent = DaggerUtilityComponent.builder()
+                .utilityModule(utilityModule)
+                .build();
 
         this.businessComponent = DaggerBusinessComponent.builder()
                 .contextModule(contextModule)
@@ -65,6 +74,7 @@ public class App extends Application {
                 .schedulerModule(schedulerModule)
                 .firebaseRepositoriesModule(firebaseRepositoriesModule)
                 .firebaseServicesModule(firebaseServicesModule)
+                .utilityModule(utilityModule)
                 .build();
 
         this.firebaseRepositoriesComponent = DaggerFirebaseRepositoriesComponent.builder()

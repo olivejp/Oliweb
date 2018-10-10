@@ -35,19 +35,22 @@ public class AnnonceFirebaseDeleter {
     private AnnonceFullRepository annonceFullRepository;
     private FirebasePhotoStorage firebasePhotoStorage;
     private ContentResolver contentResolver;
+    private MediaUtility mediaUtility;
 
     @Inject
     public AnnonceFirebaseDeleter(Context context, FirebaseAnnonceRepository firebaseAnnonceRepository,
                                   AnnonceRepository annonceRepository,
                                   PhotoRepository photoRepository,
                                   AnnonceFullRepository annonceFullRepository,
-                                  FirebasePhotoStorage firebasePhotoStorage) {
+                                  FirebasePhotoStorage firebasePhotoStorage,
+                                  MediaUtility mediaUtility) {
         this.contentResolver = context.getContentResolver();
         this.firebaseAnnonceRepository = firebaseAnnonceRepository;
         this.annonceRepository = annonceRepository;
         this.photoRepository = photoRepository;
         this.annonceFullRepository = annonceFullRepository;
         this.firebasePhotoStorage = firebasePhotoStorage;
+        this.mediaUtility = mediaUtility;
     }
 
     /**
@@ -115,7 +118,7 @@ public class AnnonceFirebaseDeleter {
                 .doOnSuccess(atomicBoolean -> {
                     if (atomicBoolean.get()) {
                         // 2 - Suppression sur le device
-                        if (MediaUtility.deletePhotoFromDevice(contentResolver, photo.getUriLocal())) {
+                        if (mediaUtility.deletePhotoFromDevice(contentResolver, photo.getUriLocal())) {
                             Log.d(TAG, "Successful delete from local device");
                         } else {
                             Log.e(TAG, "Failed to delete photo from local device");

@@ -24,19 +24,22 @@ public class PhotoService {
 
     private PhotoRepository photoRepository;
     private Context context;
+    private MediaUtility mediaUtility;
 
     @Inject
     public PhotoService(Context context,
-                        PhotoRepository photoRepository) {
+                        PhotoRepository photoRepository,
+                        MediaUtility mediaUtility) {
         this.context = context;
         this.photoRepository = photoRepository;
+        this.mediaUtility = mediaUtility;
     }
 
     public void deleteListPhoto(List<PhotoEntity> listToDelete) {
         if (listToDelete != null && !listToDelete.isEmpty()) {
             for (PhotoEntity photo : listToDelete) {
                 if (StringUtils.isNotBlank(photo.getUriLocal())) {
-                    MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
+                    mediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
                 }
                 photoRepository.delete(photo);
             }
@@ -51,7 +54,7 @@ public class PhotoService {
             return Single.error(new RuntimeException("Uri local to delete is null or empty"));
         }
         return Single.create(emitter -> {
-            boolean deleted = MediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
+            boolean deleted = mediaUtility.deletePhotoFromDevice(context.getContentResolver(), photo.getUriLocal());
             emitter.onSuccess(new AtomicBoolean(deleted));
         });
     }

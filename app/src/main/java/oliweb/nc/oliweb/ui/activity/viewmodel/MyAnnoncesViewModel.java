@@ -20,6 +20,7 @@ import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
 /**
  * Created by 2761oli on 06/02/2018.
@@ -38,10 +39,17 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     @Inject
     FirebaseRetrieverService fbRetrieverService;
 
+    @Inject
+    MediaUtility mediaUtility;
+
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
         ((App) application).getFirebaseServicesComponent().inject(this);
+    }
+
+    public MediaUtility getMediaUtility() {
+        return mediaUtility;
     }
 
     public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {

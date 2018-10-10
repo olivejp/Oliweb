@@ -15,7 +15,6 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -36,7 +35,6 @@ public class AnnonceService {
 
     private Context context;
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private PhotoService photoService;
     private UserService userService;
     private FirebasePhotoStorage firebasePhotoStorage;
@@ -45,14 +43,12 @@ public class AnnonceService {
     @Inject
     public AnnonceService(Context context,
                           AnnonceRepository annonceRepository,
-                          PhotoRepository photoRepository,
                           AnnonceWithPhotosRepository annonceWithPhotosRepository,
                           FirebasePhotoStorage firebasePhotoStorage,
                           PhotoService photoService,
                           UserService userService) {
         this.context = context;
         this.annonceRepository = annonceRepository;
-        this.photoRepository = photoRepository;
         this.userService = userService;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.annonceWithPhotosRepository = annonceWithPhotosRepository;

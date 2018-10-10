@@ -68,6 +68,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     @Named("androidScheduler")
     Scheduler androidScheduler;
 
+    @Inject
+    MediaUtility mediaUtility;
+
     private AnnoncePhotos currentAnnonce;
     private CategorieEntity currentCategorie;
     private PhotoEntity currentPhoto;
@@ -78,6 +81,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
+    }
+
+    public MediaUtility getMediaUtility() {
+        return mediaUtility;
     }
 
     public LiveData<UserEntity> getConnectedUser(String uid) {
@@ -220,7 +227,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     public Uri generateNewUri(boolean externalStorage) {
-        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
+        Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair.first;
         } else {

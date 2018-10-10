@@ -28,8 +28,11 @@ import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerUtilityComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.UtilityComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.system.dagger.module.UtilityModule;
 import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.ui.activity.MyChatsActivity;
 import oliweb.nc.oliweb.utility.Constants;
@@ -56,12 +59,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private MessageRepository messageRepository;
     private ChatRepository chatRepository;
+    private MediaUtility mediaUtility;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
+        UtilityComponent utilityComponent = DaggerUtilityComponent.builder().utilityModule(new UtilityModule()).build();
+
         messageRepository = component.getMessageRepository();
         chatRepository = component.getChatRepository();
+        mediaUtility = utilityComponent.getMediaUtility();
         UserRepository userRepository = component.getUserRepository();
 
         if (remoteMessage.getNotification() != null) {
@@ -150,7 +157,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
         builder.addAction(action);
         builder.setSmallIcon(R.drawable.ic_message_white_48dp);
-        builder.setLargeIcon(MediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
+        builder.setLargeIcon(mediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
         builder.setAutoCancel(true);
         builder.setUsesChronometer(true);
 
@@ -184,7 +191,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setImportant(false);
 
         // Recherche de l'image du user
-        Bitmap bitmap = MediaUtility.getBitmapFromURL(user.getPhotoUrl());
+        Bitmap bitmap = mediaUtility.getBitmapFromURL(user.getPhotoUrl());
         if (bitmap != null) {
             builder.setIcon(IconCompat.createWithBitmap(bitmap));
         }

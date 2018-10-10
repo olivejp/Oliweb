@@ -25,6 +25,7 @@ import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.system.dagger.ApplicationContext;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
 @Module(includes = {ContextModule.class,
         SchedulerModule.class,
@@ -36,18 +37,17 @@ public class ServicesModule {
     @Singleton
     public AnnonceService annonceService(@ApplicationContext Context context,
                                          AnnonceRepository annonceRepository,
-                                         PhotoRepository photoRepository,
                                          AnnonceWithPhotosRepository annonceWithPhotosRepository,
                                          FirebasePhotoStorage firebasePhotoStorage,
                                          PhotoService photoService,
                                          UserService userService) {
-        return new AnnonceService(context, annonceRepository, photoRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userService);
+        return new AnnonceService(context, annonceRepository, annonceWithPhotosRepository, firebasePhotoStorage, photoService, userService);
     }
 
     @Provides
     @Singleton
-    public PhotoService photoService(Context context, PhotoRepository photoRepository) {
-        return new PhotoService(context, photoRepository);
+    public PhotoService photoService(Context context, PhotoRepository photoRepository, MediaUtility mediaUtility) {
+        return new PhotoService(context, photoRepository, mediaUtility);
     }
 
     @Provides

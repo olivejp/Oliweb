@@ -1,9 +1,12 @@
 package oliweb.nc.oliweb.ui.fragment;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
@@ -33,6 +36,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -69,6 +73,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     public static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
     public static final String SAVE_SORT = "SAVE_SORT";
     public static final String SAVE_DIRECTION = "SAVE_DIRECTION";
+    public static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
+    public static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
 
     public static final int SORT_DATE = 1;
     public static final int SORT_TITLE = 2;
@@ -101,6 +107,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
     private List<String> listUidFavorites = new ArrayList<>();
+    private AnnonceFull annonceFullToSaveTofavorite;
+    private View viewToEnabled;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -167,38 +175,68 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerFavorite = (View v) -> {
         v.setEnabled(false);
         if (uidUser == null || uidUser.isEmpty()) {
+            // User not logged
             Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
             v.setEnabled(true);
         } else {
+            // User logged
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
-            viewModel.addOrRemoveFromFavorite(uidUser, annonceFull).observeOnce(addRemoveFromFavorite -> {
-                if (addRemoveFromFavorite != null) {
-                    switch (addRemoveFromFavorite) {
-                        case ONE_OF_YOURS:
-                            Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
-                            break;
-                        case ADD_SUCCESSFUL:
-                            Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                    .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                    .show();
-                            break;
-                        case REMOVE_SUCCESSFUL:
-                            Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
-                            break;
-                        case REMOVE_FAILED:
-                            Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                v.setEnabled(true);
-            });
+
+            annonceFullToSaveTofavorite = viewHolder.getAnnonceFull();
+            viewToEnabled = v;
+
+            // Ask for permission to write on the external storage of the device
+            if (checkPermissionMversion()) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
+            } else {
+                callAddOrRemoveFromFavorite();
+            }
         }
     };
+
+    private boolean checkPermissionMversion() {
+        return Build.VERSION.SDK_INT >= 23 &&
+                viewModel.getMediaUtility().isExternalStorageAvailable() &&
+                viewModel.getMediaUtility().allPermissionsAreGranted(appCompatActivity.getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            callAddOrRemoveFromFavorite();
+        }
+    }
+
+    private void callAddOrRemoveFromFavorite() {
+        viewModel.addOrRemoveFromFavorite(uidUser, annonceFullToSaveTofavorite).observeOnce(addRemoveFromFavorite -> {
+            if (addRemoveFromFavorite != null) {
+                switch (addRemoveFromFavorite) {
+                    case ONE_OF_YOURS:
+                        Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                        break;
+                    case ADD_SUCCESSFUL:
+                        Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                .show();
+                        break;
+                    case REMOVE_SUCCESSFUL:
+                        Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                        break;
+                    case REMOVE_FAILED:
+                        Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (viewToEnabled != null) {
+                viewToEnabled.setEnabled(true);
+            }
+        });
+    }
 
     private void callFavoriteAnnonceActivity() {
         Intent intent = new Intent();
@@ -309,6 +347,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
         outState.putInt(SAVE_SORT, sortSelected);
         outState.putInt(SAVE_DIRECTION, directionSelected);
+        outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
     }
 
     @Override

@@ -81,6 +81,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
     @Inject
     @Named("processScheduler")
     Scheduler processScheduler;
+
     @Inject
     @Named("androidScheduler")
     Scheduler androidScheduler;
