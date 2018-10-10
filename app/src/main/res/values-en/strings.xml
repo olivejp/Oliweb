@@ -97,4 +97,6 @@
     <string name="empty_message_list">Start discuss with seller sending him a message</string>
     <string name="AD_DONT_EXIST_ANYMORE">This ad dont exist anymore</string>
     <string name="UPDATE_SUCCESSFUL">User successfully updated</string>
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_ringtone" translatable="false">Ringtone</string>
 </resources>
