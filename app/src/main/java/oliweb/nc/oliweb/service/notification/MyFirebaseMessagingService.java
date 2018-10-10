@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.service.notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -37,6 +38,7 @@ import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.ui.activity.MyChatsActivity;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_CHAT;
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_USER;
@@ -116,8 +118,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * @param message
      * @param userReceiver
      */
-    private void createChatDirectReplyNotification(String chatUid, String
-            annonceTitre, UserEntity authorEntity, String message, UserEntity userReceiver) {
+    private void createChatDirectReplyNotification(String chatUid, String annonceTitre, UserEntity authorEntity, String message, UserEntity userReceiver) {
 
         // On va appeler un service pour enregistrer la réponse à la notification reçue
         PendingIntent pendingIntent;
@@ -160,6 +161,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         builder.setLargeIcon(mediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
         builder.setAutoCancel(true);
         builder.setUsesChronometer(true);
+
+        // Si on a activé les notifications dans les paramètres, et qu'on a sélectionné une sonnette spéciale
+        boolean notificationMessage = SharedPreferencesHelper.getInstance(getApplicationContext()).getNotificationsMessage();
+        if (notificationMessage) {
+            Uri ringtone = SharedPreferencesHelper.getInstance(getApplicationContext()).getNotificationsMessageRingtone();
+            builder.setSound(ringtone);
+        }
+
 
         // Création du style de notification
         NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(receiverPerson).setConversationTitle(annonceTitre);
