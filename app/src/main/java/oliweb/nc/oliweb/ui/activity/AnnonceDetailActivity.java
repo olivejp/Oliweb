@@ -343,11 +343,13 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             fabActionEmail.setVisibility(View.GONE);
             fabActionTelephone.setVisibility(View.GONE);
             fabActionMessage.setVisibility(View.GONE);
+            imageFavorite.setVisibility(View.GONE);
         } else {
             fabActionUpdate.setVisibility(View.GONE);
             fabActionEmail.setVisibility((annonce.getContactByEmail() != null && "O".equals(annonce.getContactByEmail()) && seller.getEmail() != null) ? View.VISIBLE : View.GONE);
             fabActionTelephone.setVisibility((annonce.getContactByTel() != null && "O".equals(annonce.getContactByTel()) && seller.getTelephone() != null) ? View.VISIBLE : View.GONE);
             fabActionMessage.setVisibility((annonce.getContactByMsg() != null && "O".equals(annonce.getContactByMsg()) && !comeFromChatFragment) ? View.VISIBLE : View.GONE);
+            imageFavorite.setVisibility(View.VISIBLE);
         }
     }
 
