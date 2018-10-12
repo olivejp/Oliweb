@@ -63,20 +63,27 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
         messageDao.findSingleByUid(messageFirebase.getUidMessage())
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .doOnSuccess(messageEntity -> Log.d(TAG, "Message trouvé, inutile de le recréer"))
-                .doOnComplete(() -> {
-                    Log.d(TAG, "Message non trouvé, tentative d'insertion");
-                    chatRepository.findByUid(messageFirebase.getUidChat())
-                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                            .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
-                            .flatMapSingle(this::singleSave)
-                            .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
-                            .flatMapSingle(chatEntity1 -> {
-                                chatEntity1.setLastMessage(messageFirebase.getMessage());
-                                chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
-                                return chatRepository.singleSave(chatEntity1);
-                            })
-                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                            .subscribe();
+                .doOnComplete(() -> saveNewMessageUpdateChat(messageFirebase))
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
+    }
+
+    private void saveNewMessageUpdateChat(MessageFirebase messageFirebase) {
+        Log.d(TAG, "Message non trouvé, tentative d'insertion");
+        chatRepository.findByUid(messageFirebase.getUidChat())
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnComplete(() -> Log.e(TAG, "Le chat " + messageFirebase.getUidChat() + "n'existe pas."))
+                .map(chatEntity -> MessageConverter.convertDtoToEntity(chatEntity.getIdChat(), messageFirebase))
+                .flatMapSingle(this::singleSave)
+                .flatMapMaybe(messageEntity -> chatRepository.findByUid(messageEntity.getUidChat()))
+                .flatMapSingle(chatEntity1 -> {
+                    if (messageFirebase.getTimestamp() >= chatEntity1.getUpdateTimestamp()) {
+                        chatEntity1.setLastMessage(messageFirebase.getMessage());
+                        chatEntity1.setUpdateTimestamp(messageFirebase.getTimestamp());
+                        return chatRepository.singleSave(chatEntity1);
+                    } else {
+                        return Single.just(chatEntity1);
+                    }
                 })
                 .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                 .subscribe();
