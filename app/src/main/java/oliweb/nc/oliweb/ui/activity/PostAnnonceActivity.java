@@ -516,7 +516,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else {
-                if (idAnnonce != null) {
+                if (idAnnonce != null && idAnnonce != 0) {
                     viewModel.getAnnonceById(idAnnonce).observe(this, this::observeAnnoncePhotos);
                 } else if (uidAnnonce != null) {
                     viewModel.getAnnonceByUid(uidAnnonce).observe(this, this::observeAnnoncePhotos);
