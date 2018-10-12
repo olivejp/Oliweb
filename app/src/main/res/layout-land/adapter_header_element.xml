@@ -5,8 +5,8 @@
     android:id="@+id/constraint_chat"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-
-    android:background="@android:color/darker_gray">
+    android:background="@android:color/darker_gray"
+    android:elevation="3dp">
 
     <TextView
         android:id="@+id/annonce_titre"

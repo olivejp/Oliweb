@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.utility.helper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 /**
@@ -10,6 +11,8 @@ import android.preference.PreferenceManager;
 
 public class SharedPreferencesHelper {
 
+    private static final String NOTIFICATIONS_NEW_MESSAGE = "notifications_new_message";
+    private static final String NOTIFICATIONS_NEW_MESSAGE_RINGTONE = "notifications_new_message_ringtone";
     private static final String PREF_FIREBASE_USER_UID = "DISPLAY_FIREBASE_USER_UID";
     private static final String PREF_USE_EXTERNAL_STORAGE = "PREF_USE_EXTERNAL_STORAGE";
     private static final String PREF_DISPLAY_GRID = "PREF_DISPLAY_GRID";
@@ -52,6 +55,14 @@ public class SharedPreferencesHelper {
 
     public boolean getUseExternalStorage() {
         return sharedPreferences.getBoolean(PREF_USE_EXTERNAL_STORAGE, false);
+    }
+
+    public boolean getNotificationsMessage() {
+        return sharedPreferences.getBoolean(NOTIFICATIONS_NEW_MESSAGE, false);
+    }
+
+    public Uri getNotificationsMessageRingtone() {
+        return Uri.parse(sharedPreferences.getString(NOTIFICATIONS_NEW_MESSAGE_RINGTONE, "content://settings/system/notification_sound"));
     }
 
     public boolean setUseExternalStorage(boolean useExternalStorage) {

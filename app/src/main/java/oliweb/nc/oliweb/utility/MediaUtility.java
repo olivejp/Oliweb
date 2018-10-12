@@ -2,13 +2,16 @@ package oliweb.nc.oliweb.utility;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.content.FileProvider;
 import android.support.v4.util.Pair;
 import android.util.Log;
@@ -25,8 +28,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
@@ -35,6 +42,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
  * Created by orlanth23 on 03/02/2018.
  */
 
+@Singleton
 public class MediaUtility {
 
     public enum MediaType {
@@ -44,27 +52,35 @@ public class MediaUtility {
 
     private static final String TAG = MediaUtility.class.getName();
 
-    private MediaUtility() {
+    @Inject
+    public MediaUtility() {
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public boolean allPermissionsAreGranted(Context context, List<String> permissionsToCheck) {
+        boolean allPermitted = true;
+        for (String permission : permissionsToCheck) {
+            allPermitted = allPermitted && (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED);
+        }
+        return allPermitted;
     }
 
     /* Checks if external storage is available for read and write */
-    public static boolean isExternalStorageWritable() {
+    public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state);
     }
 
     /* Checks if external storage is available to at least read */
-    public static boolean isExternalStorageReadable() {
+    public boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
+    }
+
+    public boolean isExternalStorageAvailable() {
+        return isExternalStorageReadable() && isExternalStorageWritable();
     }
 
     /**
@@ -72,7 +88,7 @@ public class MediaUtility {
      *
      * @param fileName
      */
-    public static void refreshMediaProvider(Context appContext, String fileName) {
+    public void refreshMediaProvider(Context appContext, String fileName) {
         MediaScannerConnection scanner = null;
         try {
             scanner = new MediaScannerConnection(appContext, null);
@@ -101,7 +117,7 @@ public class MediaUtility {
      * @param uri
      * @return
      */
-    public static boolean saveBitmapToUri(Bitmap bmp, Uri uri) {
+    public boolean saveBitmapToUri(Bitmap bmp, Uri uri) {
         boolean saved = false;
         FileOutputStream out = null;
         File newFile;
@@ -145,7 +161,7 @@ public class MediaUtility {
      * @return Bitmap redimenssionné
      */
     @Nullable
-    private static Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
+    private Bitmap resizeBitmap(Bitmap bitmap, int maxPx) {
         int newWidth;
         int newHeight;
 
@@ -174,7 +190,7 @@ public class MediaUtility {
      * @param uri
      * @return
      */
-    public static Bitmap getBitmapFromUri(Context context, Uri uri) {
+    public Bitmap getBitmapFromUri(Context context, Uri uri) {
         Log.d(TAG, "getBitmapFromUri uri = " + uri.toString());
         InputStream imageStream;
         Bitmap bitmap = null;
@@ -187,7 +203,7 @@ public class MediaUtility {
         return bitmap;
     }
 
-    public static Bitmap getBitmapFromURL(String strURL) {
+    public Bitmap getBitmapFromURL(String strURL) {
         try {
             URL url = new URL(strURL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -209,16 +225,10 @@ public class MediaUtility {
      * @return
      */
     @Nullable
-    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
+    public Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
         String fileName = generateMediaName(type);
-        File newFile;
-        if (externalStorage) {
-            newFile = createExternalMediaFile(fileName);
-        } else {
-            newFile = createInternalMediaFile(context, fileName);
-        }
+        File newFile = (externalStorage) ? createExternalMediaFile(fileName) : createInternalMediaFile(context, fileName);
         if (newFile != null) {
-            Log.d(TAG, "createNewMediaFileUri : " + newFile.getAbsolutePath());
             return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
         }
         return null;
@@ -231,7 +241,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private static File createInternalMediaFile(Context context, String fileName) {
+    private File createInternalMediaFile(Context context, String fileName) {
         return new File(context.getFilesDir(), fileName);
     }
 
@@ -242,7 +252,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private static File createExternalMediaFile(String fileName) {
+    private File createExternalMediaFile(String fileName) {
         // External sdcard location
         File mediaStorageDir = new File(
                 // TODO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
@@ -251,12 +261,10 @@ public class MediaUtility {
                 Constants.IMAGE_DIRECTORY_NAME);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d(TAG, "Oops! Failed create "
-                        + Constants.IMAGE_DIRECTORY_NAME + " directory");
-                return null;
-            }
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            Log.d(TAG, "Oops! Failed create "
+                    + Constants.IMAGE_DIRECTORY_NAME + " directory");
+            return null;
         }
 
         // Create a media file name
@@ -269,7 +277,7 @@ public class MediaUtility {
      * @param type
      * @return
      */
-    private static String generateMediaName(MediaType type) {
+    private String generateMediaName(MediaType type) {
         String prefixName = UUID.randomUUID().toString();
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         if (type.equals(MediaType.IMAGE)) {
@@ -289,7 +297,7 @@ public class MediaUtility {
      * @param uriDestination
      * @return false si le fichier source n'a pas pu être lu
      */
-    public static boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) {
+    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) {
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
             Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
@@ -311,7 +319,7 @@ public class MediaUtility {
         return false;
     }
 
-    public static boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
+    public boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
         try {
             OutputStream out = contentResolver.openOutputStream(uriDestination);
             bitmapToSave.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -326,17 +334,18 @@ public class MediaUtility {
         return false;
     }
 
-    public static boolean deletePhotoFromDevice(ContentResolver contentResolver, String uriPhoto) {
-        Log.d(TAG, "Starting deletePhotoFromDevice " + uriPhoto);
+    public boolean deletePhotoFromDevice(ContentResolver contentResolver, String uriPhoto) {
         try {
-            return (contentResolver.delete(Uri.parse(uriPhoto), null, null) != 0);
+            boolean result = (contentResolver.delete(Uri.parse(uriPhoto), null, null) != 0);
+            Log.d(TAG, result ? "Photo " + uriPhoto + " successfully deleted !": "Photo " + uriPhoto + " has not been deleted !");
+            return result;
         } catch (Exception e) {
             Log.e(TAG, "Exception encountered to delete physical photo : " + uriPhoto);
             return false;
         }
     }
 
-    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) {
+    public void saveInputStreamToContentProvider(InputStream inputStream, File file) {
         try (OutputStream outStream = new FileOutputStream(file.getAbsoluteFile())) {
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;
@@ -352,9 +361,9 @@ public class MediaUtility {
     }
 
     @NonNull
-    public static Pair<Uri, File> createNewImagePairUriFile(Context context) {
+    public Pair<Uri, File> createNewImagePairUriFile(Context context) {
         boolean useExternalStorage = SharedPreferencesHelper.getInstance(context).getUseExternalStorage();
-        Pair<Uri, File> pairUriFile = MediaUtility.createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
+        Pair<Uri, File> pairUriFile = createNewMediaFileUri(context, useExternalStorage, MediaUtility.MediaType.IMAGE);
 
         if (pairUriFile == null) {
             throw new MediaUtilityException("Pair Uri & File ne peut pas être null");
@@ -364,7 +373,7 @@ public class MediaUtility {
             throw new MediaUtilityException("File ne peut pas être null");
         }
 
-        if (pairUriFile.first == null) {
+        if (pairUriFile.first == null || pairUriFile.first.toString().isEmpty()) {
             throw new MediaUtilityException("Uri ne peut pas être null");
         }
 

@@ -13,11 +13,13 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.Collections;
 import java.util.List;
 
 import oliweb.nc.oliweb.R;
@@ -105,27 +107,39 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
 
     @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_TAG_DELETE)
-                && dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
+        if (dialog.getTag() == null) {
+            return;
+        }
+        if (DIALOG_TAG_DELETE.equals(dialog.getTag())) {
+            dialogPositiveDelete(dialog);
+        } else if (DIALOG_FIREBASE_RETRIEVE.equals(dialog.getTag())) {
+            dialogPositiveRetrieve();
+        }
+    }
+
+    private void dialogPositiveDelete(NoticeDialogFragment dialog) {
+        if (dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
             long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
             if (idAnnonce != 0) {
-                viewModel.markToDelete(idAnnonce).observeOnce(atomicBoolean -> {
-
-                });
+                viewModel.markToDelete(idAnnonce).observeOnce(atomicBoolean ->
+                        Log.d(TAG, "Annonce successfully mark as to Delete")
+                );
             }
         }
+    }
 
-        if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
-                } else {
-                    callForFirebaseSync();
-                }
-            } else {
-                callForFirebaseSync();
-            }
+    private void dialogPositiveRetrieve() {
+        if (checkPermissionForMversion()) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
+        } else {
+            callForFirebaseSync();
         }
+    }
+
+    private boolean checkPermissionForMversion() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && viewModel.getMediaUtility().isExternalStorageAvailable()
+                && !viewModel.getMediaUtility().allPermissionsAreGranted (getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     }
 
     @Override

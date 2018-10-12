@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.service.notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -28,12 +29,16 @@ import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DaggerUtilityComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
+import oliweb.nc.oliweb.system.dagger.component.UtilityComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.system.dagger.module.UtilityModule;
 import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.ui.activity.MyChatsActivity;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_CHAT;
 import static oliweb.nc.oliweb.service.sync.SyncService.ARG_UID_USER;
@@ -56,12 +61,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private MessageRepository messageRepository;
     private ChatRepository chatRepository;
+    private MediaUtility mediaUtility;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
+        UtilityComponent utilityComponent = DaggerUtilityComponent.builder().utilityModule(new UtilityModule()).build();
+
         messageRepository = component.getMessageRepository();
         chatRepository = component.getChatRepository();
+        mediaUtility = utilityComponent.getMediaUtility();
         UserRepository userRepository = component.getUserRepository();
 
         if (remoteMessage.getNotification() != null) {
@@ -109,8 +118,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * @param message
      * @param userReceiver
      */
-    private void createChatDirectReplyNotification(String chatUid, String
-            annonceTitre, UserEntity authorEntity, String message, UserEntity userReceiver) {
+    private void createChatDirectReplyNotification(String chatUid, String annonceTitre, UserEntity authorEntity, String message, UserEntity userReceiver) {
 
         // On va appeler un service pour enregistrer la réponse à la notification reçue
         PendingIntent pendingIntent;
@@ -150,9 +158,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
         builder.addAction(action);
         builder.setSmallIcon(R.drawable.ic_message_white_48dp);
-        builder.setLargeIcon(MediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
+        builder.setLargeIcon(mediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
         builder.setAutoCancel(true);
         builder.setUsesChronometer(true);
+
+        // Si on a activé les notifications dans les paramètres, et qu'on a sélectionné une sonnette spéciale
+        boolean notificationMessage = SharedPreferencesHelper.getInstance(getApplicationContext()).getNotificationsMessage();
+        if (notificationMessage) {
+            Uri ringtone = SharedPreferencesHelper.getInstance(getApplicationContext()).getNotificationsMessageRingtone();
+            builder.setSound(ringtone);
+        }
+
 
         // Création du style de notification
         NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(receiverPerson).setConversationTitle(annonceTitre);
@@ -184,7 +200,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setImportant(false);
 
         // Recherche de l'image du user
-        Bitmap bitmap = MediaUtility.getBitmapFromURL(user.getPhotoUrl());
+        Bitmap bitmap = mediaUtility.getBitmapFromURL(user.getPhotoUrl());
         if (bitmap != null) {
             builder.setIcon(IconCompat.createWithBitmap(bitmap));
         }

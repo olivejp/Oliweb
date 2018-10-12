@@ -15,7 +15,6 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
-import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -36,7 +35,6 @@ public class AnnonceService {
 
     private Context context;
     private AnnonceRepository annonceRepository;
-    private PhotoRepository photoRepository;
     private PhotoService photoService;
     private UserService userService;
     private FirebasePhotoStorage firebasePhotoStorage;
@@ -45,14 +43,12 @@ public class AnnonceService {
     @Inject
     public AnnonceService(Context context,
                           AnnonceRepository annonceRepository,
-                          PhotoRepository photoRepository,
                           AnnonceWithPhotosRepository annonceWithPhotosRepository,
                           FirebasePhotoStorage firebasePhotoStorage,
                           PhotoService photoService,
                           UserService userService) {
         this.context = context;
         this.annonceRepository = annonceRepository;
-        this.photoRepository = photoRepository;
         this.userService = userService;
         this.firebasePhotoStorage = firebasePhotoStorage;
         this.annonceWithPhotosRepository = annonceWithPhotosRepository;
@@ -73,14 +69,20 @@ public class AnnonceService {
                 if (annonceFull.getAnnonce().getFavorite() == 1) {
                     removeFromFavorite(uidUser, annonceFull)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnError(e -> observer.onChanged(REMOVE_FAILED))
                             .doOnSuccess(atomicBoolean -> observer.onChanged(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
+                            .doOnError(e -> {
+                                Log.e(TAG, e.getMessage());
+                                observer.onChanged(REMOVE_FAILED);
+                            })
                             .subscribe();
                 } else {
                     saveToFavorite(uidUser, annonceFull)
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                            .doOnError(e -> observer.onChanged(ADD_FAILED))
                             .doOnSuccess(annonceEntity -> observer.onChanged(ADD_SUCCESSFUL))
+                            .doOnError(e -> {
+                                Log.e(TAG, e.getMessage());
+                                observer.onChanged(ADD_FAILED);
+                            })
                             .subscribe();
                 }
             }

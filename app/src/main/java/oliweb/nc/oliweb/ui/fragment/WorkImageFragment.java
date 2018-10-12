@@ -21,7 +21,6 @@ import butterknife.OnClick;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
-import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -70,7 +69,7 @@ public class WorkImageFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_work_image, container, false);
         ButterKnife.bind(this, rootView);
-        pBitmap = MediaUtility.getBitmapFromUri(this.appCompatActivity, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
+        pBitmap = viewModel.getMediaUtility().getBitmapFromUri(this.appCompatActivity, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()));
         photo.setImageBitmap(pBitmap);
         Utility.hideKeyboard(this.appCompatActivity);
         return rootView;
@@ -90,7 +89,7 @@ public class WorkImageFragment extends Fragment {
     @OnClick(R.id.frag_work_image_button_valid_photo)
     public void onValid(View v) {
         if (hasBeenUpdated) {
-            if (MediaUtility.saveBitmapToFileProviderUri(appCompatActivity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
+            if (viewModel.getMediaUtility().saveBitmapToFileProviderUri(appCompatActivity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
                 viewModel.getUpdatedPhoto().setStatut(StatusRemote.TO_SEND);
             }
             this.viewModel.updatePhotos();

@@ -35,7 +35,6 @@
                     android:id="@+id/text_categorie"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:editable="false"
                     android:hint="@string/categories" />
             </android.support.design.widget.TextInputLayout>
 

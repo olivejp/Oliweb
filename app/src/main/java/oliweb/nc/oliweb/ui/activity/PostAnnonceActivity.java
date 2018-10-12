@@ -35,6 +35,8 @@ import com.bumptech.glide.request.RequestOptions;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -54,7 +56,6 @@ import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
-import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -182,6 +183,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
             return false;
         });
 
+        manageSaveInstanceState(savedInstanceState);
+
+        Bundle bundle = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
+        if (!checkAndCatchParameter(bundle)) {
+            setResult(RESULT_CANCELED);
+            finish();
+        } else {
+            setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
+            initViewModel();
+        }
+    }
+
+    private void manageSaveInstanceState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
                 viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
@@ -200,15 +214,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                             .commit();
                 }
             }
-        }
-
-        Bundle bundle = (savedInstanceState != null) ? savedInstanceState : getIntent().getExtras();
-        if (!checkAndCatchParameter(bundle)) {
-            setResult(RESULT_CANCELED);
-            finish();
-        } else {
-            setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
-            initViewModel();
         }
     }
 
@@ -511,23 +516,19 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (mode.equals(Constants.PARAM_CRE)) {
                 viewModel.createNewAnnonce();
             } else {
-                if (idAnnonce != null) {
-                    viewModel.getAnnonceById(idAnnonce).observe(this, annoncePhotos -> {
-                        if (annoncePhotos != null) {
-                            viewModel.setCurrentAnnonce(annoncePhotos);
-                            displayCurrentAnnonce();
-                        }
-                    });
-                }
-                if (uidAnnonce != null) {
-                    viewModel.getAnnonceByUid(uidAnnonce).observe(this, annoncePhotos -> {
-                        if (annoncePhotos != null) {
-                            viewModel.setCurrentAnnonce(annoncePhotos);
-                            displayCurrentAnnonce();
-                        }
-                    });
+                if (idAnnonce != null && idAnnonce != 0) {
+                    viewModel.getAnnonceById(idAnnonce).observe(this, this::observeAnnoncePhotos);
+                } else if (uidAnnonce != null) {
+                    viewModel.getAnnonceByUid(uidAnnonce).observe(this, this::observeAnnoncePhotos);
                 }
             }
+        }
+    }
+
+    private void observeAnnoncePhotos(AnnoncePhotos annoncePhotos) {
+        if (annoncePhotos != null) {
+            viewModel.setCurrentAnnonce(annoncePhotos);
+            displayCurrentAnnonce();
         }
     }
 
@@ -560,7 +561,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity photoEntity) {
+    private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity
+            photoEntity) {
         ImageView imageView = pair.first;
         FrameLayout frameLayout = pair.second;
         if (imageView != null && frameLayout != null && frameLayout.getTag() == null) {
@@ -579,7 +581,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private void resizePhotoThenInsertToCurrentList(Uri uriSrc) {
         Uri uriDst = viewModel.generateNewUri(externalStorage);
         if (uriDst != null) {
-            if (MediaUtility.copyAndResizeUriImages(getApplicationContext(), uriSrc, uriDst)) {
+            if (viewModel.getMediaUtility().copyAndResizeUriImages(getApplicationContext(), uriSrc, uriDst)) {
                 viewModel.addPhotoToCurrentList(uriDst.toString());
             } else {
                 Snackbar.make(photo1, "L'image " + uriSrc.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
@@ -587,30 +589,30 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
+
+    /**
+     * Vérifie si l'on est en version >= 23 que le stockage externe est disponible et si la permission a été donnée
+     * d'écrire sur le disque externe.
+     *
+     * @return true si version >= 23 && stockage externe disponible && pas de permission sur le stockage externe
+     */
+    private boolean checkExternalPermission(List<String> permissionsToCheck) {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && viewModel.getMediaUtility().isExternalStorageAvailable()
+                && !viewModel.getMediaUtility().allPermissionsAreGranted(getApplicationContext(), permissionsToCheck);
+    }
+
     public void onNewPictureClick() {
-        // Demande de la permission pour utiliser la camera
-        if (Build.VERSION.SDK_INT >= 23) {
-            if ((checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) ||
-                    (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_CAMERA_PERMISSION_CODE);
-            } else {
-                callCaptureIntent();
-            }
+        if (checkExternalPermission(new ArrayList<>(Arrays.asList(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)))) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION_CODE);
         } else {
             callCaptureIntent();
         }
     }
 
     public void onGalleryClick() {
-        // Demande de la permission pour utiliser la camera
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
-            } else {
-                callGalleryIntent();
-            }
+        if (checkExternalPermission(new ArrayList<>(Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE)))) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
         } else {
             callGalleryIntent();
         }

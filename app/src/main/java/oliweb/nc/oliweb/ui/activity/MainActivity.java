@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -507,7 +508,9 @@ public class MainActivity extends AppCompatActivity
                                 clearConnectedUser();
                                 break;
                             case NEW_CONNECTION:
-                                initNewConnection(firebaseAuth.getCurrentUser());
+                                if (firebaseAuth.getCurrentUser() != null) {
+                                    initNewConnection(firebaseAuth.getCurrentUser());
+                                }
                                 break;
                             case NOTHING:
                             case SAME_CONNECTION:
@@ -518,6 +521,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initNewConnection(FirebaseUser user) {
+        Crashlytics.setUserIdentifier(user.getUid());
         Snackbar.make(coordinatorLayout, R.string.welcome, Snackbar.LENGTH_LONG).setAction(R.string.show_profile, v -> callProfilActivity()).show();
         if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
             viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {

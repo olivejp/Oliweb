@@ -72,7 +72,6 @@ public class ListMessageFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list_message, container, false);
-
         ButterKnife.bind(this, view);
 
         // Init recyclerView
@@ -134,6 +133,7 @@ public class ListMessageFragment extends Fragment {
         });
     }
 
+    // TODO Descendre la complexite de la methode
     @OnClick(R.id.button_send_message)
     public void clickOnSendButton(View v) {
         final String messageToSend = textToSend.getText().toString();

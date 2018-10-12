@@ -36,6 +36,7 @@ import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
+import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -78,6 +79,9 @@ public class MainActivityViewModel extends AndroidViewModel {
     @Named("androidScheduler")
     Scheduler androidScheduler;
 
+    @Inject
+    MediaUtility mediaUtility;
+
     private UserEntity userConnected;
     private boolean isNetworkAvailable;
     private MutableLiveData<Integer> sorting;
@@ -103,6 +107,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         ((App) application).getFirebaseRepositoriesComponent().inject(this);
         ((App) application).getServicesComponent().inject(this);
         ((App) application).getFirebaseServicesComponent().inject(this);
+    }
+
+    public MediaUtility getMediaUtility() {
+        return mediaUtility;
     }
 
     public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {

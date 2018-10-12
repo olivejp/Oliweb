@@ -9,6 +9,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,31 +24,28 @@ import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.MediaUtilityException;
 
 import static oliweb.nc.oliweb.database.converter.PhotoConverter.createPhotoEntityFromUrl;
-import static oliweb.nc.oliweb.utility.MediaUtility.createNewImagePairUriFile;
 
 @Singleton
 public class FirebasePhotoStorage {
 
     private static final String TAG = FirebasePhotoStorage.class.getName();
     public static final String ERROR_MISSED_URI = "URI nécessaire pour sauvegarder une photo";
+    public static final String ERROR_IMPOSSIBLE_TO_SAVE_PHOTO_WOUT_URL = "Impossible de sauvegarder une photo sans URL";
 
     private StorageReference fireStorage;
     private PhotoRepository photoRepository;
     private Scheduler processScheduler;
+    private MediaUtility mediaUtility;
 
     @Inject
-    public FirebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler) {
+    public FirebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler, MediaUtility mediaUtility) {
         this.photoRepository = photoRepository;
         this.processScheduler = processScheduler;
-    }
-
-    // Cette méthode sert pour les tests afin de pouvoir injecter notre storageReference
-    private void checkFirebaseStorage() {
-        if (fireStorage == null) {
-            fireStorage = FirebaseStorage.getInstance().getReference();
-        }
+        this.mediaUtility = mediaUtility;
     }
 
     public void setFireStorage(StorageReference fireStorage) {
@@ -78,40 +77,17 @@ public class FirebasePhotoStorage {
     }
 
     /**
-     * Will send the file located at uriLocalFile to the Firebase Storage
-     * with the name passed in fileName.
-     *
-     * @param fileName     futur name of the file in Firebase Storage
-     * @param uriLocalFile location of the local file to send
-     * @return Will return the URI of the file in Firebase Storage. You could use this URI to download the file from Internet
-     */
-    private Single<Uri> saveFileToStorage(String fileName, Uri uriLocalFile) {
-        checkFirebaseStorage();
-
-        return Single.create(e -> {
-            StorageReference storageReference = fireStorage.child(fileName);
-            storageReference.putFile(uriLocalFile)
-                    .addOnFailureListener(e::onError)
-                    .addOnSuccessListener(taskSnapshot ->
-                            storageReference.getDownloadUrl()
-                                    .addOnFailureListener(e::onError)
-                                    .addOnSuccessListener(e::onSuccess)
-                    );
-        });
-    }
-
-    /**
      * @param context
      * @param idAnnonce
      * @param listPhoto
      * @return The number of photos correctly saved
      */
     public Single<Long> savePhotosFromRemoteToLocal(Context context, final long idAnnonce, final List<PhotoEntity> listPhoto) {
-        Log.d(TAG, "savePhotosFromRemoteToLocal : " + listPhoto);
         return Single.create(emitter ->
                 Observable.fromIterable(listPhoto)
+                        .subscribeOn(processScheduler).observeOn(processScheduler)
                         .filter(photo -> (photo.getFirebasePath() != null && !photo.getFirebasePath().isEmpty()))
-                        .switchMapSingle(photoEntity -> savePhotoToLocalByUrl(context, idAnnonce, photoEntity.getFirebasePath()))
+                        .flatMapSingle(photoEntity -> savePhotoToLocalByUrl(context, idAnnonce, photoEntity.getFirebasePath()))
                         .doOnComplete(() -> emitter.onSuccess(idAnnonce))
                         .doOnError(emitter::onError)
                         .subscribe()
@@ -120,54 +96,76 @@ public class FirebasePhotoStorage {
 
     /**
      * Pour toutes les urls passées dans la liste,
-     * On va télécharger l'image
+     * On va télécharger les images sur notre device
      *
      * @param context
      * @param idAnnonce
      * @param listPhotoUrl
      */
     public void savePhotoToLocalByListUrl(Context context, final long idAnnonce, List<String> listPhotoUrl) {
-        Log.d(TAG, "savePhotoToLocalByListUrl : " + listPhotoUrl);
         for (String urlPhoto : listPhotoUrl) {
-            Pair<Uri, File> pairUriFile = createNewImagePairUriFile(context);
-            downloadFileFromStorage(pairUriFile.second, urlPhoto)
-                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                    .doOnSuccess(atomicBoolean -> {
-                        if (atomicBoolean.get()) {
-                            PhotoEntity photoEntity = createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString());
-                            photoRepository.singleSave(photoEntity)
-                                    .subscribeOn(processScheduler).observeOn(processScheduler)
-                                    .doOnSuccess(photoEntity1 -> Log.d(TAG, "Insertion de la photo réussie"))
-                                    .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
-                                    .subscribe();
-                        }
-                    })
-                    .subscribe();
+            if (StringUtils.isBlank(urlPhoto)) {
+                Log.e(TAG, ERROR_IMPOSSIBLE_TO_SAVE_PHOTO_WOUT_URL);
+            } else {
+                try {
+                    Pair<Uri, File> pairUriFile = mediaUtility.createNewImagePairUriFile(context);
+                    downloadFileToDevice(pairUriFile, idAnnonce, urlPhoto)
+                            .doOnError(exception -> Log.e(TAG, exception.getLocalizedMessage(), exception))
+                            .subscribe();
+                } catch (MediaUtilityException e) {
+                    Log.e(TAG, e.getLocalizedMessage(), e);
+                }
+            }
         }
     }
 
-    private Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
-        Log.d(TAG, "savePhotoToLocalByUrl : " + urlPhoto);
+    /**
+     * Renverra True si la photo a été supprimée du Storage
+     * S'il n'y a pas de photo à supprimer sur le storage, la fonction renverra quand même true
+     * S'il y a une erreur lors de la suppression de la photo, une exception pourra être récupérer dans le doOnError()
+     *
+     * @param photoEntity à supprimer
+     * @return True si la photo a bien été supprimée ou s'il n'y avait pas de photo à supprimer, false sinon
+     */
+    public Single<AtomicBoolean> delete(PhotoEntity photoEntity) {
+        Log.d(TAG, "Starting delete " + photoEntity.toString());
         return Single.create(emitter -> {
-            if (urlPhoto == null || urlPhoto.isEmpty()) {
-                emitter.onError(new RuntimeException("Impossible de sauvegarder une photo sans URL"));
+            if (photoEntity.getFirebasePath() == null || photoEntity.getFirebasePath().isEmpty()) {
+                emitter.onSuccess(new AtomicBoolean(true));
             } else {
-                Pair<Uri, File> pairUriFile = createNewImagePairUriFile(context);
-                downloadFileFromStorage(pairUriFile.second, urlPhoto)
-                        .doOnSuccess(atomicBoolean -> {
-                            if (atomicBoolean.get()) {
-                                PhotoEntity photoEntity = createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first.toString());
-                                photoRepository.singleSave(photoEntity)
-                                        .subscribeOn(processScheduler).observeOn(processScheduler)
-                                        .doOnSuccess(emitter::onSuccess)
-                                        .doOnError(emitter::onError)
-                                        .subscribe();
-                            }
-                        })
+                int positionPoint = photoEntity.getFirebasePath().lastIndexOf("?");
+                String substring = photoEntity.getFirebasePath().substring(0, positionPoint);
+                File file = new File(substring);
+                deleteFromStorage(file.getName())
                         .doOnError(emitter::onError)
+                        .doOnSuccess(emitter::onSuccess)
                         .subscribe();
             }
         });
+    }
+
+    // Cette méthode sert pour les tests afin de pouvoir injecter notre storageReference
+    private void checkFirebaseStorage() {
+        if (fireStorage == null) {
+            fireStorage = FirebaseStorage.getInstance().getReference();
+        }
+    }
+
+    private Single<PhotoEntity> downloadFileToDevice(Pair<Uri, File> pairUriFile, long idAnnonce, String urlPhoto) {
+        return downloadFileFromStorage(pairUriFile.second, urlPhoto)
+                .subscribeOn(processScheduler).observeOn(processScheduler)
+                .filter(AtomicBoolean::get)
+                .map(atomicBoolean -> createPhotoEntityFromUrl(idAnnonce, urlPhoto, pairUriFile.first))
+                .flatMapSingle(photoRepository::singleSave);
+    }
+
+    private Single<PhotoEntity> savePhotoToLocalByUrl(Context context, final long idAnnonce, final String urlPhoto) {
+        try {
+            Pair<Uri, File> pairUriFile = mediaUtility.createNewImagePairUriFile(context);
+            return downloadFileToDevice(pairUriFile, idAnnonce, urlPhoto);
+        } catch (MediaUtilityException e) {
+            return Single.error(e);
+        }
     }
 
     /**
@@ -189,25 +187,24 @@ public class FirebasePhotoStorage {
     }
 
     /**
-     * Renverra True si la photo a été supprimée du Storage
-     * S'il n'y a pas de photo à supprimer sur le storage, la fonction renverra quand même true
-     * S'il y a une erreur lors de la suppression de la photo, une exception pourra être récupérer dans le doOnError()
+     * Will send the file located at uriLocalFile to the Firebase Storage
+     * with the name passed in fileName.
      *
-     * @param photoEntity à supprimer
-     * @return True si la photo a bien été supprimée ou s'il n'y avait pas de photo à supprimer, false sinon
+     * @param fileName     futur name of the file in Firebase Storage
+     * @param uriLocalFile location of the local file to send
+     * @return Will return the URI of the file in Firebase Storage. You could use this URI to download the file from Internet
      */
-    public Single<AtomicBoolean> delete(PhotoEntity photoEntity) {
-        Log.d(TAG, "Starting delete " + photoEntity.toString());
-        return Single.create(emitter -> {
-            if (photoEntity.getFirebasePath() == null || photoEntity.getFirebasePath().isEmpty()) {
-                emitter.onSuccess(new AtomicBoolean(true));
-            } else {
-                File file = new File(photoEntity.getUriLocal());
-                deleteFromStorage(file.getName())
-                        .doOnError(emitter::onError)
-                        .doOnSuccess(emitter::onSuccess)
-                        .subscribe();
-            }
+    private Single<Uri> saveFileToStorage(String fileName, Uri uriLocalFile) {
+        checkFirebaseStorage();
+        return Single.create(e -> {
+            StorageReference storageReference = fireStorage.child(fileName);
+            storageReference.putFile(uriLocalFile)
+                    .addOnFailureListener(e::onError)
+                    .addOnSuccessListener(taskSnapshot ->
+                            storageReference.getDownloadUrl()
+                                    .addOnFailureListener(e::onError)
+                                    .addOnSuccessListener(e::onSuccess)
+                    );
         });
     }
 
@@ -221,17 +218,15 @@ public class FirebasePhotoStorage {
      * will return a exception in case of error
      */
     private Single<AtomicBoolean> deleteFromStorage(String fileName) {
+        Log.d(TAG, "Try to delete photo nammed " + fileName);
         checkFirebaseStorage();
         return Single.create(emitter -> {
             StorageReference storageReference = fireStorage.child(fileName);
             storageReference.delete()
-                    .addOnSuccessListener(taskSnapshot -> {
-                        Log.d(TAG, "Successful deleting photo on Firebase Storage : " + fileName);
-                        emitter.onSuccess(new AtomicBoolean(true));
-                    })
+                    .addOnSuccessListener(taskSnapshot -> emitter.onSuccess(new AtomicBoolean(true)))
                     .addOnFailureListener(e -> {
                         if (e instanceof StorageException && ((StorageException) e).getErrorCode() == StorageException.ERROR_OBJECT_NOT_FOUND) {
-                            Log.e(TAG, "Object not found on Firebase Storage. Return True anyway.", e);
+                            Log.e(TAG, "Object " + fileName + "not found on Firebase Storage. Return True anyway.", e);
                             emitter.onSuccess(new AtomicBoolean(true));
                         } else {
                             Log.e(TAG, "Failed to delete image on Firebase Storage : " + fileName + "exception : " + e.getMessage(), e);

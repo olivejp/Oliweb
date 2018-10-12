@@ -25,8 +25,9 @@ import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.PhotoFirebaseSender;
 import oliweb.nc.oliweb.system.dagger.ApplicationContext;
+import oliweb.nc.oliweb.utility.MediaUtility;
 
-@Module(includes = {ContextModule.class, SchedulerModule.class, FirebaseRepositoriesModule.class})
+@Module(includes = {ContextModule.class, SchedulerModule.class, FirebaseRepositoriesModule.class, UtilityModule.class})
 public class FirebaseServicesModule {
 
     @Provides
@@ -36,8 +37,9 @@ public class FirebaseServicesModule {
                                                          AnnonceRepository annonceRepository,
                                                          PhotoRepository photoRepository,
                                                          AnnonceFullRepository annonceFullRepository,
-                                                         FirebasePhotoStorage firebasePhotoStorage) {
-        return new AnnonceFirebaseDeleter(context, firebaseAnnonceRepository, annonceRepository, photoRepository, annonceFullRepository, firebasePhotoStorage);
+                                                         FirebasePhotoStorage firebasePhotoStorage,
+                                                         MediaUtility mediaUtility) {
+        return new AnnonceFirebaseDeleter(context, firebaseAnnonceRepository, annonceRepository, photoRepository, annonceFullRepository, firebasePhotoStorage, mediaUtility);
     }
 
     @Provides
@@ -86,7 +88,7 @@ public class FirebaseServicesModule {
 
     @Provides
     @Singleton
-    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler) {
-        return new FirebasePhotoStorage(photoRepository, processScheduler);
+    public FirebasePhotoStorage firebasePhotoStorage(PhotoRepository photoRepository, @Named("processScheduler") Scheduler processScheduler, MediaUtility mediaUtility) {
+        return new FirebasePhotoStorage(photoRepository, processScheduler, mediaUtility);
     }
 }
