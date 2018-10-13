@@ -251,6 +251,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             Window w = getWindow();
             w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         }
+
+        // Permet a l'ecran de ne pas se superposer a la navigation bar.
+        if (Utility.hasNavigationBar(this)) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LOW_PROFILE);
+        }
     }
 
     @Override
@@ -324,10 +330,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                         imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp)
                 );
             }
-
-            // Permet a l'ecran de ne pas se superposer a la navigation bar.
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
     }
 
