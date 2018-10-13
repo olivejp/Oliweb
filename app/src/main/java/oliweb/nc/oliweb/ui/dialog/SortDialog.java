@@ -45,9 +45,7 @@ public class SortDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
         builder.setTitle("Trier");
-        builder.setItems(R.array.pref_sort, (dialog, which) -> {
-            listener.sortHasBeenUpdated(which);
-        });
+        builder.setItems(R.array.pref_sort, (dialog, which) -> listener.sortHasBeenUpdated(which));
         return builder.create();
     }
 
