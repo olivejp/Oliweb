@@ -172,8 +172,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         arrayImageViews.add(new Pair<>(photo3, view3));
         arrayImageViews.add(new Pair<>(photo4, view4));
 
-        initObservers();
-
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -192,6 +190,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         } else {
             setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
             initViewModel();
+            initObservers();
         }
     }
 
