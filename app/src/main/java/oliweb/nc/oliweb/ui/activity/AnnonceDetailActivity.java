@@ -324,6 +324,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                         imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp)
                 );
             }
+
+            // Permet a l'ecran de ne pas se superposer a la navigation bar.
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
     }
 
