@@ -337,7 +337,7 @@ public class MediaUtility {
     public boolean deletePhotoFromDevice(ContentResolver contentResolver, String uriPhoto) {
         try {
             boolean result = (contentResolver.delete(Uri.parse(uriPhoto), null, null) != 0);
-            Log.d(TAG, result ? "Photo " + uriPhoto + " successfully deleted !": "Photo " + uriPhoto + " has not been deleted !");
+            Log.d(TAG, result ? "Photo " + uriPhoto + " successfully deleted !" : "Photo " + uriPhoto + " has not been deleted !");
             return result;
         } catch (Exception e) {
             Log.e(TAG, "Exception encountered to delete physical photo : " + uriPhoto);

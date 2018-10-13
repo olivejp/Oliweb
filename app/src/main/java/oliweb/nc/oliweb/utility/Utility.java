@@ -10,7 +10,10 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -51,6 +54,12 @@ public class Utility {
     private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private Utility() {
+    }
+
+    public static boolean hasNavigationBar(Context context) {
+        boolean hasMenuKey = ViewConfiguration.get(context).hasPermanentMenuKey();
+        boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+        return !hasMenuKey && !hasBackKey;
     }
 
     public static Executor getNewExecutor() {
