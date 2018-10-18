@@ -16,6 +16,6 @@
     <dimen name="spacing_medium">8dp</dimen>
     <dimen name="spacing_large">16dp</dimen>
     <dimen name="desc_padding">40dp</dimen>
-    <dimen name="annonce_image_view_adapter_element">200dp</dimen>
-    <dimen name="annonce_card_adapter_element">250dp</dimen>
+    <dimen name="annonce_image_view_adapter_element">100dp</dimen>
+    <dimen name="annonce_card_adapter_element">200dp</dimen>
 </resources>

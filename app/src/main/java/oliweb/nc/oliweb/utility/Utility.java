@@ -276,7 +276,7 @@ public class Utility {
                 }
             });
         }
-        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_tight);
+        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);
