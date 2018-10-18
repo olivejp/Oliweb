@@ -102,7 +102,7 @@ public class ListChatFragment extends Fragment {
         for (ChatEntity chatEntity : listChats) {
             if (!listTitreDejaTraite.contains(chatEntity.getTitreAnnonce())) {
                 ChatAdapter.HeaderItem header = new ChatAdapter.HeaderItem();
-                header.setTitreAnnonce(chatEntity.getTitreAnnonce());
+                header.setChatEntity(chatEntity);
                 listItems.add(header);
                 listTitreDejaTraite.add(chatEntity.getTitreAnnonce());
             }

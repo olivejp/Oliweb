@@ -91,6 +91,9 @@ public class IntroActivity extends AppCompatActivity {
                 launchHomeScreen();
             }
         });
+
+        // Set the default sorting
+        SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(2);
     }
 
     private void addBottomDots(int currentPage) {

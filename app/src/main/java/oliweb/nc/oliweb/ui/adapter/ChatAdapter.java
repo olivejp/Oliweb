@@ -68,8 +68,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int type = getItemViewType(position);
         if (type == ListItem.TYPE_HEADER) {
             HeaderViewHolder holder = (HeaderViewHolder) viewHolder;
-            String titreAnnonce = ((HeaderItem) listChats.get(position)).getTitreAnnonce();
+            ChatEntity model = ((HeaderItem) listChats.get(position)).getChatEntity();
+
+            holder.headerOptions.setTag(model);
+            String titreAnnonce = ((HeaderItem) listChats.get(position)).getChatEntity().getTitreAnnonce();
             holder.titre.setText(titreAnnonce);
+
+            holder.headerOptions.setOnClickListener(popupClickListener);
+
         } else {
             ChatViewHolder holder = (ChatViewHolder) viewHolder;
             ChatEntity model = ((EventItem) listChats.get(position)).getChatEntity();
@@ -114,8 +120,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return chatOld.getUidChat().equals(chatNew.getUidChat());
                     }
                     if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
-                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
-                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
+                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getChatEntity().getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getChatEntity().getTitreAnnonce();
                         return titreOld.equals(titreNew);
                     }
                     return false;
@@ -131,8 +137,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return chatOld.equals(chatNew);
                     }
                     if (TYPE_HEADER == listChats.get(oldItemPosition).getType()) {
-                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getTitreAnnonce();
-                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getTitreAnnonce();
+                        String titreOld = ((HeaderItem) listChats.get(oldItemPosition)).getChatEntity().getTitreAnnonce();
+                        String titreNew = ((HeaderItem) newListChats.get(newItemPosition)).getChatEntity().getTitreAnnonce();
                         return titreOld.equals(titreNew);
                     }
                     return false;
@@ -183,6 +189,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @BindView(R.id.annonce_titre)
         TextView titre;
 
+        @BindView(R.id.chat_header_popup_menu)
+        ImageView headerOptions;
+
         HeaderViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
@@ -221,19 +230,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static class HeaderItem extends ListItem {
 
-        private String titreAnnonce;
+        private ChatEntity chatEntity;
 
         @Override
         public int getType() {
             return TYPE_HEADER;
         }
 
-        public String getTitreAnnonce() {
-            return titreAnnonce;
+        public ChatEntity getChatEntity() {
+            return chatEntity;
         }
 
-        public void setTitreAnnonce(String titreAnnonce) {
-            this.titreAnnonce = titreAnnonce;
+        public void setChatEntity(ChatEntity chatEntity) {
+            this.chatEntity = chatEntity;
         }
     }
 
