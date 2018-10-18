@@ -215,7 +215,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             if (addRemoveFromFavorite != null) {
                 switch (addRemoveFromFavorite) {
                     case ONE_OF_YOURS:
-                        Toast.makeText(appCompatActivity, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
                         break;
                     case ADD_SUCCESSFUL:
                         Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
@@ -226,7 +226,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                         Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
                         break;
                     case REMOVE_FAILED:
-                        Toast.makeText(appCompatActivity, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
                         break;
                     default:
                         break;

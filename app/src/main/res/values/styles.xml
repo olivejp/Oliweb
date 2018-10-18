@@ -4,7 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@android:color/white</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
@@ -43,6 +43,13 @@
         <item name="android:paddingLeft">@dimen/desc_padding</item>
         <item name="android:paddingRight">@dimen/desc_padding</item>
         <item name="android:textSize">@dimen/slide_desc</item>
+    </style>
+
+    <style name="ToolbarStyle" parent="Theme.AppCompat">
+        <item name="android:textColorPrimary">@color/colorBottomDark</item>
+        <item name="android:textColorSecondary">@color/colorBottomDark</item>
+        <item name="actionMenuTextColor">@color/colorBottomDark</item>
+        <item name="actionOverflowButtonStyle">@style/Widget.AppCompat.Light.ActionButton.Overflow</item>
     </style>
 
 </resources>

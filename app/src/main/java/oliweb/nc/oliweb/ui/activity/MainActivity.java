@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -77,6 +78,10 @@ public class MainActivity extends AppCompatActivity
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
+
+
+    @BindView(R.id.appbarlayout)
+    AppBarLayout appBarLayout;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -192,8 +197,7 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu = navigationView.getMenu();
 
         setSupportActionBar(toolbar);
-        toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -202,6 +206,17 @@ public class MainActivity extends AppCompatActivity
         prepareNavigationMenu(false);
 
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
+
+        initToolbar();
+    }
+
+    /**
+     * Permet de faire disparaitre la barre outil dans le cas où on scroll
+     */
+    private void initToolbar() {
+        appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
+                appBarLayout.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
+        );
     }
 
     private void initFragments(Bundle savedInstanceState) {
