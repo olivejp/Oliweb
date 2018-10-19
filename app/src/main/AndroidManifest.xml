@@ -74,8 +74,7 @@
         <activity
             android:name=".ui.activity.SearchActivity"
             android:label="Recherche annonce"
-            android:parentActivityName=".ui.activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".ui.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>

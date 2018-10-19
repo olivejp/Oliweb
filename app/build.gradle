@@ -83,6 +83,9 @@ dependencies {
     implementation 'com.evernote:android-job:1.2.5'
     implementation 'com.google.code.gson:gson:2.8.2'
 
+    // Test des composants Material Desgin
+   // implementation 'com.google.android.material:material:1.0.0'
+
     // Pour utiliser Stetho lancer l'application en debug sur un mobile connecté
     // Puis aller sur chrome et taper l'url chrome://inspect/
     // Vous devez aller dans local storage et vous trouverez la DB

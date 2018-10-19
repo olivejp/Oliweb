@@ -13,7 +13,6 @@ import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -80,9 +79,6 @@ public class SearchActivity extends AppCompatActivity {
     @BindView(R.id.empty_search_linear)
     LinearLayout linearLayout;
 
-    @BindView(R.id.toolbar_activity_search)
-    Toolbar toolbar;
-
     SearchView searchView;
 
     private ArrayList<AnnonceFull> listAnnonce;
@@ -136,12 +132,6 @@ public class SearchActivity extends AppCompatActivity {
             if (intentParam.hasExtra(WITH_PHOTO_ONLY)) {
                 withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
             }
-        }
-
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
         annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(this, R.color.colorAnnonceElementBackground),
