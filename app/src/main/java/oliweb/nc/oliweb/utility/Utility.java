@@ -10,6 +10,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -54,6 +55,15 @@ public class Utility {
     private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private Utility() {
+    }
+
+    public static int getDefaultActionBarSize(Context context) {
+        // Calculate ActionBar's height
+        TypedValue tv = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            return TypedValue.complexToDimensionPixelSize(tv.data, context.getResources().getDisplayMetrics());
+        }
+        return 0;
     }
 
     public static boolean hasNavigationBar(Context context) {

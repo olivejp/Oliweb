@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -68,6 +69,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOGIN = 100;
     private static final int REQUEST_CALL_POST_ANNONCE = 200;
     private static final String MAIL_MESSAGE_TYPE = "message/rfc822";
+
+    @BindView(R.id.appbar)
+    AppBarLayout appBarLayout;
 
     @BindView(R.id.collapsing_toolbar_detail)
     CollapsingToolbarLayout collapsingToolbarLayout;
@@ -319,6 +323,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
                 indicator.setViewPager(viewPager);
+            } else {
+                // If no photo for this ads, we don't expand the AppBarLayout
+                appBarLayout.setExpanded(false);
             }
 
             if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {
