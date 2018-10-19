@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -124,8 +123,6 @@ public class ListChatFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         // Init du Adapter
-        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(appCompatActivity, DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(itemDecoration);
         ChatAdapter chatAdapter = new ChatAdapter(viewModel.getFirebaseUserUid(), onClickListener, onPopupClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         recyclerView.setAdapter(chatAdapter);

@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="400dp"
             android:fitsSystemWindows="true"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
             tools:visibility="gone">
 
             <android.support.design.widget.CollapsingToolbarLayout
@@ -24,7 +24,7 @@
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true"
                 app:collapsedTitleGravity="center"
-                app:contentScrim="@color/colorPrimary"
+                app:contentScrim="@android:color/white"
                 app:expandedTitleTextAppearance="@android:color/white"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:toolbarId="@+id/toolbar">
