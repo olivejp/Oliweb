@@ -11,25 +11,13 @@
 
     <!--android:layout_height="@dimen/annonce_card_adapter_element"-->
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/firstLinear"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="10dp">
 
-        <ProgressBar
-            android:id="@+id/loading_progress"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="@id/card_view_beauty"
-            app:layout_constraintLeft_toLeftOf="@id/card_view_beauty"
-            app:layout_constraintRight_toRightOf="@id/card_view_beauty"
-            app:layout_constraintTop_toTopOf="@id/card_view_beauty"
-            tools:visibility="gone" />
-
-
-        <android.support.v7.widget.CardView
+        <androidx.cardview.widget.CardView
             android:id="@+id/card_view_beauty"
             android:layout_width="0dp"
             android:layout_height="@dimen/annonce_image_view_adapter_element"
@@ -61,8 +49,8 @@
                     android:layout_alignParentTop="true"
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="10dp"
-                    android:layout_marginRight="5dp"
                     android:layout_marginEnd="5dp"
+                    android:layout_marginRight="5dp"
                     android:background="@drawable/drawable_ripple_red_effect"
                     android:clickable="true"
                     android:focusable="true"
@@ -81,7 +69,19 @@
                     android:focusable="true"
                     app:srcCompat="@drawable/ic_share_white_48dp" />
             </RelativeLayout>
-        </android.support.v7.widget.CardView>
+        </androidx.cardview.widget.CardView>
+
+        <ProgressBar
+            android:id="@+id/loading_progress"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@id/card_view_beauty"
+            app:layout_constraintLeft_toLeftOf="@id/card_view_beauty"
+            app:layout_constraintRight_toRightOf="@id/card_view_beauty"
+            app:layout_constraintTop_toTopOf="@id/card_view_beauty"
+            tools:visibility="gone" />
+
 
         <ImageView
             android:id="@+id/image_view_empty"
@@ -139,5 +139,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
             tools:text="400 000 XPF" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

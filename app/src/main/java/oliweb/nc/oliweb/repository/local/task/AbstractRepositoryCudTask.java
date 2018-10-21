@@ -1,7 +1,7 @@
 package oliweb.nc.oliweb.repository.local.task;
 
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import oliweb.nc.oliweb.database.dao.AbstractDao;

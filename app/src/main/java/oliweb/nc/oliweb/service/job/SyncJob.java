@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb.service.job;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobRequest;

@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb.repository.local;
 
-import android.arch.lifecycle.LiveData;
+import androidx.lifecycle.LiveData;
 import android.content.Context;
 
 import java.util.List;

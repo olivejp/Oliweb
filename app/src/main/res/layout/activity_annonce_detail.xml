@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinator_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:ignore="MergeRootFrame">
 
-        <android.support.design.widget.AppBarLayout
+        <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
             android:layout_width="match_parent"
             android:layout_height="400dp"
@@ -18,7 +18,7 @@
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
             tools:visibility="gone">
 
-            <android.support.design.widget.CollapsingToolbarLayout
+            <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:id="@+id/collapsing_toolbar_detail"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -29,12 +29,12 @@
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:toolbarId="@+id/toolbar">
 
-                <android.support.constraint.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
 
-                    <android.support.v4.view.ViewPager
+                    <androidx.viewpager.widget.ViewPager
                         android:id="@+id/view_pager_detail"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -50,9 +50,9 @@
                         app:ci_drawable_unselected="@xml/circle_indicator_color"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                </android.support.constraint.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <android.support.v7.widget.Toolbar
+                <androidx.appcompat.widget.Toolbar
                     android:id="@+id/detail_toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
@@ -61,15 +61,15 @@
                     app:layout_collapseMode="pin"
                     app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-            </android.support.design.widget.CollapsingToolbarLayout>
-        </android.support.design.widget.AppBarLayout>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
-        <android.support.v4.widget.NestedScrollView
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <android.support.constraint.ConstraintLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
@@ -96,7 +96,7 @@
                         android:foregroundGravity="left"
                         app:srcCompat="@drawable/ic_person_white_48dp" />
 
-                    <android.support.design.widget.FloatingActionButton
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab_action_update"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -110,7 +110,7 @@
                         app:srcCompat="@drawable/ic_mode_edit_white_48dp"
                         tools:visibility="visible" />
 
-                    <android.support.design.widget.FloatingActionButton
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab_action_telephone"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -121,7 +121,7 @@
                         app:srcCompat="@drawable/ic_phone_white_48dp"
                         tools:visibility="visible" />
 
-                    <android.support.design.widget.FloatingActionButton
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab_action_email"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -132,7 +132,7 @@
                         app:srcCompat="@drawable/ic_email_white_48dp"
                         tools:visibility="visible" />
 
-                    <android.support.design.widget.FloatingActionButton
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab_action_message"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -216,8 +216,8 @@
                     tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI." />
 
 
-            </android.support.constraint.ConstraintLayout>
-        </android.support.v4.widget.NestedScrollView>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
 
         <TextView
             android:id="@+id/text_view_prix_detail"
@@ -232,5 +232,5 @@
             android:transitionName="@string/prix_detail_transition"
             tools:text="400 000 XPF" />
 
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </FrameLayout>

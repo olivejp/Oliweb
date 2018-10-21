@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb;
 
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.Observer;
 import android.content.Context;
 
 import org.junit.Before;

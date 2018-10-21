@@ -1,9 +1,5 @@
 package oliweb.nc.oliweb.repository.firebase;
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -21,6 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -57,7 +57,7 @@ public class FirebaseAnnonceRepository {
     public LiveData<Long> getCountAnnonceByUidUser(String uidUser) {
         return new LiveData<Long>() {
             @Override
-            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super Long> observer) {
                 super.observe(owner, observer);
                 annonceRef.orderByChild("utilisateur/uuid").equalTo(uidUser).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override

@@ -2,7 +2,7 @@ package oliweb.nc.oliweb.service.firebase;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v4.util.Pair;
+import androidx.core.util.Pair;
 import android.util.Log;
 
 import com.google.firebase.storage.FirebaseStorage;

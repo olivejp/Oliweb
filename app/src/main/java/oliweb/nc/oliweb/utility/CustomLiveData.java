@@ -1,8 +1,8 @@
 package oliweb.nc.oliweb.utility;
 
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Observer;
-import android.support.annotation.Nullable;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.annotation.Nullable;
 
 /**
  * Created by orlanth23 on 08/08/2018.

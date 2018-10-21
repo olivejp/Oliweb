@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb.database.entity;
 
-import android.arch.persistence.room.TypeConverter;
+import androidx.room.TypeConverter;
 
 
 /**
