@@ -5,20 +5,21 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.viewpager.widget.PagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.material.button.MaterialButton;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -36,10 +37,10 @@ public class IntroActivity extends AppCompatActivity {
     LinearLayout dotsLayout;
 
     @BindView(R.id.btn_skip)
-    Button btnSkip;
+    MaterialButton btnSkip;
 
     @BindView(R.id.btn_next)
-    Button btnNext;
+    MaterialButton btnNext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,12 +105,12 @@ public class IntroActivity extends AppCompatActivity {
             dots[i] = new TextView(this);
             dots[i].setText(Html.fromHtml("&#8226;"));
             dots[i].setTextSize(35);
-            dots[i].setTextColor(getResources().getColor(R.color.colorPrimary));
+            dots[i].setTextColor(getResources().getColor(android.R.color.darker_gray));
             dotsLayout.addView(dots[i]);
         }
 
         if (dots.length > 0)
-            dots[currentPage].setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            dots[currentPage].setTextColor(getResources().getColor(android.R.color.black));
     }
 
     private int getItem(int i) {

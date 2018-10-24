@@ -4,19 +4,19 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.DialogInfos;
 
@@ -70,6 +70,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         bundle.putInt(NoticeDialogFragment.P_IMG, dialogInfos.getIdDrawable());
         bundle.putBundle(NoticeDialogFragment.P_BUNDLE, dialogInfos.getBundlePar());
         dialogErreur.setArguments(bundle);
+        dialogErreur.setCancelable(false);
         dialogErreur.show(fragmentManager, dialogInfos.getTag());
     }
 

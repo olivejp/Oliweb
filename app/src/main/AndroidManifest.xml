@@ -142,7 +142,7 @@
             android:name=".ui.activity.IntroActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="Intro"
-            android:theme="@style/SplashTheme" />
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.activity.SplashActivity"
             android:theme="@style/SplashTheme">
