@@ -1,11 +1,10 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.annotation.NonNull;
+import android.os.Bundle;
 import android.util.Log;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -52,6 +55,7 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
     private ChatEntity currentChat;
     private String firebaseUserUid;
     private MutableLiveData<Map<String, UserEntity>> liveDataPhotoUrlUsers;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Inject
     ChatRepository chatRepository;
@@ -76,6 +80,8 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         ((App) getApplication()).getBusinessComponent().inject(this);
 
         this.liveDataPhotoUrlUsers = new MutableLiveData<>();
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(application);
     }
 
     public String getFirebaseUserUid() {
@@ -199,7 +205,10 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
 
         messageRepository.singleSave(messageEntity)
                 .subscribeOn(processScheduler).observeOn(processScheduler)
-                .doOnSuccess(atomicBoolean -> atomicBooleanCustomLiveData.postValue(new AtomicBoolean(true)))
+                .doOnSuccess(atomicBoolean -> {
+                    atomicBooleanCustomLiveData.postValue(new AtomicBoolean(true));
+                    sendNewEvent();
+                })
                 .doOnError(e -> {
                     atomicBooleanCustomLiveData.postValue(new AtomicBoolean(false));
                     Log.e(TAG, e.getLocalizedMessage(), e);
@@ -207,6 +216,12 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
                 .subscribe();
 
         return atomicBooleanCustomLiveData;
+    }
+
+    private void sendNewEvent() {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "message");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 
     public LiveData<Map<String, UserEntity>> getLiveDataPhotoUrlUsers() {
