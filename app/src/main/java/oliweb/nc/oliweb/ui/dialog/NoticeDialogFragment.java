@@ -37,6 +37,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     private Bundle mBundle;
     private DialogListener mListener;
     private AppCompatActivity appCompatActivity;
+    private AlertDialog mDialog;
 
     public void setListener(DialogListener listener) {
         mListener = listener;
@@ -138,13 +139,17 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
                     builder.setPositiveButton(getString(R.string.yes), (dialog, which) -> mListener.onDialogPositiveClick(NoticeDialogFragment.this))
                             .setNegativeButton(getString(R.string.no), (dialog, which) -> mListener.onDialogNegativeClick(NoticeDialogFragment.this));
                     break;
+                default:
             }
 
             // Gestion de l'image à afficher en haut de la fenêtre
             ImageView imgView = view.findViewById(R.id.imageDialog);
             imgView.setImageResource(idResource);
         }
-        return builder.create();
+
+        mDialog = builder.create();
+
+        return mDialog;
     }
 
     @Override
@@ -156,13 +161,16 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         } catch (IllegalStateException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
         }
+        mDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.white));
+        mDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.white));
+
     }
 
     public Bundle getBundle() {
         return mBundle;
     }
 
-    /* The activity that creates an instance of this dialog fragment must
+    /* The activity that creates an instance of this mDialog fragment must
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface DialogListener {
