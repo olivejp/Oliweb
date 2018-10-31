@@ -26,7 +26,7 @@
         android:layout_marginStart="15dp"
         android:fontFamily="@font/grinty_font_family"
         android:maxLines="2"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
         android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/profileImage"

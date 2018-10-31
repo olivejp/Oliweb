@@ -18,11 +18,10 @@
 
     <TextView
         android:id="@+id/text_date_publication_annonce_raw"
-        style="@style/TextAppearance.AppCompat.Caption"
+        style="@style/TextAppearance.MaterialComponents.Caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical|start"
-        android:textStyle="italic"
         app:layout_constraintLeft_toRightOf="@+id/text_titre_annonce_raw"
         app:layout_constraintRight_toLeftOf="@+id/annonce_popup_menu"
         app:layout_constraintTop_toTopOf="parent"
@@ -30,7 +29,7 @@
 
     <TextView
         android:id="@+id/text_titre_annonce_raw"
-        style="@style/TextAppearance.AppCompat.Body2"
+        style="@style/TextAppearance.MaterialComponents.Body1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical|start"
@@ -41,7 +40,7 @@
 
     <TextView
         android:id="@+id/text_nb_photos"
-        style="@style/TextAppearance.AppCompat.Caption"
+        style="@style/TextAppearance.MaterialComponents.Caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
@@ -62,7 +61,7 @@
 
     <TextView
         android:id="@+id/text_prix_annonce_raw"
-        style="@style/TextAppearance.AppCompat.Body2"
+        style="@style/TextAppearance.MaterialComponents.Body2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"

@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    android:layout_marginEnd="60dp"
     android:layout_marginStart="10dp"
     android:layout_marginTop="10dp"
+    android:layout_marginEnd="60dp"
+    android:layout_marginBottom="10dp"
     android:background="?android:attr/selectableItemBackground">
 
     <androidx.cardview.widget.CardView
@@ -42,6 +42,7 @@
                 android:layout_marginTop="5dp"
                 android:gravity="start"
                 android:paddingEnd="60dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 android:textColor="@android:color/white"
                 app:layout_constraintLeft_toRightOf="@+id/message_author_photo"
                 app:layout_constraintTop_toTopOf="parent"
@@ -51,10 +52,10 @@
                 android:id="@+id/message_timestamp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
                 android:layout_marginStart="5dp"
+                android:layout_marginBottom="5dp"
                 android:gravity="start"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/message_author_photo"
