@@ -98,7 +98,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity, R.style.MyDialogTheme);
 
         LayoutInflater inflater = this.appCompatActivity.getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_layout, null);
@@ -152,6 +152,8 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         return mDialog;
     }
 
+
+
     @Override
     public void show(FragmentManager manager, String tag) {
         try {
@@ -161,9 +163,6 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         } catch (IllegalStateException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
         }
-        mDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.white));
-        mDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.white));
-
     }
 
     public Bundle getBundle() {
