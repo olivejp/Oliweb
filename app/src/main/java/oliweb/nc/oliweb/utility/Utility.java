@@ -3,12 +3,6 @@ package oliweb.nc.oliweb.utility;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentManager;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyCharacterMap;
@@ -19,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -32,13 +27,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
-import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -266,23 +266,17 @@ public class Utility {
         return duration;
     }
 
-    public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView, AnnonceBeautyAdapter annonceBeautyAdapter) {
+    public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView) {
+        FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         GridLayoutManager gridLayoutManager;
         int spanCount;
-        spanCount = Integer.valueOf(context.getString(R.string.span_count));
+        spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
         gridLayoutManager = new GridLayoutManager(context, spanCount);
         if (spanCount > 2) {
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
-                    switch (annonceBeautyAdapter.getItemViewType(position)) {
-                        case 1:
-                            return 1;
-                        case 2:
-                            return 1;
-                        default:
-                            return 1;
-                    }
+                    return 1;
                 }
             });
         }
