@@ -72,14 +72,15 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 public class MainActivity extends AppCompatActivity
         implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
-    public static final int RC_SIGN_IN = 1001;
-
     private static final String TAG = MainActivity.class.getName();
+
+    public static final int RC_SIGN_IN = 1001;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
+    public static final String ACTION_CHAT = "ACTION_CHAT";
+
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
-
 
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
@@ -140,27 +141,6 @@ public class MainActivity extends AppCompatActivity
     private Bundle mBundle;
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Récupération des liens dynamiques
-        catchDynamicLink();
-
-        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le cas où il y a du réseau.
-        NetworkReceiver.listen(this);
-        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
-
-        // Récupération dans le config remote du nombre de colonne que l'on veut
-        initConfigDefaultValues();
-
-        // Init des widgets sur l'écran
-        initViews();
-
-        // Initialisation des fragments si il y en avait
-        initFragments(mBundle);
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -179,6 +159,32 @@ public class MainActivity extends AppCompatActivity
 
         // Sauvegarde du bundle pour l'utiliser dans le onStart()
         mBundle = savedInstanceState;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Récupération des liens dynamiques
+        catchDynamicLink();
+
+        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le cas où il y a du réseau.
+        NetworkReceiver.listen(this);
+        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
+
+        // Récupération dans le config remote du nombre de colonne que l'on veut
+        initConfigDefaultValues();
+
+        // Init des widgets sur l'écran
+        initViews();
+
+        // Initialisation des fragments si il y en avait
+        initFragments(mBundle);
+
+        // Recherche d'une action pour rediriger vers une activité
+        if (getIntent().getBooleanExtra(ACTION_CHAT, false) && mFirebaseAuth.getCurrentUser() != null) {
+            callChatsActivity();
+        }
     }
 
     private void initConfigDefaultValues() {

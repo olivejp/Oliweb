@@ -5,12 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.core.app.Person;
-import androidx.core.app.RemoteInput;
-import androidx.core.app.TaskStackBuilder;
-import androidx.core.graphics.drawable.IconCompat;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -19,6 +13,12 @@ import com.google.gson.Gson;
 
 import java.util.Map;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.Person;
+import androidx.core.app.RemoteInput;
+import androidx.core.app.TaskStackBuilder;
+import androidx.core.graphics.drawable.IconCompat;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -75,6 +75,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         if (remoteMessage.getNotification() != null) {
             Map<String, String> datas = remoteMessage.getData();
+            Log.d(TAG, "Contenu des datas : " + datas.toString());
             if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
                 Gson gson = new Gson();
                 UserEntity userEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UserEntity.class);
@@ -92,6 +93,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .subscribe();
             } else {
                 Intent resultIntent = new Intent(this, MainActivity.class);
+                resultIntent.putExtra(MainActivity.ACTION_CHAT, true);
                 TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
                 stackBuilder.addNextIntentWithParentStack(resultIntent);
                 PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
