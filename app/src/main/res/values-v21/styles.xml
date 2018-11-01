@@ -8,6 +8,7 @@
 
     <style name="AppTheme.NoActionBar" parent="Theme.OliwebBase.NoActionBar">
         <item name="windowActionBar">false</item>
+        <item name="android:navigationBarColor">@color/colorBottomDark</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentTransitions">true</item>
         <item name="android:statusBarColor">@android:color/white</item>
