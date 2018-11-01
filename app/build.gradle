@@ -36,10 +36,10 @@ android {
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
         }
-//        debug{
-//            applicationIdSuffix '.debug'
-//            versionNameSuffix 'Debug'
-//        }
+        debug{
+            applicationIdSuffix '.debug'
+            versionNameSuffix 'Debug'
+        }
     }
     compileOptions {
         targetCompatibility 1.8
