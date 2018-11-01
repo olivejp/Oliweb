@@ -88,9 +88,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     @BindView(R.id.text_view_prix_detail)
     TextView prix;
 
-    @BindView(R.id.detail_toolbar)
-    Toolbar toolbar;
-
     @BindView(R.id.fab_action_email)
     FloatingActionButton fabActionEmail;
 
@@ -241,13 +238,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_annonce_detail);
         ButterKnife.bind(this);
 
-        setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-
         // Récupération de l'annonce
         initAnnonceViews(annonceFull);
 
@@ -310,6 +300,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private void initAnnonceViews(AnnonceFull annonceFull) {
         if (annonceFull.getAnnonce() != null) {
             AnnonceEntity annonce = annonceFull.getAnnonce();
+
+            setTitle(annonce.getTitre());
 
             prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
             description.setText(annonce.getDescription());
