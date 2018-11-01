@@ -3,13 +3,8 @@ package oliweb.nc.oliweb.utility;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -18,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -31,13 +27,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.DialogInfos;
 import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
-import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -54,6 +55,15 @@ public class Utility {
     private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private Utility() {
+    }
+
+    public static int getDefaultActionBarSize(Context context) {
+        // Calculate ActionBar's height
+        TypedValue tv = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            return TypedValue.complexToDimensionPixelSize(tv.data, context.getResources().getDisplayMetrics());
+        }
+        return 0;
     }
 
     public static boolean hasNavigationBar(Context context) {
@@ -256,27 +266,21 @@ public class Utility {
         return duration;
     }
 
-    public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView, AnnonceBeautyAdapter annonceBeautyAdapter) {
+    public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView) {
+        FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         GridLayoutManager gridLayoutManager;
         int spanCount;
-        spanCount = Integer.valueOf(context.getString(R.string.span_count));
+        spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
         gridLayoutManager = new GridLayoutManager(context, spanCount);
         if (spanCount > 2) {
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
-                    switch (annonceBeautyAdapter.getItemViewType(position)) {
-                        case 1:
-                            return 1;
-                        case 2:
-                            return 1;
-                        default:
-                            return 1;
-                    }
+                    return 1;
                 }
             });
         }
-        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_tight);
+        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);

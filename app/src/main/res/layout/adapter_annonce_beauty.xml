@@ -1,39 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_view"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/annonce_card_adapter_element"
+    android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?android:attr/selectableItemBackground"
-    app:cardCornerRadius="10dp">
+    android:foreground="?android:attr/selectableItemBackground">
 
-    <android.support.constraint.ConstraintLayout
+    <!--android:layout_height="@dimen/annonce_card_adapter_element"-->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/firstLinear"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_view_beauty"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/annonce_image_view_adapter_element"
+            app:cardCornerRadius="3dp"
+            app:cardElevation="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/image_view_beauty"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:contentDescription="Image annonce"
+                    tools:background="@color/colorAccentDark" />
+
+                <ImageView
+                    android:id="@+id/image_favorite"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/drawable_ripple_red_effect"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:srcCompat="@drawable/ic_favorite_border_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/image_share"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_toLeftOf="@id/image_favorite"
+                    android:background="@drawable/drawable_ripple_blue_effect"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:srcCompat="@drawable/ic_share_white_48dp" />
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
 
         <ProgressBar
             android:id="@+id/loading_progress"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="20dp"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@id/text_titre_annonce"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toBottomOf="@id/card_view_beauty"
+            app:layout_constraintLeft_toLeftOf="@id/card_view_beauty"
+            app:layout_constraintRight_toRightOf="@id/card_view_beauty"
+            app:layout_constraintTop_toTopOf="@id/card_view_beauty"
+            tools:visibility="gone" />
 
-        <ImageView
-            android:id="@+id/image_view_beauty"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/annonce_image_view_adapter_element"
-            android:contentDescription="Image annonce"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/image_view_empty"
@@ -41,78 +89,56 @@
             android:layout_height="wrap_content"
             android:contentDescription="Image annonce empty"
             android:src="@drawable/icon_resize_grey"
-            app:layout_constraintBottom_toBottomOf="@id/image_view_beauty"
+            app:layout_constraintBottom_toBottomOf="@id/card_view_beauty"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
 
         <TextView
             android:id="@+id/text_date_publication_annonce"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            android:textColor="@android:color/white"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Chip"
+            app:layout_constraintBottom_toBottomOf="@id/text_categorie_annonce"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/text_categorie_annonce"
             tools:text="2 jours" />
+
+        <TextView
+            android:id="@+id/text_categorie_annonce"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/text_date_publication_annonce"
+            app:layout_constraintTop_toBottomOf="@id/card_view_beauty"
+            tools:text="Automobile" />
 
         <TextView
             android:id="@+id/text_titre_annonce"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
-            android:textColor="@android:color/white"
-            app:layout_constraintBottom_toBottomOf="@id/image_view_beauty"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_categorie_annonce"
             tools:text="A vendre plante médicinale" />
-
-        <ImageView
-            android:id="@+id/image_favorite"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/drawable_ripple_red_effect"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_view_beauty"
-            app:srcCompat="@drawable/ic_favorite_border_grey_900_48dp" />
-
-        <ImageView
-            android:id="@+id/image_share"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/drawable_ripple_blue_effect"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/image_favorite"
-            app:layout_constraintTop_toBottomOf="@id/image_view_beauty"
-            app:srcCompat="@drawable/ic_share_grey_900_48dp" />
 
 
         <TextView
             android:id="@+id/text_prix_annonce"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:gravity="center"
             android:textColor="@color/colorAccent"
             android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/image_share"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_view_beauty"
+            app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
             tools:text="400 000 XPF" />
-    </android.support.constraint.ConstraintLayout>
-</android.support.v7.widget.CardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

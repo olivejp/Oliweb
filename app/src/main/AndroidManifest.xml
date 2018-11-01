@@ -74,8 +74,7 @@
         <activity
             android:name=".ui.activity.SearchActivity"
             android:label="Recherche annonce"
-            android:parentActivityName=".ui.activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".ui.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
@@ -122,7 +121,7 @@
         </activity>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -143,7 +142,7 @@
             android:name=".ui.activity.IntroActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="Intro"
-            android:theme="@style/SplashTheme" />
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.activity.SplashActivity"
             android:theme="@style/SplashTheme">
@@ -156,7 +155,7 @@
         <activity
             android:name=".ui.activity.AnnonceDetailActivity"
             android:parentActivityName=".ui.activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MainActivity" />

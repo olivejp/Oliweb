@@ -1,25 +1,10 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.app.SearchManager;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -32,6 +17,9 @@ import android.widget.Toast;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
@@ -40,6 +28,19 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import java.util.HashMap;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -53,6 +54,7 @@ import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -77,6 +79,10 @@ public class MainActivity extends AppCompatActivity
     public static final String SORT_DIALOG = "SORT_DIALOG";
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
+
+
+    @BindView(R.id.appbarlayout)
+    AppBarLayout appBarLayout;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -177,8 +183,7 @@ public class MainActivity extends AppCompatActivity
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put("column_number_portrait", 2);
-        defaults.put("column_number_landscape", 3);
+        defaults.put(Constants.COLUMN_NUMBER, 1);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
@@ -192,8 +197,7 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu = navigationView.getMenu();
 
         setSupportActionBar(toolbar);
-        toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -202,6 +206,17 @@ public class MainActivity extends AppCompatActivity
         prepareNavigationMenu(false);
 
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
+
+        initToolbar();
+    }
+
+    /**
+     * Permet de faire disparaitre la barre outil dans le cas où on scroll
+     */
+    private void initToolbar() {
+        appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
+                appBarLayout.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
+        );
     }
 
     private void initFragments(Bundle savedInstanceState) {

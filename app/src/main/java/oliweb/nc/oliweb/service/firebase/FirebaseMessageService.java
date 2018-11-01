@@ -1,9 +1,5 @@
 package oliweb.nc.oliweb.service.firebase;
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -12,6 +8,10 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -75,7 +75,7 @@ public class FirebaseMessageService {
     public LiveData<Long> getCountMessageByUidUser(String uidUser) {
         return new LiveData<Long>() {
             @Override
-            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super Long> observer) {
                 super.observe(owner, observer);
                 getCount(uidUser).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                         .doOnSuccess(integer -> observer.onChanged(integer.longValue()))

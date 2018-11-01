@@ -1,15 +1,15 @@
 package oliweb.nc.oliweb.ui.activity;
 
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProviders;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,8 +29,8 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 
-import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
-import static android.support.v4.internal.view.SupportMenuItem.SHOW_AS_ACTION_NEVER;
+import static androidx.core.internal.view.SupportMenuItem.SHOW_AS_ACTION_ALWAYS;
+import static androidx.core.internal.view.SupportMenuItem.SHOW_AS_ACTION_NEVER;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class ProfilActivity extends AppCompatActivity {

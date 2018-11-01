@@ -6,7 +6,7 @@ public class Constants {
 
     public static final String PARAM_MAJ = "MAJ";
     public static final String PARAM_CRE = "CRE";
-    public static final int MAX_IMG_PIXEL_SIZE = 400;
+    public static final int MAX_IMG_PIXEL_SIZE = 600;
 
     public static final int PER_PAGE_REQUEST = 10;
 
@@ -33,6 +33,7 @@ public class Constants {
      * How close to the end of the period the job should run
      */
     public static final long INTERVAL_SYNC_JOB_MINS = 5;
+    public static final String COLUMN_NUMBER = "column_number";
 
     private Constants() {
     }

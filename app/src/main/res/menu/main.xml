@@ -5,11 +5,11 @@
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search_grey_900_48dp"
         android:title="Recherche"
-        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always" />
     <item
         android:id="@+id/sorting"
-        android:icon="@drawable/ic_sort_white_48dp"
+        android:icon="@drawable/ic_sort_grey_900_48dp"
         android:orderInCategory="100"
         android:title="Trier"
         app:showAsAction="ifRoom" />

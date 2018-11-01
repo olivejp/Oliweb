@@ -2,7 +2,7 @@ package oliweb.nc.oliweb.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 

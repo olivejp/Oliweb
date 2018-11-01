@@ -1,13 +1,7 @@
 package oliweb.nc.oliweb.ui.fragment;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +13,12 @@ import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -32,7 +32,7 @@ import oliweb.nc.oliweb.utility.Utility;
  */
 public class ListMessageFragment extends Fragment {
     private static final String TAG = ListMessageFragment.class.getName();
-    public static final String SAVE_TEXT_TO_SEND = "SAVE_TEXT_TO_SEND";
+    private static final String SAVE_TEXT_TO_SEND = "SAVE_TEXT_TO_SEND";
 
     private AppCompatActivity appCompatActivity;
     private MessageAdapter adapter;

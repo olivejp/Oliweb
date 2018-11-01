@@ -2,15 +2,15 @@ package oliweb.nc.oliweb.ui.adapter;
 
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.util.DiffUtil;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -108,15 +108,13 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
         viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
-
         boolean isFavorite = viewHolderBeauty.annonceFull.getAnnonce().isFavorite();
-        viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp);
+        viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);
 
-        // Récupération de la date de publication
         viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annonceFull.getAnnonce().getDatePublication()));
-
         viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf"));
+        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf").trim());
+        viewHolderBeauty.textTitreCategorie.setText(annoncePhotos.getCategorie().get(0).getName());
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageViewEmpty.setVisibility(View.GONE);
@@ -143,6 +141,7 @@ public class AnnonceBeautyAdapter extends
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {
+            viewHolderBeauty.progressBar.setVisibility(View.GONE);
             viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
             viewHolderBeauty.imageViewEmpty.setVisibility(View.VISIBLE);
             GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
@@ -188,6 +187,9 @@ public class AnnonceBeautyAdapter extends
 
     public class ViewHolderBeauty extends RecyclerView.ViewHolder {
 
+        @BindView(R.id.text_categorie_annonce)
+        TextView textTitreCategorie;
+
         @BindView(R.id.text_titre_annonce)
         TextView textTitreAnnonce;
 
@@ -198,7 +200,7 @@ public class AnnonceBeautyAdapter extends
         TextView textDatePublicationAnnonce;
 
         @BindView(R.id.card_view)
-        CardView cardView;
+        FrameLayout cardView;
 
         @BindView(R.id.image_favorite)
         ImageView imageFavorite;

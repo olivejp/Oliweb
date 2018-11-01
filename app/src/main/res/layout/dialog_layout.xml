@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:padding="15dp"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryDark"
         android:contentDescription="@string/app_name"
         android:foregroundGravity="top"
         tools:src="@drawable/ic_person_grey_900_48dp"/>

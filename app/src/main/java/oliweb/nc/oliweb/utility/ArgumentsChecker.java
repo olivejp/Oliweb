@@ -1,7 +1,7 @@
 package oliweb.nc.oliweb.utility;
 
 import android.os.Bundle;
-import android.support.v4.util.Pair;
+import androidx.core.util.Pair;
 import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;

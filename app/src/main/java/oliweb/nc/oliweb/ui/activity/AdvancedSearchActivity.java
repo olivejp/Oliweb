@@ -1,22 +1,25 @@
 package oliweb.nc.oliweb.ui.activity;
 
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.snackbar.Snackbar;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -42,8 +45,8 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     public static final String BUNDLE_SAVED_CATEGORIE = "BUNDLE_SAVED_CATEGORIE";
 
 
-    @BindView(R.id.text_categorie)
-    EditText textCategorie;
+    @BindView(R.id.chips_group)
+    ChipGroup chipsGroup;
 
     @BindView(R.id.photo_switch)
     CheckBox withPhotoOnly;
@@ -77,9 +80,20 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         setContentView(R.layout.activity_advanced_search);
         ButterKnife.bind(this);
 
-        if (savedInstanceState != null) {
+        // Retrieve the checked categories
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_SAVED_CATEGORIE)) {
             checkedCategorie = savedInstanceState.getBooleanArray(BUNDLE_SAVED_CATEGORIE);
         }
+
+        // Get the complete list of categories
+        viewModel.getListCategorieLibelle()
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(list -> {
+                    listCategorieComplete = list.toArray(new String[0]);
+                    choose(checkedCategorie);
+                })
+                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                .subscribe();
     }
 
     @Override
@@ -102,7 +116,7 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         withPhotoOnly.setChecked(!withPhotoOnly.isChecked());
     }
 
-    @OnClick(R.id.text_categorie)
+    @OnClick(R.id.button_add_category)
     public void chooseCategory(View v) {
         viewModel.getListCategorieLibelle()
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
@@ -157,16 +171,31 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
 
     @Override
     public void choose(boolean[] checkedCat) {
-        String libelleConcat = "";
+        if (checkedCat == null) return;
+
         listCategorieSelected.clear();
         checkedCategorie = checkedCat;
+        chipsGroup.removeAllViews();
         for (int i = 0; i <= listCategorieComplete.length - 1; i++) {
             if (checkedCategorie[i]) {
-                libelleConcat = libelleConcat.concat(listCategorieComplete[i]).concat((i < checkedCategorie.length - 1) ? ", " : "");
+                Chip chip = new Chip(this);
+                chip.setText(listCategorieComplete[i]);
+                chip.setTag(listCategorieComplete[i]);
+                chip.setCloseIconVisible(true);
+                int finalI = i;
+                chip.setOnCloseIconClickListener(view -> {
+                    for (String categorieLabel : listCategorieSelected) {
+                        if (categorieLabel.equals(view.getTag()) && listCategorieSelected.remove(categorieLabel)) {
+                            chipsGroup.removeView(view);
+                            checkedCategorie[finalI] = false;
+                            break;
+                        }
+                    }
+                });
+                chipsGroup.addView(chip);
                 listCategorieSelected.add(listCategorieComplete[i]);
             }
         }
-        textCategorie.setText(libelleConcat);
     }
 
     @Override

@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/fui_transparent"
-    tools:background="@color/colorAccent">
+    android:background="@color/fui_transparent">
 
     <TextView
         android:id="@+id/title_slide_1"
@@ -14,12 +12,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
         android:text="@string/keep_contact"
+        android:textColor="@android:color/darker_gray"
         app:layout_constraintBottom_toTopOf="@id/img_telephone"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.v7.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/img_telephone"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -27,26 +26,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_slide_1"
-        app:srcCompat="@drawable/ic_phone_white_48dp" />
+        app:srcCompat="@drawable/ic_phone_grey_900_48dp" />
 
-    <android.support.v7.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/img_mail"
         android:layout_width="48dp"
         android:layout_height="48dp"
         app:layout_constraintEnd_toStartOf="@+id/img_telephone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
-        app:srcCompat="@drawable/ic_email_white_48dp" />
+        app:srcCompat="@drawable/ic_email_grey_900_48dp" />
 
 
-    <android.support.v7.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/img_chat"
         android:layout_width="48dp"
         android:layout_height="48dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/img_telephone"
         app:layout_constraintTop_toTopOf="@+id/img_telephone"
-        app:srcCompat="@drawable/ic_message_white_48dp" />
+        app:srcCompat="@drawable/ic_message_grey_900_48dp" />
 
 
     <TextView
@@ -57,10 +56,11 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="100dp"
         android:text="@string/intro_3_tagline"
+        android:textColor="@android:color/darker_gray"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/img_telephone" />
 
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

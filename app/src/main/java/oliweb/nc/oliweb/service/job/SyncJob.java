@@ -1,12 +1,11 @@
 package oliweb.nc.oliweb.service.job;
 
-import android.support.annotation.NonNull;
-
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobRequest;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import oliweb.nc.oliweb.service.sync.SyncService;
 
 import static oliweb.nc.oliweb.utility.Constants.INTERVAL_SYNC_JOB_MINS;
@@ -40,13 +39,5 @@ public class SyncJob extends Job {
                 .setPeriodic(TimeUnit.MINUTES.toMillis(PERIODIC_SYNC_JOB_MINS), TimeUnit.MINUTES.toMillis(INTERVAL_SYNC_JOB_MINS))
                 .build()
                 .schedule();
-    }
-
-    /**
-     * Launch immediately the sync job
-     */
-    public static void launchImmediateJob() {
-        new JobRequest.Builder(SyncJob.SYNC_JOB)
-                .startNow();
     }
 }

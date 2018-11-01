@@ -99,4 +99,9 @@
     <string name="UPDATE_SUCCESSFUL">User successfully updated</string>
     <string name="pref_title_new_message_notifications">New message notifications</string>
     <string name="pref_title_ringtone" translatable="false">Ringtone</string>
+    <string name="title_mandatory">Le titre est obligatoire.</string>
+    <string name="description_madatory">La description est obligatoire.</string>
+    <string name="price_mandatory">Le prix est obligatoire.</string>
+    <string name="contact_mandatory">Un moyen de contact obligatoire</string>
+    <string name="choose_image_to_upload">Choisissez les images à importer</string>
 </resources>

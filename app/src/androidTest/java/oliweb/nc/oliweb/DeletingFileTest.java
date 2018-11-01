@@ -3,9 +3,9 @@ package oliweb.nc.oliweb;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
-import android.support.v4.util.Pair;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
+import androidx.core.util.Pair;
 
 import org.junit.Before;
 import org.junit.Test;

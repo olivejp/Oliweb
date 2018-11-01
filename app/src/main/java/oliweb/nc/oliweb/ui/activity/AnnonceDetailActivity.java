@@ -2,22 +2,23 @@ package oliweb.nc.oliweb.ui.activity;
 
 
 import android.Manifest;
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ShareCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
+import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -69,6 +70,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private static final int REQUEST_CALL_POST_ANNONCE = 200;
     private static final String MAIL_MESSAGE_TYPE = "message/rfc822";
 
+    @BindView(R.id.appbar)
+    AppBarLayout appBarLayout;
+
     @BindView(R.id.collapsing_toolbar_detail)
     CollapsingToolbarLayout collapsingToolbarLayout;
 
@@ -83,9 +87,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     @BindView(R.id.text_view_prix_detail)
     TextView prix;
-
-    @BindView(R.id.detail_toolbar)
-    Toolbar toolbar;
 
     @BindView(R.id.fab_action_email)
     FloatingActionButton fabActionEmail;
@@ -237,13 +238,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_annonce_detail);
         ButterKnife.bind(this);
 
-        setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-
         // Récupération de l'annonce
         initAnnonceViews(annonceFull);
 
@@ -307,6 +301,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         if (annonceFull.getAnnonce() != null) {
             AnnonceEntity annonce = annonceFull.getAnnonce();
 
+            setTitle(annonce.getTitre());
+
             prix.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " XPF"));
             description.setText(annonce.getDescription());
             collapsingToolbarLayout.setTitle(annonce.getTitre());
@@ -319,6 +315,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
                 viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
                 indicator.setViewPager(viewPager);
+            } else {
+                // If no photo for this ads, we don't expand the AppBarLayout
+                appBarLayout.setExpanded(false);
             }
 
             if (annonceFull.getUtilisateur() != null && !annonceFull.getUtilisateur().isEmpty()) {

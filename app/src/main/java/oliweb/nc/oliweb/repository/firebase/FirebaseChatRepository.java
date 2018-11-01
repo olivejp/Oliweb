@@ -1,9 +1,5 @@
 package oliweb.nc.oliweb.repository.firebase;
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -15,9 +11,14 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -44,17 +45,17 @@ public class FirebaseChatRepository {
     public LiveData<Long> getCountChatByUidUser(String uidUser) {
         return new LiveData<Long>() {
             @Override
-            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<Long> observer) {
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super Long> observer) {
                 super.observe(owner, observer);
                 chatRef.orderByChild("members/" + uidUser).equalTo(true).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    public void onDataChange(@Nonnull DataSnapshot dataSnapshot) {
                         long count = dataSnapshot.getChildrenCount();
                         observer.onChanged(count);
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    public void onCancelled(@Nonnull DatabaseError databaseError) {
                         observer.onChanged(0L);
                     }
                 });

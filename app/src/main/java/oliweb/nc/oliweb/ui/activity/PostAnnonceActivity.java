@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.Manifest;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,14 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.util.Pair;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatSpinner;
-import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,6 +22,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,6 +31,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatSpinner;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.util.Pair;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -87,8 +87,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidUser;
     private String uidAnnonce;
     private String mode;
-
-    private ArrayList<CategorieEntity> listCategorieEntities;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -271,22 +269,22 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private boolean checkIfAnnonceIsValid() {
         boolean isValid = true;
         if (StringUtils.isEmpty(textViewTitre.getText().toString())) {
-            textViewTitre.setError("Le titre est obligatoire.");
+            textViewTitre.setError(getString(R.string.title_mandatory));
             isValid = false;
         }
         if (StringUtils.isEmpty(textViewDescription.getText().toString())) {
-            textViewDescription.setError("La description est obligatoire.");
+            textViewDescription.setError(getString(R.string.description_madatory));
             isValid = false;
         }
 
         String prixStr = textViewPrix.getText().toString();
         if (StringUtils.isEmpty(prixStr) || Integer.parseInt(prixStr) <= 0) {
-            textViewPrix.setError("Le prix est obligatoire.");
+            textViewPrix.setError(getString(R.string.price_mandatory));
             isValid = false;
         }
         if (!checkBoxTel.isChecked() && !checkBoxEmail.isChecked() && !checkBoxMsg.isChecked()) {
             checkBoxMsg.setError("");
-            Toast.makeText(this, "Un moyen de contact obligatoire", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.contact_mandatory, Toast.LENGTH_LONG).show();
             isValid = false;
         }
         return isValid;
@@ -474,7 +472,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void defineSpinnerCategorie(ArrayList<CategorieEntity> categorieEntities) {
-        listCategorieEntities = categorieEntities;
+        ArrayList<CategorieEntity> listCategorieEntities = categorieEntities;
 
         SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, listCategorieEntities);
         spinnerCategorie.setAdapter(adapter);
@@ -622,7 +620,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         photoPickerIntent.setType("image/*");
         photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(photoPickerIntent, "Choisissez les images à importer"), DIALOG_GALLERY_IMAGE);
+        startActivityForResult(Intent.createChooser(photoPickerIntent, getString(R.string.choose_image_to_upload)), DIALOG_GALLERY_IMAGE);
     }
 
     /**

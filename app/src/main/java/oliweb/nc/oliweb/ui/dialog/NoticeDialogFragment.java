@@ -4,19 +4,19 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.DialogInfos;
 
@@ -37,6 +37,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     private Bundle mBundle;
     private DialogListener mListener;
     private AppCompatActivity appCompatActivity;
+    private AlertDialog mDialog;
 
     public void setListener(DialogListener listener) {
         mListener = listener;
@@ -70,6 +71,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         bundle.putInt(NoticeDialogFragment.P_IMG, dialogInfos.getIdDrawable());
         bundle.putBundle(NoticeDialogFragment.P_BUNDLE, dialogInfos.getBundlePar());
         dialogErreur.setArguments(bundle);
+        dialogErreur.setCancelable(false);
         dialogErreur.show(fragmentManager, dialogInfos.getTag());
     }
 
@@ -96,7 +98,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity, R.style.MyDialogTheme);
 
         LayoutInflater inflater = this.appCompatActivity.getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_layout, null);
@@ -137,14 +139,20 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
                     builder.setPositiveButton(getString(R.string.yes), (dialog, which) -> mListener.onDialogPositiveClick(NoticeDialogFragment.this))
                             .setNegativeButton(getString(R.string.no), (dialog, which) -> mListener.onDialogNegativeClick(NoticeDialogFragment.this));
                     break;
+                default:
             }
 
             // Gestion de l'image à afficher en haut de la fenêtre
             ImageView imgView = view.findViewById(R.id.imageDialog);
             imgView.setImageResource(idResource);
         }
-        return builder.create();
+
+        mDialog = builder.create();
+
+        return mDialog;
     }
+
+
 
     @Override
     public void show(FragmentManager manager, String tag) {
@@ -161,7 +169,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         return mBundle;
     }
 
-    /* The activity that creates an instance of this dialog fragment must
+    /* The activity that creates an instance of this mDialog fragment must
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface DialogListener {
