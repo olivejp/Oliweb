@@ -2,11 +2,6 @@ package oliweb.nc.oliweb.ui.adapter;
 
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -91,13 +91,25 @@ public class AnnonceBeautyAdapter extends
     private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
+        if (annoncePhotos.getUtilisateur() != null
+                && annoncePhotos.getUtilisateur().get(0) != null
+                && annoncePhotos.getUtilisateur().get(0).getPhotoUrl() != null) {
+
+            String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
+            GlideApp.with(viewHolderBeauty.imageUserBeauty)
+                    .load(urlPhoto)
+                    .circleCrop()
+                    .into(viewHolderBeauty.imageUserBeauty);
+        }
+
+        viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
+
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
         viewHolderBeauty.annonceFull = annoncePhotos;
 
         // Transition
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             viewHolderBeauty.imageView.setTransitionName(annonce.getUid());
-            viewHolderBeauty.textTitreAnnonce.setTransitionName(annonce.getTitre());
         }
 
         viewHolderBeauty.cardView.setTag(viewHolderBeauty);
@@ -145,6 +157,7 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
             viewHolderBeauty.imageViewEmpty.setVisibility(View.VISIBLE);
             GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
+            GlideApp.with(viewHolderBeauty.imageUserBeauty).clear(viewHolderBeauty.imageUserBeauty);
         }
     }
 
@@ -199,6 +212,9 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.text_date_publication_annonce)
         TextView textDatePublicationAnnonce;
 
+        @BindView(R.id.image_photo_number_text)
+        TextView textNumberPhoto;
+
         @BindView(R.id.card_view)
         FrameLayout cardView;
 
@@ -217,6 +233,9 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.image_view_empty)
         ImageView imageViewEmpty;
 
+        @BindView(R.id.image_user_beauty)
+        ImageView imageUserBeauty;
+
         AnnonceFull annonceFull;
 
         ViewGroup parent;
@@ -224,6 +243,10 @@ public class AnnonceBeautyAdapter extends
         ViewHolderBeauty(View itemLayoutView) {
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
+        }
+
+        public ImageView getImageUserBeauty() {
+            return imageUserBeauty;
         }
 
         public ImageView getImageView() {

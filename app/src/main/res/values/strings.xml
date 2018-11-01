@@ -84,6 +84,7 @@
     <string name="pref_title_ringtone">Sonnerie</string>
 
     <string name="image_detail_transition" translatable="false">IMAGE_DETAIL_TRANSITION</string>
+    <string name="image_detail_transition_user" translatable="false">IMAGE_DETAIL_TRANSITION_USER</string>
     <string name="prix_detail_transition" translatable="false">PRIX_DETAIL_TRANSITION</string>
     <string name="titre_detail_transition" translatable="false">TITRE_DETAIL_TRANSITION</string>
     <string name="image_working_transition" translatable="false">image_working_transition</string>
@@ -169,7 +170,7 @@
     <string name="title_activity_settings">Paramètres</string>
     <string name="pref_title_vibrate">Vibreur</string>
     <string name="pref_ringtone_silent">Silencieux</string>
-    <string name="intro_1_tagline">L\'application Android qui gére vos petites annonces</string>
+    <string name="intro_1_tagline">L\'application Android qui vous aide à gérer vos petites annonces</string>
     <string name="ads_found_on_network">Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?</string>
     <string name="ads">Annonces</string>
     <string name="chats">Conversations</string>

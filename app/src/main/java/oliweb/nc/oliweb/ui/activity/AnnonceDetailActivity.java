@@ -241,11 +241,6 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         // Récupération de l'annonce
         initAnnonceViews(annonceFull);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow();
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-        }
-
         // Permet a l'ecran de ne pas se superposer a la navigation bar.
         if (Utility.hasNavigationBar(this)) {
             View decorView = getWindow().getDecorView();

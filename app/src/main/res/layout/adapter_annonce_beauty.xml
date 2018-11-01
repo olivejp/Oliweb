@@ -9,8 +9,6 @@
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground">
 
-    <!--android:layout_height="@dimen/annonce_card_adapter_element"-->
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/firstLinear"
         android:layout_width="match_parent"
@@ -50,7 +48,6 @@
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="10dp"
                     android:layout_marginEnd="5dp"
-                    android:layout_marginRight="5dp"
                     android:background="@drawable/drawable_ripple_red_effect"
                     android:clickable="true"
                     android:focusable="true"
@@ -62,12 +59,47 @@
                     android:layout_height="25dp"
                     android:layout_alignParentTop="true"
                     android:layout_marginTop="10dp"
-                    android:layout_marginRight="5dp"
-                    android:layout_toLeftOf="@id/image_favorite"
+                    android:layout_marginEnd="5dp"
+                    android:layout_toStartOf="@id/image_favorite"
                     android:background="@drawable/drawable_ripple_blue_effect"
                     android:clickable="true"
                     android:focusable="true"
                     app:srcCompat="@drawable/ic_share_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/image_user_beauty"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:contentDescription="Image user"
+                    tools:src="@drawable/button_background" />
+
+                <TextView
+                    android:id="@+id/image_photo_number_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Chip"
+                    android:textColor="@android:color/white"
+                    tools:text="2" />
+
+                <ImageView
+                    android:id="@+id/image_photo_number"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_toStartOf="@id/image_photo_number_text"
+                    app:srcCompat="@drawable/ic_camera_alt_white_48dp" />
+
+
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
 
