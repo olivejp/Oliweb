@@ -321,7 +321,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
             if (uidUser != null) {
                 viewModel.getCountFavoritesByUidUserAndByUidAnnonce(uidUser, annonce.getUid()).observe(this, count ->
-                        imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp)
+                        imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp)
                 );
             }
         }

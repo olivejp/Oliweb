@@ -87,6 +87,8 @@
     <string name="image_detail_transition_user" translatable="false">IMAGE_DETAIL_TRANSITION_USER</string>
     <string name="prix_detail_transition" translatable="false">PRIX_DETAIL_TRANSITION</string>
     <string name="titre_detail_transition" translatable="false">TITRE_DETAIL_TRANSITION</string>
+    <string name="image_favorite_transition" translatable="false">IMAGE_FAVORITE_TRANSITION</string>
+    <string name="image_share_transition" translatable="false">IMAGE_SHARE_TRANSITION</string>
     <string name="image_working_transition" translatable="false">image_working_transition</string>
     <string name="view_1_transition" translatable="false">view_1_transition</string>
     <string name="view_2_transition" translatable="false">view_2_transition</string>

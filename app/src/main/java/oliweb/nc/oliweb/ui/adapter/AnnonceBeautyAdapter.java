@@ -260,5 +260,13 @@ public class AnnonceBeautyAdapter extends
         public ViewGroup getParent() {
             return parent;
         }
+
+        public ImageView getImageFavorite() {
+            return imageFavorite;
+        }
+
+        public ImageView getImageShare() {
+            return imageShare;
+        }
     }
 }
