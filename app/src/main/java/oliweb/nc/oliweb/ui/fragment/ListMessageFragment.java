@@ -48,6 +48,9 @@ public class ListMessageFragment extends Fragment {
     @BindView(R.id.text_empty_list)
     TextView textViewEmpty;
 
+    @BindView(R.id.list_message_titre_annonce)
+    TextView textTitreAnnonce;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -80,6 +83,10 @@ public class ListMessageFragment extends Fragment {
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter(viewModel.getFirebaseUserUid());
         recyclerView.setAdapter(adapter);
+
+        if (viewModel.getCurrentChat() != null) {
+            textTitreAnnonce.setText(viewModel.getCurrentChat().getTitreAnnonce());
+        }
 
         // Sur l'action du message, on tente d'envoyer le texte
         textToSend.setOnEditorActionListener((v, actionId, event) -> {

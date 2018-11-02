@@ -1,16 +1,8 @@
 package oliweb.nc.oliweb.ui.fragment;
 
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
@@ -21,6 +13,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -67,7 +67,7 @@ public class ListChatFragment extends Fragment {
         popup.show();
     };
 
-    private View.OnClickListener onClickListener = v -> callListMessage((Long) v.getTag());
+    private View.OnClickListener onClickListener = v -> callListMessage((ChatEntity) v.getTag());
 
     @Override
     public void onDestroyView() {
@@ -164,8 +164,8 @@ public class ListChatFragment extends Fragment {
         });
     }
 
-    private void callListMessage(Long idChat) {
-        viewModel.rechercheMessageByIdChat(idChat);
+    private void callListMessage(ChatEntity chatEntity) {
+        viewModel.rechercheMessageByChat(chatEntity);
         if (getFragmentManager() != null) {
             ListMessageFragment listMessageFragment = new ListMessageFragment();
             if (viewModel.isTwoPane()) {

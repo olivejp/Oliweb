@@ -73,6 +73,8 @@
                         android:transitionName="@string/image_share_transition"
                         app:layout_constraintEnd_toStartOf="@id/annonce_detail_img_favorite"
                         app:layout_constraintTop_toTopOf="@id/annonce_detail_img_favorite"
+                        app:layout_goneMarginEnd="5dp"
+                        app:layout_goneMarginTop="10dp"
                         app:srcCompat="@drawable/ic_share_white_48dp" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
