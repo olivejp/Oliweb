@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import oliweb.nc.oliweb.R;
@@ -42,6 +43,7 @@ import oliweb.nc.oliweb.ui.GridSpacingItemDecoration;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static androidx.recyclerview.widget.RecyclerView.HORIZONTAL;
 import static oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment.TYPE_BOUTON_YESNO;
 
 /**
@@ -273,18 +275,23 @@ public class Utility {
         spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
         gridLayoutManager = new GridLayoutManager(context, spanCount);
         if (spanCount > 2) {
+            int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
                     return 1;
                 }
             });
+            recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
+        } else {
+            // TODO Ajout d'un divider, non operationnel pour le moment
+            DividerItemDecoration itemDecor = new DividerItemDecoration(context, HORIZONTAL);
+            recyclerView.addItemDecoration(itemDecor);
         }
-        int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
-        recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+
         return gridLayoutManager;
     }
 

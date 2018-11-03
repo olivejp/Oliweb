@@ -5,13 +5,20 @@ import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.database.entity.MessageEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
+import oliweb.nc.oliweb.repository.local.ChatRepository;
+import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
+import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerFirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DaggerServicesComponent;
+import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
@@ -35,9 +42,11 @@ public class SyncService extends IntentService {
     public static final String ARG_UID_CHAT = "ARG_UID_CHAT";
     public static final String ARG_ACTION_SEND_DIRECT_MESSAGE = "ARG_ACTION_SEND_DIRECT_MESSAGE";
     public static final String ARG_UID_USER = "ARG_UID_USER";
+    public static final String ARG_UID_USER_SENDER = "ARG_UID_USER_SENDER";
 
     private ServicesComponent servicesComponent;
     private FirebaseServicesComponent firebaseServicesComponent;
+    private DatabaseRepositoriesComponent databaseRepositoriesComponent;
 
     public SyncService() {
         super("SyncService");
@@ -96,18 +105,11 @@ public class SyncService extends IntentService {
         ContextModule contextModule = new ContextModule(this);
         servicesComponent = DaggerServicesComponent.builder().contextModule(contextModule).build();
         firebaseServicesComponent = DaggerFirebaseServicesComponent.builder().contextModule(contextModule).build();
+        databaseRepositoriesComponent = DaggerDatabaseRepositoriesComponent.builder().contextModule(contextModule).build();
 
         Bundle bundle = intent.getExtras();
         if (ARG_ACTION_SEND_DIRECT_MESSAGE.equals(intent.getAction())) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
-                Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
-                if (remoteInput != null && remoteInput.getCharSequence(KEY_TEXT_TO_SEND) != null) {
-                    String messageToSend = remoteInput.getCharSequence(KEY_TEXT_TO_SEND).toString();
-
-                    // TODO enregistrer le message en base et l'envoyer sur Firebase
-
-                }
-            }
+            saveMessage(intent);
         } else if (bundle != null && bundle.containsKey(ARG_ACTION)) {
             String action = bundle.getString(ARG_ACTION);
             String uidUser;
@@ -131,6 +133,43 @@ public class SyncService extends IntentService {
                     default:
                         break;
                 }
+            }
+        }
+
+    }
+
+    private void saveMessage(@Nullable Intent intent) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
+            Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
+            if (remoteInput != null && remoteInput.getCharSequence(KEY_TEXT_TO_SEND) != null) {
+
+                // Récupération du texte à envoyer
+                String messageToSend = remoteInput.getCharSequence(KEY_TEXT_TO_SEND).toString();
+
+                // Récupération des données pour créer un message
+                String uidChat = intent.getStringExtra(ARG_UID_CHAT);
+                String uidUser = intent.getStringExtra(ARG_UID_USER);
+
+                // Recherche du chat dans notre DB locale
+                ChatRepository chatRepository = databaseRepositoriesComponent.getChatRepository();
+                chatRepository.findByUid(uidChat)
+                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                        .doOnSuccess(chatEntity -> {
+                            // Création d'un message
+                            MessageEntity messageEntity = new MessageEntity();
+                            messageEntity.setIdChat(chatEntity.getIdChat());
+                            messageEntity.setMessage(messageToSend);
+                            messageEntity.setStatusRemote(StatusRemote.TO_SEND);
+                            messageEntity.setUidChat(uidChat);
+                            messageEntity.setUidAuthor(uidUser);
+                            messageEntity.setTimestamp(Long.MAX_VALUE);
+
+                            MessageRepository messageRepository = databaseRepositoriesComponent.getMessageRepository();
+                            messageRepository.singleSave(messageEntity)
+                                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                    .subscribe();
+                        })
+                        .subscribe();
             }
         }
     }

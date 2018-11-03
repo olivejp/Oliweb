@@ -7,14 +7,16 @@
     android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
-    android:padding="10dp"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:foreground="?android:attr/selectableItemBackground"
+    android:paddingStart="20dp"
+    android:paddingTop="5dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_adapter_beauty"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="10dp">
+        android:layout_height="match_parent">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/card_view_beauty"
@@ -167,9 +169,9 @@
             android:id="@+id/text_prix_annonce"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
             android:textColor="@color/colorAccent"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
             tools:text="400 000 XPF" />

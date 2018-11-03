@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -296,7 +295,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
-        Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, BaseTransientBottomBar.LENGTH_INDEFINITE);
+        Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, Snackbar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
         annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(appCompatActivity, R.color.colorAnnonceElementBackground),
