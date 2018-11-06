@@ -100,6 +100,8 @@ public class AnnonceBeautyAdapter extends
                     .load(urlPhoto)
                     .circleCrop()
                     .into(viewHolderBeauty.imageUserBeauty);
+        } else {
+            GlideApp.with(viewHolderBeauty.imageUserBeauty).clear(viewHolderBeauty.imageUserBeauty);
         }
 
         viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
@@ -157,7 +159,6 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
             viewHolderBeauty.imageViewEmpty.setVisibility(View.VISIBLE);
             GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
-            GlideApp.with(viewHolderBeauty.imageUserBeauty).clear(viewHolderBeauty.imageUserBeauty);
         }
     }
 
