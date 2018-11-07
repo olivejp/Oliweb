@@ -37,7 +37,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:fitsSystemWindows="true"
-                        android:transitionName="@string/image_detail_transition"
                         app:layout_collapseMode="parallax"
                         tools:background="@color/colorAccent" />
 
@@ -57,7 +56,6 @@
                         android:layout_marginEnd="5dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:transitionName="@string/image_favorite_transition"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_favorite_border_white_48dp" />
@@ -68,8 +66,6 @@
                         android:layout_height="30dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:layout_marginEnd="5dp"
-                        android:transitionName="@string/image_share_transition"
                         app:layout_constraintEnd_toStartOf="@id/annonce_detail_img_favorite"
                         app:layout_constraintTop_toTopOf="@id/annonce_detail_img_favorite"
                         app:layout_goneMarginEnd="5dp"
@@ -95,7 +91,6 @@
                     android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:background="@color/colorAccentDark"
-                    android:elevation="1dp"
                     android:orientation="horizontal"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
@@ -111,7 +106,6 @@
                         android:layout_marginEnd="7dp"
                         android:layout_marginBottom="5dp"
                         android:foregroundGravity="left"
-                        android:transitionName="@string/image_detail_transition_user"
                         app:srcCompat="@drawable/ic_person_white_48dp" />
 
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -169,7 +163,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintLeft_toLeftOf="parent"
@@ -220,9 +214,9 @@
             android:background="@color/colorBottomDark"
             android:gravity="center_vertical"
             android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textColor="@color/colorAccentDarker"
-            android:transitionName="@string/prix_detail_transition"
             tools:text="400 000 XPF" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -11,7 +11,7 @@
     android:paddingStart="20dp"
     android:paddingTop="5dp"
     android:paddingEnd="20dp"
-    android:paddingBottom="20dp">
+    android:paddingBottom="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_adapter_beauty"
@@ -167,7 +167,7 @@
             android:id="@+id/text_prix_annonce"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
             android:textColor="@color/colorAccent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
