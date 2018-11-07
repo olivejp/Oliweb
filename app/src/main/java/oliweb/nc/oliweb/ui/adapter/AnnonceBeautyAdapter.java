@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +13,8 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,26 +94,24 @@ public class AnnonceBeautyAdapter extends
 
         if (annoncePhotos.getUtilisateur() != null
                 && annoncePhotos.getUtilisateur().get(0) != null
-                && annoncePhotos.getUtilisateur().get(0).getPhotoUrl() != null) {
+                && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
 
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
             GlideApp.with(viewHolderBeauty.imageUserBeauty)
                     .load(urlPhoto)
+                    .error(R.drawable.ic_person_white_48dp)
                     .circleCrop()
                     .into(viewHolderBeauty.imageUserBeauty);
         } else {
-            GlideApp.with(viewHolderBeauty.imageUserBeauty).clear(viewHolderBeauty.imageUserBeauty);
+            GlideApp.with(viewHolderBeauty.imageUserBeauty)
+                    .load(R.drawable.ic_person_white_48dp)
+                    .into(viewHolderBeauty.imageUserBeauty);
         }
 
         viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
 
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
         viewHolderBeauty.annonceFull = annoncePhotos;
-
-        // Transition
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            viewHolderBeauty.imageView.setTransitionName(annonce.getUid());
-        }
 
         viewHolderBeauty.cardView.setTag(viewHolderBeauty);
         viewHolderBeauty.imageFavorite.setTag(viewHolderBeauty);
