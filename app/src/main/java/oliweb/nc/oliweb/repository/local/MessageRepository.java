@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.repository.local;
 
-import androidx.lifecycle.LiveData;
 import android.content.Context;
 import android.util.Log;
 
@@ -9,6 +8,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.lifecycle.LiveData;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -48,6 +48,10 @@ public class MessageRepository extends AbstractRepository<MessageEntity, Long> {
 
     public Single<List<MessageEntity>> getSingleByIdChat(Long idChat) {
         return this.messageDao.getSingleByIdChat(idChat);
+    }
+
+    public Single<List<MessageEntity>> getSingleByUidChat(String uidChat) {
+        return this.messageDao.getSingleByUidChat(uidChat);
     }
 
     public Flowable<List<MessageEntity>> findFlowableByStatusAndUidChatNotNull(List<String> status) {

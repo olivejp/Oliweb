@@ -15,6 +15,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
+import java.util.List;
 import java.util.Map;
 
 import androidx.core.app.NotificationCompat;
@@ -68,6 +69,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private ChatRepository chatRepository;
     private MediaUtility mediaUtility;
     private NotificationManager mNotificationManager;
+    private UserRepository userRepository;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -79,7 +81,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         messageRepository = component.getMessageRepository();
         chatRepository = component.getChatRepository();
         mediaUtility = utilityComponent.getMediaUtility();
-        UserRepository userRepository = component.getUserRepository();
+        userRepository = component.getUserRepository();
 
         if (remoteMessage.getNotification() != null) {
             Map<String, String> datas = remoteMessage.getData();
@@ -133,50 +135,26 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // On va appeler un service pour enregistrer la réponse à la notification reçue
         PendingIntent pendingIntent;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Intent intent = new Intent(this, SyncService.class);
-            intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
-            intent.putExtra(ARG_UID_CHAT, chatUid);
-            intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
-            intent.putExtra(SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
-            pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        } else {
-            Intent intent = new Intent(this, MyChatsActivity.class);
-            intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
-            intent.putExtra(ARG_UID_CHAT, chatUid);
-            intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
-            intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
-            pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        }
+        pendingIntent = getPendingIntent(chatUid, uidUserSender, message, userReceiver);
 
         // Création du Remote Input
         RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_TO_SEND).setLabel(getString(R.string.answer)).build();
 
         // Création de la personne receuveuse
-        Person receiverPerson = new Person.Builder()
-                .setName(userReceiver.getProfile())
-                .setUri(userReceiver.getPhotoUrl())
-                .setBot(false)
-                .setImportant(false)
-                .build();
+        Person receiverPerson = getPerson(userReceiver);
 
         // Création de l'action pour répondre rapidement
-        NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.drawable.ic_send_red_300_48dp, getString(R.string.answer), pendingIntent)
-                .addRemoteInput(remoteInput)
-                .setAllowGeneratedReplies(true)
-                .build();
+        NotificationCompat.Action actionReply = getAction(pendingIntent, remoteInput);
 
         // Création d'une channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(Constants.CHANNEL_ID, "OLIWEB Channel", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel(Constants.CHANNEL_ID, Constants.OLIWEB_CHANNEL, NotificationManager.IMPORTANCE_DEFAULT);
             mNotificationManager.createNotificationChannel(channel);
         }
 
         // Récupération d'un builder de notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
-        builder.addAction(action);
+        builder.addAction(actionReply);
         builder.setSmallIcon(R.drawable.ic_message_white_48dp);
         builder.setLargeIcon(mediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
         builder.setAutoCancel(true);
@@ -199,16 +177,57 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .doOnComplete(() -> sendNotification(builder, messagingStyle))
                 .map(ChatEntity::getIdChat)
                 .flatMapSingle(messageRepository::getSingleByIdChat)
-                .doOnSuccess(messageEntities -> {
-                    if (!messageEntities.isEmpty()) {
-                        for (MessageEntity msg : messageEntities) {
-                            Person author = (msg.getUidAuthor().equals(authorEntity.getUid())) ? createPersonByName(authorEntity) : receiverPerson;
-                            messagingStyle.addMessage(msg.getMessage(), msg.getTimestamp(), author);
-                        }
-                    }
-                    sendNotification(builder, messagingStyle);
-                })
+                .doOnSuccess(messageEntities -> feedMessagingStyleWithMessages(authorEntity, receiverPerson, builder, messagingStyle, messageEntities))
                 .subscribe();
+    }
+
+    private void feedMessagingStyleWithMessages(UserEntity authorEntity, Person receiverPerson, NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle, List<MessageEntity> messageEntities) {
+        if (!messageEntities.isEmpty()) {
+            for (MessageEntity msg : messageEntities) {
+                Person author = (msg.getUidAuthor().equals(authorEntity.getUid())) ? createPersonByName(authorEntity) : receiverPerson;
+                messagingStyle.addMessage(msg.getMessage(), msg.getTimestamp(), author);
+            }
+        }
+        sendNotification(builder, messagingStyle);
+    }
+
+    private NotificationCompat.Action getAction(PendingIntent pendingIntent, RemoteInput remoteInput) {
+        return new NotificationCompat.Action.Builder(R.drawable.ic_send_red_300_48dp, getString(R.string.answer), pendingIntent)
+                .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+                .addRemoteInput(remoteInput)
+                .setAllowGeneratedReplies(true)
+                .build();
+    }
+
+    private Person getPerson(UserEntity userReceiver) {
+        return new Person.Builder()
+                .setName(userReceiver.getProfile())
+                .setUri(userReceiver.getPhotoUrl())
+                .setBot(false)
+                .setImportant(false)
+                .build();
+    }
+
+    private PendingIntent getPendingIntent(String chatUid, String uidUserSender, String message, UserEntity userReceiver) {
+        PendingIntent pendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Intent intent = new Intent(this, SyncService.class);
+            intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
+            intent.putExtra(ARG_UID_CHAT, chatUid);
+            intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
+            intent.putExtra(SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE, message);
+            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
+            pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        } else {
+            Intent intent = new Intent(this, MyChatsActivity.class);
+            intent.setAction(ARG_ACTION_SEND_DIRECT_MESSAGE);
+            intent.putExtra(ARG_UID_CHAT, chatUid);
+            intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
+            intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE, message);
+            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
+            pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+        return pendingIntent;
     }
 
     private Person createPersonByName(UserEntity user) {
@@ -232,7 +251,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         builder.setSmallIcon(R.mipmap.ic_banana_launcher);
         builder.setContentTitle("Your Title");
         builder.setContentText("Your text");
-        builder.setPriority(Notification.PRIORITY_MAX);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
+        } else {
+            builder.setPriority(Notification.PRIORITY_MAX);
+        }
 
         builder.setStyle(messagingStyle);
 
