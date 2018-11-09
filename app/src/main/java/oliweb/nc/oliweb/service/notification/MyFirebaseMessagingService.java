@@ -143,10 +143,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Création de la personne receuveuse
         Person receiverPerson = getPerson(userReceiver);
 
+        // Création du style de notification
+        NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(receiverPerson).setConversationTitle(annonceTitre);
+
         // Création de l'action pour répondre rapidement
         NotificationCompat.Action actionReply = getAction(pendingIntent, remoteInput);
 
-        // Création d'une channel
+        // Création d'une channel UNIQUEMENT dans le cas d'une version supérieure a OREO.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(Constants.CHANNEL_ID, Constants.OLIWEB_CHANNEL, NotificationManager.IMPORTANCE_DEFAULT);
             mNotificationManager.createNotificationChannel(channel);
@@ -166,10 +169,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Uri ringtone = SharedPreferencesHelper.getInstance(getApplicationContext()).getNotificationsMessageRingtone();
             builder.setSound(ringtone);
         }
-
-
-        // Création du style de notification
-        NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(receiverPerson).setConversationTitle(annonceTitre);
 
         // Lecture du chat et de ses messages
         chatRepository.findByUid(chatUid)

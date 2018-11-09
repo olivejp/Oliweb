@@ -43,6 +43,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity
     SearchView searchView;
 
     private ImageView profileImage;
+    private TextView headerVersion;
     private TextView profileName;
     private TextView profileEmail;
     private Menu navigationViewMenu;
@@ -197,9 +199,13 @@ public class MainActivity extends AppCompatActivity
 
     private void initViews() {
         View viewHeader = navigationView.getHeaderView(0);
+
+        headerVersion = viewHeader.findViewById(R.id.nav_header_version);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
+
+        headerVersion.setText(BuildConfig.VERSION_NAME);
         navigationViewMenu = navigationView.getMenu();
 
         setSupportActionBar(toolbar);
