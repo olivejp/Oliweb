@@ -29,8 +29,7 @@
     </item>
 
     <group
-        android:id="@+id/grp1"
-        android:checkableBehavior="none">
+        android:id="@+id/grp1">
         <item
             android:id="@+id/nav_advanced_search"
             android:icon="@drawable/ic_zoom_in_grey_900_48dp"
@@ -47,8 +46,7 @@
             android:title="@string/se_connecter" />
     </group>
     <group
-        android:id="@+id/grp2"
-        android:checkableBehavior="none">
+        android:id="@+id/grp2">
         <item
             android:id="@+id/nav_suggestion"
             android:icon="@drawable/ic_help_grey_900_48dp"
