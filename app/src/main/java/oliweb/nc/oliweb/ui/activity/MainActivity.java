@@ -35,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ShareCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -66,6 +67,8 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
+import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -306,10 +309,22 @@ public class MainActivity extends AppCompatActivity
             callMyAnnoncesActivity();
         } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
+        } else if (id == R.id.nav_suggestion){
+            callSuggestionActivity();
         }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void callSuggestionActivity() {
+        ShareCompat.IntentBuilder.from(this)
+                .setType(MAIL_MESSAGE_TYPE)
+                .addEmailTo(EMAIL_ADMIN)
+                .setSubject(getString(R.string.app_name) + " - Suggestion d'amélioration")
+                .setText(getString(R.string.default_mail_suggestion_message))
+                .setChooserTitle(R.string.default_mail_chooser_title)
+                .startChooser();
     }
 
     private void signInSignOut() {
@@ -482,6 +497,7 @@ public class MainActivity extends AppCompatActivity
                     .load(userEntity.getPhotoUrl())
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .error(R.mipmap.ic_banana_launcher_foreground)
                     .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }

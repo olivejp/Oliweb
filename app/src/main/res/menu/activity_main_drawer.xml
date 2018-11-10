@@ -28,19 +28,31 @@
         </menu>
     </item>
 
-    <item
-        android:id="@+id/nav_advanced_search"
-        android:icon="@drawable/ic_zoom_in_grey_900_48dp"
-        android:title="@string/advanced_search" />
+    <group
+        android:id="@+id/grp1"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_advanced_search"
+            android:icon="@drawable/ic_zoom_in_grey_900_48dp"
+            android:title="@string/advanced_search" />
 
-    <item
-        android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_settings_grey_900_48dp"
-        android:title="@string/param_tres" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings_grey_900_48dp"
+            android:title="@string/param_tres" />
 
-    <item
-        android:id="@+id/nav_connect"
-        android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
-        android:title="@string/se_connecter" />
+        <item
+            android:id="@+id/nav_connect"
+            android:icon="@drawable/ic_power_settings_new_grey_900_48dp"
+            android:title="@string/se_connecter" />
+    </group>
+    <group
+        android:id="@+id/grp2"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_suggestion"
+            android:icon="@drawable/ic_help_grey_900_48dp"
+            android:title="@string/nav_menu_item_suggestion" />
+    </group>
 
 </menu>
