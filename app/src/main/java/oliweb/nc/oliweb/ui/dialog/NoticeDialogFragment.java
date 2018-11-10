@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.dialog;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDialogFragment;
 import androidx.fragment.app.FragmentManager;
@@ -37,7 +37,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     private Bundle mBundle;
     private DialogListener mListener;
     private AppCompatActivity appCompatActivity;
-    private AlertDialog mDialog;
+    private AlertDialog mAlertDialog;
 
     public void setListener(DialogListener listener) {
         mListener = listener;
@@ -98,7 +98,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity, R.style.MyDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity, 0);
 
         LayoutInflater inflater = this.appCompatActivity.getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_layout, null);
@@ -147,9 +147,9 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
             imgView.setImageResource(idResource);
         }
 
-        mDialog = builder.create();
+        mAlertDialog = builder.create();
 
-        return mDialog;
+        return mAlertDialog;
     }
 
 
@@ -169,7 +169,7 @@ public class NoticeDialogFragment extends AppCompatDialogFragment {
         return mBundle;
     }
 
-    /* The activity that creates an instance of this mDialog fragment must
+    /* The activity that creates an instance of this mAlertDialog fragment must
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface DialogListener {
