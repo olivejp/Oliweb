@@ -412,7 +412,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private AlertDialog.Builder getBuilder() {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_NoActionBar_MinWidth);
+            builder = new AlertDialog.Builder(this, 0);
         } else {
             builder = new AlertDialog.Builder(this);
         }
