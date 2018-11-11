@@ -7,7 +7,7 @@ ext {
 }
 
 android {
-    testOptions{
+    testOptions {
         unitTests.returnDefaultValues = true
     }
     compileSdkVersion 28
@@ -87,7 +87,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
 
     // Test des composants Material Desgin
-   // implementation 'com.google.android.material:material:1.0.0'
+    // implementation 'com.google.android.material:material:1.0.0'
 
     // Pour utiliser Stetho lancer l'application en debug sur un mobile connecté
     // Puis aller sur chrome et taper l'url chrome://inspect/
@@ -99,6 +99,9 @@ dependencies {
     implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha07'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'org.apache.commons:commons-lang3:3.7'
+
+    // Fotoapparat
+    implementation 'io.fotoapparat:fotoapparat:2.6.1'
 
     // Dagger 2
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
@@ -117,8 +120,8 @@ dependencies {
 
     annotationProcessor 'androidx.annotation:annotation:1.0.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0-SNAPSHOT'
-    annotationProcessor "androidx.room:room-compiler:2.1.0-alpha02"
-    annotationProcessor "androidx.lifecycle:lifecycle-compiler:2.0.0"
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha02'
+    annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.0.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0-SNAPSHOT'
 
     // LeakCanary

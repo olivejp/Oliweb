@@ -1,12 +1,7 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.core.util.Pair;
 import android.util.Log;
 
 import java.io.File;
@@ -16,6 +11,11 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import androidx.annotation.NonNull;
+import androidx.core.util.Pair;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
@@ -226,10 +226,21 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return currentCategorie;
     }
 
+    // TODO delete this method if not used after refacto
     public Uri generateNewUri(boolean externalStorage) {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair.first;
+        } else {
+            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            return null;
+        }
+    }
+
+    public File generateNewFile(boolean externalStorage) {
+        Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
+        if (pair != null && pair.first != null) {
+            return pair.second;
         } else {
             Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
             return null;

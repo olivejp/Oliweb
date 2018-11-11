@@ -203,5 +203,6 @@
     <string name="choose_image_to_upload">Choisissez les images à importer</string>
     <string name="nav_menu_item_suggestion" translatable="false">Suggestion</string>
     <string name="default_mail_suggestion_message" translatable="false">Bonjour, \n J\'utilise votre application et je voudrai vous soumettre les améliorations suivantes : \n</string>
+    <string name="title_activity_shooting">Shooting</string>
 
 </resources>

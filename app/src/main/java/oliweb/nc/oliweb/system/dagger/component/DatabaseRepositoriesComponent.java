@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MyChatsActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
+import oliweb.nc.oliweb.ui.activity.viewmodel.ShootingActivityViewModel;
 
 @Component(modules = {DatabaseRepositoriesModule.class, UtilityModule.class})
 @Singleton
@@ -56,4 +57,6 @@ public interface DatabaseRepositoriesComponent {
     void inject(MyChatsActivityViewModel myChatsActivityViewModel);
 
     void inject(AnnonceDetailActivityViewModel annonceDetailActivityViewModel);
+
+    void inject(ShootingActivityViewModel shootingActivityViewModel);
 }

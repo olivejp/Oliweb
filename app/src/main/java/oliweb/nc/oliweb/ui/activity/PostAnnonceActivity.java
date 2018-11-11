@@ -75,6 +75,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
+    private static final int REQUEST_SHOOTING_CODE = 967;
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
     private static final String SAVE_ANNONCE = "SAVE_ANNONCE";
     private static final String SAVE_FILE_URI_TEMP = "SAVE_FILE_URI_TEMP";
@@ -472,9 +473,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void defineSpinnerCategorie(ArrayList<CategorieEntity> categorieEntities) {
-        ArrayList<CategorieEntity> listCategorieEntities = categorieEntities;
-
-        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, listCategorieEntities);
+        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, categorieEntities);
         spinnerCategorie.setAdapter(adapter);
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
     }
@@ -603,7 +602,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (checkExternalPermission(new ArrayList<>(Arrays.asList(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)))) {
             requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION_CODE);
         } else {
-            callCaptureIntent();
+            // callCaptureIntent();
+            callShootingPhoto();
         }
     }
 
@@ -635,6 +635,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
     }
 
+    private void callShootingPhoto() {
+        Intent intent = new Intent(this, ShootingActivity.class);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_SHOOTING_CODE);
+    }
 
     private void displayCurrentAnnonce() {
         AnnoncePhotos annoncePhotos = viewModel.getCurrentAnnonce();
