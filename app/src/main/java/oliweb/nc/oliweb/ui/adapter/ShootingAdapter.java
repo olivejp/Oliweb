@@ -20,6 +20,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Pair;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -33,9 +34,11 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 public class ShootingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private List<Pair<Uri, File>> listPairs;
+    private View.OnLongClickListener onLongClickListener;
 
-    public ShootingAdapter() {
+    public ShootingAdapter(View.OnLongClickListener onLongClickListener) {
         this.listPairs = new ArrayList<>();
+        this.onLongClickListener = onLongClickListener;
     }
 
     @NonNull
@@ -50,6 +53,10 @@ public class ShootingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         ShootingViewHolder holder = (ShootingViewHolder) viewHolder;
         Pair<Uri, File> model = listPairs.get(position);
+
+        // Ajout d'un long click pour supprimer une image
+        holder.constraintShooting.setTag(model.first);
+        holder.constraintShooting.setOnLongClickListener(onLongClickListener);
 
         // Tentative de téléchargement de la photo.
         GlideApp.with(holder.imageShooting)
@@ -96,6 +103,9 @@ public class ShootingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         @BindView(R.id.shooting_progress)
         ProgressBar shootingProgress;
+
+        @BindView(R.id.constraint_shooting)
+        ConstraintLayout constraintShooting;
 
         ShootingViewHolder(View itemView) {
             super(itemView);

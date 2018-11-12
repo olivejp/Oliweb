@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/constraint_shooting"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraint_shooting"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_margin="5dp"
     android:background="?android:attr/selectableItemBackground">
 
-    <ImageView
-        android:id="@+id/shooting_image"
-        android:layout_width="@dimen/shooting_width_image"
-        android:layout_height="@dimen/shooting_height_image"
-        tools:src="@drawable/ic_message_grey_900_48dp"
-        tools:visibility="gone" />
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="5dp">
 
-    <ProgressBar
-        android:id="@+id/shooting_progress"
-        android:layout_width="@dimen/shooting_width_image"
-        android:layout_height="@dimen/shooting_height_image"
-        android:visibility="visible"
-        tools:visibility="visible" />
+        <ImageView
+            android:id="@+id/shooting_image"
+            android:layout_width="@dimen/shooting_width_image"
+            android:layout_height="@dimen/shooting_height_image"
+            tools:src="@drawable/ic_message_grey_900_48dp"
+            tools:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/shooting_progress"
+            android:layout_width="@dimen/shooting_width_image"
+            android:layout_height="@dimen/shooting_height_image"
+            android:visibility="visible"
+            tools:visibility="visible" />
+    </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

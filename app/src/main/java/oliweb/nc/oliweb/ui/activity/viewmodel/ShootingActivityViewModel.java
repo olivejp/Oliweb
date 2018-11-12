@@ -7,6 +7,7 @@ import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -31,14 +32,43 @@ public class ShootingActivityViewModel extends AndroidViewModel {
     MediaUtility mediaUtility;
 
     private boolean externalStorage;
+    private boolean flashIsOn;
+    private boolean switchIsOn;
 
     private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
     private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
+    private MutableLiveData<AtomicBoolean> liveFlashIsOn = new MutableLiveData<>();
+    private MutableLiveData<AtomicBoolean> liveSwitchIsOn = new MutableLiveData<>();
 
     public ShootingActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
         externalStorage = SharedPreferencesHelper.getInstance(application).getUseExternalStorage();
+    }
+
+    public LiveData<AtomicBoolean> getLiveFlashIsOn() {
+        return liveFlashIsOn;
+    }
+
+    public boolean isFlashIsOn() {
+        return flashIsOn;
+    }
+
+    public void setFlashIsOn(boolean flashIsOn) {
+        this.flashIsOn = flashIsOn;
+        liveFlashIsOn.postValue(new AtomicBoolean(this.flashIsOn));
+    }
+
+    public boolean isSwitchIsOn() {
+        return switchIsOn;
+    }
+
+    public void setSwitchIsOn(boolean switchIsOn) {
+        this.switchIsOn = switchIsOn;
+    }
+
+    public LiveData<AtomicBoolean> getLiveSwitchIsOn() {
+        return liveSwitchIsOn;
     }
 
     public MediaUtility getMediaUtility() {
@@ -50,10 +80,15 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         liveListPairFileUri.postValue(listPairFileUri);
     }
 
-    public void removePhotoFromCurrentList(String path) {
-        if (listPairFileUri.contains(path) && listPairFileUri.remove(path)) {
-            liveListPairFileUri.postValue(listPairFileUri);
+    public void removePhotoFromCurrentList(Uri uri) {
+        ArrayList<Pair<Uri, File>> newList = new ArrayList<>();
+        for (Pair<Uri, File> pair : listPairFileUri) {
+            if (pair.first != uri) {
+                newList.add(pair);
+            }
         }
+        listPairFileUri = newList;
+        liveListPairFileUri.postValue(listPairFileUri);
     }
 
     public ArrayList<Uri> getListPairs() {

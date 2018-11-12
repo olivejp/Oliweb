@@ -130,9 +130,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private View.OnLongClickListener onLongClickPhotoListener = v -> {
         if (v.getTag() != null) {
-            AlertDialog.Builder builder;
-            builder = getBuilder();
-
+            AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
             builder.setTitle(R.string.delete_photo)
                     .setMessage(R.string.delete_photo_are_you_sure)
                     .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoFromCurrentList((PhotoEntity) v.getTag()))
@@ -392,21 +390,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
 
-    @NonNull
-    private AlertDialog.Builder getBuilder() {
-        AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder = new AlertDialog.Builder(this, 0);
-        } else {
-            builder = new AlertDialog.Builder(this);
-        }
-        return builder;
-    }
-
     @OnClick(R.id.fab_add_photo)
     public void onAddPhoto(View v) {
-        AlertDialog.Builder builder;
-        builder = getBuilder();
+        AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
         builder.setTitle(R.string.add_new_photo)
                 .setMessage(R.string.add_photo_question)
                 .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())

@@ -7,9 +7,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProviders;
@@ -19,6 +23,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.fotoapparat.Fotoapparat;
+import io.fotoapparat.configuration.CameraConfiguration;
+import io.fotoapparat.configuration.UpdateConfiguration;
 import io.fotoapparat.log.LoggersKt;
 import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.PhotoResult;
@@ -32,6 +38,11 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ShootingActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.ShootingAdapter;
 
+import static io.fotoapparat.selector.FlashSelectorsKt.off;
+import static io.fotoapparat.selector.FlashSelectorsKt.on;
+import static io.fotoapparat.selector.LensPositionSelectorsKt.back;
+import static io.fotoapparat.selector.LensPositionSelectorsKt.front;
+
 public class ShootingActivity extends AppCompatActivity {
 
     private static final String TAG = ShootingActivity.class.getCanonicalName();
@@ -43,9 +54,27 @@ public class ShootingActivity extends AppCompatActivity {
     @BindView(R.id.recycler_shooting_photos)
     RecyclerView recyclerView;
 
+    @BindView(R.id.fab_flash)
+    FloatingActionButton fabFlash;
+
     private Fotoapparat fotoapparat;
     private ShootingActivityViewModel viewModel;
     private ShootingAdapter shootingAdapter;
+
+    private View.OnLongClickListener onLongClickPhotoListener = v -> {
+        if (v.getTag() != null) {
+            AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
+            builder.setTitle(R.string.delete_photo)
+                    .setMessage(R.string.delete_photo_are_you_sure)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoFromCurrentList((Uri) v.getTag()))
+                    .setNegativeButton(R.string.no, (dialog, which) -> {
+                    })
+                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                    .show();
+            return true;
+        }
+        return false;
+    };
 
     @Override
     protected void onStart() {
@@ -68,6 +97,7 @@ public class ShootingActivity extends AppCompatActivity {
         initFotoapparat();
         initRecylcerView();
         viewModel.getLiveListPairFileUri().observe(this, this::setAdapterListPairs);
+        viewModel.getLiveFlashIsOn().observe(this, this::changeFlashIcon);
     }
 
     @Override
@@ -94,8 +124,24 @@ public class ShootingActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @OnClick(R.id.fab_switch)
+    public void onSwitchClick(View v) {
+        viewModel.setSwitchIsOn(!viewModel.isSwitchIsOn());
+        fotoapparat.switchTo(viewModel.isSwitchIsOn() ? front() : back(), CameraConfiguration.builder().flash(viewModel.isFlashIsOn() ? on() : off()).build());
+    }
+
+    @OnClick(R.id.fab_flash)
+    public void onFlashClick(View v) {
+        viewModel.setFlashIsOn(!viewModel.isFlashIsOn());
+        fotoapparat.updateConfiguration(UpdateConfiguration.builder().flash(viewModel.isFlashIsOn() ? on() : off()).build());
+    }
+
+    private void changeFlashIcon(AtomicBoolean atomicBoolean) {
+        fabFlash.setImageResource(atomicBoolean.get() ? R.drawable.ic_flash_on_grey_900_48dp : R.drawable.ic_flash_off_grey_900_48dp);
+    }
+
     private void initRecylcerView() {
-        shootingAdapter = new ShootingAdapter();
+        shootingAdapter = new ShootingAdapter(onLongClickPhotoListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);
