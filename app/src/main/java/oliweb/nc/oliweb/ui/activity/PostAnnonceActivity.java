@@ -296,7 +296,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            callCaptureIntent();
+            // callCaptureIntent();
+            callShootingPhoto();
         }
 
         if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -330,9 +331,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
                     resizePhotoThenInsertToCurrentList(data.getData());
                 }
             }
+        } else if (requestCode == REQUEST_SHOOTING_CODE) {
+            ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
+            for (Uri uri : listUriPhotos) {
+                resizePhotoThenInsertToCurrentList(uri);
+            }
         }
     }
-
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -584,7 +589,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             }
         }
     }
-
 
     /**
      * Vérifie si l'on est en version >= 23 que le stockage externe est disponible et si la permission a été donnée

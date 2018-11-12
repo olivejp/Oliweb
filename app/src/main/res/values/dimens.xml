@@ -20,4 +20,6 @@
     <dimen name="annonce_card_adapter_element">200dp</dimen>
     <dimen name="button_custom_padding_left_right">10dp</dimen>
     <dimen name="button_custom_padding_top_bottom">5dp</dimen>
+    <dimen name="shooting_height_image">75dp</dimen>
+    <dimen name="shooting_width_image">75dp</dimen>
 </resources>

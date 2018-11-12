@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.utility.MediaUtility;
@@ -31,8 +32,8 @@ public class ShootingActivityViewModel extends AndroidViewModel {
 
     private boolean externalStorage;
 
-    private List<String> listPathPhoto = new ArrayList<>();
-    private MutableLiveData<List<String>> liveListPath = new MutableLiveData<>();
+    private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
+    private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
 
     public ShootingActivityViewModel(@NonNull Application application) {
         super(application);
@@ -44,23 +45,36 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         return mediaUtility;
     }
 
-    public void addPhotoToCurrentList(String path) {
-        listPathPhoto.add(path);
+    public void addPhotoToCurrentList(Pair<Uri, File> pair) {
+        listPairFileUri.add(pair);
+        liveListPairFileUri.postValue(listPairFileUri);
     }
 
     public void removePhotoFromCurrentList(String path) {
-        if (listPathPhoto.contains(path) && listPathPhoto.remove(path)) {
-            liveListPath.postValue(listPathPhoto);
+        if (listPairFileUri.contains(path) && listPairFileUri.remove(path)) {
+            liveListPairFileUri.postValue(listPairFileUri);
         }
     }
 
-    public File generateNewFile() {
+    public ArrayList<Uri> getListPairs() {
+        ArrayList<Uri> list = new ArrayList<>();
+        for (Pair<Uri, File> pair : listPairFileUri) {
+            list.add(pair.first);
+        }
+        return list;
+    }
+
+    public Pair<Uri, File> generateNewPair_UriFile() {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
-            return pair.second;
+            return pair;
         } else {
-            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
+            Log.e(TAG, "generateNewPair_UriFile() : MediaUtility a renvoyé une pair null");
             return null;
         }
+    }
+
+    public LiveData<List<Pair<Uri, File>>> getLiveListPairFileUri() {
+        return liveListPairFileUri;
     }
 }
