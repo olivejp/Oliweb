@@ -15,13 +15,9 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,13 +32,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnLongClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
@@ -52,9 +48,9 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
+import oliweb.nc.oliweb.ui.adapter.PostPhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
-import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
@@ -101,30 +97,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
 
-    @BindView(R.id.photo_1)
-    ImageView photo1;
-
-    @BindView(R.id.photo_2)
-    ImageView photo2;
-
-    @BindView(R.id.photo_3)
-    ImageView photo3;
-
-    @BindView(R.id.photo_4)
-    ImageView photo4;
-
-    @BindView(R.id.view_1)
-    FrameLayout view1;
-
-    @BindView(R.id.view_2)
-    FrameLayout view2;
-
-    @BindView(R.id.view_3)
-    FrameLayout view3;
-
-    @BindView(R.id.view_4)
-    FrameLayout view4;
-
     @BindView(R.id.checkbox_email)
     SwitchCompat checkBoxEmail;
 
@@ -140,7 +112,38 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.text_checkbox_telephone)
     TextView textCheckboxTelephone;
 
-    List<Pair<ImageView, FrameLayout>> arrayImageViews = new ArrayList<>();
+    @BindView(R.id.recycler_photos)
+    RecyclerView recyclerView;
+
+    private PostPhotoAdapter postPhotoAdapter;
+
+    private View.OnClickListener onClickPhotoListener = v -> {
+        PhotoEntity photoEntity = (PhotoEntity) v.getTag();
+        viewModel.setUpdatedPhoto(photoEntity);
+        WorkImageFragment workImageFragment = new WorkImageFragment();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
+                .addToBackStack(null)
+                .commit();
+    };
+
+    private View.OnLongClickListener onLongClickPhotoListener = v -> {
+        if (v.getTag() != null) {
+            AlertDialog.Builder builder;
+            builder = getBuilder();
+
+            builder.setTitle(R.string.delete_photo)
+                    .setMessage(R.string.delete_photo_are_you_sure)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoFromCurrentList((PhotoEntity) v.getTag()))
+                    .setNegativeButton(R.string.no, (dialog, which) -> {
+                    })
+                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                    .show();
+            return true;
+        }
+        return false;
+    };
 
     // Evenement sur le spinner
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
@@ -166,10 +169,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
 
-        arrayImageViews.add(new Pair<>(photo1, view1));
-        arrayImageViews.add(new Pair<>(photo2, view2));
-        arrayImageViews.add(new Pair<>(photo3, view3));
-        arrayImageViews.add(new Pair<>(photo4, view4));
+        // Init du recycler view
+        postPhotoAdapter = new PostPhotoAdapter(onClickPhotoListener, onLongClickPhotoListener);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(postPhotoAdapter);
 
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
@@ -388,31 +393,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-    @OnClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
-    public void onClick(View v) {
-        if (v.getTag() == null) {
-            // Mode création d'une nouvelle photo
-            AlertDialog.Builder builder;
-            builder = getBuilder();
-            builder.setTitle(R.string.add_new_photo)
-                    .setMessage(R.string.add_photo_question)
-                    .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())
-                    .setNegativeButton(R.string.choose_from_galery, (dialog, which) -> onGalleryClick())
-                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
-                    .show();
-        } else {
-            // Mode mise à jour
-            PhotoEntity photoEntity = (PhotoEntity) v.getTag();
-            viewModel.setUpdatedPhoto(photoEntity);
-            WorkImageFragment workImageFragment = new WorkImageFragment();
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .addSharedElement(v, getString(R.string.image_working_transition))
-                    .replace(R.id.post_annonce_frame, workImageFragment, TAG_WORKING_IMAGE)
-                    .addToBackStack(null)
-                    .commit();
-        }
-    }
 
     @NonNull
     private AlertDialog.Builder getBuilder() {
@@ -425,22 +405,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return builder;
     }
 
-    @OnLongClick(value = {R.id.view_1, R.id.view_2, R.id.view_3, R.id.view_4})
-    public boolean onLongClick(View v) {
-        if (v.getTag() != null) {
-            AlertDialog.Builder builder;
-            builder = getBuilder();
-
-            builder.setTitle(R.string.delete_photo)
-                    .setMessage(R.string.delete_photo_are_you_sure)
-                    .setPositiveButton(R.string.yes, (dialog, which) -> viewModel.removePhotoFromCurrentList((PhotoEntity) v.getTag()))
-                    .setNegativeButton(R.string.no, (dialog, which) -> {
-                    })
-                    .setIcon(R.drawable.ic_add_a_photo_black_48dp)
-                    .show();
-            return true;
-        }
-        return false;
+    @OnClick(R.id.fab_add_photo)
+    public void onAddPhoto(View v) {
+        AlertDialog.Builder builder;
+        builder = getBuilder();
+        builder.setTitle(R.string.add_new_photo)
+                .setMessage(R.string.add_photo_question)
+                .setPositiveButton(R.string.take_new_picture, (dialog, which) -> onNewPictureClick())
+                .setNegativeButton(R.string.choose_from_galery, (dialog, which) -> onGalleryClick())
+                .setIcon(R.drawable.ic_add_a_photo_black_48dp)
+                .show();
     }
 
     /**
@@ -533,50 +507,16 @@ public class PostAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    private void clearImageViews() {
-        for (Pair pair : arrayImageViews) {
-            ImageView imageView = (ImageView) pair.first;
-            FrameLayout frame = (FrameLayout) pair.second;
-            if (imageView != null) {
-                imageView.setImageResource(R.drawable.ic_add_a_photo_grey_900_48dp);
-            }
-            if (frame != null) {
-                frame.setTag(null);
-            }
-        }
-    }
-
     private void displayPhotos(List<PhotoEntity> photoEntities) {
-        clearImageViews();
-        if (photoEntities != null && !photoEntities.isEmpty()) {
-            for (PhotoEntity photo : photoEntities) {
-                if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
-                    boolean insertion = false;
-                    int i = 0;
-                    while (!insertion && i < arrayImageViews.size()) {
-                        insertion = insertPhotoInImageView(arrayImageViews.get(i), photo);
-                        i++;
-                    }
-                }
+        // On ne transmet pas les photos avec un statut "à éviter"
+        ArrayList<PhotoEntity> nouvelleListe = new ArrayList<>();
+        for (PhotoEntity photo : photoEntities) {
+            if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
+                nouvelleListe.add(photo);
             }
         }
-    }
-
-    private boolean insertPhotoInImageView(Pair<ImageView, FrameLayout> pair, PhotoEntity
-            photoEntity) {
-        ImageView imageView = pair.first;
-        FrameLayout frameLayout = pair.second;
-        if (imageView != null && frameLayout != null && frameLayout.getTag() == null) {
-            frameLayout.setTag(photoEntity);
-            GlideApp.with(imageView)
-                    .load(Uri.parse(photoEntity.getUriLocal()))
-                    .apply(RequestOptions.circleCropTransform())
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .into(imageView);
-            return true;
-        }
-        return false;
+        postPhotoAdapter.setListPhotoEntity(nouvelleListe);
+        postPhotoAdapter.notifyDataSetChanged();
     }
 
     private void resizePhotoThenInsertToCurrentList(Uri uriSrc) {
@@ -585,7 +525,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
             if (viewModel.getMediaUtility().copyAndResizeUriImages(getApplicationContext(), uriSrc, uriDst)) {
                 viewModel.addPhotoToCurrentList(uriDst.toString());
             } else {
-                Snackbar.make(photo1, "L'image " + uriSrc.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(recyclerView, "L'image " + uriSrc.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
             }
         }
     }

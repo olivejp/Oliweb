@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/post_annonce_frame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="10dp"
     tools:context="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_margin="10dp"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:paddingBottom="100dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -29,93 +31,16 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/constraint_photos"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_photos"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/shooting_height_image"
                 android:orientation="horizontal"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/text_photos">
-
-                <FrameLayout
-                    android:id="@+id/view_1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:transitionName="@string/view_1_transition"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toLeftOf="@+id/view_2"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:id="@+id/photo_1"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:elevation="5dp"
-                        android:scaleType="center"
-                        app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/view_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:transitionName="@string/view_2_transition"
-                    app:layout_constraintLeft_toRightOf="@+id/view_1"
-                    app:layout_constraintRight_toLeftOf="@+id/view_3"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:id="@+id/photo_2"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:elevation="5dp"
-                        android:scaleType="center"
-                        app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/view_3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:transitionName="@string/view_3_transition"
-                    app:layout_constraintLeft_toRightOf="@+id/view_2"
-                    app:layout_constraintRight_toLeftOf="@+id/view_4"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:id="@+id/photo_3"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:elevation="5dp"
-                        android:scaleType="center"
-                        app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/view_4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:transitionName="@string/view_4_transition"
-                    app:layout_constraintLeft_toRightOf="@+id/view_3"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:id="@+id/photo_4"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:elevation="5dp"
-                        android:scaleType="center"
-                        app:srcCompat="@drawable/ic_add_a_photo_grey_900_48dp" />
-                </FrameLayout>
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                app:layout_constraintTop_toBottomOf="@id/text_photos"/>
 
             <TextView
                 android:id="@+id/text_categorie"
@@ -127,7 +52,7 @@
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/constraint_photos" />
+                app:layout_constraintTop_toBottomOf="@id/recycler_photos" />
 
             <androidx.appcompat.widget.AppCompatSpinner
                 android:id="@+id/spinner_categorie"
@@ -288,7 +213,15 @@
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
-</FrameLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        app:fabSize="normal"
+        app:srcCompat="@drawable/ic_add_a_photo_white_48dp" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
