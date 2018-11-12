@@ -325,10 +325,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 int i = -1;
                 ClipData.Item item;
                 while (i++ < data.getClipData().getItemCount() - 1) {
-                    if (viewModel.canHandleAnotherPhoto()) {
-                        item = data.getClipData().getItemAt(i);
-                        resizePhotoThenInsertToCurrentList(item.getUri());
-                    }
+                    item = data.getClipData().getItemAt(i);
+                    resizePhotoThenInsertToCurrentList(item.getUri());
                 }
             } else {
                 // Insertion simple
@@ -516,7 +514,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             }
         }
         postPhotoAdapter.setListPhotoEntity(nouvelleListe);
-        postPhotoAdapter.notifyDataSetChanged();
     }
 
     private void resizePhotoThenInsertToCurrentList(Uri uriSrc) {

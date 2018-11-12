@@ -198,6 +198,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         updatePhotos();
     }
 
+    // TODO voir si on garde cette condition pour limiter l'envoi de photos sur le serveur.
     public boolean canHandleAnotherPhoto() {
         return this.currentAnnonce.getPhotos().size() < NBR_MAX;
     }
@@ -226,7 +227,6 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return currentCategorie;
     }
 
-    // TODO delete this method if not used after refacto
     public Uri generateNewUri(boolean externalStorage) {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
@@ -237,6 +237,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         }
     }
 
+    // TODO delete this method if not used after refacto
     public File generateNewFile(boolean externalStorage) {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {

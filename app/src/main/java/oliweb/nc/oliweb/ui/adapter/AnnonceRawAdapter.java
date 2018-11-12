@@ -1,13 +1,10 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.sql.Date;
@@ -15,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -83,7 +84,7 @@ public class AnnonceRawAdapter extends
             if (viewHolderRaw.singleAnnonce.getDatePublication() != null) {
                 viewHolderRaw.textDatePublicationAnnonce.setText(DateConverter.simpleUiDateFormat.format(new Date(viewHolderRaw.singleAnnonce.getDatePublication())));
             }
-        } else if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.TO_SEND){
+        } else if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.TO_SEND) {
             viewHolderRaw.textDatePublicationAnnonce.setText("Pas encore envoyée");
         }
 
@@ -102,6 +103,24 @@ public class AnnonceRawAdapter extends
             viewHolderRaw.textNbPhotos.setText(String.valueOf(photoAvailable));
         } else {
             viewHolderRaw.textNbPhotos.setText("0");
+        }
+
+        // On regarde s'il y a un envoi en cours sur les photos
+        boolean sendingInProgress = false;
+        for (PhotoEntity photo : annoncePhotos.getPhotos()) {
+            if (photo.getStatut() == StatusRemote.SENDING) {
+                sendingInProgress = true;
+                break;
+            }
+        }
+
+        sendingInProgress = (!sendingInProgress && viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.SENDING);
+
+        if (sendingInProgress) {
+            viewHolderRaw.textDatePublicationAnnonce.setText("En cours d'envoi");
+            viewHolderRaw.progressBar.setVisibility(View.VISIBLE);
+        } else {
+            viewHolderRaw.progressBar.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -132,12 +151,16 @@ public class AnnonceRawAdapter extends
                     AnnoncePhotos oldAnnonce = listAnnonces.get(oldItemPosition);
                     AnnonceEntity oldA = oldAnnonce.getAnnonceEntity();
                     AnnonceEntity newA = newAnnonce.getAnnonceEntity();
+                    List<PhotoEntity> oldP = oldAnnonce.getPhotos();
+                    List<PhotoEntity> newP = newAnnonce.getPhotos();
                     return newA.getUid().equals(oldA.getUid())
                             && newA.getTitre().equals(oldA.getTitre())
                             && newA.getDescription().equals(oldA.getDescription())
                             && newA.isFavorite() == oldA.isFavorite()
+                            && newA.getStatut() == oldA.getStatut()
                             && newAnnonce.getPhotos().size() == oldAnnonce.getPhotos().size()
                             && newA.getPrix().equals(oldA.getPrix())
+                            && newP.hashCode() == oldP.hashCode()   // Vérification que la liste des photos n'a pas changé
                             && ((newA.getDatePublication() == null && oldA.getDatePublication() == null)
                             || (newA.getDatePublication() != null && oldA.getDatePublication() != null
                             && newA.getDatePublication().equals(oldA.getDatePublication())));
@@ -173,6 +196,9 @@ public class AnnonceRawAdapter extends
 
         @BindView(R.id.text_nb_photos)
         TextView textNbPhotos;
+
+        @BindView(R.id.sending_progress)
+        ProgressBar progressBar;
 
         AnnonceEntity singleAnnonce;
 
