@@ -35,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ShareCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -43,6 +44,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -65,6 +67,8 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
+import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -72,14 +76,15 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 public class MainActivity extends AppCompatActivity
         implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
 
-    public static final int RC_SIGN_IN = 1001;
-
     private static final String TAG = MainActivity.class.getName();
+
+    public static final int RC_SIGN_IN = 1001;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String SORT_DIALOG = "SORT_DIALOG";
+    public static final String ACTION_CHAT = "ACTION_CHAT";
+
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
-
 
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
@@ -99,6 +104,7 @@ public class MainActivity extends AppCompatActivity
     SearchView searchView;
 
     private ImageView profileImage;
+    private TextView headerVersion;
     private TextView profileName;
     private TextView profileEmail;
     private Menu navigationViewMenu;
@@ -140,27 +146,6 @@ public class MainActivity extends AppCompatActivity
     private Bundle mBundle;
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Récupération des liens dynamiques
-        catchDynamicLink();
-
-        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le cas où il y a du réseau.
-        NetworkReceiver.listen(this);
-        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
-
-        // Récupération dans le config remote du nombre de colonne que l'on veut
-        initConfigDefaultValues();
-
-        // Init des widgets sur l'écran
-        initViews();
-
-        // Initialisation des fragments si il y en avait
-        initFragments(mBundle);
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -181,6 +166,32 @@ public class MainActivity extends AppCompatActivity
         mBundle = savedInstanceState;
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Récupération des liens dynamiques
+        catchDynamicLink();
+
+        // On va écouter le Broadcast Listener pour lancer le service de synchro uniquement dans le cas où il y a du réseau.
+        NetworkReceiver.listen(this);
+        viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
+
+        // Récupération dans le config remote du nombre de colonne que l'on veut
+        initConfigDefaultValues();
+
+        // Init des widgets sur l'écran
+        initViews();
+
+        // Initialisation des fragments si il y en avait
+        initFragments(mBundle);
+
+        // Recherche d'une action pour rediriger vers une activité
+        if (getIntent().getBooleanExtra(ACTION_CHAT, false) && mFirebaseAuth.getCurrentUser() != null) {
+            callChatsActivity();
+        }
+    }
+
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
         defaults.put(Constants.COLUMN_NUMBER, 1);
@@ -191,9 +202,13 @@ public class MainActivity extends AppCompatActivity
 
     private void initViews() {
         View viewHeader = navigationView.getHeaderView(0);
+
+        headerVersion = viewHeader.findViewById(R.id.nav_header_version);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
+
+        headerVersion.setText(BuildConfig.VERSION_NAME);
         navigationViewMenu = navigationView.getMenu();
 
         setSupportActionBar(toolbar);
@@ -294,10 +309,22 @@ public class MainActivity extends AppCompatActivity
             callMyAnnoncesActivity();
         } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
+        } else if (id == R.id.nav_suggestion){
+            callSuggestionActivity();
         }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void callSuggestionActivity() {
+        ShareCompat.IntentBuilder.from(this)
+                .setType(MAIL_MESSAGE_TYPE)
+                .addEmailTo(EMAIL_ADMIN)
+                .setSubject(getString(R.string.app_name) + " - Suggestion d'amélioration")
+                .setText(getString(R.string.default_mail_suggestion_message))
+                .setChooserTitle(R.string.default_mail_chooser_title)
+                .startChooser();
     }
 
     private void signInSignOut() {
@@ -470,6 +497,7 @@ public class MainActivity extends AppCompatActivity
                     .load(userEntity.getPhotoUrl())
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .error(R.mipmap.ic_banana_launcher_foreground)
                     .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }

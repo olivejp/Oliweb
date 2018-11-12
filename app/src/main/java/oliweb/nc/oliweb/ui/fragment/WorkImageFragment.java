@@ -1,20 +1,23 @@
 package oliweb.nc.oliweb.ui.fragment;
 
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import java.io.File;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -89,7 +92,16 @@ public class WorkImageFragment extends Fragment {
     @OnClick(R.id.frag_work_image_button_valid_photo)
     public void onValid(View v) {
         if (hasBeenUpdated) {
-            if (viewModel.getMediaUtility().saveBitmapToFileProviderUri(appCompatActivity.getContentResolver(), pBitmap, Uri.parse(viewModel.getUpdatedPhoto().getUriLocal()))) {
+
+            // Création d'une nouvelle URI sur le device pour stocker la photo
+            Pair<Uri, File> pair = viewModel.getMediaUtility().createNewImagePairUriFile(appCompatActivity);
+
+            if (viewModel.getMediaUtility().saveBitmapToFileProviderUri(appCompatActivity.getContentResolver(), pBitmap, pair.first)) {
+                // Suppression de l'ancienne photo du device
+                viewModel.getMediaUtility().deletePhotoFromDevice(appCompatActivity.getContentResolver(), viewModel.getUpdatedPhoto().getUriLocal());
+
+                // Mise à jour de la nouvelle photo
+                viewModel.getUpdatedPhoto().setUriLocal(pair.first.toString());
                 viewModel.getUpdatedPhoto().setStatut(StatusRemote.TO_SEND);
             }
             this.viewModel.updatePhotos();

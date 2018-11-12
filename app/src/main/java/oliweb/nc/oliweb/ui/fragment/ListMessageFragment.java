@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -48,6 +49,12 @@ public class ListMessageFragment extends Fragment {
     @BindView(R.id.text_empty_list)
     TextView textViewEmpty;
 
+    @BindView(R.id.list_message_titre_annonce)
+    TextView textTitreAnnonce;
+
+    @BindView(R.id.list_message_toolbar)
+    Toolbar toolbar;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -80,6 +87,13 @@ public class ListMessageFragment extends Fragment {
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter(viewModel.getFirebaseUserUid());
         recyclerView.setAdapter(adapter);
+
+        if (viewModel.getCurrentChat() != null && viewModel.getCurrentChat().getTitreAnnonce() != null) {
+            toolbar.setVisibility(View.VISIBLE);
+            textTitreAnnonce.setText(viewModel.getCurrentChat().getTitreAnnonce());
+        } else {
+            toolbar.setVisibility(View.GONE);
+        }
 
         // Sur l'action du message, on tente d'envoyer le texte
         textToSend.setOnEditorActionListener((v, actionId, event) -> {

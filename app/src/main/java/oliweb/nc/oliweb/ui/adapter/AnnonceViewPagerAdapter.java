@@ -5,16 +5,24 @@ package oliweb.nc.oliweb.ui.adapter;
  */
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.viewpager.widget.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.viewpager.widget.PagerAdapter;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -44,6 +52,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup view, int position) {
         View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
         ImageView myImage = myImageLayout.findViewById(R.id.image);
+        ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
 
         if (photos.get(position).getUriLocal() != null) {
             myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
@@ -52,6 +61,21 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
                 GlideApp.with(myImage.getContext())
                         .load(photos.get(position).getFirebasePath())
                         .error(R.drawable.ic_error_grey_900_48dp)
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                myImage.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                myImage.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+                        })
                         .centerCrop()
                         .into(myImage);
             }

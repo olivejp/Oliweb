@@ -2,36 +2,32 @@ package oliweb.nc.oliweb.ui.activity;
 
 
 import android.Manifest;
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.ShareCompat;
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -53,6 +49,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
+import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -68,7 +65,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_LOGIN = 100;
     private static final int REQUEST_CALL_POST_ANNONCE = 200;
-    private static final String MAIL_MESSAGE_TYPE = "message/rfc822";
+
 
     @BindView(R.id.appbar)
     AppBarLayout appBarLayout;
@@ -241,15 +238,14 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         // Récupération de l'annonce
         initAnnonceViews(annonceFull);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow();
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-        }
-
         // Permet a l'ecran de ne pas se superposer a la navigation bar.
         if (Utility.hasNavigationBar(this)) {
             View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LOW_PROFILE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            } else {
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            }
         }
     }
 
@@ -326,7 +322,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
 
             if (uidUser != null) {
                 viewModel.getCountFavoritesByUidUserAndByUidAnnonce(uidUser, annonce.getUid()).observe(this, count ->
-                        imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_grey_900_48dp)
+                        imageFavorite.setImageResource((count != null && count >= 1) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp)
                 );
             }
         }

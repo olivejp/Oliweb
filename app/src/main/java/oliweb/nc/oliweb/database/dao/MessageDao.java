@@ -1,12 +1,11 @@
 package oliweb.nc.oliweb.database.dao;
 
+import java.util.List;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
 import androidx.room.Transaction;
-
-import java.util.List;
-
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -52,4 +51,8 @@ public abstract class MessageDao implements AbstractDao<MessageEntity, Long> {
     @Transaction
     @Query("SELECT * FROM message WHERE idChat =:idChat")
     public abstract Single<List<MessageEntity>> getSingleByIdChat(Long idChat);
+
+    @Transaction
+    @Query("SELECT message.* FROM message INNER JOIN chat ON chat.idChat = message.idChat WHERE chat.uidChat=:uidChat")
+    public abstract Single<List<MessageEntity>> getSingleByUidChat(String uidChat);
 }

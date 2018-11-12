@@ -9,6 +9,7 @@ public class Constants {
     public static final int MAX_IMG_PIXEL_SIZE = 600;
 
     public static final int PER_PAGE_REQUEST = 10;
+    public static final String EMAIL_ADMIN = "orlanth23@gmail.com";
 
     static final String FIREBASE_DB_TIME_REF = "timestamp";
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
@@ -21,6 +22,7 @@ public class Constants {
     public static final String OLIWEB_SITE = "http://oliweb-ec245.firebaseapp.com";
     public static final String OLIWEB_ANNONCE_VIEW_PATH = "/annonces/view/";
     public static final String OLIWEB_DYNAMIC_LINK_DOMAIN = "g2gb6.app.goo.gl";
+    public static final String MAIL_MESSAGE_TYPE = "message/rfc822";
 
     public static final int NOTIFICATION_SYNC_ANNONCE_ID = 654321;
 
@@ -34,6 +36,7 @@ public class Constants {
      */
     public static final long INTERVAL_SYNC_JOB_MINS = 5;
     public static final String COLUMN_NUMBER = "column_number";
+    public static final String OLIWEB_CHANNEL = "OLIWEB Channel";
 
     private Constants() {
     }

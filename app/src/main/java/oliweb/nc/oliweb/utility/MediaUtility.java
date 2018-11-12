@@ -9,11 +9,6 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.content.FileProvider;
-import androidx.core.util.Pair;
 import android.util.Log;
 
 import com.google.android.gms.common.util.IOUtils;
@@ -35,6 +30,12 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
+import androidx.core.util.Pair;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -64,6 +65,17 @@ public class MediaUtility {
             allPermitted = allPermitted && (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED);
         }
         return allPermitted;
+    }
+
+    @NonNull
+    public AlertDialog.Builder getBuilder(Context context) {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(context, 0);
+        } else {
+            builder = new AlertDialog.Builder(context);
+        }
+        return builder;
     }
 
     /* Checks if external storage is available for read and write */

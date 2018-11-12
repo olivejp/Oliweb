@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
+import oliweb.nc.oliweb.R;
 
 /**
  * Created by 2761oli on 21/03/2018.
@@ -64,7 +66,7 @@ public class SelectCategoryDialog extends DialogFragment {
                 this.checkedCategories = new boolean[this.listCategories.length];
             }
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity, R.style.MyDialogTheme);
         builder.setTitle("Catégories");
         builder.setMultiChoiceItems(listCategories, checkedCategories, (dialogInterface, i, isChecked) ->
                 this.checkedCategories[i] = isChecked

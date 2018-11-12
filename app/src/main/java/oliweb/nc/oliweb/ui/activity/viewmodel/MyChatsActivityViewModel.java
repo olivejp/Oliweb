@@ -128,18 +128,22 @@ public class MyChatsActivityViewModel extends AndroidViewModel {
         return typeRechercheMessage;
     }
 
+    public ChatEntity getCurrentChat() {
+        return currentChat;
+    }
+
+    public void setCurrentChat(ChatEntity currentChat) {
+        this.currentChat = currentChat;
+    }
+
     public void setTypeRechercheChat(TypeRechercheChat typeRechercheChat) {
         this.typeRechercheChat = typeRechercheChat;
     }
 
-    public void rechercheMessageByIdChat(Long idChat) {
+    public void rechercheMessageByChat(ChatEntity chatEntity) {
         typeRechercheMessage = TypeRechercheMessage.PAR_CHAT;
-        selectedIdChat = idChat;
-        chatRepository.findById(idChat)
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .doOnSuccess(chatEntity -> currentChat = chatEntity)
-                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                .subscribe();
+        selectedIdChat = chatEntity.getIdChat();
+        currentChat = chatEntity;
     }
 
     public void rechercheMessageByUidChat(String uidChat) {
