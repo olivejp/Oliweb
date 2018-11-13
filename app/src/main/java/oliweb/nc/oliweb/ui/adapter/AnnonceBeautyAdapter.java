@@ -150,7 +150,7 @@ public class AnnonceBeautyAdapter extends
                             return false;
                         }
                     })
-                    .error(R.drawable.ic_error_white_48dp)
+                    .error(R.mipmap.ic_banana_launcher_foreground)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {

@@ -269,6 +269,8 @@ public class Utility {
     }
 
     public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView) {
+
+        // Récupération du nombre de colonne à partir de FirebaseRemoteConfig.
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         GridLayoutManager gridLayoutManager;
         int spanCount;

@@ -22,6 +22,7 @@
             android:id="@+id/card_view_beauty"
             android:layout_width="0dp"
             android:layout_height="@dimen/annonce_image_view_adapter_element"
+            app:cardBackgroundColor="@color/colorAnnonceElementBackground"
             app:cardCornerRadius="3dp"
             app:cardElevation="0dp"
             app:layout_constraintLeft_toLeftOf="parent"
