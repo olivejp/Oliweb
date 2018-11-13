@@ -23,7 +23,6 @@ import java.util.List;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
@@ -134,10 +133,7 @@ public class SearchActivity extends AppCompatActivity {
             }
         }
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(this, R.color.colorAnnonceElementBackground),
-                onClickListener,
-                onClickListenerShare,
-                onClickListenerFavorite);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {

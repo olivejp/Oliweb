@@ -272,12 +272,11 @@ public class Utility {
 
         // Récupération du nombre de colonne à partir de FirebaseRemoteConfig.
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-        GridLayoutManager gridLayoutManager;
-        int spanCount;
-        spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
-        gridLayoutManager = new GridLayoutManager(context, spanCount);
-        if (spanCount > 2) {
-            int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
+        int spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(context, spanCount);
+        if (spanCount >= 2) {
+            int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_extra_small);
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
@@ -287,8 +286,7 @@ public class Utility {
             recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         } else {
             // TODO Ajout d'un divider, non operationnel pour le moment
-            DividerItemDecoration itemDecor = new DividerItemDecoration(context, HORIZONTAL);
-            recyclerView.addItemDecoration(itemDecor);
+            recyclerView.addItemDecoration(new DividerItemDecoration(context, HORIZONTAL));
         }
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);

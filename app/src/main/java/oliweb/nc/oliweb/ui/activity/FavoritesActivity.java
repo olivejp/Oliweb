@@ -19,7 +19,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
@@ -180,10 +179,7 @@ public class FavoritesActivity extends AppCompatActivity {
         // Init views
         setContentView(R.layout.activity_list_favorite);
         ButterKnife.bind(this);
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(ContextCompat.getColor(this, R.color.colorAnnonceElementBackground),
-                onClickListener,
-                onClickListenerShare,
-                onClickListenerFavorite);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         recyclerView.setAdapter(annonceBeautyAdapter);

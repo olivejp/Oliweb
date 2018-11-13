@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
@@ -42,17 +41,14 @@ public class AnnonceBeautyAdapter extends
     public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
     private List<AnnonceFull> listAnnonces;
-    private int backGroundColor;
     private View.OnClickListener onClickListener;
     private View.OnClickListener onClickListenerShare;
     private View.OnClickListener onClickListenerFavorite;
 
-    public AnnonceBeautyAdapter(@ColorInt int backGroundColor,
-                                View.OnClickListener onClickListener,
+    public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
                                 View.OnClickListener onClickListenerShare,
                                 View.OnClickListener onClickListenerFavorite) {
         this.listAnnonces = new ArrayList<>();
-        this.backGroundColor = backGroundColor;
         this.onClickListener = onClickListener;
         this.onClickListenerShare = onClickListenerShare;
         this.onClickListenerFavorite = onClickListenerFavorite;
@@ -92,6 +88,7 @@ public class AnnonceBeautyAdapter extends
     private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
 
+        // Chargement de l'image de l'auteur de l'annonce
         if (annoncePhotos.getUtilisateur() != null
                 && annoncePhotos.getUtilisateur().get(0) != null
                 && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
@@ -130,7 +127,6 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.textTitreCategorie.setText(annoncePhotos.getCategorie().get(0).getName());
 
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderBeauty.imageViewEmpty.setVisibility(View.GONE);
             viewHolderBeauty.imageView.setBackground(null);
             viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
             GlideApp.with(viewHolderBeauty.imageView)
@@ -155,9 +151,10 @@ public class AnnonceBeautyAdapter extends
                     .into(viewHolderBeauty.imageView);
         } else {
             viewHolderBeauty.progressBar.setVisibility(View.GONE);
-            viewHolderBeauty.imageView.setBackgroundColor(backGroundColor);
-            viewHolderBeauty.imageViewEmpty.setVisibility(View.VISIBLE);
-            GlideApp.with(viewHolderBeauty.imageView).clear(viewHolderBeauty.imageView);
+            GlideApp.with(viewHolderBeauty.imageView)
+                    .load(R.mipmap.ic_banana_launcher_foreground)
+                    .centerInside()
+                    .into(viewHolderBeauty.imageView);
         }
     }
 
@@ -229,9 +226,6 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.loading_progress)
         ProgressBar progressBar;
-
-        @BindView(R.id.image_view_empty)
-        ImageView imageViewEmpty;
 
         @BindView(R.id.image_user_beauty)
         ImageView imageUserBeauty;
