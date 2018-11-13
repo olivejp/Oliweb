@@ -7,8 +7,10 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -152,6 +154,32 @@ public class Utility {
     }
 
     /**
+     * Will return :
+     *
+     * @param context
+     * @return 1 = Portrait ||  2 = Landscape
+     */
+    public static int getScreenOrientation(Context context) {
+        WindowManager windowManager = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE));
+        if (windowManager != null) {
+            final int screenOrientation = windowManager.getDefaultDisplay().getRotation();
+            switch (screenOrientation) {
+                case Surface.ROTATION_0:
+                    return 1;
+                case Surface.ROTATION_90:
+                    return 2;
+                case Surface.ROTATION_180:
+                    return 1;
+                case Surface.ROTATION_270:
+                    return 2;
+                default:
+                    return 1;
+            }
+        }
+        return 1;
+    }
+
+    /**
      * Va renvoyer la date du jour au format yyyyMMddHHmmss en Long
      *
      * @return Long
@@ -269,13 +297,20 @@ public class Utility {
     }
 
     public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView) {
+
+        // Récupération du nombre de colonne à partir de FirebaseRemoteConfig.
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-        GridLayoutManager gridLayoutManager;
+
         int spanCount;
-        spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
-        gridLayoutManager = new GridLayoutManager(context, spanCount);
-        if (spanCount > 2) {
-            int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_medium);
+        if (getScreenOrientation(context) == 1) {
+            spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
+        } else {
+            spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER_LANDSCAPE);
+        }
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(context, spanCount);
+        if (spanCount >= 2) {
+            int spacing = context.getResources().getDimensionPixelSize(R.dimen.spacing_extra_small);
             gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
@@ -285,8 +320,7 @@ public class Utility {
             recyclerView.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
         } else {
             // TODO Ajout d'un divider, non operationnel pour le moment
-            DividerItemDecoration itemDecor = new DividerItemDecoration(context, HORIZONTAL);
-            recyclerView.addItemDecoration(itemDecor);
+            recyclerView.addItemDecoration(new DividerItemDecoration(context, HORIZONTAL));
         }
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setHasFixedSize(false);

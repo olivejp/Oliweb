@@ -64,5 +64,5 @@ Cependant les labels générés par le ML Kit sont en anglais et ne sont pas tou
 
 Possibilité de changer le nombre de colonne des listes en mode portrait ou paysage.
 Les valeurs peuvent se modifier avec les variables :
--column_number_portrait
--column_number_landscape
+-column_number            : Nombre de colonne présentes dans le GridLayout principal des annonces en mode PORTRAIT
+-column_number_landscape  : Nombre de colonne présentes dans le GridLayout principal des annonces en mode PAYSAGE

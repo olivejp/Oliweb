@@ -12,11 +12,12 @@
     <dimen name="img_width_height_mini">50dp</dimen>
     <dimen name="slide_title">28sp</dimen>
     <dimen name="slide_desc">20sp</dimen>
+    <dimen name="spacing_extra_small">2dp</dimen>
     <dimen name="spacing_tight">4dp</dimen>
     <dimen name="spacing_medium">8dp</dimen>
     <dimen name="spacing_large">16dp</dimen>
     <dimen name="desc_padding">40dp</dimen>
-    <dimen name="annonce_image_view_adapter_element">160dp</dimen>
+    <dimen name="annonce_image_view_adapter_element">140dp</dimen>
     <dimen name="annonce_card_adapter_element">200dp</dimen>
     <dimen name="button_custom_padding_left_right">10dp</dimen>
     <dimen name="button_custom_padding_top_bottom">5dp</dimen>

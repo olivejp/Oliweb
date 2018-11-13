@@ -52,12 +52,12 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup view, int position) {
         View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
         ImageView myImage = myImageLayout.findViewById(R.id.image);
-        ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
 
         if (photos.get(position).getUriLocal() != null) {
             myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
         } else {
             if (photos.get(position).getFirebasePath() != null) {
+                ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
                 GlideApp.with(myImage.getContext())
                         .load(photos.get(position).getFirebasePath())
                         .error(R.drawable.ic_error_grey_900_48dp)
@@ -76,7 +76,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
                                 return false;
                             }
                         })
-                        .centerCrop()
+                        .fitCenter()
                         .into(myImage);
             }
         }

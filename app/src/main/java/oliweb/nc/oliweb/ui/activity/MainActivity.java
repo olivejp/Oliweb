@@ -194,7 +194,8 @@ public class MainActivity extends AppCompatActivity
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put(Constants.COLUMN_NUMBER, 1);
+        defaults.put(Constants.COLUMN_NUMBER, 2);
+        defaults.put(Constants.COLUMN_NUMBER_LANDSCAPE, 2);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
