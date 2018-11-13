@@ -76,7 +76,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
                                 return false;
                             }
                         })
-                        .centerCrop()
+                        .fitCenter()
                         .into(myImage);
             }
         }
