@@ -1,5 +1,8 @@
 package oliweb.nc.oliweb.dto.firebase;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.firebase.database.PropertyName;
 
 import java.util.List;
@@ -9,7 +12,7 @@ import java.util.List;
  *
  * Firebase Annonce Model
  */
-public class AnnonceFirebase {
+public class AnnonceFirebase implements Parcelable {
     private UserFirebase utilisateur;
     private List<String> photos;
     private CategorieFirebase categorie;
@@ -133,4 +136,50 @@ public class AnnonceFirebase {
                 ", datePublication=" + datePublication +
                 '}';
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(this.utilisateur, flags);
+        dest.writeStringList(this.photos);
+        dest.writeParcelable(this.categorie, flags);
+        dest.writeString(this.uuid);
+        dest.writeString(this.titre);
+        dest.writeString(this.description);
+        dest.writeByte(this.contactEmail ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.contactTel ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.contactMsg ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.prix);
+        dest.writeLong(this.datePublication);
+    }
+
+    protected AnnonceFirebase(Parcel in) {
+        this.utilisateur = in.readParcelable(UserFirebase.class.getClassLoader());
+        this.photos = in.createStringArrayList();
+        this.categorie = in.readParcelable(CategorieFirebase.class.getClassLoader());
+        this.uuid = in.readString();
+        this.titre = in.readString();
+        this.description = in.readString();
+        this.contactEmail = in.readByte() != 0;
+        this.contactTel = in.readByte() != 0;
+        this.contactMsg = in.readByte() != 0;
+        this.prix = in.readInt();
+        this.datePublication = in.readLong();
+    }
+
+    public static final Parcelable.Creator<AnnonceFirebase> CREATOR = new Parcelable.Creator<AnnonceFirebase>() {
+        @Override
+        public AnnonceFirebase createFromParcel(Parcel source) {
+            return new AnnonceFirebase(source);
+        }
+
+        @Override
+        public AnnonceFirebase[] newArray(int size) {
+            return new AnnonceFirebase[size];
+        }
+    };
 }

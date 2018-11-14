@@ -229,6 +229,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity" />
         </activity>
+        <activity android:name=".ui.activity.ZoomImageActivity"
+            android:label="@string/title_activity_shooting"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".ui.activity.AnnonceDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity" />
+        </activity>
     </application>
 
 </manifest>

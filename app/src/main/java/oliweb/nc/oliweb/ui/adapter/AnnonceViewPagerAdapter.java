@@ -6,10 +6,10 @@ package oliweb.nc.oliweb.ui.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -31,10 +31,12 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
 
     private List<PhotoEntity> photos;
     private LayoutInflater inflater;
+    private View.OnClickListener onClickListener;
 
-    public AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos) {
+    public AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos, @Nullable View.OnClickListener onClickListener) {
         this.photos = photos;
         this.inflater = LayoutInflater.from(context);
+        this.onClickListener = onClickListener;
     }
 
     @Override
@@ -51,35 +53,42 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(@NonNull ViewGroup view, int position) {
         View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
+
+        FrameLayout frameLayout = myImageLayout.findViewById(R.id.frame_slide_view_pager);
         ImageView myImage = myImageLayout.findViewById(R.id.image);
+        ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
+
+        String pathImage = null;
 
         if (photos.get(position).getUriLocal() != null) {
-            myImage.setImageURI(Uri.parse(photos.get(position).getUriLocal()));
-        } else {
-            if (photos.get(position).getFirebasePath() != null) {
-                ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
-                GlideApp.with(myImage.getContext())
-                        .load(photos.get(position).getFirebasePath())
-                        .error(R.drawable.ic_error_grey_900_48dp)
-                        .listener(new RequestListener<Drawable>() {
-                            @Override
-                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                                myImage.setVisibility(View.VISIBLE);
-                                progressBar.setVisibility(View.GONE);
-                                return false;
-                            }
-
-                            @Override
-                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                myImage.setVisibility(View.VISIBLE);
-                                progressBar.setVisibility(View.GONE);
-                                return false;
-                            }
-                        })
-                        .fitCenter()
-                        .into(myImage);
-            }
+            pathImage = photos.get(position).getUriLocal();
+        } else if (photos.get(position).getFirebasePath() != null) {
+            pathImage = photos.get(position).getFirebasePath();
         }
+
+        GlideApp.with(myImage.getContext())
+                .load(pathImage)
+                .error(R.drawable.ic_error_grey_900_48dp)
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        myImage.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        myImage.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
+                        return false;
+                    }
+                })
+                .centerCrop()
+                .into(myImage);
+
+        frameLayout.setTag(pathImage);
+        frameLayout.setOnClickListener(onClickListener);
 
         view.addView(myImageLayout, 0);
         return myImageLayout;
