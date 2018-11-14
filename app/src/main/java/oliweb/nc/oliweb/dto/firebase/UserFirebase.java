@@ -1,10 +1,13 @@
 package oliweb.nc.oliweb.dto.firebase;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by orlanth23 on 20/02/2018.
  */
 
-public class UserFirebase {
+public class UserFirebase implements Parcelable {
     private String profile;
     private String uuid;
     private String telephone;
@@ -72,4 +75,38 @@ public class UserFirebase {
                 ", photoUrl='" + photoUrl + '\'' +
                 '}';
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.profile);
+        dest.writeString(this.uuid);
+        dest.writeString(this.telephone);
+        dest.writeString(this.email);
+        dest.writeString(this.photoUrl);
+    }
+
+    protected UserFirebase(Parcel in) {
+        this.profile = in.readString();
+        this.uuid = in.readString();
+        this.telephone = in.readString();
+        this.email = in.readString();
+        this.photoUrl = in.readString();
+    }
+
+    public static final Parcelable.Creator<UserFirebase> CREATOR = new Parcelable.Creator<UserFirebase>() {
+        @Override
+        public UserFirebase createFromParcel(Parcel source) {
+            return new UserFirebase(source);
+        }
+
+        @Override
+        public UserFirebase[] newArray(int size) {
+            return new UserFirebase[size];
+        }
+    };
 }

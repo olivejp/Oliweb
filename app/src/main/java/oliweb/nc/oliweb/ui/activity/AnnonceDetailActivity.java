@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -20,6 +21,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -37,6 +40,7 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
@@ -50,6 +54,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
+import static oliweb.nc.oliweb.ui.activity.ZoomImageActivity.ZOOM_IMAGE_ACTIVITY_ARG_URI_IMAGE;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Constants.PARAM_MAJ;
 
@@ -203,6 +208,17 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
     };
 
+    private View.OnClickListener onClickImage = (View v) -> {
+        try {
+            String uriImage = (String) v.getTag();
+            Intent intent = new Intent(this, ZoomImageActivity.class);
+            intent.putExtra(ZOOM_IMAGE_ACTIVITY_ARG_URI_IMAGE, uriImage);
+            startActivity(intent);
+        } catch (ClassCastException e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -249,9 +265,31 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             }
         }
 
+        createFragmentFromSameUser();
+    }
+
+    private void createFragmentFromSameUser() {
         // Création d'un fragment pour aller récupérer les autres annonces du même vendeur
-        FromSameAuthorFragment fromSameAuthorFragment = FromSameAuthorFragment.newInstance(annonceFull.getAnnonce().getUidUser(), annonceFull.getAnnonce().getUid());
-        getSupportFragmentManager().beginTransaction().add(R.id.from_same_salesman_fragment, fromSameAuthorFragment).commit();
+        viewModel.getListAnnonceByUidUser(annonceFull.getAnnonce().getUidUser())
+                .doOnSuccess(this::epureListThenCreateFragment)
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
+                .subscribe();
+    }
+
+    private void epureListThenCreateFragment(List<AnnonceFirebase> annonceFirebases) {
+        // Suppression de l'annonce actuellement en cours de visualisation de la liste
+        List<AnnonceFirebase> newList = new ArrayList<>();
+        for (AnnonceFirebase annonce : annonceFirebases) {
+            if (!annonce.getUuid().equals(annonceFull.getAnnonce().getUid())) {
+                newList.add(annonce);
+            }
+        }
+
+        // Si la liste épurée n'est pas vide, je créé un nouveau fragment et je l'affiche.
+        if (!newList.isEmpty()) {
+            FromSameAuthorFragment fromSameAuthorFragment = FromSameAuthorFragment.newInstance(newList);
+            getSupportFragmentManager().beginTransaction().add(R.id.from_same_salesman_fragment, fromSameAuthorFragment).commit();
+        }
     }
 
     @Override
@@ -314,7 +352,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             imageShare.setOnClickListener(onClickListenerShare);
 
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty()) {
-                viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos()));
+                viewPager.setAdapter(new AnnonceViewPagerAdapter(this, annonceFull.getPhotos(), onClickImage));
                 indicator.setViewPager(viewPager);
             } else {
                 // If no photo for this ads, we don't expand the AppBarLayout

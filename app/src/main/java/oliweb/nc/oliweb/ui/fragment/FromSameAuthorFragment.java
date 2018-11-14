@@ -3,6 +3,7 @@ package oliweb.nc.oliweb.ui.fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -22,7 +22,6 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
-import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceMiniAdapter;
 
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
@@ -31,14 +30,10 @@ import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 public class FromSameAuthorFragment extends androidx.fragment.app.Fragment {
     private static final String TAG = FromSameAuthorFragment.class.getName();
 
-    private static final String ARG_UID_USER = "ARG_UID_USER";
-    private static final String ARG_UID_ANNONCE_TO_AVOID = "ARG_UID_ANNONCE_TO_AVOID";
+    private static final String ARG_LIST_ANNONCES = "ARG_LIST_ANNONCES";
 
-    private String uidUser;
-    private String uidAnnonceToAvoid;
+    private List<AnnonceFirebase> annonceFirebases;
     private AppCompatActivity appCompatActivity;
-    private AnnonceDetailActivityViewModel viewModel;
-    private AnnonceMiniAdapter annonceMiniAdapter;
 
     @BindView(R.id.recycler_from_same_salesman)
     RecyclerView recyclerView;
@@ -56,11 +51,10 @@ public class FromSameAuthorFragment extends androidx.fragment.app.Fragment {
         // Required empty public constructor
     }
 
-    public static FromSameAuthorFragment newInstance(String uidUser, String uidAnnonceToAvoid) {
+    public static FromSameAuthorFragment newInstance(List<AnnonceFirebase> annonceFulls) {
         FromSameAuthorFragment fragment = new FromSameAuthorFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_UID_USER, uidUser);
-        args.putString(ARG_UID_ANNONCE_TO_AVOID, uidAnnonceToAvoid);
+        args.putParcelableArrayList(ARG_LIST_ANNONCES, (ArrayList<? extends Parcelable>) annonceFulls);
         fragment.setArguments(args);
         return fragment;
     }
@@ -69,22 +63,8 @@ public class FromSameAuthorFragment extends androidx.fragment.app.Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            uidUser = getArguments().getString(ARG_UID_USER);
-            uidAnnonceToAvoid = getArguments().getString(ARG_UID_ANNONCE_TO_AVOID);
+            annonceFirebases = getArguments().getParcelableArrayList(ARG_LIST_ANNONCES);
         }
-    }
-
-    private void setListAnnonces(List<AnnonceFirebase> annonces) {
-        List<AnnonceFirebase> newList = new ArrayList<>();
-        if (uidAnnonceToAvoid != null) {
-            for (AnnonceFirebase annonce : annonces) {
-                if (!annonce.getUuid().equals(uidAnnonceToAvoid)) {
-                    newList.add(annonce);
-                }
-            }
-            annonces = newList; // On remplace notre liste de départ par notre liste épurée
-        }
-        annonceMiniAdapter.setListAnnonces(AnnonceConverter.convertDtosToAnnonceFulls(annonces));
     }
 
     @Override
@@ -93,18 +73,12 @@ public class FromSameAuthorFragment extends androidx.fragment.app.Fragment {
         ButterKnife.bind(this, view);
 
         // Création d'un adapter pour les annonces
-        annonceMiniAdapter = new AnnonceMiniAdapter(onClickListener);
+        AnnonceMiniAdapter annonceMiniAdapter = new AnnonceMiniAdapter(onClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(annonceMiniAdapter);
-
-        // Instanciation d'un viewmodel
-        viewModel = ViewModelProviders.of(this).get(AnnonceDetailActivityViewModel.class);
-        viewModel.getListAnnonceByUidUser(uidUser)
-                .doOnSuccess(this::setListAnnonces)
-                .doOnError(throwable -> recyclerView.setVisibility(View.GONE))
-                .subscribe();
+        annonceMiniAdapter.setListAnnonces(AnnonceConverter.convertDtosToAnnonceFulls(annonceFirebases));
 
         return view;
     }
