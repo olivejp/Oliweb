@@ -1,15 +1,22 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
+import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -24,6 +31,9 @@ public class AnnonceDetailActivityViewModel extends AndroidViewModel {
 
     @Inject
     AnnonceFullRepository annonceFullRepository;
+
+    @Inject
+    FirebaseAnnonceRepository firebaseAnnonceRepository;
 
     @Inject
     AnnonceService annonceService;
@@ -43,5 +53,11 @@ public class AnnonceDetailActivityViewModel extends AndroidViewModel {
 
     public LiveDataOnce<SearchActivityViewModel.AddRemoveFromFavorite> addOrRemoveFromFavorite(String uidUser, AnnonceFull annonceFull) {
         return annonceService.addOrRemoveFromFavorite(uidUser, annonceFull);
+    }
+
+    public Single<List<AnnonceFirebase>> getListAnnonceByUidUser(String uidUser) {
+        return firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .toList();
     }
 }

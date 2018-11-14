@@ -41,6 +41,7 @@ import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.ui.fragment.FromSameAuthorFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
@@ -247,6 +248,10 @@ public class AnnonceDetailActivity extends AppCompatActivity {
                 decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
         }
+
+        // Création d'un fragment pour aller récupérer les autres annonces du même vendeur
+        FromSameAuthorFragment fromSameAuthorFragment = FromSameAuthorFragment.newInstance(annonceFull.getAnnonce().getUidUser(), annonceFull.getAnnonce().getUid());
+        getSupportFragmentManager().beginTransaction().add(R.id.from_same_salesman_fragment, fromSameAuthorFragment).commit();
     }
 
     @Override

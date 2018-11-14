@@ -114,9 +114,9 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageFavorite.setTag(viewHolderBeauty);
         viewHolderBeauty.imageShare.setTag(viewHolderBeauty);
 
-        viewHolderBeauty.cardView.setOnClickListener(onClickListener);
-        viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
-        viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
+        if (onClickListener != null) viewHolderBeauty.cardView.setOnClickListener(onClickListener);
+        if (onClickListenerFavorite != null)viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
+        if (onClickListenerShare != null)viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
         boolean isFavorite = viewHolderBeauty.annonceFull.getAnnonce().isFavorite();
         viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);

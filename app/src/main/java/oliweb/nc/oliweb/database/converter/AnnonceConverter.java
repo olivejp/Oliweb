@@ -20,6 +20,14 @@ public class AnnonceConverter {
     private AnnonceConverter() {
     }
 
+    public static List<AnnonceFull> convertDtosToAnnonceFulls(List<AnnonceFirebase> list) {
+        List<AnnonceFull> newList = new ArrayList<>();
+        for (AnnonceFirebase annonceFirebase : list) {
+            newList.add(convertDtoToAnnonceFull(annonceFirebase));
+        }
+        return newList;
+    }
+
     /**
      * @param annonceFirebase
      * @return

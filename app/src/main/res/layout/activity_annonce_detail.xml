@@ -202,6 +202,15 @@
                     app:layout_constraintTop_toBottomOf="@+id/text_date_publication"
                     tools:text="Ceci est une description sur plusieurs lignes juste pour test certains comportements de la UI." />
 
+                <FrameLayout
+                    android:id="@+id/from_same_salesman_fragment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/text_description_detail"
+                    tools:background="@color/colorAccent"
+                    tools:layout_height="50dp" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>
