@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.google.android.gms.common.util.IOUtils;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -301,6 +302,14 @@ public class MediaUtility {
         }
     }
 
+    public static int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException
+                    (l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
+    }
+
     /**
      * Copie un fichier dans un autre
      *
@@ -309,14 +318,15 @@ public class MediaUtility {
      * @param uriDestination
      * @return false si le fichier source n'a pas pu être lu
      */
-    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination) {
+    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination, boolean deleteUriSource) {
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
             Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
             return false;
         }
 
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, Constants.MAX_IMG_PIXEL_SIZE);
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, safeLongToInt(remoteConfig.getLong(Constants.IMAGE_RESOLUTION_RESIZE)));
         if (bitmapDst == null) {
             Log.e(TAG, "Le retaillage de l'image a échoué.");
             return false;
@@ -324,6 +334,9 @@ public class MediaUtility {
 
         try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
             bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
+            if (deleteUriSource) {
+                deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
+            }
             return true;
         } catch (IOException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);

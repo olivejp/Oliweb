@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +35,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ShareCompat;
 import androidx.core.view.GravityCompat;
@@ -54,6 +56,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
+import oliweb.nc.oliweb.ui.fragment.ListCategorieFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
@@ -69,6 +72,7 @@ import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_US
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
+import static oliweb.nc.oliweb.utility.Constants.MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -80,6 +84,7 @@ public class MainActivity extends AppCompatActivity
 
     public static final int RC_SIGN_IN = 1001;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
+    public static final String TAG_LIST_CATEGORY = "TAG_LIST_CATEGORY";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     public static final String ACTION_CHAT = "ACTION_CHAT";
 
@@ -88,6 +93,9 @@ public class MainActivity extends AppCompatActivity
 
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
+
+    @BindView(R.id.card_app_main)
+    CardView cardView;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -101,10 +109,12 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
+    @BindView(R.id.frame_category_list)
+    FrameLayout frameCategoryList;
+
     SearchView searchView;
 
     private ImageView profileImage;
-    private TextView headerVersion;
     private TextView profileName;
     private TextView profileEmail;
     private Menu navigationViewMenu;
@@ -196,6 +206,7 @@ public class MainActivity extends AppCompatActivity
         HashMap<String, Object> defaults = new HashMap<>();
         defaults.put(Constants.COLUMN_NUMBER, 2);
         defaults.put(Constants.COLUMN_NUMBER_LANDSCAPE, 2);
+        defaults.put(Constants.IMAGE_RESOLUTION_RESIZE, MAX_IMG_PIXEL_SIZE);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
@@ -204,7 +215,7 @@ public class MainActivity extends AppCompatActivity
     private void initViews() {
         View viewHeader = navigationView.getHeaderView(0);
 
-        headerVersion = viewHeader.findViewById(R.id.nav_header_version);
+        TextView headerVersion = viewHeader.findViewById(R.id.nav_header_version);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
@@ -231,11 +242,33 @@ public class MainActivity extends AppCompatActivity
      */
     private void initToolbar() {
         appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
-                appBarLayout.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
+                cardView.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
         );
     }
 
     private void initFragments(Bundle savedInstanceState) {
+        // Fragment liste catégorie
+        ListCategorieFragment listCategorieFragment;
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CATEGORY)) {
+            listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CATEGORY);
+        } else {
+            listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CATEGORY);
+        }
+        if (listCategorieFragment == null) {
+            viewModel.getListCategory()
+                    .doOnSuccess(categorieEntities -> {
+                        ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
+                        FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
+                        transactionListeCategorie.commit();
+                    })
+                    .subscribe();
+        } else {
+            FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, listCategorieFragment, TAG_LIST_CATEGORY);
+            transactionListeCategorie.commit();
+        }
+
+
+        // Fragment liste annonce
         ListAnnonceFragment listAnnonceFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
@@ -245,7 +278,6 @@ public class MainActivity extends AppCompatActivity
         if (listAnnonceFragment == null) {
             listAnnonceFragment = new ListAnnonceFragment();
         }
-
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
         transaction.commit();
 
@@ -443,6 +475,11 @@ public class MainActivity extends AppCompatActivity
         ListChatFragment listChatFragment = (ListChatFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CHAT);
         if (listChatFragment != null) {
             getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
+        }
+
+        ListCategorieFragment listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CATEGORY);
+        if (listCategorieFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_CATEGORY, listCategorieFragment);
         }
 
         outState.putBoolean(SAVED_DYNAMIC_LINK_PROCESSED, dynamicLinkProcessed);

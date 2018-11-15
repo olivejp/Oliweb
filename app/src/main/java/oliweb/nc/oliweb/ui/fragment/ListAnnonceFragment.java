@@ -69,11 +69,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
-    public static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
-    public static final String SAVE_SORT = "SAVE_SORT";
-    public static final String SAVE_DIRECTION = "SAVE_DIRECTION";
-    public static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
-    public static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
+    private static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
+    private static final String SAVE_SORT = "SAVE_SORT";
+    private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
+    private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
 
     public static final int SORT_DATE = 1;
     public static final int SORT_TITLE = 2;

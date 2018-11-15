@@ -1,13 +1,7 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import android.content.Intent;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
@@ -18,14 +12,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
@@ -64,6 +67,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     @Inject
     ChatRepository chatRepository;
+
+    @Inject
+    CategorieRepository categorieRepository;
 
     @Inject
     AnnonceService annonceService;
@@ -107,6 +113,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         ((App) application).getFirebaseRepositoriesComponent().inject(this);
         ((App) application).getServicesComponent().inject(this);
         ((App) application).getFirebaseServicesComponent().inject(this);
+    }
+
+    public Single<List<CategorieEntity>> getListCategory() {
+        return categorieRepository.getListCategorie().subscribeOn(processScheduler).observeOn(androidScheduler);
     }
 
     public MediaUtility getMediaUtility() {

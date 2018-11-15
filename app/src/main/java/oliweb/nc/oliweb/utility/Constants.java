@@ -37,6 +37,7 @@ public class Constants {
     public static final long INTERVAL_SYNC_JOB_MINS = 5;
     public static final String COLUMN_NUMBER = "column_number";
     public static final String COLUMN_NUMBER_LANDSCAPE = "column_number_landscape";
+    public static final String IMAGE_RESOLUTION_RESIZE = "image_resolution_resize";
     public static final String OLIWEB_CHANNEL = "OLIWEB Channel";
 
     private Constants() {

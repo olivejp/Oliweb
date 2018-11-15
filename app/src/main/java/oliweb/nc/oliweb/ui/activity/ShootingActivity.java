@@ -28,7 +28,6 @@ import io.fotoapparat.configuration.UpdateConfiguration;
 import io.fotoapparat.log.LoggersKt;
 import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.PhotoResult;
-import io.fotoapparat.selector.FlashSelectorsKt;
 import io.fotoapparat.selector.FocusModeSelectorsKt;
 import io.fotoapparat.selector.LensPositionSelectorsKt;
 import io.fotoapparat.selector.ResolutionSelectorsKt;
@@ -163,11 +162,6 @@ public class ShootingActivity extends AppCompatActivity {
                         FocusModeSelectorsKt.continuousFocusPicture(),
                         FocusModeSelectorsKt.autoFocus(),        // in case if continuous focus is not available on device, auto focus will be used
                         FocusModeSelectorsKt.fixed()             // if even auto focus is not available - fixed focus mode will be used
-                ))
-                .flash(SelectorsKt.firstAvailable(      // (optional) similar to how it is done for focus mode, this time for flash
-                        FlashSelectorsKt.autoRedEye(),
-                        FlashSelectorsKt.autoFlash(),
-                        FlashSelectorsKt.torch()
                 ))
                 .logger(LoggersKt.loggers(            // (optional) we want to log camera events in 2 places at once
                         LoggersKt.logcat(),           // ... in logcat

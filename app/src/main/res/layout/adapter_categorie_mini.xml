@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_view_categorie"
+    style="@style/CommonAdapterBeautyFrame"
+    android:layout_width="100dp"
+    android:layout_height="40dp"
+    android:layout_margin="5dp"
+    app:cardBackgroundColor="@color/colorAnnonceElementBackground"
+    app:cardCornerRadius="3dp"
+    app:cardElevation="0dp">
+
+    <TextView
+        android:id="@+id/text_titre_categorie"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+        android:textColor="@android:color/white"
+        tools:text="A vendre plante médicinale" />
+
+</androidx.cardview.widget.CardView>

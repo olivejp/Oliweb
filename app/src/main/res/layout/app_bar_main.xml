@@ -16,6 +16,7 @@
         app:elevation="0dp">
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_app_main"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
@@ -32,6 +33,11 @@
                 android:theme="@style/ToolbarStyle"
                 tools:background="@android:color/holo_blue_dark" />
         </androidx.cardview.widget.CardView>
+        <FrameLayout
+            android:id="@+id/frame_category_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_height="50dp"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_main" />
