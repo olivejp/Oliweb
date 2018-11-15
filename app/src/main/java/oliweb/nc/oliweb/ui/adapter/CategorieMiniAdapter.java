@@ -58,8 +58,9 @@ public class CategorieMiniAdapter extends
         viewHolderCategorieMini.cardView.setTag(categorieEntity);
         viewHolderCategorieMini.cardView.setOnClickListener(onClickListener);
 
-        if (onClickListener != null)
+        if (onClickListener != null) {
             viewHolderCategorieMini.cardView.setOnClickListener(onClickListener);
+        }
 
         viewHolderCategorieMini.textTitreAnnonce.setText(categorieEntity.getName());
     }
