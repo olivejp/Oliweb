@@ -104,4 +104,5 @@
     <string name="price_mandatory">Le prix est obligatoire.</string>
     <string name="contact_mandatory">Un moyen de contact obligatoire</string>
     <string name="choose_image_to_upload">Choisissez les images à importer</string>
+    <string name="sort">Sort</string>
 </resources>
