@@ -1,10 +1,6 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -24,6 +20,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
@@ -39,9 +39,9 @@ import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_TITLE;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
 
 /**
