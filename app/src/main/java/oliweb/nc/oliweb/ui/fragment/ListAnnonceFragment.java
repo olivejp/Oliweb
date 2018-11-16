@@ -475,6 +475,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch, String messageError) {
         if (goodFinish) {
+            updateListWithFavorite((ArrayList<AnnonceFull>) listResultSearch, listUidFavorites);
             annoncePhotosList.addAll(listResultSearch);
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
             annonceBeautyAdapter.notifyDataSetChanged();
