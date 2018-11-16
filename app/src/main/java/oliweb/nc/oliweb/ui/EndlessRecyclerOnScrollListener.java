@@ -23,7 +23,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
 
     // The minimum amount of items to have below your current scroll position
     // before loading more.
-    private int visibleThreshold = 10;
+    private int visibleThreshold = 15;
 
     private RecyclerView.LayoutManager mLayoutManager;
 

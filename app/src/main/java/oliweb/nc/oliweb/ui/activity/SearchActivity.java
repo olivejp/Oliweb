@@ -40,13 +40,13 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.DESC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_TITLE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.DESC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -133,6 +133,53 @@ public class SearchActivity extends AppCompatActivity {
             }
         }
 
+        initRecyclerView();
+
+        initViewModelObservers();
+
+        // Récupération des données sauvegardées
+        if (savedInstanceState != null) {
+            retrieveDataFromBundle(savedInstanceState);
+        } else {
+            currentPage = 0;
+            launchNewSearch(currentPage);
+        }
+    }
+
+    private void retrieveDataFromBundle(Bundle savedInstanceState) {
+        if (savedInstanceState.containsKey(SAVED_CURRENT_PAGE)) {
+            currentPage = savedInstanceState.getInt(SAVED_CURRENT_PAGE);
+        }
+        if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
+            listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
+            if (listAnnonce != null) {
+                initAdapter(listAnnonce);
+            }
+        }
+        if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
+            direction = savedInstanceState.getInt(SAVED_DIRECTION);
+        }
+        if (savedInstanceState.containsKey(SAVED_TRI)) {
+            tri = savedInstanceState.getInt(SAVED_TRI);
+        }
+        if (savedInstanceState.containsKey(SAVE_LIST_CATEGORIE)) {
+            listCategorieSelected = savedInstanceState.getStringArrayList(SAVE_LIST_CATEGORIE);
+        }
+        if (savedInstanceState.containsKey(SAVE_WITH_PHOTO)) {
+            withPhotoOnly = savedInstanceState.getBoolean(SAVE_WITH_PHOTO);
+        }
+        if (savedInstanceState.containsKey(SAVE_PRICE_HIGH)) {
+            higherPrice = savedInstanceState.getInt(SAVE_PRICE_HIGH);
+        }
+        if (savedInstanceState.containsKey(SAVE_PRICE_LOW)) {
+            lowerPrice = savedInstanceState.getInt(SAVE_PRICE_LOW);
+        }
+        if (savedInstanceState.containsKey(SAVE_QUERY)) {
+            query = savedInstanceState.getString(SAVE_QUERY);
+        }
+    }
+
+    private void initRecyclerView() {
         annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
@@ -146,45 +193,6 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
-
-        initViewModelObservers();
-
-        // Récupération des données sauvegardées
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(SAVED_CURRENT_PAGE)) {
-                currentPage = savedInstanceState.getInt(SAVED_CURRENT_PAGE);
-            }
-            if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
-                listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
-                if (listAnnonce != null) {
-                    initAdapter(listAnnonce);
-                }
-            }
-            if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
-                direction = savedInstanceState.getInt(SAVED_DIRECTION);
-            }
-            if (savedInstanceState.containsKey(SAVED_TRI)) {
-                tri = savedInstanceState.getInt(SAVED_TRI);
-            }
-            if (savedInstanceState.containsKey(SAVE_LIST_CATEGORIE)) {
-                listCategorieSelected = savedInstanceState.getStringArrayList(SAVE_LIST_CATEGORIE);
-            }
-            if (savedInstanceState.containsKey(SAVE_WITH_PHOTO)) {
-                withPhotoOnly = savedInstanceState.getBoolean(SAVE_WITH_PHOTO);
-            }
-            if (savedInstanceState.containsKey(SAVE_PRICE_HIGH)) {
-                higherPrice = savedInstanceState.getInt(SAVE_PRICE_HIGH);
-            }
-            if (savedInstanceState.containsKey(SAVE_PRICE_LOW)) {
-                lowerPrice = savedInstanceState.getInt(SAVE_PRICE_LOW);
-            }
-            if (savedInstanceState.containsKey(SAVE_QUERY)) {
-                query = savedInstanceState.getString(SAVE_QUERY);
-            }
-        } else {
-            currentPage = 0;
-            launchNewSearch(currentPage);
-        }
     }
 
     @Override
