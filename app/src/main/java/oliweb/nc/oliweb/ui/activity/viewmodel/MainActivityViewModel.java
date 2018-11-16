@@ -35,6 +35,7 @@ import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.UserService;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.service.firebase.FirebaseSyncListenerService;
+import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sync.DatabaseSyncListenerService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.utility.CustomLiveData;
@@ -76,6 +77,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     @Inject
     UserService userService;
+
+    @Inject
+    SearchEngine searchEngine;
 
     @Inject
     @Named("processScheduler")
@@ -124,6 +128,9 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public LiveData<CategorieEntity> getCategorySelected() {
+        if (liveCategorySelected == null) {
+            liveCategorySelected = new MutableLiveData<>();
+        }
         return liveCategorySelected;
     }
 
@@ -291,6 +298,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         }
         liveNetworkAvailable.setValue(new AtomicBoolean(isNetworkAvailable));
         return liveNetworkAvailable;
+    }
+
+    public SearchEngine getSearchEngine() {
+        return searchEngine;
     }
 
     public enum AuthEventType {

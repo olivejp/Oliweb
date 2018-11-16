@@ -18,7 +18,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
@@ -43,6 +42,8 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -54,17 +55,20 @@ import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
 import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
 import oliweb.nc.oliweb.ui.task.TaskListener;
-import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.DESC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, SearchEngine.SearchListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
@@ -75,12 +79,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
 
-    public static final int SORT_DATE = 1;
-    public static final int SORT_TITLE = 2;
-    public static final int SORT_PRICE = 3;
-
-    public static final int ASC = 1;
-    public static final int DESC = 2;
 
     @BindView(R.id.swipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -108,6 +106,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private List<String> listUidFavorites = new ArrayList<>();
     private AnnonceFull annonceFullToSaveTofavorite;
     private View viewToEnabled;
+    private int pagingSize = 20;
+    private CategorieEntity categorieSelected;
+    private int from = 0;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -286,6 +287,23 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 updateListAdapter();
             });
         });
+
+        // Dès que la catégorie sélectionnée aura changé, je vais relancer une recherche...
+        viewModel.getCategorySelected().observe(appCompatActivity, categorieEntity -> {
+            if (categorieEntity != null) {
+                categorieSelected = categorieEntity;
+                makeNewSearch();
+            }
+        });
+    }
+
+    private void makeNewSearch() {
+        from = 0;
+        annoncePhotosList.clear();
+        loadingDialogFragment = new LoadingDialogFragment();
+        loadingDialogFragment.setText("Recherche en cours");
+        loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
+        loadMoreDatas();
     }
 
     @Override
@@ -363,6 +381,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
+                from = annoncePhotosList.size() + 1;
                 loadMoreDatas();
             }
         };
@@ -390,12 +409,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     directionSelected = DESC;
                     break;
             }
-
-            ArrayList<AnnonceFull> list = new ArrayList<>();
-            annonceBeautyAdapter.setListAnnonces(list);
-            annonceBeautyAdapter.notifyDataSetChanged();
-            annoncePhotosList = list;
-            loadMoreDatas();
+            makeNewSearch();
         }
 
         if (swipeRefreshLayout.isRefreshing()) {
@@ -404,56 +418,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
-        switch (sortSelected) {
-            case SORT_DATE:
-                loadSortDate().addListenerForSingleValueEvent(loadSortListener);
-                break;
-            case SORT_PRICE:
-                loadSortPrice().addListenerForSingleValueEvent(loadSortListener);
-            default:
-        }
-    }
-
-    private Query loadSortPrice() {
-        Query query = annoncesReference.orderByChild("prix");
-        if (directionSelected == ASC) {
-            Integer lastPrice = 0;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getPrix() > lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonce().getPrix();
-                }
-            }
-            return query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else {
-            Integer lastPrice = Integer.MAX_VALUE;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getPrix() < lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonce().getPrix();
-                }
-            }
-            return query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
-        }
-    }
-
-    private Query loadSortDate() {
-        Query query = annoncesReference.orderByChild("datePublication");
-        if (directionSelected == DESC) {
-            Long lastDate = 0L;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
-                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
-                }
-            }
-            return query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else {
-            Long lastDate = Long.MAX_VALUE;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getDatePublication() < lastDate) {
-                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
-                }
-            }
-            return query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
-        }
+        List<String> listCategorie = (categorieSelected != null) ? Collections.singletonList(categorieSelected.getName()) : Collections.emptyList();
+        viewModel.getSearchEngine().search(listCategorie,
+                false,
+                0,
+                0,
+                null,
+                pagingSize,
+                from,
+                sortSelected,
+                directionSelected,
+                this);
     }
 
     private ValueEventListener loadSortListener = new ValueEventListener() {
@@ -492,4 +467,24 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         updateListWithFavorite(annoncePhotosList, listUidFavorites);
         updateListAdapter();
     };
+
+    @Override
+    public void onBeginSearch() {
+    }
+
+    @Override
+    public void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch, String messageError) {
+        if (goodFinish) {
+            annoncePhotosList.addAll(listResultSearch);
+            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+            annonceBeautyAdapter.notifyDataSetChanged();
+        } else {
+            Toast.makeText(appCompatActivity, messageError, Toast.LENGTH_LONG).show();
+            Log.e(TAG, messageError);
+        }
+        LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
+        if (loadingDialogFragment1 != null) {
+            loadingDialogFragment1.dismiss();
+        }
+    }
 }
