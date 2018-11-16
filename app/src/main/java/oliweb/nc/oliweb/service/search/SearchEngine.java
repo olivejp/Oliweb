@@ -22,6 +22,7 @@ import javax.inject.Singleton;
 import androidx.annotation.NonNull;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
+import io.reactivex.disposables.Disposable;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchRequest;
@@ -112,32 +113,32 @@ public class SearchEngine {
                 .timeout(30, TimeUnit.SECONDS)
                 .doOnError(throwable -> {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
-                    listener.onFinishSearch(false, null);
+                    listener.onFinishSearch(false, null, throwable.getLocalizedMessage());
                 })
                 .doOnSuccess(timestamp -> doOnSuccess(listener, listAnnonce, requestJson, timestamp))
                 .subscribe();
     }
 
     private void doOnSuccess(SearchListener listener, List<AnnonceFull> listAnnonce, String requestJson, Long timestamp) {
-        newRequestRef = requestReference.push();
-        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
-        newRequestRef.addValueEventListener(getValueEventListener(listener, listAnnonce));
-        obsDelay.observeOn(androidScheduler)
+        Disposable delay = obsDelay.observeOn(androidScheduler)
                 .doOnNext(aLong -> {
                     newRequestRef.removeValue();
-                    listener.onFinishSearch(false, null);
+                    listener.onFinishSearch(false, null, "Délai expiré");
                 })
                 .subscribe();
+        newRequestRef = requestReference.push();
+        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
+        newRequestRef.addValueEventListener(getValueEventListener(listener, listAnnonce, delay));
     }
 
-    private ValueEventListener getValueEventListener(SearchListener listener, List<AnnonceFull> listAnnonce) {
+    private ValueEventListener getValueEventListener(SearchListener listener, List<AnnonceFull> listAnnonce, Disposable delay) {
         return new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child(NO_RESULTS).exists()) {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
-                    listener.onFinishSearch(true, listAnnonce);
+                    listener.onFinishSearch(true, listAnnonce, null);
                 } else {
                     if (dataSnapshot.child(RESULTS).exists()) {
                         DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
@@ -150,15 +151,17 @@ public class SearchEngine {
                         }
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                        listener.onFinishSearch(true, listAnnonce);
+                        listener.onFinishSearch(true, listAnnonce, null);
                     }
                 }
+                delay.dispose();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                delay.dispose();
                 newRequestRef.removeValue();
-                listener.onFinishSearch(false, null);
+                listener.onFinishSearch(false, null, databaseError.getMessage());
             }
         };
     }
@@ -191,6 +194,6 @@ public class SearchEngine {
     public interface SearchListener {
         void onBeginSearch();
 
-        void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch);
+        void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch, String messageError);
     }
 }
