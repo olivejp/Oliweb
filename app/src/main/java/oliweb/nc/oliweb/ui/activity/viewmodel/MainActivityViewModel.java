@@ -93,6 +93,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private MutableLiveData<Integer> sorting;
     private MutableLiveData<UserEntity> liveUserConnected;
     private MutableLiveData<AtomicBoolean> liveNetworkAvailable;
+    private MutableLiveData<CategorieEntity> liveCategorySelected;
 
     private Intent intentLocalDbService;
     private Intent intentFirebaseDbService;
@@ -113,6 +114,17 @@ public class MainActivityViewModel extends AndroidViewModel {
         ((App) application).getFirebaseRepositoriesComponent().inject(this);
         ((App) application).getServicesComponent().inject(this);
         ((App) application).getFirebaseServicesComponent().inject(this);
+    }
+
+    public void setCategorySelected(CategorieEntity categorySelected) {
+        if (liveCategorySelected == null) {
+            liveCategorySelected = new MutableLiveData<>();
+        }
+        liveCategorySelected.postValue(categorySelected);
+    }
+
+    public LiveData<CategorieEntity> getCategorySelected() {
+        return liveCategorySelected;
     }
 
     public Single<List<CategorieEntity>> getListCategory() {

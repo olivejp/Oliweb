@@ -13,12 +13,14 @@ import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.CategorieMiniAdapter;
 
 
@@ -29,13 +31,14 @@ public class ListCategorieFragment extends Fragment {
 
     private List<CategorieEntity> categorieEntities;
     private AppCompatActivity appCompatActivity;
+    private MainActivityViewModel viewModel;
 
     @BindView(R.id.recycler_by_category)
     RecyclerView recyclerView;
 
     private View.OnClickListener onClickListener = (View v) -> {
         CategorieEntity categorieEntity = (CategorieEntity) v.getTag();
-        // TODO Do something with this Category
+        viewModel.setCategorySelected(categorieEntity);
     };
 
     public ListCategorieFragment() {
@@ -56,6 +59,9 @@ public class ListCategorieFragment extends Fragment {
         if (getArguments() != null) {
             categorieEntities = getArguments().getParcelableArrayList(ARG_LIST_CATEGORY);
         }
+
+        // Récupération du viewModel
+        viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
     }
 
     @Override

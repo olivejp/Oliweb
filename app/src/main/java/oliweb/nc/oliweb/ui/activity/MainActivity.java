@@ -232,6 +232,7 @@ public class MainActivity extends AppCompatActivity
 
         prepareNavigationMenu(false);
 
+        // Observe les changements effectués sur cet utilisateur
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
 
         initToolbar();
