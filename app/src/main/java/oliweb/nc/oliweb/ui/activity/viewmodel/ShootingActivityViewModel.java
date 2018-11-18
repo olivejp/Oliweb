@@ -4,8 +4,6 @@ import android.app.Application;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +19,6 @@ import androidx.lifecycle.MutableLiveData;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
-
-import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 /**
  * Created by orlanth23 on 12/11/2018.
@@ -42,22 +38,24 @@ public class ShootingActivityViewModel extends AndroidViewModel {
     private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
     private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
     private MutableLiveData<AtomicBoolean> liveFlashIsOn = new MutableLiveData<>();
-    private Long nbMaxPictures;
+    private Long nbShootAvailable;
 
     public ShootingActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
         externalStorage = SharedPreferencesHelper.getInstance(application).getUseExternalStorage();
-        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
-        nbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
+    }
+
+    public void setNbrShootAvailable(Long nbr) {
+        this.nbShootAvailable = nbr;
     }
 
     public Long getNbMaxPicures(){
-        return nbMaxPictures;
+        return nbShootAvailable;
     }
 
     public boolean isAbleToAddNewPicture() {
-        return listPairFileUri.size() < nbMaxPictures;
+        return listPairFileUri.size() < nbShootAvailable;
     }
 
     public LiveData<AtomicBoolean> getLiveFlashIsOn() {

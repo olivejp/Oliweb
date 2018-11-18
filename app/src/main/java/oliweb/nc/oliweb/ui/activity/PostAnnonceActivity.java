@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -53,6 +55,8 @@ import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
+
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
 
@@ -81,6 +85,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidUser;
     private String uidAnnonce;
     private String mode;
+    private Long nbMaxPictures;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -173,6 +178,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(postPhotoAdapter);
+
+        // Récupération du nombre maximale de photo autorisée
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        nbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
@@ -569,6 +578,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ShootingActivity.class);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.putExtra(ShootingActivity.EXTRA_NBR_PHOTO, nbMaxPictures - viewModel.getActualNbrPhotos());
         startActivityForResult(intent, REQUEST_SHOOTING_CODE);
     }
 

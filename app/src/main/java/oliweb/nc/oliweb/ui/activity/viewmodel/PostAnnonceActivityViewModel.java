@@ -36,6 +36,7 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -219,6 +220,21 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
                             .subscribe();
                 }
         );
+    }
+
+    /**
+     * Return the actual valid photo number in the annonce
+     *
+     * @return
+     */
+    public int getActualNbrPhotos() {
+        int i = 0;
+        for (PhotoEntity photoEntity : this.currentAnnonce.getPhotos()) {
+            if (!Utility.allStatusToAvoid().contains(photoEntity.getStatut().getValue())) {
+                i++;
+            }
+        }
+        return i;
     }
 
     public void updatePhotos() {
