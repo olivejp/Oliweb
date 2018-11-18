@@ -85,7 +85,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidUser;
     private String uidAnnonce;
     private String mode;
-    private Long nbMaxPictures;
+    private Long remoteNbMaxPictures;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -181,7 +181,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Récupération du nombre maximale de photo autorisée
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
-        nbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
+        remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
@@ -326,12 +326,17 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (requestCode == DIALOG_GALLERY_IMAGE) {
             // Insertion multiple
             if (data.getClipData() != null) {
-                List<Uri> listUri = new ArrayList<>();
+                // Vérification qu'on ajoute pas plus de photo que la quota autorisé
+                long nbPhotoSelected = data.getClipData().getItemCount();
+                if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
+                    nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
+                }
 
                 // Parcourt de toutes les items reçus et enregistrement dans une liste
+                List<Uri> listUri = new ArrayList<>();
                 int i = -1;
                 ClipData.Item item;
-                while (i++ < data.getClipData().getItemCount() - 1) {
+                while (i++ < nbPhotoSelected - 1) {
                     item = data.getClipData().getItemAt(i);
                     listUri.add(item.getUri());
                 }
@@ -578,7 +583,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ShootingActivity.class);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        intent.putExtra(ShootingActivity.EXTRA_NBR_PHOTO, nbMaxPictures - viewModel.getActualNbrPhotos());
+        intent.putExtra(ShootingActivity.EXTRA_NBR_PHOTO, remoteNbMaxPictures - viewModel.getActualNbrPhotos());
         startActivityForResult(intent, REQUEST_SHOOTING_CODE);
     }
 
