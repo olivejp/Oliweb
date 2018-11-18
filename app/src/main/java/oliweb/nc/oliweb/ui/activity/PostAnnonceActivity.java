@@ -51,7 +51,8 @@ import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.utility.Constants;
-import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.ui.activity.ShootingActivity.EXTRA_PHOTO_NUMBER;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
@@ -518,12 +519,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void displayPhotos(List<PhotoEntity> photoEntities) {
         // On ne transmet pas les photos avec un statut "à éviter"
-        ArrayList<PhotoEntity> nouvelleListe = new ArrayList<>();
-        for (PhotoEntity photo : photoEntities) {
-            if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
-                nouvelleListe.add(photo);
-            }
-        }
+        List<PhotoEntity> nouvelleListe = viewModel.removePhotoWithForbiddenStatus(photoEntities);
         recyclerView.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
         textPhotos.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
         postPhotoAdapter.setListPhotoEntity(nouvelleListe);
@@ -569,6 +565,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ShootingActivity.class);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.putExtra(EXTRA_PHOTO_NUMBER, viewModel.getPhotoNumber());
         startActivityForResult(intent, REQUEST_SHOOTING_CODE);
     }
 

@@ -36,6 +36,7 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
@@ -108,6 +109,23 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
             }
             emitter.onComplete();
         });
+    }
+
+    public List<PhotoEntity> removePhotoWithForbiddenStatus(List<PhotoEntity> listBefore) {
+        ArrayList<PhotoEntity> nouvelleListe = new ArrayList<>();
+        for (PhotoEntity photo : listBefore) {
+            if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
+                nouvelleListe.add(photo);
+            }
+        }
+        return nouvelleListe;
+    }
+
+    public int getPhotoNumber() {
+        if (liveListPhoto == null || liveListPhoto.getValue().isEmpty()) {
+            return 0;
+        }
+        return removePhotoWithForbiddenStatus(liveListPhoto.getValue()).size();
     }
 
     public LiveData<AtomicBoolean> isShowLoading() {

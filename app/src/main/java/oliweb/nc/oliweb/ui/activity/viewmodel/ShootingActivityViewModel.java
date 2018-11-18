@@ -38,6 +38,7 @@ public class ShootingActivityViewModel extends AndroidViewModel {
     private boolean externalStorage;
     private boolean flashIsOn;
     private boolean switchIsOn;
+    private int photoNumber;
 
     private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
     private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
@@ -52,12 +53,16 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         nbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
     }
 
-    public Long getNbMaxPicures(){
+    public void setPhotoNumber(int photoNumnber) {
+        this.photoNumber = photoNumnber;
+    }
+
+    public Long getNbMaxPicures() {
         return nbMaxPictures;
     }
 
     public boolean isAbleToAddNewPicture() {
-        return listPairFileUri.size() < nbMaxPictures;
+        return listPairFileUri.size() < nbMaxPictures - photoNumber;
     }
 
     public LiveData<AtomicBoolean> getLiveFlashIsOn() {

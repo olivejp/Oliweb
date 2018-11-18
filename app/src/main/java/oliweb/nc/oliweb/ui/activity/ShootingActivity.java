@@ -49,6 +49,7 @@ public class ShootingActivity extends AppCompatActivity {
 
     private static final String TAG = ShootingActivity.class.getCanonicalName();
     public static final String RESULT_DATA_LIST_PAIR = "RESULT_DATA_LIST_PAIR";
+    public static final String EXTRA_PHOTO_NUMBER = "EXTRA_PHOTO_NUMBER";
 
     @BindView(R.id.camera_view)
     CameraRenderer cameraRenderer;
@@ -93,7 +94,16 @@ public class ShootingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Récupération des paramètres
+        int photoNumber = getIntent().getIntExtra(EXTRA_PHOTO_NUMBER, 0);
+
+        // Création du viewModel
         viewModel = ViewModelProviders.of(this).get(ShootingActivityViewModel.class);
+
+        // On dit au viewModel combien de photo nous avons déjà prise
+        viewModel.setPhotoNumber(photoNumber);
+
         setContentView(R.layout.activity_shooting);
         ButterKnife.bind(this);
         initFotoapparat();
