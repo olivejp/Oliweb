@@ -25,6 +25,7 @@ import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchRequest;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
@@ -59,7 +60,7 @@ public class SearchEngine {
     private Observable<Long> obsDelay;
     private DatabaseReference newRequestRef;
     private DatabaseReference requestReference;
-    private GenericTypeIndicator<ElasticsearchResult<AnnonceFirebase>> genericClassDetail;
+    private GenericTypeIndicator<ElasticsearchHitsResult<AnnonceFirebase>> genericClassDetail;
 
     @Inject
     public SearchEngine(FirebaseUtilityService utilityService,
@@ -70,7 +71,7 @@ public class SearchEngine {
         this.androidScheduler = androidScheduler;
         this.gson = new Gson();
         this.obsDelay = Observable.timer(30, TimeUnit.SECONDS);
-        this.genericClassDetail = new GenericTypeIndicator<ElasticsearchResult<AnnonceFirebase>>() {
+        this.genericClassDetail = new GenericTypeIndicator<ElasticsearchHitsResult<AnnonceFirebase>>() {
         };
         this.requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
     }
@@ -98,7 +99,7 @@ public class SearchEngine {
             builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
         }
         if (libellesCategorie != null) {
-            builder.setCategorie(libellesCategorie);
+            builder.setListCategories(libellesCategorie);
         }
         if (lowestPrice >= 0 && highestPrice > 0) {
             builder.setRangePrice(lowestPrice, highestPrice);
@@ -127,7 +128,7 @@ public class SearchEngine {
                 })
                 .subscribe();
         newRequestRef = requestReference.push();
-        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
+        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
         newRequestRef.addValueEventListener(getValueEventListener(listener, listAnnonce, delay));
     }
 
@@ -142,17 +143,18 @@ public class SearchEngine {
                 } else {
                     if (dataSnapshot.child(RESULTS).exists()) {
                         DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
-                        for (DataSnapshot child : snapshotResults.getChildren()) {
-                            ElasticsearchResult<AnnonceFirebase> elasticsearchResult = child.getValue(genericClassDetail);
-                            if (elasticsearchResult != null) {
-                                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
+                        ElasticsearchHitsResult<AnnonceFirebase> elasticsearchResult = snapshotResults.getValue(genericClassDetail);
+                        if (elasticsearchResult != null && elasticsearchResult.getHits() != null && !elasticsearchResult.getHits().isEmpty()) {
+                            for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchResult.getHits()) {
+                                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
                                 listAnnonce.add(annonceFull);
                             }
                         }
-                        newRequestRef.removeEventListener(this);
-                        newRequestRef.removeValue();
-                        listener.onFinishSearch(true, listAnnonce, null);
+
                     }
+                    newRequestRef.removeEventListener(this);
+                    newRequestRef.removeValue();
+                    listener.onFinishSearch(true, listAnnonce, null);
                 }
                 delay.dispose();
             }

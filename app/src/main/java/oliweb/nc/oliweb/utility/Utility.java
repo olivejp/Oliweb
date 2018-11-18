@@ -303,9 +303,9 @@ public class Utility {
 
         int spanCount;
         if (getScreenOrientation(context) == 1) {
-            spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER);
+            spanCount = (int) firebaseRemoteConfig.getLong(Constants.REMOTE_COLUMN_NUMBER);
         } else {
-            spanCount = (int) firebaseRemoteConfig.getLong(Constants.COLUMN_NUMBER_LANDSCAPE);
+            spanCount = (int) firebaseRemoteConfig.getLong(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE);
         }
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(context, spanCount);

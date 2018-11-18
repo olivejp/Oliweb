@@ -182,7 +182,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
             builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
         }
         if (libellesCategorie != null) {
-            builder.setCategorie(libellesCategorie);
+            builder.setListCategories(libellesCategorie);
         }
         if (lowestPrice >= 0 && highestPrice > 0) {
             builder.setRangePrice(lowestPrice, highestPrice);
@@ -201,7 +201,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
                 })
                 .doOnSuccess(timestamp -> {
                     newRequestRef = requestReference.push();
-                    newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson));
+                    newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
                     newRequestRef.addValueEventListener(requestValueListener);
                     delayBeforeDeleteRequest();
                 })

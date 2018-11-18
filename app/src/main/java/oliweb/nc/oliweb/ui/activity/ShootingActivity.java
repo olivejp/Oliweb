@@ -3,13 +3,16 @@ package oliweb.nc.oliweb.ui.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -114,7 +117,7 @@ public class ShootingActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.menu_shooting_save) {
             Intent resultIntent = new Intent();
-            resultIntent.putParcelableArrayListExtra(RESULT_DATA_LIST_PAIR, viewModel.getListPairs());
+            resultIntent.putParcelableArrayListExtra(RESULT_DATA_LIST_PAIR, (ArrayList<? extends Parcelable>) viewModel.getListPairs());
             setResult(RESULT_OK, resultIntent);
             finish();
             return true;
@@ -172,13 +175,17 @@ public class ShootingActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab_shoot)
     public void photoShoot(View v) {
-        // Prise de la photo
-        PhotoResult photoResult = fotoapparat.takePicture();
+        if (viewModel.isAbleToAddNewPicture()) {
+            // Prise de la photo
+            PhotoResult photoResult = fotoapparat.takePicture();
 
-        // Recherche d'un nom de fichier
-        Pair<Uri, File> pair = viewModel.generateNewPair_UriFile();
+            // Recherche d'un nom de fichier
+            Pair<Uri, File> pair = viewModel.generateNewPairUriFile();
 
-        // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
-        photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
+            // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
+            photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
+        } else {
+            Toast.makeText(this, "Nombre maximal (" + String.valueOf(viewModel.getNbMaxPicures()) + ") de photo atteint", Toast.LENGTH_LONG).show();
+        }
     }
 }

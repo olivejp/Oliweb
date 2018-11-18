@@ -78,6 +78,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
+    private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
 
 
     @BindView(R.id.swipeRefreshLayout)
@@ -272,6 +273,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             sortSelected = savedInstanceState.getInt(SAVE_SORT);
             directionSelected = savedInstanceState.getInt(SAVE_DIRECTION);
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
+            categorieSelected = savedInstanceState.getParcelable(SAVE_CATEGORY_SELECTED);
         }
 
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
@@ -290,7 +292,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         // Dès que la catégorie sélectionnée aura changé, je vais relancer une recherche...
         viewModel.getCategorySelected().observe(appCompatActivity, categorieEntity -> {
-            if (categorieEntity != null) {
+            if (categorieEntity != null && (categorieSelected == null || !categorieEntity.getName().equals(categorieSelected.getName()))) {
                 categorieSelected = categorieEntity;
                 makeNewSearch();
             }
@@ -365,6 +367,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putInt(SAVE_SORT, sortSelected);
         outState.putInt(SAVE_DIRECTION, directionSelected);
         outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
+        outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
     }
 
     @Override
@@ -401,12 +404,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     break;
                 case 2:
                     sortSelected = SORT_DATE;
-                    directionSelected = ASC;
+                    directionSelected = DESC;
                     break;
                 case 3:
                 default:
                     sortSelected = SORT_DATE;
-                    directionSelected = DESC;
+                    directionSelected = ASC;
                     break;
             }
             makeNewSearch();
@@ -485,7 +488,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
         LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
         if (loadingDialogFragment1 != null) {
-            loadingDialogFragment1.dismiss();
+            loadingDialogFragment1.dismissAllowingStateLoss();
         }
     }
 }

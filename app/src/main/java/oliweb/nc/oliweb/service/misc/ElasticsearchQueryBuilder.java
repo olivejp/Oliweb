@@ -52,7 +52,6 @@ public class ElasticsearchQueryBuilder {
         return this;
     }
 
-
     /**
      * "multi_match":   {
      * "query":"query",
@@ -101,7 +100,7 @@ public class ElasticsearchQueryBuilder {
      * @param libelleCategorie
      * @return
      */
-    public ElasticsearchQueryBuilder setCategorie(List<String> libelleCategorie) {
+    public ElasticsearchQueryBuilder setListCategories(List<String> libelleCategorie) {
         JsonArray must = initMustFromQuery();
 
         JsonArray should = new JsonArray();

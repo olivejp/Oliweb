@@ -326,7 +326,7 @@ public class MediaUtility {
             return false;
         }
 
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, safeLongToInt(remoteConfig.getLong(Constants.IMAGE_RESOLUTION_RESIZE)));
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE)));
         if (bitmapDst == null) {
             Log.e(TAG, "Le retaillage de l'image a échoué.");
             return false;

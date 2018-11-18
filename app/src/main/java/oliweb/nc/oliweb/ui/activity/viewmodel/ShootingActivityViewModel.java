@@ -4,6 +4,8 @@ import android.app.Application;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,8 @@ import androidx.lifecycle.MutableLiveData;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
+
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 /**
  * Created by orlanth23 on 12/11/2018.
@@ -38,12 +42,22 @@ public class ShootingActivityViewModel extends AndroidViewModel {
     private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
     private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
     private MutableLiveData<AtomicBoolean> liveFlashIsOn = new MutableLiveData<>();
-    private MutableLiveData<AtomicBoolean> liveSwitchIsOn = new MutableLiveData<>();
+    private Long nbMaxPictures;
 
     public ShootingActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
         externalStorage = SharedPreferencesHelper.getInstance(application).getUseExternalStorage();
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        nbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
+    }
+
+    public Long getNbMaxPicures(){
+        return nbMaxPictures;
+    }
+
+    public boolean isAbleToAddNewPicture() {
+        return listPairFileUri.size() < nbMaxPictures;
     }
 
     public LiveData<AtomicBoolean> getLiveFlashIsOn() {
@@ -67,10 +81,6 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         this.switchIsOn = switchIsOn;
     }
 
-    public LiveData<AtomicBoolean> getLiveSwitchIsOn() {
-        return liveSwitchIsOn;
-    }
-
     public MediaUtility getMediaUtility() {
         return mediaUtility;
     }
@@ -91,7 +101,7 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         liveListPairFileUri.postValue(listPairFileUri);
     }
 
-    public ArrayList<Uri> getListPairs() {
+    public List<Uri> getListPairs() {
         ArrayList<Uri> list = new ArrayList<>();
         for (Pair<Uri, File> pair : listPairFileUri) {
             list.add(pair.first);
@@ -99,12 +109,12 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         return list;
     }
 
-    public Pair<Uri, File> generateNewPair_UriFile() {
+    public Pair<Uri, File> generateNewPairUriFile() {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair;
         } else {
-            Log.e(TAG, "generateNewPair_UriFile() : MediaUtility a renvoyé une pair null");
+            Log.e(TAG, "generateNewPairUriFile() : MediaUtility a renvoyé une pair null");
             return null;
         }
     }

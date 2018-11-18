@@ -70,9 +70,10 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.utility.Constants.DEFAULT_NUMBER_PICTURES;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
-import static oliweb.nc.oliweb.utility.Constants.MAX_IMG_PIXEL_SIZE;
+import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -204,9 +205,10 @@ public class MainActivity extends AppCompatActivity
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put(Constants.COLUMN_NUMBER, 2);
-        defaults.put(Constants.COLUMN_NUMBER_LANDSCAPE, 2);
-        defaults.put(Constants.IMAGE_RESOLUTION_RESIZE, MAX_IMG_PIXEL_SIZE);
+        defaults.put(Constants.REMOTE_COLUMN_NUMBER, 2);
+        defaults.put(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE, 2);
+        defaults.put(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE, DEFAULT_MAX_IMG_PIXEL_SIZE);
+        defaults.put(Constants.REMOTE_NUMBER_PICTURES, DEFAULT_NUMBER_PICTURES);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
