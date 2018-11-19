@@ -25,6 +25,8 @@
             android:id="@+id/frame_category_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
             tools:layout_height="50dp" />
     </com.google.android.material.appbar.AppBarLayout>
 
