@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.service.search;
 
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseException;
@@ -11,10 +12,8 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -25,12 +24,8 @@ import androidx.annotation.NonNull;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
-import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchRequest;
-import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
-import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
@@ -62,7 +57,7 @@ public class SearchEngine {
     private Observable<Long> obsDelay;
     private DatabaseReference newRequestRef;
     private DatabaseReference requestReference;
-    private GenericTypeIndicator<ElasticsearchHitsResult<AnnonceFirebase>> genericClassDetail;
+    private GenericTypeIndicator<ElasticsearchHitsResult> genericClassDetail;
 
     @Inject
     public SearchEngine(FirebaseUtilityService utilityService,
@@ -73,7 +68,7 @@ public class SearchEngine {
         this.androidScheduler = androidScheduler;
         this.gson = new Gson();
         this.obsDelay = Observable.timer(30, TimeUnit.SECONDS);
-        this.genericClassDetail = new GenericTypeIndicator<ElasticsearchHitsResult<AnnonceFirebase>>() {
+        this.genericClassDetail = new GenericTypeIndicator<ElasticsearchHitsResult>() {
         };
         this.requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
     }
@@ -91,8 +86,6 @@ public class SearchEngine {
 
         // Condition de garde, si pas de listener alors inutile de faire tourner la requête
         if (listener == null) return;
-
-        List<AnnonceFull> listAnnonce = new ArrayList<>();
 
         listener.onBeginSearch();
 
@@ -118,11 +111,11 @@ public class SearchEngine {
                     Log.e(TAG, throwable.getLocalizedMessage(), throwable);
                     listener.onFinishSearch(false, null, throwable.getLocalizedMessage());
                 })
-                .doOnSuccess(timestamp -> doOnSuccess(listener, listAnnonce, requestJson, timestamp))
+                .doOnSuccess(timestamp -> doOnSuccess(listener, requestJson, timestamp))
                 .subscribe();
     }
 
-    private void doOnSuccess(SearchListener listener, List<AnnonceFull> listAnnonce, String requestJson, Long timestamp) {
+    private void doOnSuccess(SearchListener listener, String requestJson, Long timestamp) {
         Disposable delay = obsDelay.observeOn(androidScheduler)
                 .doOnNext(aLong -> {
                     newRequestRef.removeValue();
@@ -131,35 +124,30 @@ public class SearchEngine {
                 .subscribe();
         newRequestRef = requestReference.push();
         newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
-        newRequestRef.addValueEventListener(getValueEventListener(listener, listAnnonce, delay));
+        newRequestRef.addValueEventListener(getValueEventListener(listener, delay));
     }
 
-    private ValueEventListener getValueEventListener(SearchListener listener, List<AnnonceFull> listAnnonce, Disposable delay) {
+    private ValueEventListener getValueEventListener(SearchListener listener, Disposable delay) {
         return new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child(NO_RESULTS).exists()) {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
-                    listener.onFinishSearch(true, listAnnonce, null);
+                    listener.onFinishSearch(true, null, null);
                     delay.dispose();
                 } else if (dataSnapshot.child(RESULTS).exists()) {
-                    // TODO finir de tester cette méthode après avoir corrigé la CloudFunction
+                    ElasticsearchHitsResult elasticsearchResult = null;
+                    DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
                     try {
-                        DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
-                        ElasticsearchHitsResult<AnnonceFirebase> elasticsearchResult = snapshotResults.getValue(genericClassDetail);
-                        if (elasticsearchResult != null && elasticsearchResult.getHits() != null && !elasticsearchResult.getHits().isEmpty()) {
-                            for (Map.Entry<Integer, ElasticsearchResult<AnnonceFirebase>> result : elasticsearchResult.getHits().entrySet()) {
-                                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.getValue().get_source());
-                                listAnnonce.add(annonceFull);
-                            }
-                        }
+                        elasticsearchResult = snapshotResults.getValue(genericClassDetail);
                     } catch (DatabaseException e) {
+                        Crashlytics.log(1, TAG, e.getLocalizedMessage());
                         Log.e(TAG, e.getLocalizedMessage(), e);
                     } finally {
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                        listener.onFinishSearch(true, listAnnonce, null);
+                        listener.onFinishSearch(true, elasticsearchResult, null);
                         delay.dispose();
                     }
                 }
@@ -202,6 +190,6 @@ public class SearchEngine {
     public interface SearchListener {
         void onBeginSearch();
 
-        void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch, String messageError);
+        void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError);
     }
 }

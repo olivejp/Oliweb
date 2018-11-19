@@ -40,9 +40,13 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
@@ -79,6 +83,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
     private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
+    private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
 
 
     @BindView(R.id.swipeRefreshLayout)
@@ -110,6 +115,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int pagingSize = 20;
     private CategorieEntity categorieSelected;
     private int from = 0;
+    private Long totalLoaded = 0L;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -274,6 +280,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             directionSelected = savedInstanceState.getInt(SAVE_DIRECTION);
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
             categorieSelected = savedInstanceState.getParcelable(SAVE_CATEGORY_SELECTED);
+            totalLoaded = savedInstanceState.getLong(SAVE_TOTAL_LOADED);
         }
 
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
@@ -301,6 +308,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     private void makeNewSearch() {
         from = 0;
+        totalLoaded = 0L;
         annoncePhotosList.clear();
         loadingDialogFragment = new LoadingDialogFragment();
         loadingDialogFragment.setText("Recherche en cours");
@@ -368,6 +376,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putInt(SAVE_DIRECTION, directionSelected);
         outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
         outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
+        outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
     }
 
     @Override
@@ -384,8 +393,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
-                from = annoncePhotosList.size() + 1;
-                loadMoreDatas();
+                // Tant que la liste en cours est plus petite que le nombre total
+                if (annoncePhotosList.size() < totalLoaded) {
+                    from = annoncePhotosList.size() + 1;
+                    loadMoreDatas();
+                }
             }
         };
         recyclerView.addOnScrollListener(scrollListener);
@@ -450,6 +462,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     };
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
+        if (listAnnonces == null || listAnnonces.isEmpty()) return;
         for (AnnonceFull annonceFull : listAnnonces) {
             if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
                 annonceFull.getAnnonce().setFavorite(1);
@@ -476,9 +489,19 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     @Override
-    public void onFinishSearch(boolean goodFinish, List<AnnonceFull> listResultSearch, String messageError) {
+    public void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError) {
         if (goodFinish) {
-            updateListWithFavorite((ArrayList<AnnonceFull>) listResultSearch, listUidFavorites);
+            ArrayList<AnnonceFull> listResultSearch = null;
+            if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
+                listResultSearch = new ArrayList<>();
+                totalLoaded = elasticsearchHitsResult.getTotal();
+                for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchHitsResult.getHits()) {
+                    AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
+                    listResultSearch.add(annonceFull);
+                }
+            }
+
+            updateListWithFavorite(listResultSearch, listUidFavorites);
             annoncePhotosList.addAll(listResultSearch);
             annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
             annonceBeautyAdapter.notifyDataSetChanged();

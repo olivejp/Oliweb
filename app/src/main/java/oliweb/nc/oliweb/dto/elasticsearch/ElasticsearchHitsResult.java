@@ -1,15 +1,17 @@
 package oliweb.nc.oliweb.dto.elasticsearch;
 
-import java.util.Map;
+import java.util.List;
+
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 
 /**
  * Created by orlanth23 on 18/11/2018.
  */
 
-public class ElasticsearchHitsResult<T> {
+public class ElasticsearchHitsResult {
     private Long total;
     private Long max_score;
-    private Map<Integer, ElasticsearchResult<T>> hits;
+    private List<ElasticsearchResult<AnnonceFirebase>> hits;
 
     public Long getTotal() {
         return total;
@@ -27,11 +29,11 @@ public class ElasticsearchHitsResult<T> {
         this.max_score = max_score;
     }
 
-    public Map<Integer, ElasticsearchResult<T>> getHits() {
+    public List<ElasticsearchResult<AnnonceFirebase>> getHits() {
         return hits;
     }
 
-    public void setHits(Map<Integer, ElasticsearchResult<T>> hits) {
+    public void setHits(List<ElasticsearchResult<AnnonceFirebase>> hits) {
         this.hits = hits;
     }
 }
