@@ -19,7 +19,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import io.reactivex.Scheduler;
-import io.reactivex.Single;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -134,8 +133,8 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveCategorySelected;
     }
 
-    public Single<List<CategorieEntity>> getListCategory() {
-        return categorieRepository.getListCategorie().subscribeOn(processScheduler).observeOn(androidScheduler);
+    public LiveData<List<CategorieEntity>> getLiveListCategory() {
+        return categorieRepository.getLiveCategorie();
     }
 
     public MediaUtility getMediaUtility() {

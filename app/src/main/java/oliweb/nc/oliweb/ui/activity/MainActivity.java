@@ -286,21 +286,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void createListCategoryFragment() {
-        viewModel.getListCategory()
-                .doOnSuccess(categorieEntities -> {
-                    // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
-                    CategorieEntity cat = new CategorieEntity();
-                    cat.setIdCategorie(ID_ALL_CATEGORY);
-                    cat.setName("Toutes");
-                    categorieEntities.add(0, cat);
+        viewModel.getLiveListCategory().observe(this, categorieEntities -> {
+            if (categorieEntities != null && !categorieEntities.isEmpty()) {
+                // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
+                CategorieEntity cat = new CategorieEntity();
+                cat.setIdCategorie(ID_ALL_CATEGORY);
+                cat.setName("Toutes");
+                categorieEntities.add(0, cat);
 
-                    viewModel.setCategorySelected(cat);
+                viewModel.setCategorySelected(cat);
 
-                    ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
-                    FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
-                    transactionListeCategorie.commit();
-                })
-                .subscribe();
+                ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
+                FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
+                transactionListeCategorie.commit();
+            }
+        });
     }
 
     @Override
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity
             callMyAnnoncesActivity();
         } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
-        } else if (id == R.id.nav_suggestion){
+        } else if (id == R.id.nav_suggestion) {
             callSuggestionActivity();
         }
 
