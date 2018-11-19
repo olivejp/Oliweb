@@ -11,33 +11,21 @@
         android:id="@+id/appbarlayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:elevation="0dp"
-        app:elevation="0dp">
+        android:background="@android:color/white">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_app_main"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="5dp"
-            app:cardElevation="3dp"
-            app:cardUseCompatPadding="true"
-            app:layout_scrollFlags="scroll|enterAlways">
+            android:theme="@style/ToolbarStyle"
+            app:layout_scrollFlags="scroll|enterAlways"
+            tools:background="@android:color/holo_blue_dark" />
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:theme="@style/ToolbarStyle"
-                tools:background="@android:color/holo_blue_dark" />
-        </androidx.cardview.widget.CardView>
         <FrameLayout
             android:id="@+id/frame_category_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:layout_height="50dp"/>
+            tools:layout_height="50dp" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_main" />

@@ -35,7 +35,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ShareCompat;
 import androidx.core.view.GravityCompat;
@@ -70,10 +69,10 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Constants.DEFAULT_NUMBER_PICTURES;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
-import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -94,9 +93,6 @@ public class MainActivity extends AppCompatActivity
 
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
-
-    @BindView(R.id.card_app_main)
-    CardView cardView;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -245,7 +241,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void initToolbar() {
         appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
-                cardView.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
+                toolbar.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
         );
     }
 
