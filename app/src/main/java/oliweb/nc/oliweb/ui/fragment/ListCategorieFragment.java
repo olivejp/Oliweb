@@ -32,6 +32,7 @@ public class ListCategorieFragment extends Fragment {
     private List<CategorieEntity> categorieEntities;
     private AppCompatActivity appCompatActivity;
     private MainActivityViewModel viewModel;
+    private CategorieMiniAdapter categorieMiniAdapter;
 
     @BindView(R.id.recycler_by_category)
     RecyclerView recyclerView;
@@ -39,6 +40,7 @@ public class ListCategorieFragment extends Fragment {
     private View.OnClickListener onClickListener = (View v) -> {
         CategorieEntity categorieEntity = (CategorieEntity) v.getTag();
         viewModel.setCategorySelected(categorieEntity);
+        categorieMiniAdapter.setCategorieSelected(categorieEntity.getId());
     };
 
     public ListCategorieFragment() {
@@ -70,7 +72,7 @@ public class ListCategorieFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         // Création d'un adapter pour les annonces
-        CategorieMiniAdapter categorieMiniAdapter = new CategorieMiniAdapter(onClickListener);
+        categorieMiniAdapter = new CategorieMiniAdapter(onClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);

@@ -239,6 +239,21 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         );
     }
 
+    /**
+     * Return the actual valid photo number in the annonce
+     *
+     * @return
+     */
+    public int getActualNbrPhotos() {
+        int i = 0;
+        for (PhotoEntity photoEntity : this.currentAnnonce.getPhotos()) {
+            if (!Utility.allStatusToAvoid().contains(photoEntity.getStatut().getValue())) {
+                i++;
+            }
+        }
+        return i;
+    }
+
     public void updatePhotos() {
         this.liveListPhoto.postValue(this.currentAnnonce.getPhotos());
     }

@@ -1,6 +1,6 @@
 package oliweb.nc.oliweb.dto.elasticsearch;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by orlanth23 on 18/11/2018.
@@ -9,7 +9,7 @@ import java.util.List;
 public class ElasticsearchHitsResult<T> {
     private Long total;
     private Long max_score;
-    private List<ElasticsearchResult<T>> hits;
+    private Map<Integer, ElasticsearchResult<T>> hits;
 
     public Long getTotal() {
         return total;
@@ -27,11 +27,11 @@ public class ElasticsearchHitsResult<T> {
         this.max_score = max_score;
     }
 
-    public List<ElasticsearchResult<T>> getHits() {
+    public Map<Integer, ElasticsearchResult<T>> getHits() {
         return hits;
     }
 
-    public void setHits(List<ElasticsearchResult<T>> hits) {
+    public void setHits(Map<Integer, ElasticsearchResult<T>> hits) {
         this.hits = hits;
     }
 }

@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -51,8 +53,9 @@ import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.utility.Constants;
+import oliweb.nc.oliweb.utility.Utility;
 
-import static oliweb.nc.oliweb.ui.activity.ShootingActivity.EXTRA_PHOTO_NUMBER;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
@@ -82,6 +85,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidUser;
     private String uidAnnonce;
     private String mode;
+    private Long remoteNbMaxPictures;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
@@ -174,6 +178,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(postPhotoAdapter);
+
+        // Récupération du nombre maximale de photo autorisée
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
@@ -318,12 +326,17 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (requestCode == DIALOG_GALLERY_IMAGE) {
             // Insertion multiple
             if (data.getClipData() != null) {
-                List<Uri> listUri = new ArrayList<>();
+                // Vérification qu'on ajoute pas plus de photo que la quota autorisé
+                long nbPhotoSelected = data.getClipData().getItemCount();
+                if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
+                    nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
+                }
 
                 // Parcourt de toutes les items reçus et enregistrement dans une liste
+                List<Uri> listUri = new ArrayList<>();
                 int i = -1;
                 ClipData.Item item;
-                while (i++ < data.getClipData().getItemCount() - 1) {
+                while (i++ < nbPhotoSelected - 1) {
                     item = data.getClipData().getItemAt(i);
                     listUri.add(item.getUri());
                 }
@@ -519,7 +532,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void displayPhotos(List<PhotoEntity> photoEntities) {
         // On ne transmet pas les photos avec un statut "à éviter"
-        List<PhotoEntity> nouvelleListe = viewModel.removePhotoWithForbiddenStatus(photoEntities);
+        ArrayList<PhotoEntity> nouvelleListe = new ArrayList<>();
+        for (PhotoEntity photo : photoEntities) {
+            if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
+                nouvelleListe.add(photo);
+            }
+        }
         recyclerView.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
         textPhotos.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
         postPhotoAdapter.setListPhotoEntity(nouvelleListe);
@@ -565,7 +583,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ShootingActivity.class);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        intent.putExtra(EXTRA_PHOTO_NUMBER, viewModel.getPhotoNumber());
+        intent.putExtra(ShootingActivity.EXTRA_NBR_PHOTO, remoteNbMaxPictures - viewModel.getActualNbrPhotos());
         startActivityForResult(intent, REQUEST_SHOOTING_CODE);
     }
 

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
@@ -13,6 +14,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -140,23 +142,27 @@ public class SearchEngine {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
                     listener.onFinishSearch(true, listAnnonce, null);
-                } else {
-                    if (dataSnapshot.child(RESULTS).exists()) {
+                    delay.dispose();
+                } else if (dataSnapshot.child(RESULTS).exists()) {
+                    // TODO finir de tester cette méthode après avoir corrigé la CloudFunction
+                    try {
                         DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
                         ElasticsearchHitsResult<AnnonceFirebase> elasticsearchResult = snapshotResults.getValue(genericClassDetail);
                         if (elasticsearchResult != null && elasticsearchResult.getHits() != null && !elasticsearchResult.getHits().isEmpty()) {
-                            for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchResult.getHits()) {
-                                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
+                            for (Map.Entry<Integer, ElasticsearchResult<AnnonceFirebase>> result : elasticsearchResult.getHits().entrySet()) {
+                                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.getValue().get_source());
                                 listAnnonce.add(annonceFull);
                             }
                         }
-
+                    } catch (DatabaseException e) {
+                        Log.e(TAG, e.getLocalizedMessage(), e);
+                    } finally {
+                        newRequestRef.removeEventListener(this);
+                        newRequestRef.removeValue();
+                        listener.onFinishSearch(true, listAnnonce, null);
+                        delay.dispose();
                     }
-                    newRequestRef.removeEventListener(this);
-                    newRequestRef.removeValue();
-                    listener.onFinishSearch(true, listAnnonce, null);
                 }
-                delay.dispose();
             }
 
             @Override

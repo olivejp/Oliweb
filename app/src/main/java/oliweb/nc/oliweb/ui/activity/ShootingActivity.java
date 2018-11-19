@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,12 +45,13 @@ import static io.fotoapparat.selector.FlashSelectorsKt.off;
 import static io.fotoapparat.selector.FlashSelectorsKt.on;
 import static io.fotoapparat.selector.LensPositionSelectorsKt.back;
 import static io.fotoapparat.selector.LensPositionSelectorsKt.front;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 public class ShootingActivity extends AppCompatActivity {
 
     private static final String TAG = ShootingActivity.class.getCanonicalName();
     public static final String RESULT_DATA_LIST_PAIR = "RESULT_DATA_LIST_PAIR";
-    public static final String EXTRA_PHOTO_NUMBER = "EXTRA_PHOTO_NUMBER";
+    public static final String EXTRA_NBR_PHOTO = "EXTRA_NBR_PHOTO";
 
     @BindView(R.id.camera_view)
     CameraRenderer cameraRenderer;
@@ -63,6 +65,7 @@ public class ShootingActivity extends AppCompatActivity {
     private Fotoapparat fotoapparat;
     private ShootingActivityViewModel viewModel;
     private ShootingAdapter shootingAdapter;
+    private Long remoteNbrMaxPictures;
 
     private View.OnLongClickListener onLongClickPhotoListener = v -> {
         if (v.getTag() != null) {
@@ -95,19 +98,21 @@ public class ShootingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Récupération des paramètres
-        int photoNumber = getIntent().getIntExtra(EXTRA_PHOTO_NUMBER, 0);
+        // Récupère le nombre de photos que je peux prendre
+        Long nbrPhotoPlaceAvailable = getIntent().getLongExtra(EXTRA_NBR_PHOTO, 0);
 
-        // Création du viewModel
-        viewModel = ViewModelProviders.of(this).get(ShootingActivityViewModel.class);
-
-        // On dit au viewModel combien de photo nous avons déjà prise
-        viewModel.setPhotoNumber(photoNumber);
+        // Récupération du nombre maximale de photo autorisée
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        remoteNbrMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
         setContentView(R.layout.activity_shooting);
         ButterKnife.bind(this);
+
         initFotoapparat();
         initRecylcerView();
+
+        viewModel = ViewModelProviders.of(this).get(ShootingActivityViewModel.class);
+        viewModel.setNbrShootAvailable(nbrPhotoPlaceAvailable);
         viewModel.getLiveListPairFileUri().observe(this, this::setAdapterListPairs);
         viewModel.getLiveFlashIsOn().observe(this, this::changeFlashIcon);
     }
@@ -134,6 +139,22 @@ public class ShootingActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @OnClick(R.id.fab_shoot)
+    public void photoShoot(View v) {
+        if (viewModel.isAbleToAddNewPicture()) {
+            // Prise de la photo
+            PhotoResult photoResult = fotoapparat.takePicture();
+
+            // Recherche d'un nom de fichier
+            Pair<Uri, File> pair = viewModel.generateNewPairUriFile();
+
+            // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
+            photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
+        } else {
+            Toast.makeText(this, "Nombre maximal (" + remoteNbrMaxPictures + ") de photo atteint", Toast.LENGTH_LONG).show();
+        }
     }
 
     @OnClick(R.id.fab_switch)
@@ -181,21 +202,5 @@ public class ShootingActivity extends AppCompatActivity {
                         LoggersKt.fileLogger(this)    // ... and to file
                 ))
                 .build();
-    }
-
-    @OnClick(R.id.fab_shoot)
-    public void photoShoot(View v) {
-        if (viewModel.isAbleToAddNewPicture()) {
-            // Prise de la photo
-            PhotoResult photoResult = fotoapparat.takePicture();
-
-            // Recherche d'un nom de fichier
-            Pair<Uri, File> pair = viewModel.generateNewPairUriFile();
-
-            // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
-            photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
-        } else {
-            Toast.makeText(this, "Nombre maximal (" + String.valueOf(viewModel.getNbMaxPicures()) + ") de photo atteint", Toast.LENGTH_LONG).show();
-        }
     }
 }

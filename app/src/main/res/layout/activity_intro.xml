@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:background="@android:color/white"
     android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/clothing_leather_wooden"/>
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
@@ -36,7 +41,7 @@
         android:background="@color/fui_transparent"
         android:backgroundTint="@color/fui_transparent"
         android:text="@string/next"
-        android:textColor="@android:color/darker_gray" />
+        android:textColor="@android:color/white" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_skip"
@@ -49,5 +54,5 @@
         android:background="@color/fui_transparent"
         android:backgroundTint="@color/fui_transparent"
         android:text="@string/skip"
-        android:textColor="@android:color/darker_gray" />
+        android:textColor="@android:color/white" />
 </RelativeLayout>
