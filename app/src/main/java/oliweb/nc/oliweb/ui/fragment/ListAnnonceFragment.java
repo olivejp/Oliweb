@@ -14,11 +14,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
@@ -56,9 +51,6 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
-import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
-import oliweb.nc.oliweb.ui.task.TaskListener;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -70,7 +62,7 @@ import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, SearchEngine.SearchListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
@@ -103,7 +95,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
     private ArrayList<AnnonceFull> annoncePhotosList = new ArrayList<>();
-    private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sortSelected = SORT_DATE;
     private int directionSelected;
     private ActionBar actionBar;
@@ -299,7 +290,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         // Dès que la catégorie sélectionnée aura changé, je vais relancer une recherche...
         viewModel.getCategorySelected().observe(appCompatActivity, categorieEntity -> {
-            if (categorieEntity != null && (categorieSelected == null || !categorieEntity.getName().equals(categorieSelected.getName()))) {
+            if (categorieEntity != null && (categorieSelected == null || !categorieEntity.getId().equals(categorieSelected.getId()))) {
                 categorieSelected = categorieEntity;
                 makeNewSearch();
             }
@@ -334,7 +325,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         if (savedInstanceState != null) {
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
-            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
             updateListAdapter();
         }
 
@@ -364,7 +354,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         GlideApp.get(appCompatActivity).clearMemory();
         recyclerView.setAdapter(null);
         recyclerView.removeOnScrollListener(scrollListener);
-        annoncesReference.removeEventListener(loadSortListener);
         super.onDestroyView();
     }
 
@@ -433,7 +422,10 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
-        List<String> listCategorie = (categorieSelected != null) ? Collections.singletonList(categorieSelected.getName()) : Collections.emptyList();
+        List<String> listCategorie = Collections.emptyList();
+        if (categorieSelected != null && !categorieSelected.getId().equals(ID_ALL_CATEGORY)) {
+            listCategorie = Collections.singletonList(categorieSelected.getName());
+        }
         viewModel.getSearchEngine().search(listCategorie,
                 false,
                 0,
@@ -445,21 +437,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 directionSelected,
                 this);
     }
-
-    private ValueEventListener loadSortListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            if (dataSnapshot.getValue() != null) {
-                LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
-                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sortSelected, directionSelected));
-            }
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
         if (listAnnonces == null || listAnnonces.isEmpty()) return;
@@ -477,13 +454,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annonceBeautyAdapter.notifyDataSetChanged();
     }
 
-    private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
-        annoncePhotosList = listAnnoncePhotos;
-        annoncesReference.removeEventListener(loadSortListener);
-        updateListWithFavorite(annoncePhotosList, listUidFavorites);
-        updateListAdapter();
-    };
-
     @Override
     public void onBeginSearch() {
     }
@@ -491,9 +461,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError) {
         if (goodFinish) {
-            ArrayList<AnnonceFull> listResultSearch = null;
+            ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
             if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
-                listResultSearch = new ArrayList<>();
                 totalLoaded = elasticsearchHitsResult.getTotal();
                 for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchHitsResult.getHits()) {
                     AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());

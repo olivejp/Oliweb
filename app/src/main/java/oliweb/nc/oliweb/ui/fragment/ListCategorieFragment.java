@@ -28,6 +28,7 @@ public class ListCategorieFragment extends Fragment {
     private static final String TAG = ListCategorieFragment.class.getName();
 
     private static final String ARG_LIST_CATEGORY = "ARG_LIST_CATEGORY";
+    public static final Long ID_ALL_CATEGORY = -1L;
 
     private List<CategorieEntity> categorieEntities;
     private AppCompatActivity appCompatActivity;
@@ -40,7 +41,6 @@ public class ListCategorieFragment extends Fragment {
     private View.OnClickListener onClickListener = (View v) -> {
         CategorieEntity categorieEntity = (CategorieEntity) v.getTag();
         viewModel.setCategorySelected(categorieEntity);
-        categorieMiniAdapter.setCategorieSelected(categorieEntity.getId());
     };
 
     public ListCategorieFragment() {
@@ -64,6 +64,11 @@ public class ListCategorieFragment extends Fragment {
 
         // Récupération du viewModel
         viewModel = ViewModelProviders.of(appCompatActivity).get(MainActivityViewModel.class);
+        viewModel.getCategorySelected().observe(this, categorieEntity -> {
+            if (categorieEntity != null) {
+                categorieMiniAdapter.setCategorieSelected(categorieEntity.getId());
+            }
+        });
     }
 
     @Override
@@ -72,7 +77,7 @@ public class ListCategorieFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         // Création d'un adapter pour les annonces
-        categorieMiniAdapter = new CategorieMiniAdapter(onClickListener);
+        categorieMiniAdapter = new CategorieMiniAdapter(appCompatActivity, onClickListener);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(appCompatActivity);
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);

@@ -1,32 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical">
+    tools:layout_width="200dp">
+
+    <ImageView
+        android:id="@+id/image_background"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/clothing_leather_wooden"
+        app:layout_constraintBottom_toTopOf="@id/msgDialog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/imageDialog"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:padding="15dp"
-        android:background="@color/colorPrimaryDark"
         android:contentDescription="@string/app_name"
-        android:foregroundGravity="top"
-        tools:src="@drawable/ic_person_grey_900_48dp"/>
+        android:padding="15dp"
+        app:layout_constraintBottom_toBottomOf="@id/image_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/image_background"
+        tools:src="@drawable/ic_add_white_48dp" />
 
     <TextView
         android:id="@+id/msgDialog"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/imageDialog"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="20dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="20dp"
-        android:textColor="#000000"
+        android:padding="15dp"
         android:textAlignment="center"
-        android:textSize="16sp"
-        tools:text="Bonjour ceci est un super message super long. Qui devra totalement être accessible."/>
-</RelativeLayout>
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image_background"
+        tools:text="Bonjour ceci est un super message super long. Qui devra totalement être accessible." />
+</androidx.constraintlayout.widget.ConstraintLayout>

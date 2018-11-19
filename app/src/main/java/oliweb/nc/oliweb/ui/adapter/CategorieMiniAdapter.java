@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -28,10 +28,12 @@ public class CategorieMiniAdapter extends
     private List<CategorieEntity> categorieEntities;
     private View.OnClickListener onClickListener;
     private Long categorieIdSelected;
+    private AppCompatActivity context;
 
-    public CategorieMiniAdapter(View.OnClickListener onClickListener) {
+    public CategorieMiniAdapter(AppCompatActivity context, View.OnClickListener onClickListener) {
         this.categorieEntities = new ArrayList<>();
         this.onClickListener = onClickListener;
+        this.context = context;
     }
 
     @NonNull
@@ -64,7 +66,7 @@ public class CategorieMiniAdapter extends
         }
 
         viewHolderCategorieMini.textTitreAnnonce.setText(categorieEntity.getName());
-        viewHolderCategorieMini.cardView.setCardBackgroundColor((categorieEntity.getId().equals(categorieIdSelected)) ? Color.RED : Color.LTGRAY);
+        viewHolderCategorieMini.cardView.setCardBackgroundColor((categorieEntity.getId().equals(categorieIdSelected)) ? context.getResources().getColor(R.color.colorAccent) : context.getResources().getColor(R.color.colorPrimaryDark));
     }
 
     public void setCategorieEntities(final List<CategorieEntity> newListAnnonces) {

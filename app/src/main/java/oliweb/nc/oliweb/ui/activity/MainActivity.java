@@ -48,6 +48,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
@@ -69,6 +70,7 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
 import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Constants.DEFAULT_NUMBER_PICTURES;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
@@ -254,13 +256,7 @@ public class MainActivity extends AppCompatActivity
             listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CATEGORY);
         }
         if (listCategorieFragment == null) {
-            viewModel.getListCategory()
-                    .doOnSuccess(categorieEntities -> {
-                        ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
-                        FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
-                        transactionListeCategorie.commit();
-                    })
-                    .subscribe();
+            createListCategoryFragment();
         } else {
             FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, listCategorieFragment, TAG_LIST_CATEGORY);
             transactionListeCategorie.commit();
@@ -287,6 +283,24 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
             }
         }
+    }
+
+    private void createListCategoryFragment() {
+        viewModel.getListCategory()
+                .doOnSuccess(categorieEntities -> {
+                    // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
+                    CategorieEntity cat = new CategorieEntity();
+                    cat.setIdCategorie(ID_ALL_CATEGORY);
+                    cat.setName("Toutes");
+                    categorieEntities.add(0, cat);
+
+                    viewModel.setCategorySelected(cat);
+
+                    ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
+                    FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
+                    transactionListeCategorie.commit();
+                })
+                .subscribe();
     }
 
     @Override

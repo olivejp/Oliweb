@@ -120,11 +120,11 @@ public class MainActivityViewModel extends AndroidViewModel {
         ((App) application).getFirebaseServicesComponent().inject(this);
     }
 
-    public void setCategorySelected(CategorieEntity categorySelected) {
+    public void setCategorySelected(CategorieEntity category) {
         if (liveCategorySelected == null) {
             liveCategorySelected = new MutableLiveData<>();
         }
-        liveCategorySelected.postValue(categorySelected);
+        liveCategorySelected.postValue(category);
     }
 
     public LiveData<CategorieEntity> getCategorySelected() {
