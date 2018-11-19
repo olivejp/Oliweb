@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ public class CategorieMiniAdapter extends
 
     private List<CategorieEntity> categorieEntities;
     private View.OnClickListener onClickListener;
+    private Long categorieIdSelected;
 
     public CategorieMiniAdapter(View.OnClickListener onClickListener) {
         this.categorieEntities = new ArrayList<>();
@@ -62,10 +64,16 @@ public class CategorieMiniAdapter extends
         }
 
         viewHolderCategorieMini.textTitreAnnonce.setText(categorieEntity.getName());
+        viewHolderCategorieMini.cardView.setCardBackgroundColor((categorieEntity.getId().equals(categorieIdSelected)) ? Color.RED : Color.LTGRAY);
     }
 
     public void setCategorieEntities(final List<CategorieEntity> newListAnnonces) {
         this.categorieEntities = newListAnnonces;
+        notifyDataSetChanged();
+    }
+
+    public void setCategorieSelected(Long categorieIdSelected) {
+        this.categorieIdSelected = categorieIdSelected;
         notifyDataSetChanged();
     }
 
