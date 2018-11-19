@@ -107,6 +107,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private CategorieEntity categorieSelected;
     private int from = 0;
     private Long totalLoaded = 0L;
+    private boolean searchinProgress;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -298,13 +299,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void makeNewSearch() {
-        from = 0;
-        totalLoaded = 0L;
-        annoncePhotosList.clear();
-        loadingDialogFragment = new LoadingDialogFragment();
-        loadingDialogFragment.setText("Recherche en cours");
-        loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
-        loadMoreDatas();
+        if (!searchinProgress) {
+            from = 0;
+            totalLoaded = 0L;
+            annoncePhotosList.clear();
+            if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
+                loadingDialogFragment = new LoadingDialogFragment();
+                loadingDialogFragment.setText("Recherche en cours");
+                loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
+            }
+            loadMoreDatas();
+        }
     }
 
     @Override
@@ -456,10 +461,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     @Override
     public void onBeginSearch() {
+        searchinProgress = true;
     }
 
     @Override
     public void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError) {
+        searchinProgress = false;
         if (goodFinish) {
             ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
             if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
