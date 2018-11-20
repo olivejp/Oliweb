@@ -18,6 +18,7 @@ import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
@@ -110,24 +111,25 @@ public class SearchActivityViewModel extends AndroidViewModel {
 
     public void search(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
         updateLoadingStatus(true);
-        if (from == 0) {
-            listAnnonce.clear();
-        }
+        if (from == 0) listAnnonce.clear();
 
         searchEngine.searchMaybe(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction)
                 .subscribeOn(processScheduler).observeOn(processScheduler)
                 .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
-                .doOnSuccess(elasticsearchHitsResult -> {
-                    if (elasticsearchHitsResult != null) {
-                        for (ElasticsearchResult<AnnonceFirebase> elasticsearchResult : elasticsearchHitsResult.getHits()) {
-                            AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
-                            listAnnonce.add(annonceFull);
-                        }
-                        liveListAnnonce.postValue(listAnnonce);
-                    }
-                })
+                .doOnSuccess(this::doOnSuccess)
                 .doOnComplete(() -> updateLoadingStatus(false))
                 .subscribe();
+    }
+
+    private void doOnSuccess(ElasticsearchHitsResult elasticsearchHitsResult) {
+        if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
+            for (ElasticsearchResult<AnnonceFirebase> elasticsearchResult : elasticsearchHitsResult.getHits()) {
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
+                listAnnonce.add(annonceFull);
+            }
+            liveListAnnonce.postValue(listAnnonce);
+        }
+        updateLoadingStatus(false);
     }
 
     public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {
