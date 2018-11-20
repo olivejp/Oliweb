@@ -152,7 +152,7 @@ public class MainActivityViewModel extends AndroidViewModel {
         return observer -> observer.onChanged(new AtomicBoolean(false));
     }
 
-    public LiveData<Integer> sortingUpdated() {
+    public LiveData<Integer> getLiveSort() {
         if (sorting == null) {
             sorting = new MutableLiveData<>();
         }

@@ -76,7 +76,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
     private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
     private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
-
+    private static final String SAVE_ACTUAL_SORT = "SAVE_ACTUAL_SORT";
 
     @BindView(R.id.swipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -107,6 +107,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private CategorieEntity categorieSelected;
     private int from = 0;
     private Long totalLoaded = 0L;
+    private int actualSort;
     private boolean searchinProgress;
 
     /**
@@ -273,6 +274,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
             categorieSelected = savedInstanceState.getParcelable(SAVE_CATEGORY_SELECTED);
             totalLoaded = savedInstanceState.getLong(SAVE_TOTAL_LOADED);
+            actualSort = savedInstanceState.getInt(SAVE_ACTUAL_SORT);
         }
 
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
@@ -335,7 +337,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        viewModel.sortingUpdated().observe(appCompatActivity, this::changeSortAndUpdateList);
+        viewModel.getLiveSort().observe(appCompatActivity, this::changeSortAndUpdateList);
 
         viewModel.getIsNetworkAvailable().observe(appCompatActivity, atomicBoolean -> {
             if (atomicBoolean != null && !atomicBoolean.get()) {
@@ -371,6 +373,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
         outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
         outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
+        outState.putInt(SAVE_ACTUAL_SORT, actualSort);
     }
 
     @Override
@@ -398,7 +401,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void changeSortAndUpdateList(Integer newSort) {
-        if (newSort != null) {
+        if (newSort != null && newSort != actualSort) {
+            actualSort = newSort;
             switch (newSort) {
                 case 0:
                     sortSelected = SORT_PRICE;
