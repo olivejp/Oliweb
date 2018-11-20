@@ -47,7 +47,7 @@ import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
 /**
  * Created by 2761oli on 06/02/2018.
  */
-
+// TODO refaire ce viewmodel avec le SearchEngine.
 public class SearchActivityViewModel extends AndroidViewModel {
 
     private static final String TAG = SearchActivityViewModel.class.getName();

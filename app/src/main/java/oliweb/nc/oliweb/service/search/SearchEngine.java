@@ -21,6 +21,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import androidx.annotation.NonNull;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeEmitter;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
@@ -73,6 +75,7 @@ public class SearchEngine {
         this.requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
     }
 
+
     public void search(List<String> libellesCategorie,
                        boolean withPhotoOnly,
                        int lowestPrice,
@@ -89,19 +92,7 @@ public class SearchEngine {
 
         listener.onBeginSearch();
 
-        ElasticsearchQueryBuilder builder = initQueryBuilder(pagingSize, direction, from, tri);
-        if (query != null) {
-            builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
-        }
-        if (libellesCategorie != null) {
-            builder.setListCategories(libellesCategorie);
-        }
-        if (lowestPrice >= 0 && highestPrice > 0) {
-            builder.setRangePrice(lowestPrice, highestPrice);
-        }
-        if (withPhotoOnly) {
-            builder.setWithPhotoOnly();
-        }
+        ElasticsearchQueryBuilder builder = getElasticsearchQueryBuilder(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction);
 
         String requestJson = gson.toJson(builder.build());
         utilityService.getServerTimestamp()
@@ -115,6 +106,23 @@ public class SearchEngine {
                 .subscribe();
     }
 
+    private ElasticsearchQueryBuilder getElasticsearchQueryBuilder(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
+        ElasticsearchQueryBuilder builder = initQueryBuilder(pagingSize, direction, from, tri);
+        if (query != null) {
+            builder.setMultiMatchQuery(Arrays.asList(FIELD_TITRE, FIELD_DESCRIPTION), query);
+        }
+        if (libellesCategorie != null) {
+            builder.setListCategories(libellesCategorie);
+        }
+        if (lowestPrice >= 0 && highestPrice > 0) {
+            builder.setRangePrice(lowestPrice, highestPrice);
+        }
+        if (withPhotoOnly) {
+            builder.setWithPhotoOnly();
+        }
+        return builder;
+    }
+
     private void doOnSuccess(SearchListener listener, String requestJson, Long timestamp) {
         Disposable delay = obsDelay.observeOn(androidScheduler)
                 .doOnNext(aLong -> {
@@ -126,6 +134,7 @@ public class SearchEngine {
         newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
         newRequestRef.addValueEventListener(getValueEventListener(listener, delay));
     }
+
 
     private ValueEventListener getValueEventListener(SearchListener listener, Disposable delay) {
         return new ValueEventListener() {
@@ -158,6 +167,76 @@ public class SearchEngine {
                 delay.dispose();
                 newRequestRef.removeValue();
                 listener.onFinishSearch(false, null, databaseError.getMessage());
+            }
+        };
+    }
+
+    public Maybe<ElasticsearchHitsResult> searchMaybe(List<String> libellesCategorie,
+                                                      boolean withPhotoOnly,
+                                                      int lowestPrice,
+                                                      int highestPrice,
+                                                      String query,
+                                                      int pagingSize,
+                                                      int from,
+                                                      int tri,
+                                                      int direction) {
+        return Maybe.create(e -> {
+            ElasticsearchQueryBuilder builder = getElasticsearchQueryBuilder(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction);
+
+            String requestJson = gson.toJson(builder.build());
+            utilityService.getServerTimestamp()
+                    .subscribeOn(processScheduler).observeOn(processScheduler)
+                    .timeout(30, TimeUnit.SECONDS)
+                    .doOnError(e::onError)
+                    .doOnSuccess(timestamp -> doOnSuccessMaybe(e, requestJson, timestamp))
+                    .subscribe();
+        });
+    }
+
+    private void doOnSuccessMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter, String requestJson, Long timestamp) {
+        Disposable delay = obsDelay.observeOn(androidScheduler)
+                .doOnNext(aLong -> {
+                    newRequestRef.removeValue();
+                    emitter.onError(new RuntimeException("Délai expiré"));
+                })
+                .subscribe();
+        newRequestRef = requestReference.push();
+        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
+        newRequestRef.addValueEventListener(getValueEventListenerMaybe(emitter, delay));
+    }
+
+
+    private ValueEventListener getValueEventListenerMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter, Disposable delay) {
+        return new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child(NO_RESULTS).exists()) {
+                    newRequestRef.removeEventListener(this);
+                    newRequestRef.removeValue();
+                    delay.dispose();
+                    emitter.onComplete();
+                } else if (dataSnapshot.child(RESULTS).exists()) {
+                    ElasticsearchHitsResult elasticsearchResult = null;
+                    DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
+                    try {
+                        elasticsearchResult = snapshotResults.getValue(genericClassDetail);
+                    } catch (DatabaseException e) {
+                        Crashlytics.log(1, TAG, e.getLocalizedMessage());
+                        Log.e(TAG, e.getLocalizedMessage(), e);
+                    } finally {
+                        newRequestRef.removeEventListener(this);
+                        newRequestRef.removeValue();
+                        delay.dispose();
+                        emitter.onSuccess(elasticsearchResult);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                delay.dispose();
+                newRequestRef.removeValue();
+                emitter.onError(new RuntimeException(databaseError.getMessage()));
             }
         };
     }
