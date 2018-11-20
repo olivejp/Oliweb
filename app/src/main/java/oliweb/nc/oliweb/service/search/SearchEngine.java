@@ -210,13 +210,13 @@ public class SearchEngine {
         return new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ElasticsearchHitsResult elasticsearchResult = null;
                 if (dataSnapshot.child(NO_RESULTS).exists()) {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
                     delay.dispose();
                     emitter.onComplete();
                 } else if (dataSnapshot.child(RESULTS).exists()) {
-                    ElasticsearchHitsResult elasticsearchResult = null;
                     DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
                     try {
                         elasticsearchResult = snapshotResults.getValue(genericClassDetail);
