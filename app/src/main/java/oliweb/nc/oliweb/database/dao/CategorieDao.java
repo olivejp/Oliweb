@@ -1,11 +1,11 @@
 package oliweb.nc.oliweb.database.dao;
 
+import java.util.List;
+
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
 import androidx.room.Transaction;
-
-import java.util.List;
-
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -34,6 +34,10 @@ public abstract class CategorieDao implements AbstractDao<CategorieEntity, Long>
     @Transaction
     @Query("SELECT * FROM categorie")
     public abstract Single<List<CategorieEntity>> getListCategorie();
+
+    @Transaction
+    @Query("SELECT * FROM categorie")
+    public abstract LiveData<List<CategorieEntity>> getLiveListCategorie();
 
     @Transaction
     @Query("SELECT name FROM categorie")

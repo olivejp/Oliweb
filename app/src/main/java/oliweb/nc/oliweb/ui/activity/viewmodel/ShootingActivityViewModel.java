@@ -38,12 +38,24 @@ public class ShootingActivityViewModel extends AndroidViewModel {
     private List<Pair<Uri, File>> listPairFileUri = new ArrayList<>();
     private MutableLiveData<List<Pair<Uri, File>>> liveListPairFileUri = new MutableLiveData<>();
     private MutableLiveData<AtomicBoolean> liveFlashIsOn = new MutableLiveData<>();
-    private MutableLiveData<AtomicBoolean> liveSwitchIsOn = new MutableLiveData<>();
+    private Long nbShootAvailable;
 
     public ShootingActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
         externalStorage = SharedPreferencesHelper.getInstance(application).getUseExternalStorage();
+    }
+
+    public void setNbrShootAvailable(Long nbr) {
+        this.nbShootAvailable = nbr;
+    }
+
+    public Long getNbMaxPicures(){
+        return nbShootAvailable;
+    }
+
+    public boolean isAbleToAddNewPicture() {
+        return listPairFileUri.size() < nbShootAvailable;
     }
 
     public LiveData<AtomicBoolean> getLiveFlashIsOn() {
@@ -67,10 +79,6 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         this.switchIsOn = switchIsOn;
     }
 
-    public LiveData<AtomicBoolean> getLiveSwitchIsOn() {
-        return liveSwitchIsOn;
-    }
-
     public MediaUtility getMediaUtility() {
         return mediaUtility;
     }
@@ -91,7 +99,7 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         liveListPairFileUri.postValue(listPairFileUri);
     }
 
-    public ArrayList<Uri> getListPairs() {
+    public List<Uri> getListPairs() {
         ArrayList<Uri> list = new ArrayList<>();
         for (Pair<Uri, File> pair : listPairFileUri) {
             list.add(pair.first);
@@ -99,12 +107,12 @@ public class ShootingActivityViewModel extends AndroidViewModel {
         return list;
     }
 
-    public Pair<Uri, File> generateNewPair_UriFile() {
+    public Pair<Uri, File> generateNewPairUriFile() {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair;
         } else {
-            Log.e(TAG, "generateNewPair_UriFile() : MediaUtility a renvoyé une pair null");
+            Log.e(TAG, "generateNewPairUriFile() : MediaUtility a renvoyé une pair null");
             return null;
         }
     }

@@ -15,10 +15,10 @@ import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_TITLE;
 
 /**
  * Created by 2761oli on 08/03/2018.
@@ -117,7 +117,7 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
             for (DataSnapshot child : dataSnapshot.getChildren()) {
                 try {
                     AnnonceFirebase annonceFirebase = child.getValue(AnnonceFirebase.class);
-                    if (annonceFirebase != null && !existInTheList(annonceFulls, annonceFirebase)) {
+                    if (annonceFirebase != null) {
                         AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(annonceFirebase);
                         annonceFulls.add(annonceFull);
                     }
@@ -128,15 +128,6 @@ public class LoadMostRecentAnnonceTask extends AsyncTask<LoadMoreTaskBundle, Voi
         }
         sortList(annonceFulls, bundle.getTri(), bundle.getDirection());
         return annonceFulls;
-    }
-
-    private boolean existInTheList(List<AnnonceFull> listAnnonceFull, AnnonceFirebase annonceFirebase) {
-        for (AnnonceFull anno : listAnnonceFull) {
-            if (anno.getAnnonce().getUid().equals(annonceFirebase.getUuid())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

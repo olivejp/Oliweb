@@ -14,12 +14,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
@@ -41,8 +35,14 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
+import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -51,36 +51,33 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
-import oliweb.nc.oliweb.ui.task.LoadMoreTaskBundle;
-import oliweb.nc.oliweb.ui.task.LoadMostRecentAnnonceTask;
-import oliweb.nc.oliweb.ui.task.TaskListener;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.DESC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
-import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_ANNONCE_REF;
+import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, SearchEngine.SearchListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
 
-    public static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
-    public static final String SAVE_SORT = "SAVE_SORT";
-    public static final String SAVE_DIRECTION = "SAVE_DIRECTION";
-    public static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
-    public static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
-
-    public static final int SORT_DATE = 1;
-    public static final int SORT_TITLE = 2;
-    public static final int SORT_PRICE = 3;
-
-    public static final int ASC = 1;
-    public static final int DESC = 2;
+    private static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
+    private static final String SAVE_SORT = "SAVE_SORT";
+    private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
+    private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
+    private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
+    private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
+    private static final String SAVE_ACTUAL_SORT = "SAVE_ACTUAL_SORT";
 
     @BindView(R.id.swipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -99,7 +96,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private MainActivityViewModel viewModel;
     private AnnonceBeautyAdapter annonceBeautyAdapter;
     private ArrayList<AnnonceFull> annoncePhotosList = new ArrayList<>();
-    private DatabaseReference annoncesReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_ANNONCE_REF);
     private int sortSelected = SORT_DATE;
     private int directionSelected;
     private ActionBar actionBar;
@@ -108,6 +104,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private List<String> listUidFavorites = new ArrayList<>();
     private AnnonceFull annonceFullToSaveTofavorite;
     private View viewToEnabled;
+    private CategorieEntity categorieSelected;
+    private int from = 0;
+    private Long totalLoaded = 0L;
+    private int actualSort;
+    private boolean searchinProgress;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -271,6 +272,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             sortSelected = savedInstanceState.getInt(SAVE_SORT);
             directionSelected = savedInstanceState.getInt(SAVE_DIRECTION);
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
+            categorieSelected = savedInstanceState.getParcelable(SAVE_CATEGORY_SELECTED);
+            totalLoaded = savedInstanceState.getLong(SAVE_TOTAL_LOADED);
+            actualSort = savedInstanceState.getInt(SAVE_ACTUAL_SORT);
         }
 
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
@@ -286,6 +290,27 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 updateListAdapter();
             });
         });
+
+        // Dès que la catégorie sélectionnée aura changé, je vais relancer une recherche...
+        viewModel.getCategorySelected().observe(appCompatActivity, categorieEntity -> {
+            if (categorieEntity != null && (categorieSelected == null || !categorieEntity.getId().equals(categorieSelected.getId()))) {
+                categorieSelected = categorieEntity;
+                makeNewSearch();
+            }
+        });
+    }
+
+    private void makeNewSearch() {
+        if (searchinProgress) return;
+        from = 0;
+        totalLoaded = 0L;
+        annoncePhotosList.clear();
+        if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
+            loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText("Recherche en cours");
+            loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
+        }
+        loadMoreDatas();
     }
 
     @Override
@@ -306,13 +331,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         if (savedInstanceState != null) {
             annoncePhotosList = savedInstanceState.getParcelableArrayList(SAVE_LIST_ANNONCE);
-            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
             updateListAdapter();
         }
 
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        viewModel.sortingUpdated().observe(appCompatActivity, this::changeSortAndUpdateList);
+        viewModel.getLiveSort().observe(appCompatActivity, this::changeSortAndUpdateList);
 
         viewModel.getIsNetworkAvailable().observe(appCompatActivity, atomicBoolean -> {
             if (atomicBoolean != null && !atomicBoolean.get()) {
@@ -336,7 +360,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         GlideApp.get(appCompatActivity).clearMemory();
         recyclerView.setAdapter(null);
         recyclerView.removeOnScrollListener(scrollListener);
-        annoncesReference.removeEventListener(loadSortListener);
         super.onDestroyView();
     }
 
@@ -347,6 +370,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putInt(SAVE_SORT, sortSelected);
         outState.putInt(SAVE_DIRECTION, directionSelected);
         outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
+        outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
+        outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
+        outState.putInt(SAVE_ACTUAL_SORT, actualSort);
     }
 
     @Override
@@ -363,14 +389,19 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
-                loadMoreDatas();
+                // Tant que la liste en cours est plus petite que le nombre total
+                if (annoncePhotosList.size() < totalLoaded) {
+                    from = annoncePhotosList.size() + 1;
+                    loadMoreDatas();
+                }
             }
         };
         recyclerView.addOnScrollListener(scrollListener);
     }
 
     private void changeSortAndUpdateList(Integer newSort) {
-        if (newSort != null) {
+        if (newSort != null && newSort != actualSort) {
+            actualSort = newSort;
             switch (newSort) {
                 case 0:
                     sortSelected = SORT_PRICE;
@@ -382,20 +413,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     break;
                 case 2:
                     sortSelected = SORT_DATE;
-                    directionSelected = ASC;
+                    directionSelected = DESC;
                     break;
                 case 3:
                 default:
                     sortSelected = SORT_DATE;
-                    directionSelected = DESC;
+                    directionSelected = ASC;
                     break;
             }
-
-            ArrayList<AnnonceFull> list = new ArrayList<>();
-            annonceBeautyAdapter.setListAnnonces(list);
-            annonceBeautyAdapter.notifyDataSetChanged();
-            annoncePhotosList = list;
-            loadMoreDatas();
+            makeNewSearch();
         }
 
         if (swipeRefreshLayout.isRefreshing()) {
@@ -404,74 +430,24 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
-        switch (sortSelected) {
-            case SORT_DATE:
-                loadSortDate().addListenerForSingleValueEvent(loadSortListener);
-                break;
-            case SORT_PRICE:
-                loadSortPrice().addListenerForSingleValueEvent(loadSortListener);
-            default:
+        List<String> listCategorie = Collections.emptyList();
+        if (categorieSelected != null && !categorieSelected.getId().equals(ID_ALL_CATEGORY)) {
+            listCategorie = Collections.singletonList(categorieSelected.getName());
         }
+        viewModel.getSearchEngine().search(listCategorie,
+                false,
+                0,
+                0,
+                null,
+                Constants.PER_PAGE_REQUEST,
+                from,
+                sortSelected,
+                directionSelected,
+                this);
     }
-
-    private Query loadSortPrice() {
-        Query query = annoncesReference.orderByChild("prix");
-        if (directionSelected == ASC) {
-            Integer lastPrice = 0;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getPrix() > lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonce().getPrix();
-                }
-            }
-            return query.startAt(lastPrice).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else {
-            Integer lastPrice = Integer.MAX_VALUE;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getPrix() < lastPrice) {
-                    lastPrice = annoncePhotos.getAnnonce().getPrix();
-                }
-            }
-            return query.endAt(lastPrice).limitToLast(Constants.PER_PAGE_REQUEST);
-        }
-    }
-
-    private Query loadSortDate() {
-        Query query = annoncesReference.orderByChild("datePublication");
-        if (directionSelected == DESC) {
-            Long lastDate = 0L;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getDatePublication() > lastDate) {
-                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
-                }
-            }
-            return query.startAt(lastDate).limitToFirst(Constants.PER_PAGE_REQUEST);
-        } else {
-            Long lastDate = Long.MAX_VALUE;
-            for (AnnonceFull annoncePhotos : annoncePhotosList) {
-                if (annoncePhotos.getAnnonce().getDatePublication() < lastDate) {
-                    lastDate = annoncePhotos.getAnnonce().getDatePublication();
-                }
-            }
-            return query.endAt(lastDate).limitToLast(Constants.PER_PAGE_REQUEST);
-        }
-    }
-
-    private ValueEventListener loadSortListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            if (dataSnapshot.getValue() != null) {
-                LoadMostRecentAnnonceTask loadMoreTask = new LoadMostRecentAnnonceTask(taskListener);
-                loadMoreTask.execute(new LoadMoreTaskBundle(annoncePhotosList, dataSnapshot, sortSelected, directionSelected));
-            }
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-            // Do nothing
-        }
-    };
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
+        if (listAnnonces == null || listAnnonces.isEmpty()) return;
         for (AnnonceFull annonceFull : listAnnonces) {
             if (listUidFavorites != null && listUidFavorites.contains(annonceFull.getAnnonce().getUid())) {
                 annonceFull.getAnnonce().setFavorite(1);
@@ -486,10 +462,35 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annonceBeautyAdapter.notifyDataSetChanged();
     }
 
-    private TaskListener<ArrayList<AnnonceFull>> taskListener = listAnnoncePhotos -> {
-        annoncePhotosList = listAnnoncePhotos;
-        annoncesReference.removeEventListener(loadSortListener);
-        updateListWithFavorite(annoncePhotosList, listUidFavorites);
-        updateListAdapter();
-    };
+    @Override
+    public void onBeginSearch() {
+        searchinProgress = true;
+    }
+
+    @Override
+    public void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError) {
+        searchinProgress = false;
+        if (goodFinish) {
+            ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
+            if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
+                totalLoaded = elasticsearchHitsResult.getTotal();
+                for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchHitsResult.getHits()) {
+                    AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
+                    listResultSearch.add(annonceFull);
+                }
+            }
+
+            updateListWithFavorite(listResultSearch, listUidFavorites);
+            annoncePhotosList.addAll(listResultSearch);
+            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+            annonceBeautyAdapter.notifyDataSetChanged();
+        } else {
+            Toast.makeText(appCompatActivity, messageError, Toast.LENGTH_LONG).show();
+            Log.e(TAG, messageError);
+        }
+        LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
+        if (loadingDialogFragment1 != null) {
+            loadingDialogFragment1.dismissAllowingStateLoss();
+        }
+    }
 }

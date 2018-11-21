@@ -3,13 +3,17 @@ package oliweb.nc.oliweb.ui.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,7 +32,6 @@ import io.fotoapparat.configuration.UpdateConfiguration;
 import io.fotoapparat.log.LoggersKt;
 import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.PhotoResult;
-import io.fotoapparat.selector.FlashSelectorsKt;
 import io.fotoapparat.selector.FocusModeSelectorsKt;
 import io.fotoapparat.selector.LensPositionSelectorsKt;
 import io.fotoapparat.selector.ResolutionSelectorsKt;
@@ -42,11 +45,13 @@ import static io.fotoapparat.selector.FlashSelectorsKt.off;
 import static io.fotoapparat.selector.FlashSelectorsKt.on;
 import static io.fotoapparat.selector.LensPositionSelectorsKt.back;
 import static io.fotoapparat.selector.LensPositionSelectorsKt.front;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 public class ShootingActivity extends AppCompatActivity {
 
     private static final String TAG = ShootingActivity.class.getCanonicalName();
     public static final String RESULT_DATA_LIST_PAIR = "RESULT_DATA_LIST_PAIR";
+    public static final String EXTRA_NBR_PHOTO = "EXTRA_NBR_PHOTO";
 
     @BindView(R.id.camera_view)
     CameraRenderer cameraRenderer;
@@ -60,6 +65,7 @@ public class ShootingActivity extends AppCompatActivity {
     private Fotoapparat fotoapparat;
     private ShootingActivityViewModel viewModel;
     private ShootingAdapter shootingAdapter;
+    private Long remoteNbrMaxPictures;
 
     private View.OnLongClickListener onLongClickPhotoListener = v -> {
         if (v.getTag() != null) {
@@ -91,11 +97,22 @@ public class ShootingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel = ViewModelProviders.of(this).get(ShootingActivityViewModel.class);
+
+        // Récupère le nombre de photos que je peux prendre
+        Long nbrPhotoPlaceAvailable = getIntent().getLongExtra(EXTRA_NBR_PHOTO, 0);
+
+        // Récupération du nombre maximale de photo autorisée
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        remoteNbrMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
+
         setContentView(R.layout.activity_shooting);
         ButterKnife.bind(this);
+
         initFotoapparat();
         initRecylcerView();
+
+        viewModel = ViewModelProviders.of(this).get(ShootingActivityViewModel.class);
+        viewModel.setNbrShootAvailable(nbrPhotoPlaceAvailable);
         viewModel.getLiveListPairFileUri().observe(this, this::setAdapterListPairs);
         viewModel.getLiveFlashIsOn().observe(this, this::changeFlashIcon);
     }
@@ -115,13 +132,29 @@ public class ShootingActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.menu_shooting_save) {
             Intent resultIntent = new Intent();
-            resultIntent.putParcelableArrayListExtra(RESULT_DATA_LIST_PAIR, viewModel.getListPairs());
+            resultIntent.putParcelableArrayListExtra(RESULT_DATA_LIST_PAIR, (ArrayList<? extends Parcelable>) viewModel.getListPairs());
             setResult(RESULT_OK, resultIntent);
             finish();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @OnClick(R.id.fab_shoot)
+    public void photoShoot(View v) {
+        if (viewModel.isAbleToAddNewPicture()) {
+            // Prise de la photo
+            PhotoResult photoResult = fotoapparat.takePicture();
+
+            // Recherche d'un nom de fichier
+            Pair<Uri, File> pair = viewModel.generateNewPairUriFile();
+
+            // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
+            photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
+        } else {
+            Toast.makeText(this, "Nombre maximal (" + remoteNbrMaxPictures + ") de photo atteint", Toast.LENGTH_LONG).show();
+        }
     }
 
     @OnClick(R.id.fab_switch)
@@ -164,27 +197,10 @@ public class ShootingActivity extends AppCompatActivity {
                         FocusModeSelectorsKt.autoFocus(),        // in case if continuous focus is not available on device, auto focus will be used
                         FocusModeSelectorsKt.fixed()             // if even auto focus is not available - fixed focus mode will be used
                 ))
-                .flash(SelectorsKt.firstAvailable(      // (optional) similar to how it is done for focus mode, this time for flash
-                        FlashSelectorsKt.autoRedEye(),
-                        FlashSelectorsKt.autoFlash(),
-                        FlashSelectorsKt.torch()
-                ))
                 .logger(LoggersKt.loggers(            // (optional) we want to log camera events in 2 places at once
                         LoggersKt.logcat(),           // ... in logcat
                         LoggersKt.fileLogger(this)    // ... and to file
                 ))
                 .build();
-    }
-
-    @OnClick(R.id.fab_shoot)
-    public void photoShoot(View v) {
-        // Prise de la photo
-        PhotoResult photoResult = fotoapparat.takePicture();
-
-        // Recherche d'un nom de fichier
-        Pair<Uri, File> pair = viewModel.generateNewPair_UriFile();
-
-        // Sauvegarde de notre photo, puis envoi à la liste courante des photos de l'annonce
-        photoResult.saveToFile(pair.second).whenDone(unit -> viewModel.addPhotoToCurrentList(pair));
     }
 }

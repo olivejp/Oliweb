@@ -21,7 +21,7 @@
                 android:id="@+id/profil_image_background"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="@drawable/intro_background"
+                android:background="@drawable/clothing_leather_wooden"
                 app:layout_constraintTop_toTopOf="parent" />
 
 

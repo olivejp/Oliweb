@@ -6,7 +6,8 @@ public class Constants {
 
     public static final String PARAM_MAJ = "MAJ";
     public static final String PARAM_CRE = "CRE";
-    public static final int MAX_IMG_PIXEL_SIZE = 600;
+    public static final int DEFAULT_MAX_IMG_PIXEL_SIZE = 600;
+    public static final Long DEFAULT_NUMBER_PICTURES = 10L;
 
     public static final int PER_PAGE_REQUEST = 10;
     public static final String EMAIL_ADMIN = "orlanth23@gmail.com";
@@ -35,8 +36,15 @@ public class Constants {
      * How close to the end of the period the job should run
      */
     public static final long INTERVAL_SYNC_JOB_MINS = 5;
-    public static final String COLUMN_NUMBER = "column_number";
-    public static final String COLUMN_NUMBER_LANDSCAPE = "column_number_landscape";
+
+    /**
+     * All the remote parameters
+     */
+    public static final String REMOTE_COLUMN_NUMBER = "column_number";
+    public static final String REMOTE_COLUMN_NUMBER_LANDSCAPE = "column_number_landscape";
+    public static final String REMOTE_IMAGE_RESOLUTION_RESIZE = "image_resolution_resize";
+    public static final String REMOTE_NUMBER_PICTURES = "remote_number_pictures";
+
     public static final String OLIWEB_CHANNEL = "OLIWEB Channel";
 
     private Constants() {

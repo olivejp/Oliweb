@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,6 +48,7 @@ import butterknife.ButterKnife;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
@@ -54,6 +56,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
+import oliweb.nc.oliweb.ui.fragment.ListCategorieFragment;
 import oliweb.nc.oliweb.ui.fragment.ListChatFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
@@ -67,6 +70,9 @@ import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UI
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.RC_POST_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.PROFIL_ACTIVITY_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.ProfilActivity.UPDATE;
+import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
+import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
+import static oliweb.nc.oliweb.utility.Constants.DEFAULT_NUMBER_PICTURES;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
@@ -80,6 +86,7 @@ public class MainActivity extends AppCompatActivity
 
     public static final int RC_SIGN_IN = 1001;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
+    public static final String TAG_LIST_CATEGORY = "TAG_LIST_CATEGORY";
     public static final String SORT_DIALOG = "SORT_DIALOG";
     public static final String ACTION_CHAT = "ACTION_CHAT";
 
@@ -101,10 +108,12 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
+    @BindView(R.id.frame_category_list)
+    FrameLayout frameCategoryList;
+
     SearchView searchView;
 
     private ImageView profileImage;
-    private TextView headerVersion;
     private TextView profileName;
     private TextView profileEmail;
     private Menu navigationViewMenu;
@@ -194,8 +203,10 @@ public class MainActivity extends AppCompatActivity
 
     private void initConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put(Constants.COLUMN_NUMBER, 2);
-        defaults.put(Constants.COLUMN_NUMBER_LANDSCAPE, 2);
+        defaults.put(Constants.REMOTE_COLUMN_NUMBER, 2);
+        defaults.put(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE, 2);
+        defaults.put(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE, DEFAULT_MAX_IMG_PIXEL_SIZE);
+        defaults.put(Constants.REMOTE_NUMBER_PICTURES, DEFAULT_NUMBER_PICTURES);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());
@@ -204,10 +215,16 @@ public class MainActivity extends AppCompatActivity
     private void initViews() {
         View viewHeader = navigationView.getHeaderView(0);
 
-        headerVersion = viewHeader.findViewById(R.id.nav_header_version);
+        TextView headerVersion = viewHeader.findViewById(R.id.nav_header_version);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
+
+        profileImage.setOnClickListener(v -> {
+            if (mFirebaseAuth.getUid() != null) {
+                callProfilActivity();
+            }
+        });
 
         headerVersion.setText(BuildConfig.VERSION_NAME);
         navigationViewMenu = navigationView.getMenu();
@@ -221,6 +238,7 @@ public class MainActivity extends AppCompatActivity
 
         prepareNavigationMenu(false);
 
+        // Observe les changements effectués sur cet utilisateur
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
 
         initToolbar();
@@ -231,11 +249,27 @@ public class MainActivity extends AppCompatActivity
      */
     private void initToolbar() {
         appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
-                appBarLayout.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
+                toolbar.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
         );
     }
 
     private void initFragments(Bundle savedInstanceState) {
+        // Fragment liste catégorie
+        ListCategorieFragment listCategorieFragment;
+        if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CATEGORY)) {
+            listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CATEGORY);
+        } else {
+            listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CATEGORY);
+        }
+        if (listCategorieFragment == null) {
+            createListCategoryFragment();
+        } else {
+            FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, listCategorieFragment, TAG_LIST_CATEGORY);
+            transactionListeCategorie.commit();
+        }
+
+
+        // Fragment liste annonce
         ListAnnonceFragment listAnnonceFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_ANNONCE)) {
             listAnnonceFragment = (ListAnnonceFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_ANNONCE);
@@ -245,7 +279,6 @@ public class MainActivity extends AppCompatActivity
         if (listAnnonceFragment == null) {
             listAnnonceFragment = new ListAnnonceFragment();
         }
-
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
         transaction.commit();
 
@@ -256,6 +289,24 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listChatFragment, TAG_LIST_CHAT).commit();
             }
         }
+    }
+
+    private void createListCategoryFragment() {
+        viewModel.getLiveListCategory().observe(this, categorieEntities -> {
+            if (categorieEntities != null && !categorieEntities.isEmpty()) {
+                // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
+                CategorieEntity cat = new CategorieEntity();
+                cat.setIdCategorie(ID_ALL_CATEGORY);
+                cat.setName("Toutes");
+                categorieEntities.add(0, cat);
+
+                viewModel.setCategorySelected(cat);
+
+                ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
+                FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
+                transactionListeCategorie.commit();
+            }
+        });
     }
 
     @Override
@@ -300,8 +351,6 @@ public class MainActivity extends AppCompatActivity
             signInSignOut();
         } else if (id == R.id.nav_settings) {
             callSettingActivity();
-        } else if (id == R.id.nav_profile) {
-            callProfilActivity();
         } else if (id == R.id.nav_favorites) {
             callFavoriteActivity();
         } else if (id == R.id.nav_chats) {
@@ -310,7 +359,7 @@ public class MainActivity extends AppCompatActivity
             callMyAnnoncesActivity();
         } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
-        } else if (id == R.id.nav_suggestion){
+        } else if (id == R.id.nav_suggestion) {
             callSuggestionActivity();
         }
 
@@ -445,6 +494,11 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().putFragment(outState, TAG_LIST_CHAT, listChatFragment);
         }
 
+        ListCategorieFragment listCategorieFragment = (ListCategorieFragment) getSupportFragmentManager().findFragmentByTag(TAG_LIST_CATEGORY);
+        if (listCategorieFragment != null) {
+            getSupportFragmentManager().putFragment(outState, TAG_LIST_CATEGORY, listCategorieFragment);
+        }
+
         outState.putBoolean(SAVED_DYNAMIC_LINK_PROCESSED, dynamicLinkProcessed);
 
         super.onSaveInstanceState(outState);
@@ -499,7 +553,6 @@ public class MainActivity extends AppCompatActivity
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .error(R.mipmap.ic_banana_launcher_foreground)
-                    .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }
 
@@ -591,7 +644,6 @@ public class MainActivity extends AppCompatActivity
 
     private void prepareNavigationMenu(boolean isConnected) {
         navigationView.getMenu().findItem(R.id.nav_annonces).setEnabled(isConnected);
-        navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(isConnected);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(isConnected);
         navigationView.getMenu().findItem(R.id.nav_chats).setEnabled(isConnected);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((isConnected) ? getString(R.string.sign_out) : getString(R.string.sign_in));

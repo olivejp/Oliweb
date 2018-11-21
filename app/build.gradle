@@ -18,8 +18,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 8
-        versionName "alpha-1.6"
+        versionCode 9
+        versionName "alpha-1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -66,9 +66,9 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
-    implementation 'com.google.firebase:firebase-database:16.0.4'
+    implementation 'com.google.firebase:firebase-database:16.0.5'
     implementation 'com.google.firebase:firebase-auth:16.0.5'
-    implementation 'com.google.firebase:firebase-storage:16.0.4'
+    implementation 'com.google.firebase:firebase-storage:16.0.5'
 
     // Ne pas toucher à la version de firebase-invites car pas rétro compatible
     implementation 'com.google.firebase:firebase-core:16.0.5'

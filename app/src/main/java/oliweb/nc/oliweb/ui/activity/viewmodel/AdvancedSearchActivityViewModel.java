@@ -1,13 +1,12 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.annotation.NonNull;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import io.reactivex.Single;
-import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
@@ -27,10 +26,6 @@ public class AdvancedSearchActivityViewModel extends AndroidViewModel {
                 .build();
 
         categorieRepository = component.getCategorieRepository();
-    }
-
-    public Single<List<CategorieEntity>> getListCategorie() {
-        return categorieRepository.getListCategorie();
     }
 
     public Single<List<String>> getListCategorieLibelle() {

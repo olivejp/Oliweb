@@ -58,7 +58,7 @@ public class ElasticsearchUnitTest {
         ElasticsearchQueryBuilder elasticsearchQueryBuilder = new ElasticsearchQueryBuilder();
         elasticsearchQueryBuilder.setFrom(2);
         elasticsearchQueryBuilder.setSize(10);
-        elasticsearchQueryBuilder.setCategorie(listCategorie);
+        elasticsearchQueryBuilder.setListCategories(listCategorie);
         elasticsearchQueryBuilder.setRangePrice(1000, 2000);
         elasticsearchQueryBuilder.setWithPhotoOnly();
         elasticsearchQueryBuilder.setMultiMatchQuery(listFields, "recherche");

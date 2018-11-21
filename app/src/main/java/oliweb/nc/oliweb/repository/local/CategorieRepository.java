@@ -7,6 +7,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.lifecycle.LiveData;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -27,6 +28,10 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity, Lon
 
     public Single<List<CategorieEntity>> getListCategorie() {
         return this.categorieDao.getListCategorie();
+    }
+
+    public LiveData<List<CategorieEntity>> getLiveCategorie() {
+        return this.categorieDao.getLiveListCategorie();
     }
 
 

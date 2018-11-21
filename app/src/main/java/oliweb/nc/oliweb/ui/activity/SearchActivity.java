@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -28,9 +31,16 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Maybe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
+import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
+import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -40,13 +50,13 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
 import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
+import static oliweb.nc.oliweb.service.search.SearchEngine.ASC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.DESC;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
+import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_TITLE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.ASC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.DESC;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_DATE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_PRICE;
-import static oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment.SORT_TITLE;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -54,7 +64,6 @@ public class SearchActivity extends AppCompatActivity {
     private static final String TAG = SearchActivity.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
-    private static final String SAVED_CURRENT_PAGE = "SAVED_CURRENT_PAGE";
     private static final String SAVED_LIST_ANNONCE = "SAVED_LIST_ANNONCE";
     private static final String SAVED_TRI = "SAVED_TRI";
     private static final String SAVED_DIRECTION = "SAVED_DIRECTION";
@@ -70,6 +79,8 @@ public class SearchActivity extends AppCompatActivity {
     public static final String SAVE_PRICE_HIGH = "SAVE_PRICE_HIGH";
     public static final String SAVE_PRICE_LOW = "SAVE_PRICE_LOW";
     public static final String SAVE_QUERY = "SAVE_QUERY";
+    public static final String SAVE_FROM = "SAVE_FROM";
+    public static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
 
 
     @BindView(R.id.recycler_search_annonce)
@@ -80,7 +91,7 @@ public class SearchActivity extends AppCompatActivity {
 
     SearchView searchView;
 
-    private ArrayList<AnnonceFull> listAnnonce;
+    private ArrayList<AnnonceFull> listAnnonce = new ArrayList<>();
 
     private LoadingDialogFragment loadingDialogFragment;
     private SearchActivityViewModel viewModel;
@@ -88,8 +99,9 @@ public class SearchActivity extends AppCompatActivity {
     private List<String> listUidFavorites = new ArrayList<>();
     private int tri;
     private int direction;
-    private int currentPage = 0;
     private String action;
+    private int from = 0;
+    private int totalLoaded = 0;
 
     private String query;
     private int lowerPrice;
@@ -133,58 +145,70 @@ public class SearchActivity extends AppCompatActivity {
             }
         }
 
+        initRecyclerView();
+
+        initViewModelObservers();
+
+        // Récupération des données sauvegardées
+        if (savedInstanceState != null) {
+            retrieveDataFromBundle(savedInstanceState);
+        } else {
+            makeNewSearch();
+        }
+    }
+
+    private void retrieveDataFromBundle(Bundle savedInstanceState) {
+        if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
+            listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
+            if (listAnnonce != null) {
+                initAdapter(listAnnonce);
+            }
+        }
+        if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
+            direction = savedInstanceState.getInt(SAVED_DIRECTION);
+        }
+        if (savedInstanceState.containsKey(SAVED_TRI)) {
+            tri = savedInstanceState.getInt(SAVED_TRI);
+        }
+        if (savedInstanceState.containsKey(SAVE_LIST_CATEGORIE)) {
+            listCategorieSelected = savedInstanceState.getStringArrayList(SAVE_LIST_CATEGORIE);
+        }
+        if (savedInstanceState.containsKey(SAVE_WITH_PHOTO)) {
+            withPhotoOnly = savedInstanceState.getBoolean(SAVE_WITH_PHOTO);
+        }
+        if (savedInstanceState.containsKey(SAVE_PRICE_HIGH)) {
+            higherPrice = savedInstanceState.getInt(SAVE_PRICE_HIGH);
+        }
+        if (savedInstanceState.containsKey(SAVE_PRICE_LOW)) {
+            lowerPrice = savedInstanceState.getInt(SAVE_PRICE_LOW);
+        }
+        if (savedInstanceState.containsKey(SAVE_QUERY)) {
+            query = savedInstanceState.getString(SAVE_QUERY);
+        }
+        if (savedInstanceState.containsKey(SAVE_FROM)) {
+            from = savedInstanceState.getInt(SAVE_FROM);
+        }
+        if (savedInstanceState.containsKey(SAVE_TOTAL_LOADED)) {
+            totalLoaded = savedInstanceState.getInt(SAVE_TOTAL_LOADED);
+        }
+    }
+
+    private void initRecyclerView() {
         annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
-                currentPage++;
-                launchNewSearch(currentPage);
+                if (listAnnonce.size() < totalLoaded && !viewModel.isLoading()) {
+                    from = listAnnonce.size() + 1;
+                    loadMoreData();
+                }
             }
         };
         recyclerView.addOnScrollListener(endlessRecyclerOnScrollListener);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
-
-        initViewModelObservers();
-
-        // Récupération des données sauvegardées
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(SAVED_CURRENT_PAGE)) {
-                currentPage = savedInstanceState.getInt(SAVED_CURRENT_PAGE);
-            }
-            if (savedInstanceState.containsKey(SAVED_LIST_ANNONCE)) {
-                listAnnonce = savedInstanceState.getParcelableArrayList(SAVED_LIST_ANNONCE);
-                if (listAnnonce != null) {
-                    initAdapter(listAnnonce);
-                }
-            }
-            if (savedInstanceState.containsKey(SAVED_DIRECTION)) {
-                direction = savedInstanceState.getInt(SAVED_DIRECTION);
-            }
-            if (savedInstanceState.containsKey(SAVED_TRI)) {
-                tri = savedInstanceState.getInt(SAVED_TRI);
-            }
-            if (savedInstanceState.containsKey(SAVE_LIST_CATEGORIE)) {
-                listCategorieSelected = savedInstanceState.getStringArrayList(SAVE_LIST_CATEGORIE);
-            }
-            if (savedInstanceState.containsKey(SAVE_WITH_PHOTO)) {
-                withPhotoOnly = savedInstanceState.getBoolean(SAVE_WITH_PHOTO);
-            }
-            if (savedInstanceState.containsKey(SAVE_PRICE_HIGH)) {
-                higherPrice = savedInstanceState.getInt(SAVE_PRICE_HIGH);
-            }
-            if (savedInstanceState.containsKey(SAVE_PRICE_LOW)) {
-                lowerPrice = savedInstanceState.getInt(SAVE_PRICE_LOW);
-            }
-            if (savedInstanceState.containsKey(SAVE_QUERY)) {
-                query = savedInstanceState.getString(SAVE_QUERY);
-            }
-        } else {
-            currentPage = 0;
-            launchNewSearch(currentPage);
-        }
     }
 
     @Override
@@ -224,7 +248,6 @@ public class SearchActivity extends AppCompatActivity {
                 newTri = SORT_DATE;
                 break;
         }
-
         if (tri == newTri) {
             if (direction == ASC) {
                 direction = DESC;
@@ -235,54 +258,86 @@ public class SearchActivity extends AppCompatActivity {
             tri = newTri;
             direction = ASC;
         }
-
-        this.currentPage = 0;
-        launchNewSearch(currentPage);
-
+        makeNewSearch();
         return true;
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(SAVED_CURRENT_PAGE, currentPage);
         outState.putParcelableArrayList(SAVED_LIST_ANNONCE, listAnnonce);
         outState.putInt(SAVED_TRI, tri);
         outState.putInt(SAVED_DIRECTION, direction);
-
         outState.putStringArrayList(SAVE_LIST_CATEGORIE, listCategorieSelected);
         outState.putBoolean(SAVE_WITH_PHOTO, withPhotoOnly);
         outState.putInt(SAVE_PRICE_HIGH, higherPrice);
         outState.putInt(SAVE_PRICE_LOW, lowerPrice);
         outState.putString(SAVE_QUERY, query);
+        outState.putInt(SAVE_FROM, from);
+        outState.putInt(SAVE_TOTAL_LOADED, totalLoaded);
     }
 
-    private void launchNewSearch(int currentPage) {
+    private void makeNewSearch() {
+        if (viewModel.isLoading()) return;
+        from = 0;
+        totalLoaded = 0;
+        listAnnonce.clear();
+        loadMoreData();
+    }
+
+    private void loadMoreData() {
         if (!viewModel.isConnected()) {
             Toast.makeText(this, R.string.connection_required_to_search, Toast.LENGTH_LONG).show();
         } else {
-            int from = currentPage * Constants.PER_PAGE_REQUEST;
+            if (viewModel.isLoading()) return;
+            Maybe<ElasticsearchHitsResult> maybe = null;
             if (Intent.ACTION_SEARCH.equals(action)) {
-                viewModel.search(null, false, 0, 0, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
-            } else if (ACTION_ADVANCED_SEARCH.equals(action)) {
-                viewModel.search(listCategorieSelected, withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+                maybe = viewModel.getSearchEngine().searchMaybe(null, false, 0, 0, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
             }
+            if (ACTION_ADVANCED_SEARCH.equals(action)) {
+                maybe = viewModel.getSearchEngine().searchMaybe(listCategorieSelected, withPhotoOnly, lowerPrice, higherPrice, query, Constants.PER_PAGE_REQUEST, from, tri, direction);
+            }
+            if (maybe != null) {
+                viewModel.updateLoadingStatus(true);
+                maybe.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                        .timeout(20L, TimeUnit.SECONDS)
+                        .onErrorComplete(throwable -> throwable instanceof TimeoutException)
+                        .doOnError(throwable -> {
+                            Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                            viewModel.updateLoadingStatus(false);
+                        })
+                        .doOnSuccess(s -> {
+                            doOnSuccessSearch(s);
+                            viewModel.updateLoadingStatus(false);
+                        })
+                        .doOnComplete(() -> viewModel.updateLoadingStatus(false))
+                        .subscribe();
+            }
+        }
+    }
+
+    private void doOnSuccessSearch(ElasticsearchHitsResult elasticsearchHitsResult) {
+        if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
+            ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
+            for (ElasticsearchResult<AnnonceFirebase> elasticsearchResult : elasticsearchHitsResult.getHits()) {
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
+                listResultSearch.add(annonceFull);
+            }
+            listAnnonce.addAll(listResultSearch);
+            initAdapter(listAnnonce);
         }
     }
 
     private void initViewModelObservers() {
         // Fait apparaitre un spinner pendant le chargement des annonces
         viewModel.getLoading().observe(this, atomicBoolean -> {
-                    if (atomicBoolean != null) {
-                        if (atomicBoolean.get()) {
-                            loadingDialogFragment = new LoadingDialogFragment();
-                            loadingDialogFragment.show(this.getSupportFragmentManager(), LOADING_DIALOG);
-                            linearLayout.setVisibility(View.GONE);
-                        } else {
-                            if (loadingDialogFragment != null) {
-                                loadingDialogFragment.dismiss();
-                            }
-                        }
+                    if (atomicBoolean == null) return;
+                    if (atomicBoolean.get()) {
+                        loadingDialogFragment = new LoadingDialogFragment();
+                        loadingDialogFragment.show(this.getSupportFragmentManager(), LOADING_DIALOG);
+                        linearLayout.setVisibility(View.GONE);
+                    } else if (loadingDialogFragment != null) {
+                        loadingDialogFragment.dismiss();
                     }
                 }
         );
@@ -308,7 +363,7 @@ public class SearchActivity extends AppCompatActivity {
     private void initAdapter(ArrayList<AnnonceFull> annonceWithPhotos) {
         listAnnonce = annonceWithPhotos;
         updateListWithFavorite(listAnnonce, listUidFavorites);
-        if (!annonceWithPhotos.isEmpty()) {
+        if (!listAnnonce.isEmpty()) {
             linearLayout.setVisibility(View.GONE);
             annonceBeautyAdapter.setListAnnonces(this.listAnnonce);
             annonceBeautyAdapter.notifyDataSetChanged();

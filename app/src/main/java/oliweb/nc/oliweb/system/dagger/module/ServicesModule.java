@@ -23,8 +23,10 @@ import oliweb.nc.oliweb.service.firebase.AnnonceFirebaseSender;
 import oliweb.nc.oliweb.service.firebase.FirebaseChatService;
 import oliweb.nc.oliweb.service.firebase.FirebaseMessageService;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
+import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sync.ScheduleSync;
 import oliweb.nc.oliweb.system.dagger.ApplicationContext;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 @Module(includes = {ContextModule.class,
@@ -78,5 +80,13 @@ public class ServicesModule {
                 messageRepository, firebaseMessageService,
                 firebaseChatService,
                 processScheduler);
+    }
+
+    @Provides
+    @Singleton
+    public SearchEngine searchEngine(FirebaseUtilityService utilityService,
+                                     @Named("processScheduler") Scheduler processScheduler,
+                                     @Named("androidScheduler") Scheduler androidScheduler) {
+        return new SearchEngine(utilityService, processScheduler, androidScheduler);
     }
 }

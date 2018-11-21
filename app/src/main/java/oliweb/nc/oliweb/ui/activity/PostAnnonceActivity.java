@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,7 +17,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -50,10 +50,12 @@ import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.PostAnnonceActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.PostPhotoAdapter;
 import oliweb.nc.oliweb.ui.adapter.SpinnerAdapter;
+import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.fragment.WorkImageFragment;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
-import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
+
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_NUMBER_PICTURES;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class PostAnnonceActivity extends AppCompatActivity {
@@ -68,25 +70,28 @@ public class PostAnnonceActivity extends AppCompatActivity {
     public static final String BUNDLE_UID_USER = "BUNDLE_UID_USER";
     public static final String BUNDLE_KEY_MODE = "MODE";
 
-    public static final int DIALOG_REQUEST_IMAGE = 100;
     private static final int DIALOG_GALLERY_IMAGE = 200;
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 999;
     private static final int REQUEST_SHOOTING_CODE = 967;
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
     private static final String SAVE_ANNONCE = "SAVE_ANNONCE";
     private static final String SAVE_FILE_URI_TEMP = "SAVE_FILE_URI_TEMP";
+    public static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     private PostAnnonceActivityViewModel viewModel;
 
     private Uri mFileUriTemp;
     private Long idAnnonce;
-    private boolean externalStorage;
     private String uidUser;
     private String uidAnnonce;
     private String mode;
+    private Long remoteNbMaxPictures;
 
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
+
+    @BindView(R.id.text_photos)
+    TextView textPhotos;
 
     @BindView(R.id.edit_titre_annonce)
     EditText textViewTitre;
@@ -143,7 +148,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return false;
     };
 
-    // Evenement sur le spinner
+    // Evenement sur le spinner de choix de la catégorie
     private AdapterView.OnItemSelectedListener spinnerItemSelected = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -174,6 +179,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(postPhotoAdapter);
 
+        // Récupération du nombre maximale de photo autorisée
+        FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
+
         // Sur l'action finale du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -197,23 +206,23 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void manageSaveInstanceState(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
-                viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
-            }
-            if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
-                mFileUriTemp = savedInstanceState.getParcelable(SAVE_FILE_URI_TEMP);
-            }
+        if (savedInstanceState == null) return;
 
-            // S'il y avait un fragment, je le remet
-            if (savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
-                Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
-                if (frag != null) {
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
-                            .commit();
-                }
+        if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
+            viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
+        }
+        if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
+            mFileUriTemp = savedInstanceState.getParcelable(SAVE_FILE_URI_TEMP);
+        }
+
+        // S'il y avait un fragment, je le remet
+        if (savedInstanceState.containsKey(TAG_WORKING_IMAGE)) {
+            Fragment frag = getSupportFragmentManager().getFragment(savedInstanceState, TAG_WORKING_IMAGE);
+            if (frag != null) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.post_annonce_frame, frag, TAG_WORKING_IMAGE)
+                        .commit();
             }
         }
     }
@@ -299,7 +308,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // callCaptureIntent();
             callShootingPhoto();
         }
 
@@ -315,29 +323,47 @@ public class PostAnnonceActivity extends AppCompatActivity {
             return;
         }
 
-        if (requestCode == DIALOG_REQUEST_IMAGE) {
-            resizePhotoThenInsertToCurrentList(mFileUriTemp);
-        } else if (requestCode == DIALOG_GALLERY_IMAGE) {
+        if (requestCode == DIALOG_GALLERY_IMAGE) {
             // Insertion multiple
             if (data.getClipData() != null) {
+                // Vérification qu'on ajoute pas plus de photo que la quota autorisé
+                long nbPhotoSelected = data.getClipData().getItemCount();
+                if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
+                    nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
+                }
+
+                // Parcourt de toutes les items reçus et enregistrement dans une liste
+                List<Uri> listUri = new ArrayList<>();
                 int i = -1;
                 ClipData.Item item;
-                while (i++ < data.getClipData().getItemCount() - 1) {
+                while (i++ < nbPhotoSelected - 1) {
                     item = data.getClipData().getItemAt(i);
-                    resizePhotoThenInsertToCurrentList(item.getUri());
+                    listUri.add(item.getUri());
                 }
+
+                // Appel de la fonction pour resizer toutes les photos
+                showLoadingAndResizeListPhotos(listUri, false);
             } else {
                 // Insertion simple
                 if (data.getData() != null) {
-                    resizePhotoThenInsertToCurrentList(data.getData());
+                    // Appel de la fonction pour resizer la photo
+                    showLoadingAndResizeListPhotos(Collections.singletonList(data.getData()), false);
                 }
             }
         } else if (requestCode == REQUEST_SHOOTING_CODE) {
             ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
-            for (Uri uri : listUriPhotos) {
-                resizePhotoThenInsertToCurrentList(uri);
+            if (listUriPhotos != null && !listUriPhotos.isEmpty()) {
+                showLoadingAndResizeListPhotos(listUriPhotos, true);
             }
         }
+    }
+
+    private void showLoadingAndResizeListPhotos(List<Uri> listUriPhotos, boolean deleteUriTemp) {
+        viewModel.setShowLoading(true);
+        viewModel.resizeListPhotos(listUriPhotos, deleteUriTemp)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete(() -> viewModel.setShowLoading(false))
+                .subscribe();
     }
 
     @Override
@@ -389,7 +415,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-
     @OnClick(R.id.fab_add_photo)
     public void onAddPhoto(View v) {
         AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
@@ -408,9 +433,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
      * @return true if everything is ok, false otherwise
      */
     private boolean checkAndCatchParameter(Bundle bundle) {
-        // Catch preferences
-        externalStorage = SharedPreferencesHelper.getInstance(getApplicationContext()).getUseExternalStorage();
-
         // Récupération des paramètres
         if (bundle == null || !bundle.containsKey(BUNDLE_KEY_MODE) || bundle.getString(BUNDLE_KEY_MODE) == null) {
             Log.e(TAG, "Missing mandatory parameter");
@@ -466,6 +488,23 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Initialisation pour écouter les changements sur les photos
         viewModel.getLiveListPhoto().observe(this, this::displayPhotos);
+
+        // Montre le fragment de chargement
+        viewModel.isShowLoading().observe(this, this::showLoading);
+    }
+
+    private void showLoading(AtomicBoolean atomicBoolean) {
+        if (atomicBoolean != null) {
+            LoadingDialogFragment fragLoading = (LoadingDialogFragment) getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
+            if (atomicBoolean.get() && fragLoading == null) {
+                LoadingDialogFragment loadingDialogFragment = new LoadingDialogFragment();
+                loadingDialogFragment.setText("Redimenssionnement des photos");
+                loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
+            }
+            if (!atomicBoolean.get() && fragLoading != null) {
+                fragLoading.dismiss();
+            }
+        }
     }
 
     private void initViewModel() {
@@ -499,18 +538,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 nouvelleListe.add(photo);
             }
         }
+        recyclerView.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
+        textPhotos.setVisibility(nouvelleListe.isEmpty() ? View.GONE : View.VISIBLE);
         postPhotoAdapter.setListPhotoEntity(nouvelleListe);
-    }
-
-    private void resizePhotoThenInsertToCurrentList(Uri uriSrc) {
-        Uri uriDst = viewModel.generateNewUri(externalStorage);
-        if (uriDst != null) {
-            if (viewModel.getMediaUtility().copyAndResizeUriImages(getApplicationContext(), uriSrc, uriDst)) {
-                viewModel.addPhotoToCurrentList(uriDst.toString());
-            } else {
-                Snackbar.make(recyclerView, "L'image " + uriSrc.getPath() + " n'a pas pu être récupérée.", Snackbar.LENGTH_LONG).show();
-            }
-        }
     }
 
     /**
@@ -529,7 +559,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (checkExternalPermission(new ArrayList<>(Arrays.asList(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)))) {
             requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION_CODE);
         } else {
-            // callCaptureIntent();
             callShootingPhoto();
         }
     }
@@ -550,22 +579,11 @@ public class PostAnnonceActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(photoPickerIntent, getString(R.string.choose_image_to_upload)), DIALOG_GALLERY_IMAGE);
     }
 
-    /**
-     * Launch activity to take a picture
-     */
-    private void callCaptureIntent() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        mFileUriTemp = viewModel.generateNewUri(externalStorage);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUriTemp);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivityForResult(intent, DIALOG_REQUEST_IMAGE);
-    }
-
     private void callShootingPhoto() {
         Intent intent = new Intent(this, ShootingActivity.class);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.putExtra(ShootingActivity.EXTRA_NBR_PHOTO, remoteNbMaxPictures - viewModel.getActualNbrPhotos());
         startActivityForResult(intent, REQUEST_SHOOTING_CODE);
     }
 

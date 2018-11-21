@@ -7,6 +7,7 @@ import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,6 +17,7 @@ import androidx.core.util.Pair;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
@@ -34,6 +36,8 @@ import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
+import oliweb.nc.oliweb.utility.Utility;
+import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -75,12 +79,61 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private CategorieEntity currentCategorie;
     private PhotoEntity currentPhoto;
     private CustomLiveData<ArrayList<CategorieEntity>> listCategorie;
-
+    private MutableLiveData<AtomicBoolean> showLoading = new MutableLiveData<>();
     private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
         ((App) application).getDatabaseRepositoriesComponent().inject(this);
+    }
+
+    /**
+     * Lecture de la liste des Uri passée en paramètre.
+     * Pour chaque élément on va retailler l'image et l'ajouter à notre liste courante de photo
+     *
+     * @param listPhotosUri              Liste des Uri à retailler et à enregistrer
+     * @param deleteUriSourceAfterResize Doit on supprimer le fichier situé à l'Uri source après le redimensionnement.
+     * @return
+     */
+    public Maybe<AtomicBoolean> resizeListPhotos(List<Uri> listPhotosUri, boolean deleteUriSourceAfterResize) {
+        boolean externalStorage = SharedPreferencesHelper.getInstance(getApplication()).getUseExternalStorage();
+        return Maybe.create(emitter -> {
+            for (Uri uriPhoto : listPhotosUri) {
+                Uri uriDst = generateNewUri(externalStorage);
+                if (uriDst != null && getMediaUtility().copyAndResizeUriImages(getApplication(), uriPhoto, uriDst, deleteUriSourceAfterResize)) {
+                    addPhotoToCurrentList(uriDst.toString());
+                } else {
+                    Log.e(TAG, String.format("La photo %s n'a pas pu être redimenssionnée et enregistrée", uriPhoto.toString()));
+                    emitter.onError(new RuntimeException(String.format("La photo %s n'a pas pu être redimenssionnée et enregistrée", uriPhoto.toString())));
+                }
+            }
+            emitter.onComplete();
+        });
+    }
+
+    public List<PhotoEntity> removePhotoWithForbiddenStatus(List<PhotoEntity> listBefore) {
+        ArrayList<PhotoEntity> nouvelleListe = new ArrayList<>();
+        for (PhotoEntity photo : listBefore) {
+            if (!Utility.allStatusToAvoid().contains(photo.getStatut().getValue())) {
+                nouvelleListe.add(photo);
+            }
+        }
+        return nouvelleListe;
+    }
+
+    public int getPhotoNumber() {
+        if (liveListPhoto == null || liveListPhoto.getValue().isEmpty()) {
+            return 0;
+        }
+        return removePhotoWithForbiddenStatus(liveListPhoto.getValue()).size();
+    }
+
+    public LiveData<AtomicBoolean> isShowLoading() {
+        return showLoading;
+    }
+
+    public void setShowLoading(boolean showLoading) {
+        this.showLoading.postValue(new AtomicBoolean(showLoading));
     }
 
     public MediaUtility getMediaUtility() {
@@ -186,21 +239,31 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         );
     }
 
+    /**
+     * Return the actual valid photo number in the annonce
+     *
+     * @return
+     */
+    public int getActualNbrPhotos() {
+        int i = 0;
+        for (PhotoEntity photoEntity : this.currentAnnonce.getPhotos()) {
+            if (!Utility.allStatusToAvoid().contains(photoEntity.getStatut().getValue())) {
+                i++;
+            }
+        }
+        return i;
+    }
+
     public void updatePhotos() {
         this.liveListPhoto.postValue(this.currentAnnonce.getPhotos());
     }
 
-    public void addPhotoToCurrentList(String path) {
+    private void addPhotoToCurrentList(String path) {
         PhotoEntity photoEntity = new PhotoEntity();
         photoEntity.setUriLocal(path);
         photoEntity.setStatut(StatusRemote.NOT_TO_SEND);
         this.currentAnnonce.getPhotos().add(photoEntity);
         updatePhotos();
-    }
-
-    // TODO voir si on garde cette condition pour limiter l'envoi de photos sur le serveur.
-    public boolean canHandleAnotherPhoto() {
-        return this.currentAnnonce.getPhotos().size() < NBR_MAX;
     }
 
     public void removePhotoFromCurrentList(PhotoEntity photoEntity) {
@@ -227,21 +290,10 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return currentCategorie;
     }
 
-    public Uri generateNewUri(boolean externalStorage) {
+    private Uri generateNewUri(boolean externalStorage) {
         Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair.first;
-        } else {
-            Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
-            return null;
-        }
-    }
-
-    // TODO delete this method if not used after refacto
-    public File generateNewFile(boolean externalStorage) {
-        Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
-        if (pair != null && pair.first != null) {
-            return pair.second;
         } else {
             Log.e(TAG, "generateNewUri() : MediaUtility a renvoyé une pair null");
             return null;

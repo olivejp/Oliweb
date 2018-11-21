@@ -4,11 +4,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
 import oliweb.nc.oliweb.R;
 
 /**
@@ -44,7 +44,7 @@ public class SortDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(appCompatActivity);
-        builder.setTitle("Trier");
+        builder.setTitle(R.string.sort);
         builder.setItems(R.array.pref_sort, (dialog, which) -> listener.sortHasBeenUpdated(which));
         return builder.create();
     }
