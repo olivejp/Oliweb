@@ -205,5 +205,7 @@
     <string name="default_mail_suggestion_message" translatable="false">Bonjour, \n J\'utilise votre application et je voudrai vous soumettre les améliorations suivantes : \n</string>
     <string name="title_activity_shooting" translatable="false">Shooting</string>
     <string name="sort">Trier</string>
+    <string name="TRANSITION_CONSTRAINT_PROFILE"  translatable="false">TRANSITION_CONSTRAINT_PROFILE</string>
+    <string name="TRANSITION_PROFILE_IMAGE" translatable="false">TRANSITION_PROFILE_IMAGE</string>
 
 </resources>

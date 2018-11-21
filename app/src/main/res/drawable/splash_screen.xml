@@ -4,6 +4,6 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_banana_launcher_foreground" />
+            android:src="@drawable/clothing_leather_wooden" />
     </item>
 </layer-list>

@@ -35,8 +35,11 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.app.ShareCompat;
+import androidx.core.util.Pair;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity
 
     SearchView searchView;
 
+    private ConstraintLayout constraintProfil;
     private ImageView profileImage;
     private TextView profileName;
     private TextView profileEmail;
@@ -216,6 +220,7 @@ public class MainActivity extends AppCompatActivity
         View viewHeader = navigationView.getHeaderView(0);
 
         TextView headerVersion = viewHeader.findViewById(R.id.nav_header_version);
+        constraintProfil = viewHeader.findViewById(R.id.constraint_nav_profile);
         profileImage = viewHeader.findViewById(R.id.profileImage);
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
@@ -658,7 +663,10 @@ public class MainActivity extends AppCompatActivity
             bundle.putString(PROFIL_ACTIVITY_UID_USER, uidUser);
             bundle.putBoolean(UPDATE, true);
             intent.putExtras(bundle);
-            startActivity(intent);
+            Pair<View, String> pairImage = new Pair<>(constraintProfil, getString(R.string.TRANSITION_CONSTRAINT_PROFILE));
+            Pair<View, String> pairImageUser = new Pair<>(profileImage, getString(R.string.TRANSITION_PROFILE_IMAGE));
+            ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage, pairImageUser);
+            startActivity(intent, options.toBundle());
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
     }
