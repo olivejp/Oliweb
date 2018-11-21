@@ -324,8 +324,7 @@ public class SearchActivity extends AppCompatActivity {
                 listResultSearch.add(annonceFull);
             }
             listAnnonce.addAll(listResultSearch);
-            annonceBeautyAdapter.setListAnnonces(listAnnonce);
-            annonceBeautyAdapter.notifyDataSetChanged();
+            initAdapter(listAnnonce);
         }
     }
 

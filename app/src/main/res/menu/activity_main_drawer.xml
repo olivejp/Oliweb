@@ -7,10 +7,6 @@
     <item android:title="@string/mes_informations">
         <menu>
             <item
-                android:id="@+id/nav_profile"
-                android:icon="@drawable/ic_person_grey_900_48dp"
-                android:title="@string/mon_profil" />
-            <item
                 android:id="@+id/nav_annonces"
                 android:icon="@drawable/ic_assistant_photo_grey_900_48dp"
                 android:title="@string/mes_annonces"

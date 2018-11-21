@@ -220,6 +220,12 @@ public class MainActivity extends AppCompatActivity
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
 
+        profileImage.setOnClickListener(v -> {
+            if (mFirebaseAuth.getUid() != null) {
+                callProfilActivity();
+            }
+        });
+
         headerVersion.setText(BuildConfig.VERSION_NAME);
         navigationViewMenu = navigationView.getMenu();
 
@@ -345,8 +351,6 @@ public class MainActivity extends AppCompatActivity
             signInSignOut();
         } else if (id == R.id.nav_settings) {
             callSettingActivity();
-        } else if (id == R.id.nav_profile) {
-            callProfilActivity();
         } else if (id == R.id.nav_favorites) {
             callFavoriteActivity();
         } else if (id == R.id.nav_chats) {
@@ -549,7 +553,6 @@ public class MainActivity extends AppCompatActivity
                     .circleCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .error(R.mipmap.ic_banana_launcher_foreground)
-                    .placeholder(R.mipmap.ic_banana_launcher_foreground)
                     .into(profileImage);
         }
 
@@ -641,7 +644,6 @@ public class MainActivity extends AppCompatActivity
 
     private void prepareNavigationMenu(boolean isConnected) {
         navigationView.getMenu().findItem(R.id.nav_annonces).setEnabled(isConnected);
-        navigationView.getMenu().findItem(R.id.nav_profile).setEnabled(isConnected);
         navigationView.getMenu().findItem(R.id.nav_favorites).setEnabled(isConnected);
         navigationView.getMenu().findItem(R.id.nav_chats).setEnabled(isConnected);
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((isConnected) ? getString(R.string.sign_out) : getString(R.string.sign_in));
