@@ -13,12 +13,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -34,6 +37,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -42,7 +46,6 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
-import oliweb.nc.oliweb.service.search.SearchEngine;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -65,7 +68,7 @@ import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
 
-public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, SearchEngine.SearchListener {
+public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
@@ -434,16 +437,16 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (categorieSelected != null && !categorieSelected.getId().equals(ID_ALL_CATEGORY)) {
             listCategorie = Collections.singletonList(categorieSelected.getName());
         }
-        viewModel.getSearchEngine().search(listCategorie,
-                false,
-                0,
-                0,
-                null,
-                Constants.PER_PAGE_REQUEST,
-                from,
-                sortSelected,
-                directionSelected,
-                this);
+        viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .timeout(20L, TimeUnit.SECONDS)
+                .onErrorComplete(throwable -> throwable instanceof TimeoutException)
+                .doOnSubscribe(disposable -> searchinProgress = true)
+                .doOnError(Crashlytics::logException)
+                .doOnSuccess(this::doOnSuccessSearch)
+                .doOnComplete(this::dismissLoading)
+                .doAfterTerminate(this::dismissLoading)
+                .subscribe();
     }
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
@@ -462,32 +465,24 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annonceBeautyAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onBeginSearch() {
-        searchinProgress = true;
+    private void doOnSuccessSearch(ElasticsearchHitsResult elasticsearchHitsResult) {
+        ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
+        if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
+            totalLoaded = elasticsearchHitsResult.getTotal();
+            for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchHitsResult.getHits()) {
+                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
+                listResultSearch.add(annonceFull);
+            }
+        }
+
+        updateListWithFavorite(listResultSearch, listUidFavorites);
+        annoncePhotosList.addAll(listResultSearch);
+        annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+        annonceBeautyAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError) {
+    private void dismissLoading() {
         searchinProgress = false;
-        if (goodFinish) {
-            ArrayList<AnnonceFull> listResultSearch = new ArrayList<>();
-            if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
-                totalLoaded = elasticsearchHitsResult.getTotal();
-                for (ElasticsearchResult<AnnonceFirebase> result : elasticsearchHitsResult.getHits()) {
-                    AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(result.get_source());
-                    listResultSearch.add(annonceFull);
-                }
-            }
-
-            updateListWithFavorite(listResultSearch, listUidFavorites);
-            annoncePhotosList.addAll(listResultSearch);
-            annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
-            annonceBeautyAdapter.notifyDataSetChanged();
-        } else {
-            Toast.makeText(appCompatActivity, messageError, Toast.LENGTH_LONG).show();
-            Log.e(TAG, messageError);
-        }
         LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
         if (loadingDialogFragment1 != null) {
             loadingDialogFragment1.dismissAllowingStateLoss();

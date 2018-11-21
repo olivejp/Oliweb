@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -66,6 +65,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_OPEN_CHATS;
@@ -162,8 +162,10 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Récupération du viewModel
         viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
+        // Get instances of Firebase tooling
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseDynamicLinks = FirebaseDynamicLinks.getInstance();
         mFirebaseConfig = FirebaseRemoteConfig.getInstance();
@@ -191,7 +193,7 @@ public class MainActivity extends AppCompatActivity
         viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 
         // Récupération dans le config remote du nombre de colonne que l'on veut
-        initConfigDefaultValues();
+        initRemoteConfigDefaultValues();
 
         // Init des widgets sur l'écran
         initViews();
@@ -205,7 +207,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void initConfigDefaultValues() {
+    private void initRemoteConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
         defaults.put(Constants.REMOTE_COLUMN_NUMBER, 2);
         defaults.put(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE, 2);
@@ -225,34 +227,26 @@ public class MainActivity extends AppCompatActivity
         profileName = viewHeader.findViewById(R.id.profileName);
         profileEmail = viewHeader.findViewById(R.id.profileEmail);
 
+        headerVersion.setText(BuildConfig.VERSION_NAME);
         profileImage.setOnClickListener(v -> {
             if (mFirebaseAuth.getUid() != null) {
                 callProfilActivity();
             }
         });
 
-        headerVersion.setText(BuildConfig.VERSION_NAME);
-        navigationViewMenu = navigationView.getMenu();
-
         setSupportActionBar(toolbar);
         toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        navigationViewMenu = navigationView.getMenu();
         navigationView.setNavigationItemSelectedListener(this);
-
         prepareNavigationMenu(false);
 
         // Observe les changements effectués sur cet utilisateur
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
 
-        initToolbar();
-    }
-
-    /**
-     * Permet de faire disparaitre la barre outil dans le cas où on scroll
-     */
-    private void initToolbar() {
+        // Permet de faire disparaitre la barre outil dans le cas où on scroll
         appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
                 toolbar.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
         );
@@ -287,6 +281,7 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, listAnnonceFragment, TAG_LIST_ANNONCE);
         transaction.commit();
 
+        // Fragment liste de chats (TODO voir si encore utilisé)
         ListChatFragment listChatFragment;
         if (savedInstanceState != null && savedInstanceState.containsKey(TAG_LIST_CHAT)) {
             listChatFragment = (ListChatFragment) getSupportFragmentManager().getFragment(savedInstanceState, TAG_LIST_CHAT);
@@ -298,19 +293,18 @@ public class MainActivity extends AppCompatActivity
 
     private void createListCategoryFragment() {
         viewModel.getLiveListCategory().observe(this, categorieEntities -> {
-            if (categorieEntities != null && !categorieEntities.isEmpty()) {
-                // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
-                CategorieEntity cat = new CategorieEntity();
-                cat.setIdCategorie(ID_ALL_CATEGORY);
-                cat.setName("Toutes");
-                categorieEntities.add(0, cat);
+            if (categorieEntities == null || categorieEntities.isEmpty()) return;
 
-                viewModel.setCategorySelected(cat);
+            // Ajout d'une catégorie, dans la liste et sélection de cette catégorie par défaut
+            CategorieEntity cat = new CategorieEntity();
+            cat.setIdCategorie(ID_ALL_CATEGORY);
+            cat.setName(getString(R.string.all_categories));
+            categorieEntities.add(0, cat);
+            viewModel.setCategorySelected(cat);
 
-                ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
-                FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
-                transactionListeCategorie.commit();
-            }
+            ListCategorieFragment nouveauFragment = ListCategorieFragment.newInstance(categorieEntities);
+            FragmentTransaction transactionListeCategorie = getSupportFragmentManager().beginTransaction().replace(R.id.frame_category_list, nouveauFragment, TAG_LIST_CATEGORY);
+            transactionListeCategorie.commit();
         });
     }
 
@@ -449,7 +443,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-
         navigationView.setNavigationItemSelectedListener(null);
         drawer.removeDrawerListener(toggle);
 
@@ -475,8 +468,8 @@ public class MainActivity extends AppCompatActivity
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
             SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
             SyncService.launchSynchroFromFirebase(MainActivity.this, viewModel.getUserConnected().getUid());
-            dialog.dismiss();
         }
+        dialog.dismiss();
     }
 
     @Override
@@ -517,6 +510,7 @@ public class MainActivity extends AppCompatActivity
 
     private void catchDynamicLink() {
         mFirebaseDynamicLinks.getDynamicLink(getIntent())
+                .addOnFailureListener(this, e -> Crashlytics.log(1, TAG, "getDynamicLink:onFailure" + e.getLocalizedMessage()))
                 .addOnSuccessListener(this, data -> {
                     // TODO Déplacer ce code dans une classe plus business.
                     if (data != null && data.getLink() != null && !dynamicLinkProcessed) {
@@ -534,14 +528,41 @@ public class MainActivity extends AppCompatActivity
                             });
                         }
                     }
-                })
-                .addOnFailureListener(this, e -> Log.w(TAG, "getDynamicLink:onFailure", e));
+                });
     }
 
     private void callAnnonceDetailActivity(AnnonceFull annonceFull) {
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, annonceFull);
         startActivity(intent);
+    }
+
+    private void callProfilActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, ProfilActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString(PROFIL_ACTIVITY_UID_USER, uidUser);
+            bundle.putBoolean(UPDATE, true);
+            intent.putExtras(bundle);
+            Pair<View, String> pairImage = new Pair<>(constraintProfil, getString(R.string.TRANSITION_CONSTRAINT_PROFILE));
+            Pair<View, String> pairImageUser = new Pair<>(profileImage, getString(R.string.TRANSITION_PROFILE_IMAGE));
+            ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage, pairImageUser);
+            startActivity(intent, options.toBundle());
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
+    }
+
+    private void callFavoriteActivity() {
+        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
+        if (uidUser != null) {
+            Intent intent = new Intent();
+            intent.setClass(this, FavoritesActivity.class);
+            intent.putExtra(ARG_UID_USER, uidUser);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+        }
     }
 
     private void initViewsForThisUser(UserEntity userEntity) {
@@ -654,34 +675,6 @@ public class MainActivity extends AppCompatActivity
         navigationViewMenu.findItem(R.id.nav_connect).setTitle((isConnected) ? getString(R.string.sign_out) : getString(R.string.sign_in));
     }
 
-    private void callProfilActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-        if (uidUser != null) {
-            Intent intent = new Intent();
-            intent.setClass(this, ProfilActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putString(PROFIL_ACTIVITY_UID_USER, uidUser);
-            bundle.putBoolean(UPDATE, true);
-            intent.putExtras(bundle);
-            Pair<View, String> pairImage = new Pair<>(constraintProfil, getString(R.string.TRANSITION_CONSTRAINT_PROFILE));
-            Pair<View, String> pairImageUser = new Pair<>(profileImage, getString(R.string.TRANSITION_PROFILE_IMAGE));
-            ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, pairImage, pairImageUser);
-            startActivity(intent, options.toBundle());
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-        }
-    }
-
-    private void callFavoriteActivity() {
-        String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
-        if (uidUser != null) {
-            Intent intent = new Intent();
-            intent.setClass(this, FavoritesActivity.class);
-            intent.putExtra(ARG_UID_USER, uidUser);
-            startActivity(intent);
-            overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-        }
-    }
-
     @Override
     public void onNetworkEnable() {
         String uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
@@ -696,6 +689,4 @@ public class MainActivity extends AppCompatActivity
         viewModel.stopAllServices();
         viewModel.setIsNetworkAvailable(false);
     }
-
-
 }

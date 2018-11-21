@@ -207,5 +207,6 @@
     <string name="sort">Trier</string>
     <string name="TRANSITION_CONSTRAINT_PROFILE"  translatable="false">TRANSITION_CONSTRAINT_PROFILE</string>
     <string name="TRANSITION_PROFILE_IMAGE" translatable="false">TRANSITION_PROFILE_IMAGE</string>
+    <string name="all_categories">Toutes</string>
 
 </resources>

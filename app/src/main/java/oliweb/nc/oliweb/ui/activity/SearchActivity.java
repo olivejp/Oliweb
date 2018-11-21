@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.dynamiclinks.DynamicLink;
@@ -303,7 +304,7 @@ public class SearchActivity extends AppCompatActivity {
                         .timeout(20L, TimeUnit.SECONDS)
                         .onErrorComplete(throwable -> throwable instanceof TimeoutException)
                         .doOnError(throwable -> {
-                            Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                            Crashlytics.logException(throwable);
                             viewModel.updateLoadingStatus(false);
                         })
                         .doOnSuccess(s -> {
