@@ -51,6 +51,7 @@ import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -103,7 +104,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private List<String> listUidFavorites = new ArrayList<>();
     private AnnonceFull annonceFullToSaveTofavorite;
     private View viewToEnabled;
-    private int pagingSize = 20;
     private CategorieEntity categorieSelected;
     private int from = 0;
     private Long totalLoaded = 0L;
@@ -301,17 +301,16 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void makeNewSearch() {
-        if (!searchinProgress) {
-            from = 0;
-            totalLoaded = 0L;
-            annoncePhotosList.clear();
-            if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
-                loadingDialogFragment = new LoadingDialogFragment();
-                loadingDialogFragment.setText("Recherche en cours");
-                loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
-            }
-            loadMoreDatas();
+        if (searchinProgress) return;
+        from = 0;
+        totalLoaded = 0L;
+        annoncePhotosList.clear();
+        if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
+            loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText("Recherche en cours");
+            loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
         }
+        loadMoreDatas();
     }
 
     @Override
@@ -440,7 +439,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 0,
                 0,
                 null,
-                pagingSize,
+                Constants.PER_PAGE_REQUEST,
                 from,
                 sortSelected,
                 directionSelected,

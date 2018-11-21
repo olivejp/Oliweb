@@ -1,7 +1,6 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +15,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.Scheduler;
 import oliweb.nc.oliweb.App;
-import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
-import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
-import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.service.AnnonceService;
 import oliweb.nc.oliweb.service.search.SearchEngine;
@@ -77,6 +72,10 @@ public class SearchActivityViewModel extends AndroidViewModel {
         listAnnonce = new ArrayList<>();
     }
 
+    public boolean isLoading() {
+        return (loading != null) && loading.getValue().get();
+    }
+
     public LiveData<ArrayList<AnnonceFull>> getLiveListAnnonce() {
         if (liveListAnnonce == null) {
             liveListAnnonce = new MutableLiveData<>();
@@ -98,7 +97,7 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return annonceService.addOrRemoveFromFavorite(uidCurrentUser, annoncePhotos);
     }
 
-    private void updateLoadingStatus(boolean status) {
+    public void updateLoadingStatus(boolean status) {
         if (loading == null) {
             loading = new MutableLiveData<>();
         }
@@ -109,27 +108,8 @@ public class SearchActivityViewModel extends AndroidViewModel {
         return NetworkReceiver.checkConnection(getApplication().getApplicationContext());
     }
 
-    public void search(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
-        updateLoadingStatus(true);
-        if (from == 0) listAnnonce.clear();
-
-        searchEngine.searchMaybe(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction)
-                .subscribeOn(processScheduler).observeOn(processScheduler)
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage(), throwable))
-                .doOnSuccess(this::doOnSuccess)
-                .doOnComplete(() -> updateLoadingStatus(false))
-                .subscribe();
-    }
-
-    private void doOnSuccess(ElasticsearchHitsResult elasticsearchHitsResult) {
-        if (elasticsearchHitsResult != null && elasticsearchHitsResult.getHits() != null && !elasticsearchHitsResult.getHits().isEmpty()) {
-            for (ElasticsearchResult<AnnonceFirebase> elasticsearchResult : elasticsearchHitsResult.getHits()) {
-                AnnonceFull annonceFull = AnnonceConverter.convertDtoToAnnonceFull(elasticsearchResult.get_source());
-                listAnnonce.add(annonceFull);
-            }
-            liveListAnnonce.postValue(listAnnonce);
-        }
-        updateLoadingStatus(false);
+    public SearchEngine getSearchEngine() {
+        return searchEngine;
     }
 
     public LiveData<List<AnnonceFull>> getFavoritesByUidUser(String uidUtilisateur) {
