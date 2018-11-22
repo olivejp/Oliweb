@@ -22,6 +22,7 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -44,14 +45,17 @@ public class AnnonceBeautyAdapter extends
     private View.OnClickListener onClickListener;
     private View.OnClickListener onClickListenerShare;
     private View.OnClickListener onClickListenerFavorite;
+    private AppCompatActivity appCompatActivity;
 
     public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
                                 View.OnClickListener onClickListenerShare,
-                                View.OnClickListener onClickListenerFavorite) {
+                                View.OnClickListener onClickListenerFavorite,
+                                AppCompatActivity appCompatActivity) {
         this.listAnnonces = new ArrayList<>();
         this.onClickListener = onClickListener;
         this.onClickListenerShare = onClickListenerShare;
         this.onClickListenerFavorite = onClickListenerFavorite;
+        this.appCompatActivity = appCompatActivity;
     }
 
     @NonNull
@@ -94,14 +98,16 @@ public class AnnonceBeautyAdapter extends
                 && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
 
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
-            GlideApp.with(viewHolderBeauty.imageUserBeauty)
+            GlideApp.with(appCompatActivity)
                     .load(urlPhoto)
+                    .skipMemoryCache(true)
                     .error(R.drawable.ic_person_white_48dp)
                     .circleCrop()
                     .into(viewHolderBeauty.imageUserBeauty);
         } else {
-            GlideApp.with(viewHolderBeauty.imageUserBeauty)
+            GlideApp.with(appCompatActivity)
                     .load(R.drawable.ic_person_white_48dp)
+                    .skipMemoryCache(true)
                     .into(viewHolderBeauty.imageUserBeauty);
         }
 
@@ -129,7 +135,7 @@ public class AnnonceBeautyAdapter extends
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setBackground(null);
             viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
-            GlideApp.with(viewHolderBeauty.imageView)
+            GlideApp.with(appCompatActivity)
                     .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
                     .listener(new RequestListener<Drawable>() {
                         @Override
@@ -146,14 +152,16 @@ public class AnnonceBeautyAdapter extends
                             return false;
                         }
                     })
+                    .skipMemoryCache(true)
                     .error(R.mipmap.ic_banana_launcher_foreground)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {
             viewHolderBeauty.progressBar.setVisibility(View.GONE);
-            GlideApp.with(viewHolderBeauty.imageView)
+            GlideApp.with(appCompatActivity)
                     .load(R.mipmap.ic_banana_launcher_foreground)
                     .centerInside()
+                    .skipMemoryCache(true)
                     .into(viewHolderBeauty.imageView);
         }
     }

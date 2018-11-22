@@ -31,6 +31,7 @@ import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -172,6 +173,12 @@ public class FavoritesActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GlideApp.get(this).clearMemory();
+    }
+
     private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(FavoriteActivityViewModel.class);
@@ -179,7 +186,7 @@ public class FavoritesActivity extends AppCompatActivity {
         // Init views
         setContentView(R.layout.activity_list_favorite);
         ButterKnife.bind(this);
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         recyclerView.setAdapter(annonceBeautyAdapter);

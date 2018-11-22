@@ -32,8 +32,10 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
     private List<PhotoEntity> photos;
     private LayoutInflater inflater;
     private View.OnClickListener onClickListener;
+    private Context context;
 
     public AnnonceViewPagerAdapter(Context context, List<PhotoEntity> photos, @Nullable View.OnClickListener onClickListener) {
+        this.context = context;
         this.photos = photos;
         this.inflater = LayoutInflater.from(context);
         this.onClickListener = onClickListener;
@@ -65,8 +67,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
         } else if (photos.get(position).getFirebasePath() != null) {
             pathImage = photos.get(position).getFirebasePath();
         }
-
-        GlideApp.with(myImage.getContext())
+        GlideApp.with(context)
                 .load(pathImage)
                 .error(R.drawable.ic_error_grey_900_48dp)
                 .listener(new RequestListener<Drawable>() {
@@ -84,6 +85,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
                         return false;
                     }
                 })
+                .skipMemoryCache(true)
                 .centerCrop()
                 .into(myImage);
 

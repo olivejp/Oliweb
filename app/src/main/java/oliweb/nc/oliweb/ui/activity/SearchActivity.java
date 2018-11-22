@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,6 +46,7 @@ import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -195,7 +195,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void initRecyclerView() {
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -276,6 +276,12 @@ public class SearchActivity extends AppCompatActivity {
         outState.putString(SAVE_QUERY, query);
         outState.putInt(SAVE_FROM, from);
         outState.putInt(SAVE_TOTAL_LOADED, totalLoaded);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GlideApp.get(this).clearMemory();
     }
 
     private void makeNewSearch() {

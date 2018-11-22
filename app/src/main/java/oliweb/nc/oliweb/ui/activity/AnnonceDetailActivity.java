@@ -336,6 +336,12 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GlideApp.get(this).clearMemory();
+    }
+
     private void initAnnonceViews(AnnonceFull annonceFull) {
         if (annonceFull.getAnnonce() != null) {
             AnnonceEntity annonce = annonceFull.getAnnonce();
