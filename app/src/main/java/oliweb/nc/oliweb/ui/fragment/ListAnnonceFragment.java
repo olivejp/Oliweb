@@ -382,7 +382,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @Override
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
-        changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+        makeNewSearch();
     }
 
     private void initAccordingToAction() {
