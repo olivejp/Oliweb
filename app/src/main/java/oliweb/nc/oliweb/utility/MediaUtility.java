@@ -147,7 +147,7 @@ public class MediaUtility {
                     Log.e(TAG, e.getMessage(), e);
                 }
             }
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
             out.flush();
         } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
@@ -333,7 +333,7 @@ public class MediaUtility {
         }
 
         try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
-            bitmapDst.compress(Bitmap.CompressFormat.PNG, 100, out);
+            bitmapDst.compress(Bitmap.CompressFormat.JPEG, 70, out);
             if (deleteUriSource) {
                 deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
             }
@@ -347,7 +347,7 @@ public class MediaUtility {
     public boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
         try {
             OutputStream out = contentResolver.openOutputStream(uriDestination);
-            bitmapToSave.compress(Bitmap.CompressFormat.PNG, 100, out);
+            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, out);
             if (out != null) {
                 out.flush();
                 out.close();
