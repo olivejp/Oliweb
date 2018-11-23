@@ -4,10 +4,10 @@
     android:layout_height="match_parent">
 
     <ImageView
+        android:id="@+id/intro_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/clothing_leather_wooden"/>
+        android:scaleType="centerCrop"/>
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"

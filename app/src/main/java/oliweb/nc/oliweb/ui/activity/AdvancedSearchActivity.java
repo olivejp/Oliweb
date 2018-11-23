@@ -76,9 +76,10 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
         setContentView(R.layout.activity_advanced_search);
         ButterKnife.bind(this);
+
+        viewModel = ViewModelProviders.of(this).get(AdvancedSearchActivityViewModel.class);
 
         // Retrieve the checked categories
         if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_SAVED_CATEGORIE)) {

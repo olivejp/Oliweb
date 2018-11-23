@@ -23,7 +23,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
 
     // The minimum amount of items to have below your current scroll position
     // before loading more.
-    private int visibleThreshold = 15;
+    private int visibleThreshold = 20;
 
     private RecyclerView.LayoutManager mLayoutManager;
 
@@ -73,9 +73,7 @@ public abstract class EndlessRecyclerOnScrollListener extends
         if (totalItemCount < previousTotalItemCount) {
             this.currentPage = this.startingPageIndex;
             this.previousTotalItemCount = totalItemCount;
-            if (totalItemCount == 0) {
-                this.loading = true;
-            }
+            this.loading = (totalItemCount == 0);
         }
         // If it’s still loading, we check to see if the dataset count has
         // changed, if so we conclude it has finished loading and update the current page

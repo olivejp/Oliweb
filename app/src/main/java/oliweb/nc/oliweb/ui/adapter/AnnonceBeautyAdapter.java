@@ -10,6 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -31,6 +33,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
+import oliweb.nc.oliweb.ui.glide.GlideRequests;
 import oliweb.nc.oliweb.utility.Utility;
 
 /**
@@ -45,17 +48,23 @@ public class AnnonceBeautyAdapter extends
     private View.OnClickListener onClickListener;
     private View.OnClickListener onClickListenerShare;
     private View.OnClickListener onClickListenerFavorite;
-    private AppCompatActivity appCompatActivity;
+    private GlideRequests glide;
 
     public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
                                 View.OnClickListener onClickListenerShare,
                                 View.OnClickListener onClickListenerFavorite,
-                                AppCompatActivity appCompatActivity) {
+                                AppCompatActivity appCompatActivity,
+                                Fragment fragment) {
         this.listAnnonces = new ArrayList<>();
         this.onClickListener = onClickListener;
         this.onClickListenerShare = onClickListenerShare;
         this.onClickListenerFavorite = onClickListenerFavorite;
-        this.appCompatActivity = appCompatActivity;
+        if (appCompatActivity != null) {
+            glide = GlideApp.with(appCompatActivity);
+        }
+        if (fragment != null) {
+            glide = GlideApp.with(fragment);
+        }
     }
 
     @NonNull
@@ -98,17 +107,13 @@ public class AnnonceBeautyAdapter extends
                 && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
 
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
-            GlideApp.with(appCompatActivity)
-                    .load(urlPhoto)
-                    .skipMemoryCache(true)
+            glide.load(urlPhoto).override(100, 100)
                     .error(R.drawable.ic_person_white_48dp)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .circleCrop()
                     .into(viewHolderBeauty.imageUserBeauty);
         } else {
-            GlideApp.with(appCompatActivity)
-                    .load(R.drawable.ic_person_white_48dp)
-                    .skipMemoryCache(true)
-                    .into(viewHolderBeauty.imageUserBeauty);
+            glide.load(R.drawable.ic_person_white_48dp).into(viewHolderBeauty.imageUserBeauty);
         }
 
         viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
@@ -121,8 +126,10 @@ public class AnnonceBeautyAdapter extends
         viewHolderBeauty.imageShare.setTag(viewHolderBeauty);
 
         if (onClickListener != null) viewHolderBeauty.cardView.setOnClickListener(onClickListener);
-        if (onClickListenerFavorite != null)viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
-        if (onClickListenerShare != null)viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
+        if (onClickListenerFavorite != null)
+            viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
+        if (onClickListenerShare != null)
+            viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
 
         boolean isFavorite = viewHolderBeauty.annonceFull.getAnnonce().isFavorite();
         viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);
@@ -135,8 +142,7 @@ public class AnnonceBeautyAdapter extends
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setBackground(null);
             viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
-            GlideApp.with(appCompatActivity)
-                    .load(annoncePhotos.getPhotos().get(0).getFirebasePath())
+            glide.load(annoncePhotos.getPhotos().get(0).getFirebasePath())
                     .listener(new RequestListener<Drawable>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
@@ -152,16 +158,14 @@ public class AnnonceBeautyAdapter extends
                             return false;
                         }
                     })
-                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .error(R.mipmap.ic_banana_launcher_foreground)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
         } else {
             viewHolderBeauty.progressBar.setVisibility(View.GONE);
-            GlideApp.with(appCompatActivity)
-                    .load(R.mipmap.ic_banana_launcher_foreground)
+            glide.load(R.mipmap.ic_banana_launcher_foreground)
                     .centerInside()
-                    .skipMemoryCache(true)
                     .into(viewHolderBeauty.imageView);
         }
     }

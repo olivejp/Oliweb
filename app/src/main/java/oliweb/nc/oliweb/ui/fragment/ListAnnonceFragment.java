@@ -38,6 +38,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
@@ -112,7 +113,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int from = 0;
     private Long totalLoaded = 0L;
     private int actualSort;
-    private boolean searchinProgress;
+    private Disposable actualSearch;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -305,7 +306,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void makeNewSearch() {
-        if (searchinProgress) return;
+        if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
         from = 0;
         totalLoaded = 0L;
         annoncePhotosList.clear();
@@ -327,7 +328,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, Snackbar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, appCompatActivity);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, null, this);
 
         recyclerView.setAdapter(annonceBeautyAdapter);
 
@@ -442,7 +443,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .timeout(20L, TimeUnit.SECONDS)
                 .onErrorComplete(throwable -> throwable instanceof TimeoutException)
-                .doOnSubscribe(disposable -> searchinProgress = true)
+                .doOnSubscribe(disposable -> actualSearch = disposable)
                 .doOnError(Crashlytics::logException)
                 .doOnSuccess(this::doOnSuccessSearch)
                 .doOnComplete(this::dismissLoading)
@@ -486,7 +487,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(false);
         }
-        searchinProgress = false;
         LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
         if (loadingDialogFragment1 != null) {
             loadingDialogFragment1.dismissAllowingStateLoss();
