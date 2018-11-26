@@ -10,11 +10,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,15 +25,14 @@ import javax.inject.Singleton;
 import androidx.annotation.NonNull;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeEmitter;
-import io.reactivex.Observable;
 import io.reactivex.Scheduler;
-import io.reactivex.disposables.Disposable;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchRequest;
 import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY;
 
 @Singleton
 public class SearchEngine {
@@ -54,56 +55,21 @@ public class SearchEngine {
 
     private FirebaseUtilityService utilityService;
     private Scheduler processScheduler;
-    private Scheduler androidScheduler;
     private Gson gson;
-    private Observable<Long> obsDelay;
     private DatabaseReference newRequestRef;
     private DatabaseReference requestReference;
     private GenericTypeIndicator<ElasticsearchHitsResult> genericClassDetail;
+    private Long delay;
 
     @Inject
-    public SearchEngine(FirebaseUtilityService utilityService,
-                        @Named("processScheduler") Scheduler processScheduler,
-                        @Named("androidScheduler") Scheduler androidScheduler) {
+    public SearchEngine(FirebaseUtilityService utilityService, @Named("processScheduler") Scheduler processScheduler) {
         this.utilityService = utilityService;
         this.processScheduler = processScheduler;
-        this.androidScheduler = androidScheduler;
         this.gson = new Gson();
-        this.obsDelay = Observable.timer(30, TimeUnit.SECONDS);
         this.genericClassDetail = new GenericTypeIndicator<ElasticsearchHitsResult>() {
         };
         this.requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
-    }
-
-
-    public void search(List<String> libellesCategorie,
-                       boolean withPhotoOnly,
-                       int lowestPrice,
-                       int highestPrice,
-                       String query,
-                       int pagingSize,
-                       int from,
-                       int tri,
-                       int direction,
-                       SearchListener listener) {
-
-        // Condition de garde, si pas de listener alors inutile de faire tourner la requête
-        if (listener == null) return;
-
-        listener.onBeginSearch();
-
-        ElasticsearchQueryBuilder builder = getElasticsearchQueryBuilder(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction);
-
-        String requestJson = gson.toJson(builder.build());
-        utilityService.getServerTimestamp()
-                .subscribeOn(processScheduler).observeOn(androidScheduler)
-                .timeout(30, TimeUnit.SECONDS)
-                .doOnError(throwable -> {
-                    Log.e(TAG, throwable.getLocalizedMessage(), throwable);
-                    listener.onFinishSearch(false, null, throwable.getLocalizedMessage());
-                })
-                .doOnSuccess(timestamp -> doOnSuccess(listener, requestJson, timestamp))
-                .subscribe();
+        this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
     private ElasticsearchQueryBuilder getElasticsearchQueryBuilder(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
@@ -123,54 +89,6 @@ public class SearchEngine {
         return builder;
     }
 
-    private void doOnSuccess(SearchListener listener, String requestJson, Long timestamp) {
-        Disposable delay = obsDelay.observeOn(androidScheduler)
-                .doOnNext(aLong -> {
-                    newRequestRef.removeValue();
-                    listener.onFinishSearch(false, null, "Délai expiré");
-                })
-                .subscribe();
-        newRequestRef = requestReference.push();
-        newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
-        newRequestRef.addValueEventListener(getValueEventListener(listener, delay));
-    }
-
-
-    private ValueEventListener getValueEventListener(SearchListener listener, Disposable delay) {
-        return new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child(NO_RESULTS).exists()) {
-                    newRequestRef.removeEventListener(this);
-                    newRequestRef.removeValue();
-                    listener.onFinishSearch(true, null, null);
-                    delay.dispose();
-                } else if (dataSnapshot.child(RESULTS).exists()) {
-                    ElasticsearchHitsResult elasticsearchResult = null;
-                    DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
-                    try {
-                        elasticsearchResult = snapshotResults.getValue(genericClassDetail);
-                    } catch (DatabaseException e) {
-                        Crashlytics.log(1, TAG, e.getLocalizedMessage());
-                        Log.e(TAG, e.getLocalizedMessage(), e);
-                    } finally {
-                        newRequestRef.removeEventListener(this);
-                        newRequestRef.removeValue();
-                        listener.onFinishSearch(true, elasticsearchResult, null);
-                        delay.dispose();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                delay.dispose();
-                newRequestRef.removeValue();
-                listener.onFinishSearch(false, null, databaseError.getMessage());
-            }
-        };
-    }
-
     public Maybe<ElasticsearchHitsResult> searchMaybe(List<String> libellesCategorie,
                                                       boolean withPhotoOnly,
                                                       int lowestPrice,
@@ -186,27 +104,26 @@ public class SearchEngine {
             String requestJson = gson.toJson(builder.build());
             utilityService.getServerTimestamp()
                     .subscribeOn(processScheduler).observeOn(processScheduler)
-                    .timeout(30, TimeUnit.SECONDS)
-                    .doOnError(e::onError)
+                    .timeout(delay, TimeUnit.SECONDS)
+                    .doOnError(throwable -> {
+                        if (throwable instanceof TimeoutException) {
+                            Crashlytics.log(1, TAG, "getServerTimestamp : Délai expiré");
+                        }
+                        e.onError(throwable);
+                    })
                     .doOnSuccess(timestamp -> doOnSuccessMaybe(e, requestJson, timestamp))
                     .subscribe();
         });
     }
 
     private void doOnSuccessMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter, String requestJson, Long timestamp) {
-        Disposable delay = obsDelay.observeOn(androidScheduler)
-                .doOnNext(aLong -> {
-                    newRequestRef.removeValue();
-                    emitter.onError(new RuntimeException("Délai expiré"));
-                })
-                .subscribe();
         newRequestRef = requestReference.push();
         newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
-        newRequestRef.addValueEventListener(getValueEventListenerMaybe(emitter, delay));
+        newRequestRef.addValueEventListener(getValueEventListenerMaybe(emitter));
     }
 
 
-    private ValueEventListener getValueEventListenerMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter, Disposable delay) {
+    private ValueEventListener getValueEventListenerMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter) {
         return new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -214,7 +131,6 @@ public class SearchEngine {
                 if (dataSnapshot.child(NO_RESULTS).exists()) {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
-                    delay.dispose();
                     emitter.onComplete();
                 } else if (dataSnapshot.child(RESULTS).exists()) {
                     DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
@@ -226,7 +142,6 @@ public class SearchEngine {
                     } finally {
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                        delay.dispose();
                         emitter.onSuccess(elasticsearchResult);
                     }
                 }
@@ -234,7 +149,6 @@ public class SearchEngine {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                delay.dispose();
                 newRequestRef.removeValue();
                 emitter.onError(new RuntimeException(databaseError.getMessage()));
             }
@@ -264,11 +178,5 @@ public class SearchEngine {
                 .addSortingFields(field, directionStr);
 
         return builder;
-    }
-
-    public interface SearchListener {
-        void onBeginSearch();
-
-        void onFinishSearch(boolean goodFinish, ElasticsearchHitsResult elasticsearchHitsResult, String messageError);
     }
 }

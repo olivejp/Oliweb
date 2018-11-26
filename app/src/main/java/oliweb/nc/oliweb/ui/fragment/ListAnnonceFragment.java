@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.dynamiclinks.DynamicLink;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,6 +70,7 @@ import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
@@ -113,6 +115,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int from = 0;
     private Long totalLoaded = 0L;
     private int actualSort;
+    private Long delay;
     private Disposable actualSearch;
 
     /**
@@ -303,6 +306,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 makeNewSearch();
             }
         });
+
+        // Récupération du délai configuré avant d'envoyer un timeoutexception
+        this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
     private void makeNewSearch() {
@@ -441,10 +447,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
         viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .timeout(20L, TimeUnit.SECONDS)
+                .timeout(delay, TimeUnit.SECONDS)
                 .onErrorComplete(throwable -> throwable instanceof TimeoutException)
                 .doOnSubscribe(disposable -> actualSearch = disposable)
-                .doOnError(Crashlytics::logException)
+                .doOnError(throwable -> {
+                    if (throwable instanceof TimeoutException) {
+
+                    }
+                    Crashlytics.logException(throwable);
+                })
                 .doOnSuccess(this::doOnSuccessSearch)
                 .doOnComplete(this::dismissLoading)
                 .doAfterTerminate(this::dismissLoading)

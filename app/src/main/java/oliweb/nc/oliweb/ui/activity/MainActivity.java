@@ -78,6 +78,7 @@ import static oliweb.nc.oliweb.utility.Constants.DEFAULT_MAX_IMG_PIXEL_SIZE;
 import static oliweb.nc.oliweb.utility.Constants.DEFAULT_NUMBER_PICTURES;
 import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY_DEFAULT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
@@ -213,6 +214,7 @@ public class MainActivity extends AppCompatActivity
         defaults.put(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE, 2);
         defaults.put(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE, DEFAULT_MAX_IMG_PIXEL_SIZE);
         defaults.put(Constants.REMOTE_NUMBER_PICTURES, DEFAULT_NUMBER_PICTURES);
+        defaults.put(Constants.REMOTE_DELAY, REMOTE_DELAY_DEFAULT);
         mFirebaseConfig.setDefaults(defaults);
         final Task<Void> fetch = mFirebaseConfig.fetch(0);
         fetch.addOnSuccessListener(this, aVoid -> mFirebaseConfig.activateFetched());

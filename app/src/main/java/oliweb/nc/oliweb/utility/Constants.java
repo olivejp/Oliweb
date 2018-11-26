@@ -44,6 +44,9 @@ public class Constants {
     public static final String REMOTE_COLUMN_NUMBER_LANDSCAPE = "column_number_landscape";
     public static final String REMOTE_IMAGE_RESOLUTION_RESIZE = "image_resolution_resize";
     public static final String REMOTE_NUMBER_PICTURES = "remote_number_pictures";
+    public static final String REMOTE_DELAY = "remote_delay";
+    public static final Long REMOTE_DELAY_DEFAULT = 15L;
+
 
     public static final String OLIWEB_CHANNEL = "OLIWEB Channel";
 
