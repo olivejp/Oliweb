@@ -24,14 +24,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="32dp"
                 android:gravity="center_vertical|start"
                 android:text="@string/categories"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toStartOf="@id/button_add_category"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/text_layout_keywords" />
+                app:layout_constraintTop_toBottomOf="@+id/text_description_keyword" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/button_add_category"
@@ -63,11 +63,23 @@
             </com.google.android.material.chip.ChipGroup>
 
             <TextView
+                android:id="@+id/text_description_category"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Sélectionner les catégories dans lesquelles vous voulez effectuer votre recherche"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chips_group" />
+
+            <TextView
                 android:id="@+id/with_photos_only"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="32dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:gravity="start"
@@ -76,7 +88,19 @@
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/chips_group" />
+                app:layout_constraintTop_toBottomOf="@+id/text_description_category" />
+
+            <TextView
+                android:id="@+id/text_description_photo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Cochez pour ne rechercher que les annonces avec photos"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/with_photos_only" />
 
             <CheckBox
                 android:id="@+id/photo_switch"
@@ -107,11 +131,23 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
+                android:id="@+id/text_description_keyword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Les mots clés nécessaires"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_layout_keywords" />
+
+            <TextView
                 android:id="@+id/text_price_between"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="32dp"
                 android:layout_marginEnd="8dp"
                 android:gravity="start"
                 android:text="@string/price_between"
@@ -119,7 +155,7 @@
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/with_photos_only" />
+                app:layout_constraintTop_toBottomOf="@id/text_description_photo" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/text_layout_minimum"
@@ -171,6 +207,19 @@
                     android:inputType="number"
                     android:maxLength="12" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/text_description_prix"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Définissez un interval de prix"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_layout_minimum" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

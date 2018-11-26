@@ -160,7 +160,7 @@ public class AnnonceRawAdapter extends
                             && newA.getStatut() == oldA.getStatut()
                             && newAnnonce.getPhotos().size() == oldAnnonce.getPhotos().size()
                             && newA.getPrix().equals(oldA.getPrix())
-                            && newP.hashCode() == oldP.hashCode()   // Vérification que la liste des photos n'a pas changé
+                            && checkPhotoIsTheSame(newP, oldP)   // Vérification que la liste des photos n'a pas changé
                             && ((newA.getDatePublication() == null && oldA.getDatePublication() == null)
                             || (newA.getDatePublication() != null && oldA.getDatePublication() != null
                             && newA.getDatePublication().equals(oldA.getDatePublication())));
@@ -169,6 +169,30 @@ public class AnnonceRawAdapter extends
             this.listAnnonces = newListAnnonces;
             result.dispatchUpdatesTo(this);
         }
+    }
+
+    private boolean checkPhotoIsTheSame(List<PhotoEntity> newList, List<PhotoEntity> oldList) {
+        if (newList == null && oldList == null) return true;
+        if (newList == null || oldList == null) return false;
+        if (newList.isEmpty() && oldList.isEmpty()) return true;
+        if (newList.size() != oldList.size()) return false;
+        if (newList.containsAll(oldList)) return true;
+
+        for (PhotoEntity photo : newList) {
+            boolean idFound = false;
+            Long idToFound = photo.getId();
+            for (PhotoEntity oldPhoto : oldList) {
+                if (idToFound.equals(oldPhoto.getId())) {
+                    idFound = true;
+                    if (!photo.getFirebasePath().equals(oldPhoto.getFirebasePath()) || !photo.getUriLocal().equals(oldPhoto.getUriLocal()) || !photo.getStatut().equals(oldPhoto.getStatut())) {
+                        return false;
+                    }
+                }
+            }
+            if (!idFound) return false;
+        }
+
+        return true;
     }
 
     public class ViewHolderRaw extends RecyclerView.ViewHolder {
