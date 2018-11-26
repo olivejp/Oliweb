@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
@@ -36,10 +37,10 @@ android {
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
         }
-        debug{
-            applicationIdSuffix '.debug'
-            versionNameSuffix 'Debug'
-        }
+//        debug{
+//            applicationIdSuffix '.debug'
+//            versionNameSuffix 'Debug'
+//        }
     }
     compileOptions {
         targetCompatibility 1.8
@@ -75,6 +76,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-invites:16.0.5'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
     implementation 'com.google.firebase:firebase-config:16.1.0'
+    implementation 'com.google.firebase:firebase-perf:16.2.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.2.0'
     implementation 'com.firebaseui:firebase-ui-database:4.2.0'
     implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
