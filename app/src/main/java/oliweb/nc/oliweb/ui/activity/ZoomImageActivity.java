@@ -1,10 +1,12 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
@@ -36,5 +38,10 @@ public class ZoomImageActivity extends AppCompatActivity {
                 .error(R.drawable.ic_error_grey_900_48dp)
                 .fitCenter()
                 .into(imageZoom);
+    }
+
+    @OnClick(R.id.fab_close)
+    public void close(View view) {
+        finish();
     }
 }
