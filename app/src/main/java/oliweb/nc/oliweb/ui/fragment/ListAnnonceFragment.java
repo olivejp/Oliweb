@@ -334,8 +334,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list_annonce, container, false);
 
         ButterKnife.bind(this, view);
