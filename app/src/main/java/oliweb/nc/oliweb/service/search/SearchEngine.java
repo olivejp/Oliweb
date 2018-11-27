@@ -10,13 +10,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,7 +29,6 @@ import oliweb.nc.oliweb.service.misc.ElasticsearchQueryBuilder;
 import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 
 import static oliweb.nc.oliweb.utility.Constants.FIREBASE_DB_REQUEST_REF;
-import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY;
 
 @Singleton
 public class SearchEngine {
@@ -59,7 +55,6 @@ public class SearchEngine {
     private DatabaseReference newRequestRef;
     private DatabaseReference requestReference;
     private GenericTypeIndicator<ElasticsearchHitsResult> genericClassDetail;
-    private Long delay;
 
     @Inject
     public SearchEngine(FirebaseUtilityService utilityService, @Named("processScheduler") Scheduler processScheduler) {
@@ -69,7 +64,6 @@ public class SearchEngine {
         this.genericClassDetail = new GenericTypeIndicator<ElasticsearchHitsResult>() {
         };
         this.requestReference = FirebaseDatabase.getInstance().getReference(FIREBASE_DB_REQUEST_REF);
-        this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
     private ElasticsearchQueryBuilder getElasticsearchQueryBuilder(List<String> libellesCategorie, boolean withPhotoOnly, int lowestPrice, int highestPrice, String query, int pagingSize, int from, int tri, int direction) {
@@ -98,20 +92,19 @@ public class SearchEngine {
                                                       int from,
                                                       int tri,
                                                       int direction) {
-        return Maybe.create(e -> {
+        return Maybe.create(emitter -> {
             ElasticsearchQueryBuilder builder = getElasticsearchQueryBuilder(libellesCategorie, withPhotoOnly, lowestPrice, highestPrice, query, pagingSize, from, tri, direction);
 
             String requestJson = gson.toJson(builder.build());
             utilityService.getServerTimestamp()
                     .subscribeOn(processScheduler).observeOn(processScheduler)
-                    .timeout(delay, TimeUnit.SECONDS)
                     .doOnError(throwable -> {
-                        if (throwable instanceof TimeoutException) {
-                            Crashlytics.log(1, TAG, "getServerTimestamp : Délai expiré");
-                        }
-                        e.onError(throwable);
+                        if (!emitter.isDisposed()) emitter.onError(throwable);
                     })
-                    .doOnSuccess(timestamp -> doOnSuccessMaybe(e, requestJson, timestamp))
+                    .doOnSuccess(timestamp -> {
+                        if (!emitter.isDisposed())
+                            doOnSuccessMaybe(emitter, requestJson, timestamp);
+                    })
                     .subscribe();
         });
     }
@@ -122,7 +115,6 @@ public class SearchEngine {
         newRequestRef.addValueEventListener(getValueEventListenerMaybe(emitter));
     }
 
-
     private ValueEventListener getValueEventListenerMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter) {
         return new ValueEventListener() {
             @Override
@@ -131,18 +123,22 @@ public class SearchEngine {
                 if (dataSnapshot.child(NO_RESULTS).exists()) {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
-                    emitter.onComplete();
+                    if (!emitter.isDisposed()) {
+                        emitter.onComplete();
+                    }
                 } else if (dataSnapshot.child(RESULTS).exists()) {
                     DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
                     try {
                         elasticsearchResult = snapshotResults.getValue(genericClassDetail);
-                    } catch (DatabaseException e) {
-                        Crashlytics.log(1, TAG, e.getLocalizedMessage());
-                        Log.e(TAG, e.getLocalizedMessage(), e);
+                    } catch (DatabaseException exception) {
+                        Crashlytics.log(1, TAG, exception.getLocalizedMessage());
+                        Log.e(TAG, exception.getLocalizedMessage(), exception);
                     } finally {
                         newRequestRef.removeEventListener(this);
                         newRequestRef.removeValue();
-                        emitter.onSuccess(elasticsearchResult);
+                        if (!emitter.isDisposed()) {
+                            emitter.onSuccess(elasticsearchResult);
+                        }
                     }
                 }
             }
@@ -150,7 +146,9 @@ public class SearchEngine {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 newRequestRef.removeValue();
-                emitter.onError(new RuntimeException(databaseError.getMessage()));
+                if (!emitter.isDisposed()) {
+                    emitter.onError(new RuntimeException(databaseError.getMessage()));
+                }
             }
         };
     }

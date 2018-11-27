@@ -85,8 +85,7 @@ public class ServicesModule {
     @Provides
     @Singleton
     public SearchEngine searchEngine(FirebaseUtilityService utilityService,
-                                     @Named("processScheduler") Scheduler processScheduler,
-                                     @Named("androidScheduler") Scheduler androidScheduler) {
-        return new SearchEngine(utilityService, processScheduler, androidScheduler);
+                                     @Named("processScheduler") Scheduler processScheduler) {
+        return new SearchEngine(utilityService, processScheduler);
     }
 }

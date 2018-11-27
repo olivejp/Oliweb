@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -50,6 +49,7 @@ import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
+import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
@@ -311,17 +311,26 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
-    private void makeNewSearch() {
+    private void clearActualSearch() {
         if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
+    }
+
+    private void makeNewSearch() {
+        if (toastIfNoConnectivity()) return;
+        clearActualSearch();
         from = 0;
         totalLoaded = 0L;
         annoncePhotosList.clear();
+        createLoading();
+        loadMoreDatas();
+    }
+
+    private void createLoading() {
         if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
             loadingDialogFragment = new LoadingDialogFragment();
             loadingDialogFragment.setText("Recherche en cours");
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
         }
-        loadMoreDatas();
     }
 
     @Override
@@ -441,25 +450,38 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
+        if (toastIfNoConnectivity()) return;
+        clearActualSearch();
         List<String> listCategorie = Collections.emptyList();
         if (categorieSelected != null && !categorieSelected.getId().equals(ID_ALL_CATEGORY)) {
             listCategorie = Collections.singletonList(categorieSelected.getName());
         }
-        viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .timeout(delay, TimeUnit.SECONDS)
+        actualSearch = viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
+                .subscribeOn(Schedulers.io())
+                .timeout(delay, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .onErrorComplete(throwable -> throwable instanceof TimeoutException)
-                .doOnSubscribe(disposable -> actualSearch = disposable)
-                .doOnError(throwable -> {
-                    if (throwable instanceof TimeoutException) {
-
-                    }
-                    Crashlytics.logException(throwable);
-                })
                 .doOnSuccess(this::doOnSuccessSearch)
-                .doOnComplete(this::dismissLoading)
+                .doOnComplete(this::doOnCompleteSearch)
                 .doAfterTerminate(this::dismissLoading)
+                .doOnError(throwable -> {
+                    Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                    dismissLoading();
+                })
                 .subscribe();
+    }
+
+    private boolean toastIfNoConnectivity() {
+        if (!checkConnectivity()) {
+            dismissLoading();
+            Toast.makeText(appCompatActivity, "Aucune recherche possible sans connexion", Toast.LENGTH_LONG).show();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkConnectivity() {
+        return NetworkReceiver.checkConnection(appCompatActivity);
     }
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
@@ -494,6 +516,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         annonceBeautyAdapter.notifyDataSetChanged();
     }
 
+    private void doOnCompleteSearch() {
+        dismissLoading();
+        annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
+        annonceBeautyAdapter.notifyDataSetChanged();
+    }
+
     private void dismissLoading() {
         if (swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(false);
@@ -503,4 +531,5 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment1.dismissAllowingStateLoss();
         }
     }
+
 }
