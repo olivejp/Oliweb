@@ -8,11 +8,11 @@
 
     <ImageView
         android:id="@+id/image_background"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="150dp"
         android:contentDescription="@string/app_name"
-        android:scaleType="fitXY"
-        android:src="@drawable/clothing_leather_wooden"
+        android:scaleType="centerCrop"
+        android:src="@drawable/clothing_leather_wooden_mini"
         app:layout_constraintBottom_toTopOf="@id/msgDialog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,6 +34,7 @@
         android:id="@+id/msgDialog"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:minHeight="100dp"
         android:padding="15dp"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"

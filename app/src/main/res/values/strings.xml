@@ -173,7 +173,7 @@
     <string name="pref_title_vibrate">Vibreur</string>
     <string name="pref_ringtone_silent">Silencieux</string>
     <string name="intro_1_tagline">L\'application Android qui vous aide à gérer vos petites annonces</string>
-    <string name="ads_found_on_network">Des annonces vous appartenant ont été trouvées sur le réseau, voulez vous les récupérer sur votre appareil ?</string>
+    <string name="ads_found_on_network">Des annonces vous appartenant ont été trouvées sur le réseau.\n\nVoulez vous les récupérer sur cet appareil ?</string>
     <string name="ads">Annonces</string>
     <string name="chats">Conversations</string>
     <string name="messages">Messages</string>
