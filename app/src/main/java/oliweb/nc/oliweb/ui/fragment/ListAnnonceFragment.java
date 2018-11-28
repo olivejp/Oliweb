@@ -56,6 +56,7 @@ import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
 import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
+import oliweb.nc.oliweb.ui.activity.SnackbarViewProvider;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -126,6 +127,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int actualSort;
     private Long delay;
     private Disposable actualSearch;
+    private SnackbarViewProvider snackbarViewProvider;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -175,11 +177,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                 @Override
                 public void getLinkError() {
                     loadingDialogFragment.dismiss();
-                    Snackbar.make(coordinatorLayout, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.link_share_error, Snackbar.LENGTH_LONG).show();
                 }
             });
         } else {
-            Snackbar.make(coordinatorLayout, R.string.sign_in_required, Snackbar.LENGTH_LONG)
+            Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.sign_in_required, Snackbar.LENGTH_LONG)
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         }
@@ -196,7 +198,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         v.setEnabled(false);
         if (uidUser == null || uidUser.isEmpty()) {
             // User not logged
-            Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+            Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
             v.setEnabled(true);
@@ -238,12 +240,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                         Toast.makeText(getContext(), R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
                         break;
                     case ADD_SUCCESSFUL:
-                        Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
                                 .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
                                 .show();
                         break;
                     case REMOVE_SUCCESSFUL:
-                        Snackbar.make(recyclerView, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
                         break;
                     case REMOVE_FAILED:
                         Toast.makeText(getContext(), R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
@@ -276,8 +278,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         try {
             appCompatActivity = (AppCompatActivity) context;
         } catch (ClassCastException e) {
-            Log.e(TAG, "Context should be an AppCompatActivity and implements SignInActivity", e);
+            Log.e(TAG, "Context should be an AppCompatActivity", e);
         }
+
+        try {
+            snackbarViewProvider = (SnackbarViewProvider) context;
+        } catch (ClassCastException e) {
+            Log.e(TAG, "Context should implement SnackbarViewProvider", e);
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        appCompatActivity = null;
+        snackbarViewProvider = null;
     }
 
     @Override
@@ -324,29 +339,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
     }
 
-    private void activeTimeout(boolean timeoutActive) {
+    private void displayTimeoutViews(boolean timeoutActive) {
         imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
         textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
         swipeRefreshLayout.setVisibility(timeoutActive ? View.GONE : View.VISIBLE);
     }
 
     private void makeNewSearch() {
+        swipeRefreshLayout.setRefreshing(true);
         if (toastIfNoConnectivity()) return;
-        activeTimeout(false);
+        displayTimeoutViews(false);
         clearActualSearch();
         from = 0;
         totalLoaded = 0L;
         annoncePhotosList.clear();
-        createLoading();
         loadMoreDatas();
-    }
-
-    private void createLoading() {
-        if (appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG) == null) {
-            loadingDialogFragment = new LoadingDialogFragment();
-            loadingDialogFragment.setText("Recherche en cours");
-            loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
-        }
     }
 
     @Override
@@ -355,7 +362,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         ButterKnife.bind(this, view);
 
-        Snackbar snackbar = Snackbar.make(coordinatorLayout, R.string.network_unavailable, Snackbar.LENGTH_INDEFINITE);
+        Snackbar snackbar = Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.network_unavailable, Snackbar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
         annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, null, this);
@@ -540,17 +547,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         dismissLoading();
         annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         annonceBeautyAdapter.notifyDataSetChanged();
-        activeTimeout(true);
+        displayTimeoutViews(true);
     }
 
     private void dismissLoading() {
         if (swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(false);
         }
-        LoadingDialogFragment loadingDialogFragment1 = (LoadingDialogFragment) appCompatActivity.getSupportFragmentManager().findFragmentByTag(LOADING_DIALOG);
-        if (loadingDialogFragment1 != null) {
-            loadingDialogFragment1.dismissAllowingStateLoss();
-        }
     }
-
 }

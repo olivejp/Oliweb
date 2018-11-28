@@ -84,7 +84,7 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener {
+        implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener, SnackbarViewProvider {
 
     private static final String TAG = MainActivity.class.getName();
 
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    @BindView(R.id.coordinator_layout)
+    @BindView(R.id.main_coordinator_layout)
     CoordinatorLayout coordinatorLayout;
 
     @BindView(R.id.nav_view)
@@ -690,5 +690,10 @@ public class MainActivity extends AppCompatActivity
     public void onNetworkDisable() {
         viewModel.stopAllServices();
         viewModel.setIsNetworkAvailable(false);
+    }
+
+    @Override
+    public View getSnackbarViewProvider() {
+        return findViewById(R.id.main_coordinator_layout);
     }
 }
