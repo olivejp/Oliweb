@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -37,6 +39,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Maybe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -97,6 +100,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
     @BindView(R.id.coordinator_layout_list_annonce)
     CoordinatorLayout coordinatorLayout;
+
+    @BindView(R.id.list_annonce_image_timeout)
+    ImageView imageViewTimeout;
+
+    @BindView(R.id.list_annonce_timeout)
+    TextView textViewTimeout;
 
     private String uidUser;
     private AppCompatActivity appCompatActivity;
@@ -307,7 +316,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             }
         });
 
-        // Récupération du délai configuré avant d'envoyer un timeoutexception
+        // Récupération du délai configuré avant d'envoyer un Timeoutexception
         this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
@@ -315,8 +324,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
     }
 
+    private void activeTimeout(boolean timeoutActive) {
+        imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
+        textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
+        swipeRefreshLayout.setVisibility(timeoutActive ? View.GONE : View.VISIBLE);
+    }
+
     private void makeNewSearch() {
         if (toastIfNoConnectivity()) return;
+        activeTimeout(false);
         clearActualSearch();
         from = 0;
         totalLoaded = 0L;
@@ -457,16 +473,21 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
         actualSearch = viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
                 .subscribeOn(Schedulers.io())
-                .timeout(delay, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
+                .timeout(delay, TimeUnit.SECONDS, AndroidSchedulers.mainThread(), Maybe.empty())
                 .observeOn(AndroidSchedulers.mainThread())
                 .onErrorComplete(throwable -> throwable instanceof TimeoutException)
+                .doOnError(throwable -> {
+                    try {
+                        dismissLoading();
+                    } catch (RuntimeException e) {
+                        Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                    } finally {
+                        dismissLoading();
+                    }
+                })
                 .doOnSuccess(this::doOnSuccessSearch)
                 .doOnComplete(this::doOnCompleteSearch)
                 .doAfterTerminate(this::dismissLoading)
-                .doOnError(throwable -> {
-                    Log.e(TAG, throwable.getLocalizedMessage(), throwable);
-                    dismissLoading();
-                })
                 .subscribe();
     }
 
@@ -519,6 +540,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         dismissLoading();
         annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         annonceBeautyAdapter.notifyDataSetChanged();
+        activeTimeout(true);
     }
 
     private void dismissLoading() {

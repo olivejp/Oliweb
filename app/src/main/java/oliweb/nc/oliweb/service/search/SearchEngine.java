@@ -103,13 +103,13 @@ public class SearchEngine {
                     })
                     .doOnSuccess(timestamp -> {
                         if (!emitter.isDisposed())
-                            doOnSuccessMaybe(emitter, requestJson, timestamp);
+                            doOnSuccessGetServerTimestamp(emitter, requestJson, timestamp);
                     })
                     .subscribe();
         });
     }
 
-    private void doOnSuccessMaybe(MaybeEmitter<ElasticsearchHitsResult> emitter, String requestJson, Long timestamp) {
+    private void doOnSuccessGetServerTimestamp(MaybeEmitter<ElasticsearchHitsResult> emitter, String requestJson, Long timestamp) {
         newRequestRef = requestReference.push();
         newRequestRef.setValue(new ElasticsearchRequest(timestamp, requestJson, 2));
         newRequestRef.addValueEventListener(getValueEventListenerMaybe(emitter));
@@ -124,7 +124,7 @@ public class SearchEngine {
                     newRequestRef.removeEventListener(this);
                     newRequestRef.removeValue();
                     if (!emitter.isDisposed()) {
-                        emitter.onComplete();
+                        emitter.onSuccess(new ElasticsearchHitsResult());
                     }
                 } else if (dataSnapshot.child(RESULTS).exists()) {
                     DataSnapshot snapshotResults = dataSnapshot.child(RESULTS);
