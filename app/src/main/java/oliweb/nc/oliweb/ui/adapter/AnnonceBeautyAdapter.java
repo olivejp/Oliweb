@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
@@ -107,7 +108,9 @@ public class AnnonceBeautyAdapter extends
                 && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
 
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
-            glide.load(urlPhoto).override(100, 100)
+
+            glide.load(urlPhoto)
+                    .override(100)
                     .error(R.drawable.ic_person_white_48dp)
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .circleCrop()
@@ -142,7 +145,15 @@ public class AnnonceBeautyAdapter extends
         if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
             viewHolderBeauty.imageView.setBackground(null);
             viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
-            glide.load(annoncePhotos.getPhotos().get(0).getFirebasePath())
+
+            String urlPhoto = annoncePhotos.getPhotos().get(0).getFirebasePath();
+
+            // Création d'une requestBuilder pour charger le thumbnail
+            RequestBuilder<Drawable> requestThumbnail = glide.load(urlPhoto).override(100, 100).diskCacheStrategy(DiskCacheStrategy.RESOURCE);
+
+            // Création de la requête pour télécharger l'image
+            glide.load(urlPhoto)
+                    .thumbnail(requestThumbnail)
                     .listener(new RequestListener<Drawable>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
@@ -158,7 +169,7 @@ public class AnnonceBeautyAdapter extends
                             return false;
                         }
                     })
-                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .error(R.mipmap.ic_banana_launcher_foreground)
                     .centerCrop()
                     .into(viewHolderBeauty.imageView);
