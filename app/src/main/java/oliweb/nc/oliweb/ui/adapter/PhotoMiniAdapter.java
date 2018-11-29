@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +26,11 @@ public class PhotoMiniAdapter extends
 
     public static final String TAG = PhotoMiniAdapter.class.getName();
 
+    private Context context;
     private List<PhotoEntity> listPhotos;
 
-    public PhotoMiniAdapter() {
+    public PhotoMiniAdapter(Context context) {
+        this.context = context;
         this.listPhotos = new ArrayList<>();
     }
 
@@ -45,10 +48,20 @@ public class PhotoMiniAdapter extends
 
         VHPhotoMini vhPhotoMini = (VHPhotoMini) viewHolder;
 
-        GlideApp.with(vhPhotoMini.imageView)
-                .load(photoEntity.getUriLocal())
-                .circleCrop()
-                .into(vhPhotoMini.imageView);
+        String pathImage = null;
+        if (photoEntity.getUriLocal() != null) {
+            pathImage = photoEntity.getUriLocal();
+        } else if (photoEntity.getFirebasePath() != null) {
+            pathImage = photoEntity.getFirebasePath();
+        }
+
+        if (pathImage != null) {
+            GlideApp.with(context)
+                    .load(pathImage)
+                    .override(80)
+                    .circleCrop()
+                    .into(vhPhotoMini.imageView);
+        }
     }
 
     @Override

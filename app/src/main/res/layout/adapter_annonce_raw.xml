@@ -31,10 +31,10 @@
         android:id="@+id/sending_progress"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/text_prix_annonce_raw"
-        app:layout_constraintLeft_toRightOf="@id/text_nb_photos"
-        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw"
+        app:layout_constraintBottom_toTopOf="@+id/text_prix_annonce_raw"
+        app:layout_constraintEnd_toStartOf="@+id/annonce_popup_menu"
+        app:layout_constraintStart_toEndOf="@+id/text_titre_annonce_raw"
+        app:layout_constraintTop_toBottomOf="@+id/text_date_publication_annonce_raw"
         tools:visibility="visible" />
 
     <TextView
@@ -48,37 +48,18 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="A vendre : Super affaire moto presque neuve. Super titre sur 2 lignes." />
 
-    <TextView
-        android:id="@+id/text_nb_photos"
-        style="@style/TextAppearance.MaterialComponents.Caption"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:gravity="center_vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toRightOf="@id/img_photo_raw"
-        app:layout_constraintTop_toTopOf="@id/img_photo_raw"
-        tools:text="5" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_photos_annonce"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sending_progress"
-        app:layout_constraintStart_toEndOf="@id/text_nb_photos"
-        app:layout_constraintTop_toTopOf="@id/text_nb_photos" />
+        app:layout_constraintEnd_toStartOf="@+id/text_prix_annonce_raw"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageView
-        android:id="@+id/img_photo_raw"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:srcCompat="@drawable/ic_photo_camera_grey_900_48dp"
-        tools:ignore="contentDescription" />
 
     <TextView
         android:id="@+id/text_prix_annonce_raw"
