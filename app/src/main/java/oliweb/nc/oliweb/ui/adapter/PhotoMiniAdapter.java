@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
+import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
 /**
@@ -29,7 +32,7 @@ public class PhotoMiniAdapter extends
     private Context context;
     private List<PhotoEntity> listPhotos;
 
-    public PhotoMiniAdapter(Context context) {
+    PhotoMiniAdapter(Context context) {
         this.context = context;
         this.listPhotos = new ArrayList<>();
     }
@@ -48,19 +51,25 @@ public class PhotoMiniAdapter extends
 
         VHPhotoMini vhPhotoMini = (VHPhotoMini) viewHolder;
 
-        String pathImage = null;
-        if (photoEntity.getUriLocal() != null) {
-            pathImage = photoEntity.getUriLocal();
-        } else if (photoEntity.getFirebasePath() != null) {
-            pathImage = photoEntity.getFirebasePath();
-        }
+        boolean isSending = photoEntity.getStatut().equals(StatusRemote.SENDING);
+        vhPhotoMini.imageView.setVisibility((isSending)? View.GONE : View.VISIBLE);
 
-        if (pathImage != null) {
-            GlideApp.with(context)
-                    .load(pathImage)
-                    .override(80)
-                    .circleCrop()
-                    .into(vhPhotoMini.imageView);
+        if (!isSending) {
+            String pathImage = null;
+            if (photoEntity.getUriLocal() != null) {
+                pathImage = photoEntity.getUriLocal();
+            } else if (photoEntity.getFirebasePath() != null) {
+                pathImage = photoEntity.getFirebasePath();
+            }
+
+            if (pathImage != null) {
+                GlideApp.with(context)
+                        .load(pathImage)
+                        .override(80)
+                        .circleCrop()
+                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                        .into(vhPhotoMini.imageView);
+            }
         }
     }
 
@@ -69,7 +78,7 @@ public class PhotoMiniAdapter extends
         return listPhotos.size();
     }
 
-    public void setListPhotos(final List<PhotoEntity> newListAnnonces) {
+    void setListPhotos(final List<PhotoEntity> newListAnnonces) {
         if (listPhotos == null) {
             listPhotos = newListAnnonces;
             notifyItemRangeInserted(0, newListAnnonces.size());
@@ -106,7 +115,7 @@ public class PhotoMiniAdapter extends
         }
     }
 
-    public class VHPhotoMini extends RecyclerView.ViewHolder {
+    class VHPhotoMini extends RecyclerView.ViewHolder {
 
         @BindView(R.id.image_photo_mini)
         ImageView imageView;

@@ -1,10 +1,6 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import java.util.List;
@@ -12,11 +8,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.Transformations;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.App;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
+import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.utility.CustomLiveData;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -37,10 +40,15 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
     AnnonceRepository annonceRepository;
 
     @Inject
+    PhotoRepository photoRepository;
+
+    @Inject
     FirebaseRetrieverService fbRetrieverService;
 
     @Inject
     MediaUtility mediaUtility;
+
+    private MediatorLiveData<List<AnnoncePhotos>> liveListAnnonce;
 
     public MyAnnoncesViewModel(@NonNull Application application) {
         super(application);
@@ -50,6 +58,18 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
 
     public MediaUtility getMediaUtility() {
         return mediaUtility;
+    }
+
+    public LiveData<List<AnnoncePhotos>> findAnnonceByUidUserAndPhotos(String uidUser) {
+        if (liveListAnnonce == null) {
+            liveListAnnonce = new MediatorLiveData<>();
+        }
+        LiveData<List<AnnoncePhotos>> liveDataPhotos = Transformations.switchMap(photoRepository.findAllByUidUser(uidUser), input -> annonceWithPhotosRepository.findActiveAnnonceByUidUser(uidUser));
+
+        liveListAnnonce.addSource(annonceWithPhotosRepository.findActiveAnnonceByUidUser(uidUser), annoncePhotos -> liveListAnnonce.postValue(annoncePhotos));
+        liveListAnnonce.addSource(liveDataPhotos, listAnnoncePhotos -> liveListAnnonce.postValue(listAnnoncePhotos));
+
+        return liveListAnnonce;
     }
 
     public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {

@@ -51,14 +51,13 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_photos_annonce"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginEnd="8dp"
-        android:clickable="true"
-        android:focusable="true"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_prix_annonce_raw"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw" />
 
 
     <TextView

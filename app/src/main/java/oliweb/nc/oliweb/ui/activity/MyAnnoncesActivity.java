@@ -85,7 +85,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
-        viewModel.findAnnoncesByUidUser(uidUser).observe(this, annonceWithPhotos -> {
+        viewModel.findAnnonceByUidUserAndPhotos(uidUser).observe(this, annonceWithPhotos -> {
             if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                 initEmptyLayout();
             } else {

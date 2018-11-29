@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.repository.local;
 
-import androidx.lifecycle.LiveData;
 import android.content.Context;
 import android.util.Log;
 
@@ -9,6 +8,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import androidx.lifecycle.LiveData;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -33,9 +33,9 @@ public class PhotoRepository extends AbstractRepository<PhotoEntity, Long> {
         this.dao = this.photoDao;
     }
 
-    public LiveData<List<PhotoEntity>> findAllByIdAnnonce(long idAnnonce) {
-        Log.d(TAG, "Starting findAllByIdAnnonce idAnnonce : " + idAnnonce);
-        return this.photoDao.findByIdAnnonce(idAnnonce);
+    public LiveData<List<PhotoEntity>> findAllByUidUser(String uidUser) {
+        Log.d(TAG, "Starting findAllByUidUser uidUser : " + uidUser);
+        return this.photoDao.findAllByUidUser(uidUser);
     }
 
     private Single<List<PhotoEntity>> findAllPhotosByIdAnnonce(long idAnnonce) {

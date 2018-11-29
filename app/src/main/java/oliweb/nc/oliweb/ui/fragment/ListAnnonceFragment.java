@@ -218,10 +218,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         }
     };
 
-    private boolean checkPermissionMversion() {
-        return Build.VERSION.SDK_INT >= 23 &&
-                viewModel.getMediaUtility().isExternalStorageAvailable() &&
-                viewModel.getMediaUtility().allPermissionsAreGranted(appCompatActivity.getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
+    public ListAnnonceFragment() {
+        // Empty constructor
     }
 
     @Override
@@ -230,46 +228,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             callAddOrRemoveFromFavorite();
         }
-    }
-
-    private void callAddOrRemoveFromFavorite() {
-        viewModel.addOrRemoveFromFavorite(uidUser, annonceFullToSaveTofavorite).observeOnce(addRemoveFromFavorite -> {
-            if (addRemoveFromFavorite != null) {
-                switch (addRemoveFromFavorite) {
-                    case ONE_OF_YOURS:
-                        Toast.makeText(getContext(), R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
-                        break;
-                    case ADD_SUCCESSFUL:
-                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                .show();
-                        break;
-                    case REMOVE_SUCCESSFUL:
-                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
-                        break;
-                    case REMOVE_FAILED:
-                        Toast.makeText(getContext(), R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (viewToEnabled != null) {
-                viewToEnabled.setEnabled(true);
-            }
-        });
-    }
-
-    private void callFavoriteAnnonceActivity() {
-        Intent intent = new Intent();
-        intent.setClass(appCompatActivity, FavoritesActivity.class);
-        intent.putExtra(ARG_UID_USER, uidUser);
-        startActivity(intent);
-        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
-    }
-
-    public ListAnnonceFragment() {
-        // Empty constructor
     }
 
     @Override
@@ -335,25 +293,30 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
     }
 
-    private void clearActualSearch() {
-        if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
+    @Override
+    public void onDestroyView() {
+        GlideApp.get(appCompatActivity).clearMemory();
+        recyclerView.setAdapter(null);
+        recyclerView.removeOnScrollListener(scrollListener);
+        super.onDestroyView();
     }
 
-    private void displayTimeoutViews(boolean timeoutActive) {
-        imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
-        textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
-        swipeRefreshLayout.setVisibility(timeoutActive ? View.GONE : View.VISIBLE);
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
+        outState.putInt(SAVE_SORT, sortSelected);
+        outState.putInt(SAVE_DIRECTION, directionSelected);
+        outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
+        outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
+        outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
+        outState.putInt(SAVE_ACTUAL_SORT, actualSort);
     }
 
-    private void makeNewSearch() {
+    @Override
+    public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
-        if (toastIfNoConnectivity()) return;
-        displayTimeoutViews(false);
-        clearActualSearch();
-        from = 0;
-        totalLoaded = 0L;
-        annoncePhotosList.clear();
-        loadMoreDatas();
+        makeNewSearch();
     }
 
     @Override
@@ -397,30 +360,67 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return view;
     }
 
-    @Override
-    public void onDestroyView() {
-        GlideApp.get(appCompatActivity).clearMemory();
-        recyclerView.setAdapter(null);
-        recyclerView.removeOnScrollListener(scrollListener);
-        super.onDestroyView();
+    private boolean checkPermissionMversion() {
+        return Build.VERSION.SDK_INT >= 23 &&
+                viewModel.getMediaUtility().isExternalStorageAvailable() &&
+                viewModel.getMediaUtility().allPermissionsAreGranted(appCompatActivity.getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
-        outState.putInt(SAVE_SORT, sortSelected);
-        outState.putInt(SAVE_DIRECTION, directionSelected);
-        outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
-        outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
-        outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
-        outState.putInt(SAVE_ACTUAL_SORT, actualSort);
+    private void callAddOrRemoveFromFavorite() {
+        viewModel.addOrRemoveFromFavorite(uidUser, annonceFullToSaveTofavorite).observeOnce(addRemoveFromFavorite -> {
+            if (addRemoveFromFavorite != null) {
+                switch (addRemoveFromFavorite) {
+                    case ONE_OF_YOURS:
+                        Toast.makeText(getContext(), R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                        break;
+                    case ADD_SUCCESSFUL:
+                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
+                                .show();
+                        break;
+                    case REMOVE_SUCCESSFUL:
+                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                        break;
+                    case REMOVE_FAILED:
+                        Toast.makeText(getContext(), R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (viewToEnabled != null) {
+                viewToEnabled.setEnabled(true);
+            }
+        });
     }
 
-    @Override
-    public void onRefresh() {
+    private void callFavoriteAnnonceActivity() {
+        Intent intent = new Intent();
+        intent.setClass(appCompatActivity, FavoritesActivity.class);
+        intent.putExtra(ARG_UID_USER, uidUser);
+        startActivity(intent);
+        appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
+    }
+
+    private void clearActualSearch() {
+        if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
+    }
+
+    private void displayTimeoutViews(boolean timeoutActive) {
+        imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
+        textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
+        swipeRefreshLayout.setVisibility(timeoutActive ? View.GONE : View.VISIBLE);
+    }
+
+    private void makeNewSearch() {
         swipeRefreshLayout.setRefreshing(true);
-        makeNewSearch();
+        if (toastIfNoConnectivity()) return;
+        displayTimeoutViews(false);
+        clearActualSearch();
+        from = 0;
+        totalLoaded = 0L;
+        annoncePhotosList.clear();
+        loadMoreDatas();
     }
 
     private void initAccordingToAction() {
