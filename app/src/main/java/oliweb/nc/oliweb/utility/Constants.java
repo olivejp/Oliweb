@@ -14,6 +14,7 @@ public class Constants {
 
     static final String FIREBASE_DB_TIME_REF = "timestamp";
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
+    public static final String FIREBASE_DB_CATEGORIE_REF = "categorie";
     public static final String FIREBASE_DB_USER_REF = "users";
     public static final String FIREBASE_DB_REQUEST_REF = "requests";
     public static final String FIREBASE_DB_CHATS_REF = "chats";
