@@ -12,6 +12,8 @@ import android.widget.EditText;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.perf.FirebasePerformance;
+import com.google.firebase.perf.metrics.Trace;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -151,6 +153,12 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
         if (error) {
             Snackbar.make(constraintLayout, R.string.search_error, Snackbar.LENGTH_LONG).show();
         } else {
+            // Compte le nombre de recherche avancée faite par les utilisateurs
+            Trace myTrace = FirebasePerformance.getInstance().newTrace("nb_advanced_search");
+            myTrace.start();
+            myTrace.incrementMetric("nb_advanced_search", 1);
+            myTrace.stop();
+
             String higher = higherPrice.getText().toString();
             String lower = lowerPrice.getText().toString();
             String keywordSearch = keyword.getText().toString();
