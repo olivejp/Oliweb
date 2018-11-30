@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -23,6 +24,7 @@ import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -42,6 +44,9 @@ public class IntroActivity extends AppCompatActivity {
     @BindView(R.id.btn_next)
     MaterialButton btnNext;
 
+    @BindView(R.id.intro_background)
+    ImageView imageBackground;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +55,6 @@ public class IntroActivity extends AppCompatActivity {
         boolean isFirstTime = SharedPreferencesHelper.getInstance(this).isFirstTime();
         if (!isFirstTime) {
             launchHomeScreen();
-            finish();
         }
 
         // Making notification bar transparent
@@ -59,8 +63,11 @@ public class IntroActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_intro);
-
         ButterKnife.bind(this);
+
+        GlideApp.with(this)
+                .load(R.drawable.clothing_leather_wooden)
+                .into(imageBackground);
 
         // layouts of all welcome sliders
         // add few more layouts if you want
@@ -95,6 +102,12 @@ public class IntroActivity extends AppCompatActivity {
 
         // Set the default sorting
         SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(2);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GlideApp.get(this).clearMemory();
     }
 
     private void addBottomDots(int currentPage) {

@@ -1,0 +1,2 @@
+Ajout du module de performance.
+-Dans la recherche avancée, on compte le nombre de recherche faite par les utilisateurs.

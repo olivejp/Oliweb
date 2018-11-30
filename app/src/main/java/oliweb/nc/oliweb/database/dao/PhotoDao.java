@@ -1,12 +1,11 @@
 package oliweb.nc.oliweb.database.dao;
 
+import java.util.List;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
 import androidx.room.Transaction;
-
-import java.util.List;
-
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -34,14 +33,6 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
 
     @Transaction
     @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
-    public abstract LiveData<List<PhotoEntity>> findByIdAnnonce(Long idAnnonce);
-
-    @Transaction
-    @Query("SELECT * FROM photo WHERE idPhoto = :idPhoto")
-    public abstract Single<PhotoEntity> findSingleById(long idPhoto);
-
-    @Transaction
-    @Query("SELECT * FROM photo WHERE idAnnonce = :idAnnonce")
     public abstract Single<List<PhotoEntity>> findAllSingleByIdAnnonce(long idAnnonce);
 
     @Transaction
@@ -49,18 +40,7 @@ public abstract class PhotoDao implements AbstractDao<PhotoEntity, Long> {
     public abstract Flowable<PhotoEntity> getAllPhotosByStatus(List<String> statut);
 
     @Transaction
-    @Query("SELECT * FROM photo WHERE statut IN (:listStatut) AND idAnnonce = :idAnnonce")
-    public abstract Maybe<List<PhotoEntity>> getAllPhotosByStatusAndIdAnnonce(List<String> listStatut, Long idAnnonce);
+    @Query("SELECT photo.* FROM photo, annonce WHERE photo.statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND annonce.statut NOT IN ('TO_DELETE', 'DELETED', 'FAILED_TO_DELETE') AND annonce.idAnnonce = photo.idAnnonce AND annonce.uidUser = :uidUser")
+    public abstract LiveData<List<PhotoEntity>> findAllByUidUser(String uidUser);
 
-    @Transaction
-    @Query("SELECT COUNT(*) FROM photo WHERE idAnnonce = :idAnnonce")
-    public abstract Single<Integer> countAllPhotosByIdAnnonce(long idAnnonce);
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM photo WHERE statut = :status")
-    public abstract Flowable<Integer> countFlowableAllPhotosByStatus(String status);
-
-    @Transaction
-    @Query("SELECT photo.* FROM photo INNER JOIN annonce ON photo.idAnnonce = annonce.idAnnonce WHERE photo.statut IN (:status) AND annonce.uidUser = :uidUser")
-    public abstract Flowable<PhotoEntity> getAllPhotosByUidUserAndStatus(String uidUser, List<String> status);
 }

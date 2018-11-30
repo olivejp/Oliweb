@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import androidx.lifecycle.LiveData;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.dao.CategorieDao;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -34,8 +35,11 @@ public class CategorieRepository extends AbstractRepository<CategorieEntity, Lon
         return this.categorieDao.getLiveListCategorie();
     }
 
-
     public Single<List<String>> getListCategorieLibelle() {
         return this.categorieDao.getListCategorieLibelle();
+    }
+
+    public Maybe<CategorieEntity> findByLibelle(String libelle) {
+        return this.categorieDao.findByLibelle(libelle);
     }
 }

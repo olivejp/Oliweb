@@ -57,6 +57,7 @@
         <item name="actionMenuTextColor">@color/colorBottomDark</item>
         <item name="actionOverflowButtonStyle">@style/Widget.AppCompat.Light.ActionButton.Overflow
         </item>
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline5</item>
     </style>
 
     <style name="MyDialogTheme.Base" parent="Theme.MaterialComponents.Light.Dialog">
@@ -67,7 +68,7 @@
         <item name="colorPrimary">@color/colorAccent</item>
     </style>
 
-    <style name="MyDialogTheme" parent="MyDialogTheme.Base"/>
+    <style name="MyDialogTheme" parent="MyDialogTheme.Base" />
 
     <style name="CommonAdapterBeautyFrame">
         <item name="android:clickable">true</item>

@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,7 +26,6 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
-import oliweb.nc.oliweb.utility.Utility;
 
 /**
  * Created by orlanth23 on 07/02/2018.
@@ -37,11 +38,13 @@ public class AnnonceRawAdapter extends
     private List<AnnoncePhotos> listAnnonces;
     private View.OnClickListener onClickListener;
     private View.OnClickListener popupClickListener;
+    private Context context;
 
-    public AnnonceRawAdapter(View.OnClickListener onClickListener, View.OnClickListener popupClickListener) {
+    public AnnonceRawAdapter(Context context, View.OnClickListener onClickListener, View.OnClickListener popupClickListener) {
         this.onClickListener = onClickListener;
         this.popupClickListener = popupClickListener;
         this.listAnnonces = new ArrayList<>();
+        this.context = context;
     }
 
     @NonNull
@@ -91,19 +94,15 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.imgPopup.setOnClickListener(popupClickListener);
         viewHolderRaw.imgPopup.setTag(annoncePhotos);
 
-        // Calcul du nombre de photo actuellement correctes
-        // On fait apparaitre une petite photo seulement si l'annoncePhotos a une photo
-        if (!annoncePhotos.getPhotos().isEmpty()) {
-            int photoAvailable = 0;
-            for (PhotoEntity photo : annoncePhotos.getPhotos()) {
-                if (!Utility.allStatusToAvoid().contains(photo.getStatut().toString())) {
-                    photoAvailable++;
-                }
-            }
-            viewHolderRaw.textNbPhotos.setText(String.valueOf(photoAvailable));
-        } else {
-            viewHolderRaw.textNbPhotos.setText("0");
-        }
+        // Affichage des photos
+        PhotoMiniAdapter photoMiniAdapter = new PhotoMiniAdapter(context);
+        viewHolderRaw.recyclerViewPhoto.setAdapter(photoMiniAdapter);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        viewHolderRaw.recyclerViewPhoto.setLayoutManager(linearLayoutManager);
+        photoMiniAdapter.setListPhotos(annoncePhotos.getPhotos());
+        photoMiniAdapter.notifyDataSetChanged();
 
         // On regarde s'il y a un envoi en cours sur les photos
         boolean sendingInProgress = false;
@@ -160,7 +159,7 @@ public class AnnonceRawAdapter extends
                             && newA.getStatut() == oldA.getStatut()
                             && newAnnonce.getPhotos().size() == oldAnnonce.getPhotos().size()
                             && newA.getPrix().equals(oldA.getPrix())
-                            && newP.hashCode() == oldP.hashCode()   // Vérification que la liste des photos n'a pas changé
+                            && checkPhotoIsTheSame(newP, oldP)   // Vérification que la liste des photos n'a pas changé
                             && ((newA.getDatePublication() == null && oldA.getDatePublication() == null)
                             || (newA.getDatePublication() != null && oldA.getDatePublication() != null
                             && newA.getDatePublication().equals(oldA.getDatePublication())));
@@ -169,6 +168,30 @@ public class AnnonceRawAdapter extends
             this.listAnnonces = newListAnnonces;
             result.dispatchUpdatesTo(this);
         }
+    }
+
+    private boolean checkPhotoIsTheSame(List<PhotoEntity> newList, List<PhotoEntity> oldList) {
+        if (newList == null && oldList == null) return true;
+        if (newList == null || oldList == null) return false;
+        if (newList.isEmpty() && oldList.isEmpty()) return true;
+        if (newList.size() != oldList.size()) return false;
+        if (newList.containsAll(oldList)) return true;
+
+        for (PhotoEntity photo : newList) {
+            boolean idFound = false;
+            Long idToFound = photo.getId();
+            for (PhotoEntity oldPhoto : oldList) {
+                if (idToFound.equals(oldPhoto.getId())) {
+                    idFound = true;
+                    if (!photo.getFirebasePath().equals(oldPhoto.getFirebasePath()) || !photo.getUriLocal().equals(oldPhoto.getUriLocal()) || !photo.getStatut().equals(oldPhoto.getStatut())) {
+                        return false;
+                    }
+                }
+            }
+            if (!idFound) return false;
+        }
+
+        return true;
     }
 
     public class ViewHolderRaw extends RecyclerView.ViewHolder {
@@ -185,20 +208,17 @@ public class AnnonceRawAdapter extends
         @BindView(R.id.text_date_publication_annonce_raw)
         TextView textDatePublicationAnnonce;
 
-        @BindView(R.id.img_photo_raw)
-        ImageView imgPhoto;
-
         @BindView(R.id.annonce_popup_menu)
         ImageView imgPopup;
 
         @BindView(R.id.normal_layout_raw)
         ConstraintLayout normalLayoutRaw;
 
-        @BindView(R.id.text_nb_photos)
-        TextView textNbPhotos;
-
         @BindView(R.id.sending_progress)
         ProgressBar progressBar;
+
+        @BindView(R.id.recycler_photos_annonce)
+        RecyclerView recyclerViewPhoto;
 
         AnnonceEntity singleAnnonce;
 

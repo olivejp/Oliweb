@@ -85,7 +85,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     private void initActivity(Bundle args) {
         uidUser = args.getString(ARG_UID_USER);
         viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
-        viewModel.findAnnoncesByUidUser(uidUser).observe(this, annonceWithPhotos -> {
+        viewModel.findAnnonceByUidUserAndPhotos(uidUser).observe(this, annonceWithPhotos -> {
             if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
                 initEmptyLayout();
             } else {
@@ -140,7 +140,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     private boolean checkPermissionForMversion() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && viewModel.getMediaUtility().isExternalStorageAvailable()
-                && !viewModel.getMediaUtility().allPermissionsAreGranted (getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
+                && !viewModel.getMediaUtility().allPermissionsAreGranted(getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     }
 
     @Override
@@ -195,10 +195,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         FloatingActionButton fabPostAnnonce = findViewById(R.id.fab_post_annonce);
         fabPostAnnonce.setOnClickListener(this::callPostAnnonceCreate);
 
-        AnnonceRawAdapter annonceRawAdapter = new AnnonceRawAdapter(v -> {
-            AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
-            callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
-        }, onPopupClickListener);
+        AnnonceRawAdapter annonceRawAdapter = new AnnonceRawAdapter(this,
+                v -> {
+                    AnnoncePhotos annoncePhotos = (AnnoncePhotos) v.getTag();
+                    callActivityToUpdateAnnonce(annoncePhotos.getAnnonceEntity());
+                }, onPopupClickListener);
         recyclerView.setAdapter(annonceRawAdapter);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);

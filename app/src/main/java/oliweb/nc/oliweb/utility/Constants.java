@@ -14,6 +14,7 @@ public class Constants {
 
     static final String FIREBASE_DB_TIME_REF = "timestamp";
     public static final String FIREBASE_DB_ANNONCE_REF = "annonces";
+    public static final String FIREBASE_DB_CATEGORIE_REF = "categorie";
     public static final String FIREBASE_DB_USER_REF = "users";
     public static final String FIREBASE_DB_REQUEST_REF = "requests";
     public static final String FIREBASE_DB_CHATS_REF = "chats";
@@ -44,6 +45,9 @@ public class Constants {
     public static final String REMOTE_COLUMN_NUMBER_LANDSCAPE = "column_number_landscape";
     public static final String REMOTE_IMAGE_RESOLUTION_RESIZE = "image_resolution_resize";
     public static final String REMOTE_NUMBER_PICTURES = "remote_number_pictures";
+    public static final String REMOTE_DELAY = "remote_delay";
+    public static final Long REMOTE_DELAY_DEFAULT = 20L;
+
 
     public static final String OLIWEB_CHANNEL = "OLIWEB Channel";
 

@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
@@ -18,8 +19,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 9
-        versionName "alpha-1.7"
+        versionCode 10
+        versionName "alpha-1.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -75,6 +76,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-invites:16.0.5'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
     implementation 'com.google.firebase:firebase-config:16.1.0'
+    implementation 'com.google.firebase:firebase-perf:16.2.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.2.0'
     implementation 'com.firebaseui:firebase-ui-database:4.2.0'
     implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
@@ -106,6 +108,8 @@ dependencies {
     // Dagger 2
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
 
+    androidTestImplementation 'androidx.test:core:1.0.0'
+    androidTestImplementation "androidx.test.ext:junit:1.0.0"
     androidTestImplementation 'androidx.test:rules:1.1.0'
     androidTestImplementation 'androidx.test:runner:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'

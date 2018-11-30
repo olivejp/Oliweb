@@ -3,7 +3,6 @@ package oliweb.nc.oliweb.service.firebase;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.ChildEventListener;
@@ -16,11 +15,14 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.database.converter.ChatConverter;
+import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
 import oliweb.nc.oliweb.dto.firebase.ChatFirebase;
 import oliweb.nc.oliweb.dto.firebase.MessageFirebase;
+import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.system.dagger.component.DaggerDatabaseRepositoriesComponent;
@@ -35,6 +37,7 @@ import oliweb.nc.oliweb.utility.Utility;
  * Items synced :
  * - Chats
  * - Messages
+ * - Categories
  */
 public class FirebaseSyncListenerService extends Service {
 
@@ -43,8 +46,59 @@ public class FirebaseSyncListenerService extends Service {
 
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private CategorieRepository categorieRepository;
     private Query queryChat;
     private Map<String, Query> listChatQueryListener;
+
+    private ChildEventListener categorieListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
+            try {
+                String categorieLibelle = dataSnapshot.getValue(String.class);
+                if (categorieLibelle != null && !categorieLibelle.isEmpty()) {
+
+                    // Lecture en base pour voir si la catégorie existe déjà
+                    categorieRepository.findByLibelle(categorieLibelle)
+                            .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                            .doOnComplete(() -> {
+                                // La catégorie n'existe pas en local, on va la créer.
+                                CategorieEntity categorieEntity = new CategorieEntity();
+                                categorieEntity.setName(categorieLibelle);
+                                categorieRepository.singleInsert(categorieEntity)
+                                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                                        .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category correctly inserted."))
+                                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                                        .subscribe();
+                            })
+                            .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category already exists in local DB : " + categorieEntity1))
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .subscribe();
+                }
+            } catch (Exception e1) {
+                Log.e(TAG, e1.getLocalizedMessage(), e1);
+            }
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, String s) {
+            // Do nothing
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            // Do nothing
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
+            // do nothing
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+            // do nothing
+        }
+    };
 
     private ValueEventListener chatListener = new ValueEventListener() {
         @Override
@@ -220,6 +274,7 @@ public class FirebaseSyncListenerService extends Service {
 
             chatRepository = component.getChatRepository();
             messageRepository = component.getMessageRepository();
+            categorieRepository = component.getCategorieRepository();
             listChatQueryListener = new HashMap<>();
 
             String uidUser = intent.getStringExtra(CHAT_SYNC_UID_USER);
@@ -229,6 +284,9 @@ public class FirebaseSyncListenerService extends Service {
 
             // Création d'observers pour écouter les nouveaux messages
             listenForMessageByUidUser(uidUser);
+
+            // Création de l'observer pour les catégories
+            listenForCategorie();
         }
         return START_NOT_STICKY;
     }
@@ -290,6 +348,17 @@ public class FirebaseSyncListenerService extends Service {
                     }
                 })
                 .subscribe();
+    }
+
+    /**
+     * Va créer un observer pour toutes les catégories
+     */
+    private void listenForCategorie() {
+        Log.d(TAG, "Starting listenForCategorie");
+
+        // Création de listener pour toutes les catégories
+        Query query = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_DB_CATEGORIE_REF);
+        query.addChildEventListener(categorieListener);
     }
 
     private boolean isChatAlreadyObserved(String chatUid) {

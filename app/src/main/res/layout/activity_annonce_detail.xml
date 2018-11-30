@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinator_layout"
+        android:id="@+id/annonce_detail_coordinator_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

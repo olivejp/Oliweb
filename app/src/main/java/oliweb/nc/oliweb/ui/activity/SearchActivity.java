@@ -5,16 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.dynamiclinks.DynamicLink;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,6 +47,7 @@ import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
+import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
 
@@ -57,6 +59,7 @@ import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
 import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_TITLE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
+import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class SearchActivity extends AppCompatActivity {
@@ -108,6 +111,7 @@ public class SearchActivity extends AppCompatActivity {
     private int higherPrice;
     private boolean withPhotoOnly;
     private ArrayList<String> listCategorieSelected;
+    private Long delay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +148,9 @@ public class SearchActivity extends AppCompatActivity {
                 withPhotoOnly = intentParam.getBooleanExtra(WITH_PHOTO_ONLY, false);
             }
         }
+
+        // Récupération du délai configuré avant d'envoyer un timeoutexception
+        this.delay = FirebaseRemoteConfig.getInstance().getLong(REMOTE_DELAY);
 
         initRecyclerView();
 
@@ -194,7 +201,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void initRecyclerView() {
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this, null);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         EndlessRecyclerOnScrollListener endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
@@ -277,6 +284,12 @@ public class SearchActivity extends AppCompatActivity {
         outState.putInt(SAVE_TOTAL_LOADED, totalLoaded);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GlideApp.get(this).clearMemory();
+    }
+
     private void makeNewSearch() {
         if (viewModel.isLoading()) return;
         from = 0;
@@ -299,15 +312,16 @@ public class SearchActivity extends AppCompatActivity {
             }
             if (maybe != null) {
                 viewModel.updateLoadingStatus(true);
-                maybe.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                        .timeout(20L, TimeUnit.SECONDS)
+                maybe.subscribeOn(Schedulers.io())
+                        .timeout(delay, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .onErrorComplete(throwable -> throwable instanceof TimeoutException)
                         .doOnError(throwable -> {
-                            Log.e(TAG, throwable.getLocalizedMessage(), throwable);
+                            Crashlytics.logException(throwable);
                             viewModel.updateLoadingStatus(false);
                         })
-                        .doOnSuccess(s -> {
-                            doOnSuccessSearch(s);
+                        .doOnSuccess(elasticsearchHitsResult -> {
+                            doOnSuccessSearch(elasticsearchHitsResult);
                             viewModel.updateLoadingStatus(false);
                         })
                         .doOnComplete(() -> viewModel.updateLoadingStatus(false))

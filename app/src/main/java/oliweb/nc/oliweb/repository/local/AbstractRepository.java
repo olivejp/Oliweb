@@ -1,11 +1,11 @@
 package oliweb.nc.oliweb.repository.local;
 
 import android.content.Context;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import java.util.List;
 
+import androidx.annotation.Nullable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -78,7 +78,7 @@ public abstract class AbstractRepository<T extends AbstractEntity<U>, U> {
     }
 
     public Maybe<T> singleInsert(T entity) {
-        Log.d(TAG, "singleUpdate:" + entity.toString());
+        Log.d(TAG, "singleInsert:" + entity.toString());
         U id = dao.insert(entity);
         if (id != null) {
             return findById(id);
