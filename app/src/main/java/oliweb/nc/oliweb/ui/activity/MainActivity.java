@@ -193,8 +193,12 @@ public class MainActivity extends AppCompatActivity
         NetworkReceiver.listen(this);
         viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 
-        // Récupération dans le config remote du nombre de colonne que l'on veut
+        // Récupération dans le config remote de toutes les variables configurables
         initRemoteConfigDefaultValues();
+
+        // Récupération de la liste des catégories dans Firebase (si on a une connexion)
+        if (NetworkReceiver.checkConnection(this))
+            viewModel.checkRemoteCategoriesEqualToLocalCategories();
 
         // Init des widgets sur l'écran
         initViews();
