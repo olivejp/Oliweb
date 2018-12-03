@@ -48,17 +48,33 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="A vendre : Super affaire moto presque neuve. Super titre sur 2 lignes." />
 
+    <TextView
+        android:id="@+id/text_description_annonce_raw"
+        style="@style/TextAppearance.MaterialComponents.Body2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center_vertical|start"
+        android:maxLength="100"
+        android:maxLines="3"
+        android:textColor="@color/colorPrimaryDark"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/text_date_publication_annonce_raw"
+        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw"
+        tools:text="Description de mon bien à vendre !!" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_photos_annonce"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="26dp"
         android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_prix_annonce_raw"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw" />
-
+        app:layout_constraintTop_toBottomOf="@id/text_description_annonce_raw" />
 
     <TextView
         android:id="@+id/text_prix_annonce_raw"
@@ -70,7 +86,7 @@
         android:textColor="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/annonce_popup_menu"
-        app:layout_constraintTop_toBottomOf="@+id/text_titre_annonce_raw"
+        app:layout_constraintTop_toBottomOf="@+id/text_description_annonce_raw"
         tools:text="400 000 XPF" />
 
     <ImageView
