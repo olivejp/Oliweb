@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
@@ -80,11 +81,11 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
 
     private static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
     private static final String SAVE_SORT = "SAVE_SORT";
     private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
-    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
     private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
     private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
@@ -440,7 +441,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (actionBar != null) {
             actionBar.setTitle(R.string.RECENT_ADS);
         }
-        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView);
+        GridLayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView);
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
@@ -504,16 +505,12 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private boolean showToastIfNoConnectivity() {
-        if (!checkConnectivity()) {
+        if (!NetworkReceiver.checkConnection(appCompatActivity)) {
             dismissLoading();
             Toast.makeText(appCompatActivity, "Aucune recherche possible sans connexion", Toast.LENGTH_LONG).show();
             return true;
         }
         return false;
-    }
-
-    private boolean checkConnectivity() {
-        return NetworkReceiver.checkConnection(appCompatActivity);
     }
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
