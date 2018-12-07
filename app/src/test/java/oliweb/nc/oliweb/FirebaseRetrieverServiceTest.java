@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb;
 
-import androidx.lifecycle.Observer;
 import android.content.Context;
 
 import org.junit.Before;
@@ -12,6 +11,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.lifecycle.Observer;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.TestScheduler;
@@ -21,6 +21,7 @@ import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.dto.firebase.UserFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.service.firebase.FirebasePhotoStorage;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
@@ -50,6 +51,9 @@ public class FirebaseRetrieverServiceTest {
 
     @Mock
     private AnnonceRepository annonceRepository;
+
+    @Mock
+    private CategorieRepository categorieRepository;
 
     @Mock
     private FirebasePhotoStorage firebasePhotoStorage;
@@ -110,7 +114,7 @@ public class FirebaseRetrieverServiceTest {
     @Test
     public void ShouldSaveOnce() {
         // Création de mon service à tester
-        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler, testScheduler);
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, categorieRepository, firebasePhotoStorage, testScheduler, testScheduler);
 
         // Appel de ma fonction à tester
         firebaseRetrieverService.synchronize(context, UID_USER);
@@ -128,7 +132,7 @@ public class FirebaseRetrieverServiceTest {
     @Test
     public void ShouldCallOnlyOnceRetrieve() {
         // Création de mon service à tester
-        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, firebasePhotoStorage, testScheduler, testScheduler);
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, categorieRepository, firebasePhotoStorage, testScheduler, testScheduler);
 
         // Appel de ma fonction à tester
         LiveDataOnce<AtomicBoolean> liveData = firebaseRetrieverService.checkFirebaseRepository(UID_USER);
