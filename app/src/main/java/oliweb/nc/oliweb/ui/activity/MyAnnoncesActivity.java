@@ -13,6 +13,8 @@ import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -49,6 +51,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     public static final String DIALOG_TAG_DELETE = "DIALOG_TAG_DELETE";
     public static final int REQUEST_STORAGE_PERMISSION_CODE = 5841;
     public static final int REQUEST_CODE_POST = 548;
+    public static final String ACTION_CODE_POST = "ACTION_CODE_POST";
 
     private String uidUser;
     private MyAnnoncesViewModel viewModel;
@@ -92,6 +95,11 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 initLayout(annonceWithPhotos);
             }
         });
+
+        // On redirige tout de suite vers PostAnnonceActivity.
+        if (getIntent().getAction() != null && getIntent().getAction().equals(ACTION_CODE_POST)) {
+            callPostAnnonceCreate(null);
+        }
     }
 
     @Override
@@ -227,7 +235,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         SyncService.launchSynchroFromFirebase(this, uidUser);
     }
 
-    private void callPostAnnonceCreate(View v) {
+    private void callPostAnnonceCreate(@Nullable View v) {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_MODE, Constants.PARAM_CRE);

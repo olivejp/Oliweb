@@ -2,6 +2,7 @@ package oliweb.nc.oliweb.ui.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -81,6 +82,7 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.textIdAnnonce.setText(String.valueOf(viewHolderRaw.singleAnnonce.getUid()));
         viewHolderRaw.textTitreAnnonce.setText(viewHolderRaw.singleAnnonce.getTitre());
         viewHolderRaw.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", viewHolderRaw.singleAnnonce.getPrix()) + " XPF"));
+        viewHolderRaw.textDescriptionAnnonce.setText(viewHolderRaw.singleAnnonce.getDescription());
 
         // Récupération de la date de publication
         if (viewHolderRaw.singleAnnonce.getStatut() == StatusRemote.SEND) {
@@ -103,6 +105,27 @@ public class AnnonceRawAdapter extends
         viewHolderRaw.recyclerViewPhoto.setLayoutManager(linearLayoutManager);
         photoMiniAdapter.setListPhotos(annoncePhotos.getPhotos());
         photoMiniAdapter.notifyDataSetChanged();
+
+        // Cet OnItemTouchListener permet de faire passer l'information du MotionEvent à la vue parent
+        // Cela permet de jouer le Ripple effect sur l'objet dans le recyclerview.
+        viewHolderRaw.recyclerViewPhoto.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                viewHolderRaw.normalLayoutRaw.onTouchEvent(e);
+                return true;
+            }
+
+            @Override
+            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                View view = (View) rv.getParent();
+                view.onTouchEvent(e);
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+            }
+        });
 
         // On regarde s'il y a un envoi en cours sur les photos
         boolean sendingInProgress = false;
@@ -204,6 +227,9 @@ public class AnnonceRawAdapter extends
 
         @BindView(R.id.text_prix_annonce_raw)
         TextView textPrixAnnonce;
+
+        @BindView(R.id.text_description_annonce_raw)
+        TextView textDescriptionAnnonce;
 
         @BindView(R.id.text_date_publication_annonce_raw)
         TextView textDatePublicationAnnonce;

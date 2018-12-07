@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
@@ -80,15 +81,16 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final String TAG = ListAnnonceFragment.class.getName();
 
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
 
     private static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
     private static final String SAVE_SORT = "SAVE_SORT";
     private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
-    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
     private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
     private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
     private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
     private static final String SAVE_ACTUAL_SORT = "SAVE_ACTUAL_SORT";
+    private static final String SAVE_IS_SEARCHING = "SAVE_IS_SEARCHING";
 
     @BindView(R.id.swipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -105,7 +107,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     @BindView(R.id.list_annonce_image_timeout)
     ImageView imageViewTimeout;
 
-    @BindView(R.id.list_annonce_timeout)
+    @BindView(R.id.text_annonce_timeout)
     TextView textViewTimeout;
 
     private String uidUser;
@@ -126,8 +128,9 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private Long totalLoaded = 0L;
     private int actualSort;
     private Long delay;
-    private Disposable actualSearch;
+    private Disposable disposableActualSearch;
     private SnackbarViewProvider snackbarViewProvider;
+    private boolean isSearching = false;
 
     /**
      * OnClickListener that should open AnnonceDetailActivity
@@ -265,6 +268,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             categorieSelected = savedInstanceState.getParcelable(SAVE_CATEGORY_SELECTED);
             totalLoaded = savedInstanceState.getLong(SAVE_TOTAL_LOADED);
             actualSort = savedInstanceState.getInt(SAVE_ACTUAL_SORT);
+            isSearching = savedInstanceState.getBoolean(SAVE_IS_SEARCHING);
         }
 
         viewModel.getLiveUserConnected().observe(appCompatActivity, userEntity -> {
@@ -285,7 +289,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         viewModel.getCategorySelected().observe(appCompatActivity, categorieEntity -> {
             if (categorieEntity != null && (categorieSelected == null || !categorieEntity.getId().equals(categorieSelected.getId()))) {
                 categorieSelected = categorieEntity;
-                makeNewSearch();
+                launchNewSearch();
             }
         });
 
@@ -298,6 +302,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         GlideApp.get(appCompatActivity).clearMemory();
         recyclerView.setAdapter(null);
         recyclerView.removeOnScrollListener(scrollListener);
+        swipeRefreshLayout.setOnRefreshListener(null);
+        clearDisposableActualSearch();
         super.onDestroyView();
     }
 
@@ -311,12 +317,13 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
         outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
         outState.putInt(SAVE_ACTUAL_SORT, actualSort);
+        outState.putBoolean(SAVE_IS_SEARCHING, isSearching);
     }
 
     @Override
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
-        makeNewSearch();
+        launchNewSearch();
     }
 
     @Override
@@ -328,8 +335,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Snackbar snackbar = Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.network_unavailable, Snackbar.LENGTH_INDEFINITE);
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, null, this);
 
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, null, this);
         recyclerView.setAdapter(annonceBeautyAdapter);
 
         actionBar = appCompatActivity.getSupportActionBar();
@@ -355,6 +362,10 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
 
         if (savedInstanceState == null) {
             changeSortAndUpdateList(SharedPreferencesHelper.getInstance(appCompatActivity).getPrefSort());
+        }
+
+        if (isSearching) {
+            launchNewSearch();
         }
 
         return view;
@@ -402,21 +413,24 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         appCompatActivity.overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
     }
 
-    private void clearActualSearch() {
-        if (actualSearch != null && !actualSearch.isDisposed()) actualSearch.dispose();
+    private void clearDisposableActualSearch() {
+        if (disposableActualSearch != null && !disposableActualSearch.isDisposed())
+            disposableActualSearch.dispose();
     }
 
     private void displayTimeoutViews(boolean timeoutActive) {
-        imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
-        textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.GONE);
-        swipeRefreshLayout.setVisibility(timeoutActive ? View.GONE : View.VISIBLE);
+        imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.INVISIBLE);
+        textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.INVISIBLE);
+        swipeRefreshLayout.setVisibility(timeoutActive ? View.INVISIBLE : View.VISIBLE);
     }
 
-    private void makeNewSearch() {
+    private void launchNewSearch() {
+        if (showToastIfNoConnectivity()) return;
+
+        isSearching = true;
         swipeRefreshLayout.setRefreshing(true);
-        if (toastIfNoConnectivity()) return;
         displayTimeoutViews(false);
-        clearActualSearch();
+        clearDisposableActualSearch();
         from = 0;
         totalLoaded = 0L;
         annoncePhotosList.clear();
@@ -427,7 +441,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (actionBar != null) {
             actionBar.setTitle(R.string.RECENT_ADS);
         }
-        RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView);
+        GridLayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView);
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {
@@ -463,7 +477,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     directionSelected = ASC;
                     break;
             }
-            makeNewSearch();
+            launchNewSearch();
         }
 
         if (swipeRefreshLayout.isRefreshing()) {
@@ -472,43 +486,31 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void loadMoreDatas() {
-        if (toastIfNoConnectivity()) return;
-        clearActualSearch();
+        if (showToastIfNoConnectivity()) return;
+        clearDisposableActualSearch();
         List<String> listCategorie = Collections.emptyList();
         if (categorieSelected != null && !categorieSelected.getId().equals(ID_ALL_CATEGORY)) {
             listCategorie = Collections.singletonList(categorieSelected.getName());
         }
-        actualSearch = viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
+        disposableActualSearch = viewModel.getSearchEngine().searchMaybe(listCategorie, false, 0, 0, null, Constants.PER_PAGE_REQUEST, from, sortSelected, directionSelected)
                 .subscribeOn(Schedulers.io())
                 .timeout(delay, TimeUnit.SECONDS, AndroidSchedulers.mainThread(), Maybe.empty())
                 .observeOn(AndroidSchedulers.mainThread())
                 .onErrorComplete(throwable -> throwable instanceof TimeoutException)
-                .doOnError(throwable -> {
-                    try {
-                        dismissLoading();
-                    } catch (RuntimeException e) {
-                        Log.e(TAG, throwable.getLocalizedMessage(), throwable);
-                    } finally {
-                        dismissLoading();
-                    }
-                })
+                .doOnError(throwable -> dismissLoading())
                 .doOnSuccess(this::doOnSuccessSearch)
                 .doOnComplete(this::doOnCompleteSearch)
                 .doAfterTerminate(this::dismissLoading)
                 .subscribe();
     }
 
-    private boolean toastIfNoConnectivity() {
-        if (!checkConnectivity()) {
+    private boolean showToastIfNoConnectivity() {
+        if (!NetworkReceiver.checkConnection(appCompatActivity)) {
             dismissLoading();
             Toast.makeText(appCompatActivity, "Aucune recherche possible sans connexion", Toast.LENGTH_LONG).show();
             return true;
         }
         return false;
-    }
-
-    private boolean checkConnectivity() {
-        return NetworkReceiver.checkConnection(appCompatActivity);
     }
 
     private void updateListWithFavorite(ArrayList<AnnonceFull> listAnnonces, List<String> listUidFavorites) {
@@ -544,13 +546,13 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     }
 
     private void doOnCompleteSearch() {
-        dismissLoading();
         annonceBeautyAdapter.setListAnnonces(annoncePhotosList);
         annonceBeautyAdapter.notifyDataSetChanged();
         displayTimeoutViews(true);
     }
 
     private void dismissLoading() {
+        isSearching = false;
         if (swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(false);
         }

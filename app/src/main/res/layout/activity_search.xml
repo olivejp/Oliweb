@@ -13,14 +13,47 @@
         android:layout_height="match_parent"
         tools:context="oliweb.nc.oliweb.ui.activity.SearchActivity">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_search_annonce"
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/activity_search_swipe_refreshLayout"
             android:layout_width="match_parent"
-            android:scrollbars="vertical"
-            android:layout_height="0dp"
-            android:clipToPadding="false"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_search_annonce"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <ImageView
+            android:id="@+id/activity_search_image_timeout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.3"
+            app:srcCompat="@drawable/ic_timer_off_grey_900_48dp"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/activity_search_text_timeout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Le délai de la requête a expirée.\nSwipez vers le bas pour tenter une nouvelle recherche."
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activity_search_image_timeout"
+            tools:visibility="visible" />
 
 
         <LinearLayout
@@ -29,15 +62,17 @@
             android:layout_height="match_parent"
             android:layout_marginTop="?attr/actionBarSize"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="invisible"
+            tools:visibility="visible">
 
             <TextView
+                android:id="@+id/empty_search_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginEnd="10dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="50dp"
+                android:layout_marginEnd="10dp"
                 android:gravity="center"
                 android:text="@string/empty_search_result" />
         </LinearLayout>

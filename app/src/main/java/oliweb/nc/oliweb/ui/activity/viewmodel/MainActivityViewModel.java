@@ -119,6 +119,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         ((App) application).getFirebaseServicesComponent().inject(this);
     }
 
+    public void checkRemoteCategoriesEqualToLocalCategories() {
+        this.firebaseRetrieverService.checkRemoteCategoriesEqualToLocalCategories();
+    }
+
     public void setCategorySelected(CategorieEntity category) {
         if (liveCategorySelected == null) {
             liveCategorySelected = new MutableLiveData<>();

@@ -18,6 +18,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,6 +48,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
@@ -67,6 +69,7 @@ import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
+import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ACTION_CODE_POST;
 import static oliweb.nc.oliweb.ui.activity.MyAnnoncesActivity.ARG_UID_USER;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_OPEN_CHATS;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
@@ -80,6 +83,7 @@ import static oliweb.nc.oliweb.utility.Constants.EMAIL_ADMIN;
 import static oliweb.nc.oliweb.utility.Constants.MAIL_MESSAGE_TYPE;
 import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY_DEFAULT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
+import static oliweb.nc.oliweb.utility.Utility.callLoginUi;
 import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
@@ -89,6 +93,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = MainActivity.class.getName();
 
     public static final int RC_SIGN_IN = 1001;
+    public static final int RC_SIGN_IN_TO_POST = 1002;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String TAG_LIST_CATEGORY = "TAG_LIST_CATEGORY";
     public static final String SORT_DIALOG = "SORT_DIALOG";
@@ -115,6 +120,9 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.frame_category_list)
     FrameLayout frameCategoryList;
 
+    @BindView(R.id.fab_add_annonce)
+    FloatingActionButton floatingActionButton;
+
     SearchView searchView;
 
     private ConstraintLayout constraintProfil;
@@ -136,6 +144,7 @@ public class MainActivity extends AppCompatActivity
     private boolean questionHasBeenAsked;
     private MainActivityViewModel viewModel;
     private boolean dynamicLinkProcessed = false;
+    private boolean shouldCallAddAnnonce = false;
 
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
         TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
@@ -193,8 +202,12 @@ public class MainActivity extends AppCompatActivity
         NetworkReceiver.listen(this);
         viewModel.setIsNetworkAvailable(NetworkReceiver.checkConnection(this));
 
-        // Récupération dans le config remote du nombre de colonne que l'on veut
+        // Récupération dans le config remote de toutes les variables configurables
         initRemoteConfigDefaultValues();
+
+        // Récupération de la liste des catégories dans Firebase (si on a une connexion)
+        if (NetworkReceiver.checkConnection(this))
+            viewModel.checkRemoteCategoriesEqualToLocalCategories();
 
         // Init des widgets sur l'écran
         initViews();
@@ -357,7 +370,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_chats) {
             callChatsActivity();
         } else if (id == R.id.nav_annonces) {
-            callMyAnnoncesActivity();
+            callMyAnnoncesActivity(null);
         } else if (id == R.id.nav_advanced_search) {
             callAdvancedSearchActivity();
         } else if (id == R.id.nav_suggestion) {
@@ -387,12 +400,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void callMyAnnoncesActivity() {
+    private void callMyAnnoncesActivity(@Nullable String action) {
         String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
         if (uidUser != null) {
             Intent intent = new Intent();
             intent.setClass(this, MyAnnoncesActivity.class);
             intent.putExtra(ARG_UID_USER, uidUser);
+            if (action != null) {
+                intent.setAction(action);
+            }
             startActivity(intent);
             overridePendingTransition(R.anim.fui_slide_in_right, R.anim.fui_slide_out_left);
         }
@@ -427,6 +443,10 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
             Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
+        }
+        if (requestCode == RC_SIGN_IN_TO_POST && resultCode == RESULT_OK) {
+            SharedPreferencesHelper.getInstance(getApplication()).setUidFirebaseUser(FirebaseAuth.getInstance().getUid());
+            shouldCallAddAnnonce = true;
         }
         if (requestCode == RC_POST_ANNONCE && resultCode == RESULT_OK) {
             Snackbar.make(coordinatorLayout, "Votre annonce a bien été sauvée.", Snackbar.LENGTH_LONG).show();
@@ -508,6 +528,16 @@ public class MainActivity extends AppCompatActivity
     public void sortHasBeenUpdated(int sort) {
         SharedPreferencesHelper.getInstance(getApplicationContext()).setPrefSort(sort);
         viewModel.updateSort(sort);
+    }
+
+    @OnClick(R.id.fab_add_annonce)
+    public void addAnnonce(View v) {
+        // L'utilisateur est bien connecté
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            callMyAnnoncesActivity(ACTION_CODE_POST);
+        } else {
+            callLoginUi(this, RC_SIGN_IN_TO_POST);
+        }
     }
 
     private void catchDynamicLink() {
@@ -635,6 +665,10 @@ public class MainActivity extends AppCompatActivity
                             case NEW_CONNECTION:
                                 if (firebaseAuth.getCurrentUser() != null) {
                                     initNewConnection(firebaseAuth.getCurrentUser());
+                                }
+                                if (shouldCallAddAnnonce) {
+                                    shouldCallAddAnnonce = false;
+                                    addAnnonce(null);
                                 }
                                 break;
                             case NOTHING:

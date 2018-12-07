@@ -14,6 +14,7 @@ import oliweb.nc.oliweb.repository.firebase.FirebaseMessageRepository;
 import oliweb.nc.oliweb.repository.firebase.FirebaseUserRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceFullRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
+import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
 import oliweb.nc.oliweb.repository.local.MessageRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
@@ -46,10 +47,11 @@ public class FirebaseServicesModule {
     @Singleton
     public FirebaseRetrieverService firebaseRetrieverService(FirebaseAnnonceRepository firebaseAnnonceRepository,
                                                              AnnonceRepository annonceRepository,
+                                                             CategorieRepository categorieRepository,
                                                              FirebasePhotoStorage photoStorage,
                                                              @Named("processScheduler") Scheduler processScheduler,
                                                              @Named("androidScheduler") Scheduler androidScheduler) {
-        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, photoStorage, processScheduler, androidScheduler);
+        return new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, categorieRepository, photoStorage, processScheduler, androidScheduler);
     }
 
     @Provides
