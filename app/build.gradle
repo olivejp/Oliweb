@@ -19,8 +19,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 10
-        versionName "alpha-1.8"
+        versionCode 11
+        versionName "alpha-1.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
