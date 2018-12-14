@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="oliweb.nc.oliweb">
+    package="oliweb.nc.oliweb"
+    android:versionCode="11"
+    android:versionName="alpha-1.9">
 
     <uses-feature
         android:name="android.hardware.telephony"
@@ -12,7 +14,6 @@
         android:required="true" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -229,10 +230,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity" />
         </activity>
-        <activity android:name=".ui.activity.ZoomImageActivity"
+        <activity
+            android:name=".ui.activity.ZoomImageActivity"
             android:label="@string/title_activity_shooting"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName=".ui.activity.AnnonceDetailActivity">
+            android:parentActivityName=".ui.activity.AnnonceDetailActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity" />
