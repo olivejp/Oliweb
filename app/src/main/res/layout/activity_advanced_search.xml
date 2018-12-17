@@ -173,7 +173,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/minimum"
                     android:inputType="number"
-                    android:maxLength="12" />
+                    android:maxLength="9" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
@@ -205,7 +205,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/maximum"
                     android:inputType="number"
-                    android:maxLength="12" />
+                    android:maxLength="9" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView

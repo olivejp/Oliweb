@@ -135,14 +135,44 @@ public class AdvancedSearchActivity extends AppCompatActivity implements SelectC
     @OnTextChanged({R.id.higher_price, R.id.lower_price})
     public void onTextChangeHigher(CharSequence s, int start, int before, int count) {
         error = false;
+        higherPrice.setError(null);
+        lowerPrice.setError(null);
+
         String higher = higherPrice.getText().toString();
         String lower = lowerPrice.getText().toString();
-        if (!higher.isEmpty() && !lower.isEmpty() && Integer.valueOf(lower) > Integer.valueOf((higher))) {
+
+        Integer higherInt;
+        Integer lowerInt;
+
+        try {
+            higherInt = Integer.valueOf(higher);
+        } catch (NumberFormatException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+            higherPrice.setError(getString(R.string.number_format_invalid));
+            error = true;
+            return;
+        }
+
+        try {
+            lowerInt = Integer.valueOf(lower);
+        } catch (NumberFormatException exception) {
+            Log.e(TAG, exception.getLocalizedMessage(), exception);
+            lowerPrice.setError(getString(R.string.number_format_invalid));
+            error = true;
+            return;
+        }
+
+        if (!higher.isEmpty() && !lower.isEmpty() && lowerInt > higherInt) {
             higherPrice.setError(getString(R.string.error_max_gte_min));
             error = true;
         }
 
-        if (higher.isEmpty() && !lower.isEmpty() || !higher.isEmpty() && lower.isEmpty()) {
+        if (!higher.isEmpty() && lower.isEmpty()) {
+            lowerPrice.setError(getString(R.string.error_price_interval_incorrect));
+            error = true;
+        }
+
+        if (higher.isEmpty() && !lower.isEmpty()) {
             higherPrice.setError(getString(R.string.error_price_interval_incorrect));
             error = true;
         }
