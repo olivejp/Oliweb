@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.util.IOUtils;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
@@ -179,7 +180,7 @@ public class MediaUtility {
         int newHeight;
 
         // L'image est trop grande il faut la réduire
-        if ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx)) {
+        if (isImageTooBig(bitmap, maxPx)) {
             int max;
             if (bitmap.getWidth() > maxPx) {
                 max = bitmap.getWidth();
@@ -195,6 +196,10 @@ public class MediaUtility {
         } else {
             return bitmap;
         }
+    }
+
+    private boolean isImageTooBig(Bitmap bitmap, int maxPx) {
+        return ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx));
     }
 
 
@@ -319,21 +324,30 @@ public class MediaUtility {
      * @return false si le fichier source n'a pas pu être lu
      */
     public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination, boolean deleteUriSource) {
+        // Récupération de la longeur max depuis le remote config.
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        int longeurMax = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE));
+        int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.DECREASE_JPEG_QUALITY));
+
+        // Récupération du bitmap depuis le disque du device
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
-            Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
+            Crashlytics.log("L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
             return false;
         }
 
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE)));
+        boolean resized = isImageTooBig(bitmapSrc, longeurMax);
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, longeurMax);
         if (bitmapDst == null) {
-            Log.e(TAG, "Le retaillage de l'image a échoué.");
+            Crashlytics.log("Le retaillage de l'image a échoué.");
             return false;
         }
 
         try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
-            bitmapDst.compress(Bitmap.CompressFormat.JPEG, 70, out);
+            // La photo a été retaillée, on va également baissé la qualité de la photo
+            if (resized) {
+                bitmapDst.compress(Bitmap.CompressFormat.JPEG, decreasingQuality, out);
+            }
             if (deleteUriSource) {
                 deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
             }

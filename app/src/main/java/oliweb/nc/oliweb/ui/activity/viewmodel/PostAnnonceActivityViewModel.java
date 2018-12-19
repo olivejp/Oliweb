@@ -33,8 +33,6 @@ import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.repository.local.CategorieRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
-import oliweb.nc.oliweb.utility.CustomLiveData;
-import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
@@ -78,7 +76,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private AnnoncePhotos currentAnnonce;
     private CategorieEntity currentCategorie;
     private PhotoEntity currentPhoto;
-    private CustomLiveData<ArrayList<CategorieEntity>> listCategorie;
+    private MutableLiveData<ArrayList<CategorieEntity>> listCategorie;
     private MutableLiveData<AtomicBoolean> showLoading = new MutableLiveData<>();
     private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
 
@@ -151,9 +149,9 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.liveListPhoto;
     }
 
-    public LiveDataOnce<ArrayList<CategorieEntity>> getListCategorie() {
+    public LiveData<ArrayList<CategorieEntity>> getListCategorie() {
         if (listCategorie == null) {
-            listCategorie = new CustomLiveData<>();
+            listCategorie = new MutableLiveData<>();
         }
         categorieRepository.getListCategorie()
                 .subscribeOn(processScheduler).observeOn(processScheduler)
