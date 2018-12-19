@@ -1,9 +1,6 @@
 package oliweb.nc.oliweb.activity;
 
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +8,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import androidx.lifecycle.ViewModelProviders;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.rule.ActivityTestRule;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.activity.ProfilActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.ProfilViewModel;

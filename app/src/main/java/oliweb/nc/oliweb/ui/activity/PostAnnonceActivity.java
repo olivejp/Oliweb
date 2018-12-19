@@ -485,7 +485,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void initObservers() {
         // Alimentation du spinner avec la liste des catégories
-        viewModel.getListCategorie().observeOnce(this::defineSpinnerCategorie);
+        viewModel.getListCategorie().observe(this, this::defineSpinnerCategorie);
 
         // Initialise les moyens de contacts de l'utilisateur selon ses données.
         viewModel.getConnectedUser(uidUser).observe(this, this::changeUserContactMethod);

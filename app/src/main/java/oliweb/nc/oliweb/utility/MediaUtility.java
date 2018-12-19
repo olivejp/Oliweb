@@ -243,7 +243,7 @@ public class MediaUtility {
      * @return
      */
     @Nullable
-    public Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
+    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
         String fileName = generateMediaName(type);
         File newFile = (externalStorage) ? createExternalMediaFile(fileName) : createInternalMediaFile(context, fileName);
         if (newFile != null) {
@@ -259,7 +259,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private File createInternalMediaFile(Context context, String fileName) {
+    private static File createInternalMediaFile(Context context, String fileName) {
         return new File(context.getFilesDir(), fileName);
     }
 
@@ -270,7 +270,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private File createExternalMediaFile(String fileName) {
+    private static File createExternalMediaFile(String fileName) {
         // External sdcard location
         File mediaStorageDir = new File(
                 // TODO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
@@ -295,7 +295,7 @@ public class MediaUtility {
      * @param type
      * @return
      */
-    private String generateMediaName(MediaType type) {
+    private static String generateMediaName(MediaType type) {
         String prefixName = UUID.randomUUID().toString();
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         if (type.equals(MediaType.IMAGE)) {
@@ -384,7 +384,7 @@ public class MediaUtility {
         }
     }
 
-    public void saveInputStreamToContentProvider(InputStream inputStream, File file) {
+    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) {
         try (OutputStream outStream = new FileOutputStream(file.getAbsoluteFile())) {
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;
