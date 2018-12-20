@@ -38,6 +38,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.core.util.Pair;
+import androidx.exifinterface.media.ExifInterface;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -58,6 +59,21 @@ public class MediaUtility {
     @Inject
     public MediaUtility() {
 
+    }
+
+//    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
+//        String[] proj = {MediaStore.Images.Media.DATA};
+//        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
+//        Cursor cursor = loader.loadInBackground();
+//        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+//        cursor.moveToFirst();
+//        String result = cursor.getString(column_index);
+//        cursor.close();
+//        return result;
+//    }
+
+    public InputStream getInputStream(Context context, Uri contentUri) throws FileNotFoundException {
+        return context.getContentResolver().openInputStream(contentUri);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -235,6 +251,18 @@ public class MediaUtility {
         }
     }
 
+    public static String getProviderAuthority() {
+        return BuildConfig.APPLICATION_ID + ".provider";
+    }
+
+    public static String getContentProviderAuthority() {
+        return "content://" + BuildConfig.APPLICATION_ID + ".provider/internal_files/";
+    }
+
+    public static String getContentProviderAuthorityExternal() {
+        return "content://" + BuildConfig.APPLICATION_ID + ".provider/external_files/";
+    }
+
     /**
      * Créer un URI pour stocker l'image/la video
      *
@@ -247,7 +275,7 @@ public class MediaUtility {
         String fileName = generateMediaName(type);
         File newFile = (externalStorage) ? createExternalMediaFile(fileName) : createInternalMediaFile(context, fileName);
         if (newFile != null) {
-            return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
+            return new Pair<>(FileProvider.getUriForFile(context, getProviderAuthority(), newFile), newFile);
         }
         return null;
     }
@@ -320,14 +348,22 @@ public class MediaUtility {
      *
      * @param context
      * @param uriSource
-     * @param uriDestination
+     * @param pairUriFile
      * @return false si le fichier source n'a pas pu être lu
      */
-    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination, boolean deleteUriSource) {
+    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Pair<Uri, File> pairUriFile, boolean deleteUriSource) {
         // Récupération de la longeur max depuis le remote config.
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         int longeurMax = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE));
         int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.DECREASE_JPEG_QUALITY));
+
+        // Récupération du EXIF du fichier pour récupérer l'orientation de l'image initiale => OK
+        ExifInterface oldExif = null;
+        try {
+            oldExif = new ExifInterface(getInputStream(context, uriSource));
+        } catch (IOException e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        }
 
         // Récupération du bitmap depuis le disque du device
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
@@ -343,19 +379,35 @@ public class MediaUtility {
             return false;
         }
 
-        try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
+        try (OutputStream out = context.getContentResolver().openOutputStream(pairUriFile.first)) {
             // La photo a été retaillée, on va également baissé la qualité de la photo
             if (resized) {
                 bitmapDst.compress(Bitmap.CompressFormat.JPEG, decreasingQuality, out);
+                out.flush();
             }
             if (deleteUriSource) {
                 deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
             }
-            return true;
         } catch (IOException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
+            return false;
         }
-        return false;
+
+        // Enregistrement de l'orientation de l'ancienne image
+        if (oldExif != null && oldExif.getAttribute(ExifInterface.TAG_ORIENTATION) != null) {
+            try {
+                ExifInterface newExif = new ExifInterface(pairUriFile.second.getAbsolutePath());
+                newExif.setAttribute(ExifInterface.TAG_ORIENTATION, oldExif.getAttribute(ExifInterface.TAG_ORIENTATION));
+                newExif.saveAttributes();
+                return true;
+            } catch (IOException e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
+                return false;
+            }
+        } else {
+            // On a retaillé et copié l'image, mais on a pas récupéré son EXIF
+            return true;
+        }
     }
 
     public boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {

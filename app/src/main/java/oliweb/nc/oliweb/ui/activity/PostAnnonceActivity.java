@@ -328,38 +328,46 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (resultCode != RESULT_OK) {
             return;
         }
-
         if (requestCode == DIALOG_GALLERY_IMAGE) {
-            // Insertion multiple
-            if (data.getClipData() != null) {
-                // Vérification qu'on ajoute pas plus de photo que la quota autorisé
-                long nbPhotoSelected = data.getClipData().getItemCount();
-                if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
-                    nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
-                }
+            resultFromDialogGalery(data);
 
-                // Parcourt de toutes les items reçus et enregistrement dans une liste
-                List<Uri> listUri = new ArrayList<>();
-                int i = -1;
-                ClipData.Item item;
-                while (i++ < nbPhotoSelected - 1) {
-                    item = data.getClipData().getItemAt(i);
-                    listUri.add(item.getUri());
-                }
-
-                // Appel de la fonction pour resizer toutes les photos
-                showLoadingAndResizeListPhotos(listUri, false);
-            } else {
-                // Insertion simple
-                if (data.getData() != null) {
-                    // Appel de la fonction pour resizer la photo
-                    showLoadingAndResizeListPhotos(Collections.singletonList(data.getData()), false);
-                }
-            }
         } else if (requestCode == REQUEST_SHOOTING_CODE) {
-            ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
-            if (listUriPhotos != null && !listUriPhotos.isEmpty()) {
-                showLoadingAndResizeListPhotos(listUriPhotos, true);
+            resultFromShootingActivity(data);
+        }
+    }
+
+    private void resultFromShootingActivity(Intent data) {
+        ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
+        if (listUriPhotos != null && !listUriPhotos.isEmpty()) {
+            showLoadingAndResizeListPhotos(listUriPhotos, true);
+        }
+    }
+
+    private void resultFromDialogGalery(Intent data) {
+        // Insertion multiple
+        if (data.getClipData() != null) {
+            // Vérification qu'on ajoute pas plus de photo que la quota autorisé
+            long nbPhotoSelected = data.getClipData().getItemCount();
+            if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
+                nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
+            }
+
+            // Parcourt de toutes les items reçus et enregistrement dans une liste
+            List<Uri> listUri = new ArrayList<>();
+            int i = -1;
+            ClipData.Item item;
+            while (i++ < nbPhotoSelected - 1) {
+                item = data.getClipData().getItemAt(i);
+                listUri.add(item.getUri());
+            }
+
+            // Appel de la fonction pour resizer toutes les photos
+            showLoadingAndResizeListPhotos(listUri, false);
+        } else {
+            // Insertion simple
+            if (data.getData() != null) {
+                // Appel de la fonction pour resizer la photo
+                showLoadingAndResizeListPhotos(Collections.singletonList(data.getData()), false);
             }
         }
     }

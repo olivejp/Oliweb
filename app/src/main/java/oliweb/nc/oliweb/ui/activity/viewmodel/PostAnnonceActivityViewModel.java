@@ -35,7 +35,6 @@ import oliweb.nc.oliweb.repository.local.PhotoRepository;
 import oliweb.nc.oliweb.repository.local.UserRepository;
 import oliweb.nc.oliweb.utility.MediaUtility;
 import oliweb.nc.oliweb.utility.Utility;
-import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 /**
  * Created by orlanth23 on 31/01/2018.
@@ -94,12 +93,11 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
      * @return
      */
     public Maybe<AtomicBoolean> resizeListPhotos(List<Uri> listPhotosUri, boolean deleteUriSourceAfterResize) {
-        boolean externalStorage = SharedPreferencesHelper.getInstance(getApplication()).getUseExternalStorage();
         return Maybe.create(emitter -> {
             for (Uri uriPhoto : listPhotosUri) {
-                Uri uriDst = generateNewUri(externalStorage);
-                if (uriDst != null && getMediaUtility().copyAndResizeUriImages(getApplication(), uriPhoto, uriDst, deleteUriSourceAfterResize)) {
-                    addPhotoToCurrentList(uriDst.toString());
+                Pair<Uri, File> pairUriFile = getMediaUtility().createNewImagePairUriFile(getApplication());
+                if (pairUriFile.first != null && getMediaUtility().copyAndResizeUriImages(getApplication(), uriPhoto, pairUriFile, deleteUriSourceAfterResize)) {
+                    addPhotoToCurrentList(pairUriFile.first.toString());
                 } else {
                     Log.e(TAG, String.format("La photo %s n'a pas pu être redimenssionnée et enregistrée", uriPhoto.toString()));
                     emitter.onError(new RuntimeException(String.format("La photo %s n'a pas pu être redimenssionnée et enregistrée", uriPhoto.toString())));
@@ -289,7 +287,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     }
 
     private Uri generateNewUri(boolean externalStorage) {
-        Pair<Uri, File> pair = mediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
+        Pair<Uri, File> pair = MediaUtility.createNewMediaFileUri(getApplication().getApplicationContext(), externalStorage, MediaUtility.MediaType.IMAGE);
         if (pair != null && pair.first != null) {
             return pair.first;
         } else {
