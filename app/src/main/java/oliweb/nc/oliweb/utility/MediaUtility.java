@@ -3,12 +3,14 @@ package oliweb.nc.oliweb.utility;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -39,6 +41,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.core.util.Pair;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.loader.content.CursorLoader;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -61,16 +64,16 @@ public class MediaUtility {
 
     }
 
-//    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
-//        String[] proj = {MediaStore.Images.Media.DATA};
-//        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
-//        Cursor cursor = loader.loadInBackground();
-//        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-//        cursor.moveToFirst();
-//        String result = cursor.getString(column_index);
-//        cursor.close();
-//        return result;
-//    }
+    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
 
     public InputStream getInputStream(Context context, Uri contentUri) throws FileNotFoundException {
         return context.getContentResolver().openInputStream(contentUri);
@@ -195,23 +198,18 @@ public class MediaUtility {
         int newWidth;
         int newHeight;
 
-        // L'image est trop grande il faut la réduire
-        if (isImageTooBig(bitmap, maxPx)) {
-            int max;
-            if (bitmap.getWidth() > maxPx) {
-                max = bitmap.getWidth();
-            } else {
-                max = bitmap.getHeight();
-            }
-
-            double prorata = (double) maxPx / max;
-
-            newWidth = (int) (bitmap.getWidth() * prorata);
-            newHeight = (int) (bitmap.getHeight() * prorata);
-            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+        int max;
+        if (bitmap.getWidth() > maxPx) {
+            max = bitmap.getWidth();
         } else {
-            return bitmap;
+            max = bitmap.getHeight();
         }
+
+        double prorata = (double) maxPx / max;
+
+        newWidth = (int) (bitmap.getWidth() * prorata);
+        newHeight = (int) (bitmap.getHeight() * prorata);
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
     }
 
     private boolean isImageTooBig(Bitmap bitmap, int maxPx) {
@@ -251,7 +249,7 @@ public class MediaUtility {
         }
     }
 
-    public static String getProviderAuthority() {
+    private static String getProviderAuthority() {
         return BuildConfig.APPLICATION_ID + ".provider";
     }
 
@@ -335,7 +333,7 @@ public class MediaUtility {
         }
     }
 
-    public static int safeLongToInt(long l) {
+    private static int safeLongToInt(long l) {
         if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
             throw new IllegalArgumentException
                     (l + " cannot be cast to int without changing its value.");
@@ -346,18 +344,19 @@ public class MediaUtility {
     /**
      * Copie un fichier dans un autre
      *
-     * @param context
-     * @param uriSource
-     * @param pairUriFile
+     * @param context                Context qui permet d'interroger le ContentResolver.
+     * @param uriSource              URI du fichier source à retailler, si besoin.
+     * @param pairUriFileDestination Pair contenant l'URI et le fichier de destination.
+     * @param deleteUriSource        true if we want to delete the source file, false otherwise.
      * @return false si le fichier source n'a pas pu être lu
      */
-    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Pair<Uri, File> pairUriFile, boolean deleteUriSource) {
-        // Récupération de la longeur max depuis le remote config.
+    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Pair<Uri, File> pairUriFileDestination, boolean deleteUriSource) {
+        // Récupération de la longeur max depuis le remote config et de la baisse de qualité de l'image qu'on veut effectuer.
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         int longeurMax = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE));
         int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.DECREASE_JPEG_QUALITY));
 
-        // Récupération du EXIF du fichier pour récupérer l'orientation de l'image initiale => OK
+        // Récupération du EXIF du fichier pour récupérer l'orientation de l'image initiale
         ExifInterface oldExif = null;
         try {
             oldExif = new ExifInterface(getInputStream(context, uriSource));
@@ -372,49 +371,58 @@ public class MediaUtility {
             return false;
         }
 
-        boolean resized = isImageTooBig(bitmapSrc, longeurMax);
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, longeurMax);
-        if (bitmapDst == null) {
-            Crashlytics.log("Le retaillage de l'image a échoué.");
-            return false;
+        // Vérification si l'image est trop grande
+        boolean isTooBigToFitInHere = isImageTooBig(bitmapSrc, longeurMax);
+
+        Bitmap bitmapDst = bitmapSrc; // Par défaut l'image de destination = l'image source.
+        if (isTooBigToFitInHere) {
+            bitmapDst = resizeBitmap(bitmapSrc, longeurMax);
+            if (bitmapDst == null) {
+                Crashlytics.log("Le retaillage de l'image a échoué.");
+                return false;
+            }
         }
 
-        try (OutputStream out = context.getContentResolver().openOutputStream(pairUriFile.first)) {
+        // Ouverture de l'outputstream à l'adresse de l'URI destination
+        try (OutputStream out = context.getContentResolver().openOutputStream(pairUriFileDestination.first)) {
             // La photo a été retaillée, on va également baissé la qualité de la photo
-            if (resized) {
+            if (isTooBigToFitInHere) {
                 bitmapDst.compress(Bitmap.CompressFormat.JPEG, decreasingQuality, out);
                 out.flush();
-            }
-            if (deleteUriSource) {
-                deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
             }
         } catch (IOException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
             return false;
         }
 
+        // Si on veut supprimer l'image source
+        if (deleteUriSource) {
+            deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
+        }
+
         // Enregistrement de l'orientation de l'ancienne image
-        if (oldExif != null && oldExif.getAttribute(ExifInterface.TAG_ORIENTATION) != null) {
+        copyExifAttributes(pairUriFileDestination.second, oldExif);
+
+        return true;
+    }
+
+    private void copyExifAttributes(File file, ExifInterface exifToCopy) {
+        if (exifToCopy != null && exifToCopy.getAttribute(ExifInterface.TAG_ORIENTATION) != null) {
             try {
-                ExifInterface newExif = new ExifInterface(pairUriFile.second.getAbsolutePath());
-                newExif.setAttribute(ExifInterface.TAG_ORIENTATION, oldExif.getAttribute(ExifInterface.TAG_ORIENTATION));
+                ExifInterface newExif = new ExifInterface(file.getAbsolutePath());
+                newExif.setAttribute(ExifInterface.TAG_ORIENTATION, exifToCopy.getAttribute(ExifInterface.TAG_ORIENTATION));
                 newExif.saveAttributes();
-                return true;
             } catch (IOException e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
-                return false;
             }
-        } else {
-            // On a retaillé et copié l'image, mais on a pas récupéré son EXIF
-            return true;
         }
     }
 
     public boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
         try {
             OutputStream out = contentResolver.openOutputStream(uriDestination);
-            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, out);
             if (out != null) {
+                bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, out);
                 out.flush();
                 out.close();
                 return true;
