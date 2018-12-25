@@ -52,8 +52,8 @@
 
                     <ImageView
                         android:id="@+id/annonce_detail_img_favorite"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
+                        android:layout_width="@dimen/annonce_detail_icon"
+                        android:layout_height="@dimen/annonce_detail_icon"
                         android:layout_marginTop="10dp"
                         android:layout_marginEnd="5dp"
                         android:background="@drawable/drawable_ripple_blue_effect"
@@ -66,8 +66,8 @@
 
                     <ImageView
                         android:id="@+id/annonce_detail_img_share"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
+                        android:layout_width="@dimen/annonce_detail_icon"
+                        android:layout_height="@dimen/annonce_detail_icon"
                         android:background="@drawable/drawable_ripple_red_effect"
                         android:clickable="true"
                         android:focusable="true"

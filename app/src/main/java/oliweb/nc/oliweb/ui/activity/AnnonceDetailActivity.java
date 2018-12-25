@@ -28,7 +28,9 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.app.ShareCompat;
+import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
@@ -51,6 +53,7 @@ import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
@@ -213,7 +216,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             String uriImage = (String) v.getTag();
             Intent intent = new Intent(this, ZoomImageActivity.class);
             intent.putExtra(ZOOM_IMAGE_ACTIVITY_ARG_URI_IMAGE, uriImage);
-            startActivity(intent);
+            Pair<View, String> pairImage = new Pair<>(v, getString(R.string.transition_name_annonce_zoom));
+            ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
+            startActivity(intent, options.toBundle());
         } catch (ClassCastException e) {
             Log.e(TAG, e.getLocalizedMessage(), e);
         }

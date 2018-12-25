@@ -3,12 +3,14 @@ package oliweb.nc.oliweb.utility;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -39,6 +41,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.core.util.Pair;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.loader.content.CursorLoader;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -58,21 +61,21 @@ public class MediaUtility {
 
     @Inject
     public MediaUtility() {
-
+        // Empty constructor
     }
 
-//    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
-//        String[] proj = {MediaStore.Images.Media.DATA};
-//        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
-//        Cursor cursor = loader.loadInBackground();
-//        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-//        cursor.moveToFirst();
-//        String result = cursor.getString(column_index);
-//        cursor.close();
-//        return result;
-//    }
+    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
 
-    public InputStream getInputStream(Context context, Uri contentUri) throws FileNotFoundException {
+    private InputStream getInputStream(Context context, Uri contentUri) throws FileNotFoundException {
         return context.getContentResolver().openInputStream(contentUri);
     }
 
@@ -97,13 +100,13 @@ public class MediaUtility {
     }
 
     /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
+    private boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
     /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
+    private boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state) ||
                 Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);

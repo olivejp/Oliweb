@@ -470,7 +470,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         categoriesAdapter.setNavCategorieItems(categorieEntities);
         categoriesAdapter.notifyDataSetChanged();
 
-        if (viewModel.getCurrentAnnonce() != null) {
+        if (viewModel.getCurrentAnnonce() != null && viewModel.getCurrentCategorie() != null) {
             selectCategorieInSpinner(viewModel.getCurrentCategorie().getIdCategorie());
         }
     }

@@ -209,5 +209,6 @@
     <string name="TRANSITION_PROFILE_IMAGE" translatable="false">TRANSITION_PROFILE_IMAGE</string>
     <string name="all_categories">Toutes</string>
     <string name="number_format_invalid">Le format numérique est invalide</string>
+    <string name="transition_name_annonce_zoom" translatable="false">IMAGE_ANNONCE_DETAIL_TRANSITION</string>
 
 </resources>

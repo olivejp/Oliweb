@@ -2,6 +2,7 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.OliwebBase">
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
         <item name="android:windowContentTransitions">true</item>
         <item name="android:navigationBarColor">@color/colorBottomDark</item>
     </style>
@@ -11,7 +12,7 @@
         <item name="android:navigationBarColor">@color/colorBottomDark</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentTransitions">true</item>
-        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/darker_gray</item>
     </style>
 
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">

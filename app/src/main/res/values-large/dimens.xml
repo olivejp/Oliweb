@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="dots_height">60dp</dimen>
+    <dimen name="annonce_detail_icon">40dp</dimen>
+</resources>
