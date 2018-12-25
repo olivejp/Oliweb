@@ -69,6 +69,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
+    public static final String SAVE_FRAG_FROM_SAME_AUTHOR = "SAVE_FRAG_FROM_SAME_AUTHOR";
     public static final int REQUEST_CALL_PHONE_CODE = 100;
     public static final int RESULT_PHONE_CALL = 101;
 
@@ -126,6 +127,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private String uidUser;
     private UserEntity seller;
     private LoadingDialogFragment loadingDialogFragment;
+    private FromSameAuthorFragment fromSameAuthorFragment;
     private AnnonceDetailActivityViewModel viewModel;
 
     public AnnonceDetailActivity() {
@@ -247,6 +249,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             comeFromChatFragment = params.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
         }
 
+        // Recuperation du fragment
+        fromSameAuthorFragment = (FromSameAuthorFragment) getSupportFragmentManager().getFragment(params, SAVE_FRAG_FROM_SAME_AUTHOR);
+
         // Récupération de l'uid de l'utilisateur connecté
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
 
@@ -291,8 +296,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
 
         // Si la liste épurée n'est pas vide, je créé un nouveau fragment et je l'affiche.
-        if (!newList.isEmpty()) {
-            FromSameAuthorFragment fromSameAuthorFragment = FromSameAuthorFragment.newInstance(newList);
+        if (!newList.isEmpty() && fromSameAuthorFragment == null) {
+            fromSameAuthorFragment = FromSameAuthorFragment.newInstance(newList);
             getSupportFragmentManager().beginTransaction().add(R.id.from_same_salesman_fragment, fromSameAuthorFragment).commit();
         }
     }
@@ -339,6 +344,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(ARG_ANNONCE, annonceFull);
         outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
+        getSupportFragmentManager().putFragment(outState, SAVE_FRAG_FROM_SAME_AUTHOR, fromSameAuthorFragment);
     }
 
     @Override

@@ -232,6 +232,7 @@
             android:background="@color/colorBottomDark"
             android:gravity="center_vertical"
             android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textColor="@color/colorAccentDarker"
             android:transitionName="@string/prix_detail_transition"
