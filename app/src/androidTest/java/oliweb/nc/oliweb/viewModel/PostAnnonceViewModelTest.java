@@ -1,10 +1,6 @@
 package oliweb.nc.oliweb.viewModel;
 
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -12,8 +8,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.rule.ActivityTestRule;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -37,25 +40,29 @@ public class PostAnnonceViewModelTest {
     private PostAnnonceActivityViewModel viewModel;
 
     @Rule
+    public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
+
+    @Rule
     public ActivityTestRule<PostAnnonceActivity> postAnnonceActivity = new ActivityTestRule<>(PostAnnonceActivity.class);
 
     @Before
     public void init() {
-        appContext = InstrumentationRegistry.getTargetContext();
+        appContext = ApplicationProvider.getApplicationContext();
         viewModel = ViewModelProviders.of(postAnnonceActivity.getActivity()).get(PostAnnonceActivityViewModel.class);
         UtilityTest.cleanBase(appContext);
     }
 
     @Test
     public void saveAnnonceTest() {
-        TestObserver<List<CategorieEntity>> testListCategorie = viewModel.getListCategorie().test();
-        UtilityTest.waitTerminalEvent(testListCategorie, 5);
-        testListCategorie.assertNoErrors();
-        testListCategorie.assertValueCount(1);
-        testListCategorie.assertValue(categorieEntities -> categorieEntities.size() == 1 && categorieEntities.get(0).getName().equals(CATEGORIE_NAME));
-        List<CategorieEntity> listCat = testListCategorie.values().get(0);
 
-        viewModel.setCurrentCategorie(listCat.get(0));
+        List<CategorieEntity> listCategorie =  new ArrayList<>();
+        Observer<ArrayList<CategorieEntity>> observer = listCategorie::addAll;
+
+        viewModel.getListCategorie().observeForever(observer);
+        assertEquals(1, listCategorie.size());
+        assertEquals(CATEGORIE_NAME, listCategorie.get(0).getName());
+
+        viewModel.setCurrentCategorie(listCategorie.get(0));
 
         TestObserver<AnnonceEntity> testSaveAnnonce = viewModel.saveAnnonce("titre", "description", 100, UID_USER, false, false, false).test();
         UtilityTest.waitTerminalEvent(testSaveAnnonce, 5);

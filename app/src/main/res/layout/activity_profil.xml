@@ -20,7 +20,7 @@
             <View
                 android:id="@+id/profil_image_background"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="@dimen/image_profile_back"
                 android:background="@drawable/clothing_leather_wooden"
                 android:transitionName="@string/TRANSITION_CONSTRAINT_PROFILE"
                 app:layout_constraintTop_toTopOf="parent" />

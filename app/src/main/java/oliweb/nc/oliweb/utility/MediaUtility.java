@@ -3,14 +3,17 @@ package oliweb.nc.oliweb.utility;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.util.IOUtils;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
@@ -37,6 +40,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.core.util.Pair;
+import androidx.exifinterface.media.ExifInterface;
+import androidx.loader.content.CursorLoader;
 import oliweb.nc.oliweb.BuildConfig;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
@@ -56,7 +61,22 @@ public class MediaUtility {
 
     @Inject
     public MediaUtility() {
+        // Empty constructor
+    }
 
+    private String getRealPathFromURIBeforeApi19(Context context, Uri contentUri) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
+
+    private InputStream getInputStream(Context context, Uri contentUri) throws FileNotFoundException {
+        return context.getContentResolver().openInputStream(contentUri);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -80,13 +100,13 @@ public class MediaUtility {
     }
 
     /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
+    private boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
     /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
+    private boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state) ||
                 Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
@@ -179,7 +199,7 @@ public class MediaUtility {
         int newHeight;
 
         // L'image est trop grande il faut la réduire
-        if ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx)) {
+        if (isImageTooBig(bitmap, maxPx)) {
             int max;
             if (bitmap.getWidth() > maxPx) {
                 max = bitmap.getWidth();
@@ -195,6 +215,10 @@ public class MediaUtility {
         } else {
             return bitmap;
         }
+    }
+
+    private boolean isImageTooBig(Bitmap bitmap, int maxPx) {
+        return ((bitmap.getWidth() > maxPx) || (bitmap.getHeight() > maxPx));
     }
 
 
@@ -230,6 +254,18 @@ public class MediaUtility {
         }
     }
 
+    public static String getProviderAuthority() {
+        return BuildConfig.APPLICATION_ID + ".provider";
+    }
+
+    public static String getContentProviderAuthority() {
+        return "content://" + BuildConfig.APPLICATION_ID + ".provider/internal_files/";
+    }
+
+    public static String getContentProviderAuthorityExternal() {
+        return "content://" + BuildConfig.APPLICATION_ID + ".provider/external_files/";
+    }
+
     /**
      * Créer un URI pour stocker l'image/la video
      *
@@ -238,11 +274,11 @@ public class MediaUtility {
      * @return
      */
     @Nullable
-    public Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
+    public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
         String fileName = generateMediaName(type);
         File newFile = (externalStorage) ? createExternalMediaFile(fileName) : createInternalMediaFile(context, fileName);
         if (newFile != null) {
-            return new Pair<>(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", newFile), newFile);
+            return new Pair<>(FileProvider.getUriForFile(context, getProviderAuthority(), newFile), newFile);
         }
         return null;
     }
@@ -254,7 +290,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private File createInternalMediaFile(Context context, String fileName) {
+    private static File createInternalMediaFile(Context context, String fileName) {
         return new File(context.getFilesDir(), fileName);
     }
 
@@ -265,7 +301,7 @@ public class MediaUtility {
      * @param fileName
      * @return
      */
-    private File createExternalMediaFile(String fileName) {
+    private static File createExternalMediaFile(String fileName) {
         // External sdcard location
         File mediaStorageDir = new File(
                 // TODO voir pour remplacer par context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
@@ -290,7 +326,7 @@ public class MediaUtility {
      * @param type
      * @return
      */
-    private String generateMediaName(MediaType type) {
+    private static String generateMediaName(MediaType type) {
         String prefixName = UUID.randomUUID().toString();
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.getDefault()).format(new Date());
         if (type.equals(MediaType.IMAGE)) {
@@ -315,33 +351,66 @@ public class MediaUtility {
      *
      * @param context
      * @param uriSource
-     * @param uriDestination
+     * @param pairUriFile
      * @return false si le fichier source n'a pas pu être lu
      */
-    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Uri uriDestination, boolean deleteUriSource) {
+    public boolean copyAndResizeUriImages(Context context, Uri uriSource, Pair<Uri, File> pairUriFile, boolean deleteUriSource) {
+        // Récupération de la longeur max depuis le remote config.
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
+        int longeurMax = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE));
+        int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.DECREASE_JPEG_QUALITY));
+
+        // Récupération du EXIF du fichier pour récupérer l'orientation de l'image initiale => OK
+        ExifInterface oldExif = null;
+        try {
+            oldExif = new ExifInterface(getInputStream(context, uriSource));
+        } catch (IOException e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        }
+
+        // Récupération du bitmap depuis le disque du device
         Bitmap bitmapSrc = getBitmapFromUri(context, uriSource);
         if (bitmapSrc == null) {
-            Log.e(TAG, "L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
+            Crashlytics.log("L'image avec l'uri : " + uriSource.toString() + " n'a pas pu être récupérée.");
             return false;
         }
 
-        Bitmap bitmapDst = resizeBitmap(bitmapSrc, safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE)));
+        boolean resized = isImageTooBig(bitmapSrc, longeurMax);
+        Bitmap bitmapDst = resizeBitmap(bitmapSrc, longeurMax);
         if (bitmapDst == null) {
-            Log.e(TAG, "Le retaillage de l'image a échoué.");
+            Crashlytics.log("Le retaillage de l'image a échoué.");
             return false;
         }
 
-        try (OutputStream out = context.getContentResolver().openOutputStream(uriDestination)) {
-            bitmapDst.compress(Bitmap.CompressFormat.JPEG, 70, out);
+        try (OutputStream out = context.getContentResolver().openOutputStream(pairUriFile.first)) {
+            // La photo a été retaillée, on va également baissé la qualité de la photo
+            if (resized) {
+                bitmapDst.compress(Bitmap.CompressFormat.JPEG, decreasingQuality, out);
+                out.flush();
+            }
             if (deleteUriSource) {
                 deletePhotoFromDevice(context.getContentResolver(), uriSource.toString());
             }
-            return true;
         } catch (IOException exception) {
             Log.e(TAG, exception.getLocalizedMessage(), exception);
+            return false;
         }
-        return false;
+
+        // Enregistrement de l'orientation de l'ancienne image
+        if (oldExif != null && oldExif.getAttribute(ExifInterface.TAG_ORIENTATION) != null) {
+            try {
+                ExifInterface newExif = new ExifInterface(pairUriFile.second.getAbsolutePath());
+                newExif.setAttribute(ExifInterface.TAG_ORIENTATION, oldExif.getAttribute(ExifInterface.TAG_ORIENTATION));
+                newExif.saveAttributes();
+                return true;
+            } catch (IOException e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
+                return false;
+            }
+        } else {
+            // On a retaillé et copié l'image, mais on a pas récupéré son EXIF
+            return true;
+        }
     }
 
     public boolean saveBitmapToFileProviderUri(ContentResolver contentResolver, Bitmap bitmapToSave, Uri uriDestination) {
@@ -370,7 +439,7 @@ public class MediaUtility {
         }
     }
 
-    public void saveInputStreamToContentProvider(InputStream inputStream, File file) {
+    public static void saveInputStreamToContentProvider(InputStream inputStream, File file) {
         try (OutputStream outStream = new FileOutputStream(file.getAbsoluteFile())) {
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;

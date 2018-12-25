@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import androidx.lifecycle.ViewModelProviders;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.rule.ActivityTestRule;
-import androidx.test.runner.AndroidJUnit4;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.ui.activity.MainActivity;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;

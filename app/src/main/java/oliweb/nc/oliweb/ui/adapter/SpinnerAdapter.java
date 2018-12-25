@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.ui.adapter;
 
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +8,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import androidx.appcompat.app.AppCompatActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
@@ -25,25 +25,28 @@ public class SpinnerAdapter extends BaseAdapter {
     @BindView(R.id.titleCategory)
     TextView txtTitle;
 
-    public SpinnerAdapter(AppCompatActivity appCompatActivity, List<CategorieEntity> navCategorieItems) {
+    public SpinnerAdapter(AppCompatActivity appCompatActivity) {
         super();
         this.appCompatActivity = appCompatActivity;
+    }
+
+    public void setNavCategorieItems(List<CategorieEntity> navCategorieItems) {
         this.navCategorieItems = navCategorieItems;
     }
 
     @Override
     public int getCount() {
-        return navCategorieItems.size();
+        return (navCategorieItems != null) ? navCategorieItems.size() : 0;
     }
 
     @Override
     public CategorieEntity getItem(int position) {
-        return navCategorieItems.get(position);
+        return (navCategorieItems != null) ? navCategorieItems.get(position) : null;
     }
 
     @Override
     public long getItemId(int position) {
-        return position;
+        return (navCategorieItems != null) ? navCategorieItems.get(position).getId() : 0L;
     }
 
     @Override

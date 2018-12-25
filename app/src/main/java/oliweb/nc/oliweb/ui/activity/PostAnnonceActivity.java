@@ -80,7 +80,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private PostAnnonceActivityViewModel viewModel;
 
-    private Uri mFileUriTemp;
     private Long idAnnonce;
     private String uidUser;
     private String uidAnnonce;
@@ -121,6 +120,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
     RecyclerView recyclerView;
 
     private PostPhotoAdapter postPhotoAdapter;
+    private SpinnerAdapter categoriesAdapter;
 
     private View.OnClickListener onClickPhotoListener = v -> {
         PhotoEntity photoEntity = (PhotoEntity) v.getTag();
@@ -171,13 +171,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // View creation
         setContentView(R.layout.activity_post_annonce);
         ButterKnife.bind(this);
-
-        // Init du recycler view
-        postPhotoAdapter = new PostPhotoAdapter(onClickPhotoListener, onLongClickPhotoListener);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setAdapter(postPhotoAdapter);
+        initViews();
 
         // Récupération du nombre maximale de photo autorisée
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
@@ -200,9 +194,24 @@ public class PostAnnonceActivity extends AppCompatActivity {
             finish();
         } else {
             setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
-            initViewModel();
+
             initObservers();
+            initViewModel();
         }
+    }
+
+    private void initViews() {
+        // Init du recycler view
+        postPhotoAdapter = new PostPhotoAdapter(onClickPhotoListener, onLongClickPhotoListener);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(postPhotoAdapter);
+
+        // Init de la combo des catégories
+        categoriesAdapter = new SpinnerAdapter(PostAnnonceActivity.this);
+        spinnerCategorie.setAdapter(categoriesAdapter);
+        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
     }
 
     private void manageSaveInstanceState(Bundle savedInstanceState) {
@@ -210,9 +219,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         if (savedInstanceState.containsKey(SAVE_ANNONCE)) {
             viewModel.setCurrentAnnonce(savedInstanceState.getParcelable(SAVE_ANNONCE));
-        }
-        if (savedInstanceState.containsKey(SAVE_FILE_URI_TEMP)) {
-            mFileUriTemp = savedInstanceState.getParcelable(SAVE_FILE_URI_TEMP);
         }
 
         // S'il y avait un fragment, je le remet
@@ -322,38 +328,46 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (resultCode != RESULT_OK) {
             return;
         }
-
         if (requestCode == DIALOG_GALLERY_IMAGE) {
-            // Insertion multiple
-            if (data.getClipData() != null) {
-                // Vérification qu'on ajoute pas plus de photo que la quota autorisé
-                long nbPhotoSelected = data.getClipData().getItemCount();
-                if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
-                    nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
-                }
+            resultFromDialogGalery(data);
 
-                // Parcourt de toutes les items reçus et enregistrement dans une liste
-                List<Uri> listUri = new ArrayList<>();
-                int i = -1;
-                ClipData.Item item;
-                while (i++ < nbPhotoSelected - 1) {
-                    item = data.getClipData().getItemAt(i);
-                    listUri.add(item.getUri());
-                }
-
-                // Appel de la fonction pour resizer toutes les photos
-                showLoadingAndResizeListPhotos(listUri, false);
-            } else {
-                // Insertion simple
-                if (data.getData() != null) {
-                    // Appel de la fonction pour resizer la photo
-                    showLoadingAndResizeListPhotos(Collections.singletonList(data.getData()), false);
-                }
-            }
         } else if (requestCode == REQUEST_SHOOTING_CODE) {
-            ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
-            if (listUriPhotos != null && !listUriPhotos.isEmpty()) {
-                showLoadingAndResizeListPhotos(listUriPhotos, true);
+            resultFromShootingActivity(data);
+        }
+    }
+
+    private void resultFromShootingActivity(Intent data) {
+        ArrayList<Uri> listUriPhotos = data.getParcelableArrayListExtra(ShootingActivity.RESULT_DATA_LIST_PAIR);
+        if (listUriPhotos != null && !listUriPhotos.isEmpty()) {
+            showLoadingAndResizeListPhotos(listUriPhotos, true);
+        }
+    }
+
+    private void resultFromDialogGalery(Intent data) {
+        // Insertion multiple
+        if (data.getClipData() != null) {
+            // Vérification qu'on ajoute pas plus de photo que la quota autorisé
+            long nbPhotoSelected = data.getClipData().getItemCount();
+            if (viewModel.getActualNbrPhotos() + nbPhotoSelected > remoteNbMaxPictures) {
+                nbPhotoSelected = remoteNbMaxPictures - viewModel.getActualNbrPhotos();
+            }
+
+            // Parcourt de toutes les items reçus et enregistrement dans une liste
+            List<Uri> listUri = new ArrayList<>();
+            int i = -1;
+            ClipData.Item item;
+            while (i++ < nbPhotoSelected - 1) {
+                item = data.getClipData().getItemAt(i);
+                listUri.add(item.getUri());
+            }
+
+            // Appel de la fonction pour resizer toutes les photos
+            showLoadingAndResizeListPhotos(listUri, false);
+        } else {
+            // Insertion simple
+            if (data.getData() != null) {
+                // Appel de la fonction pour resizer la photo
+                showLoadingAndResizeListPhotos(Collections.singletonList(data.getData()), false);
             }
         }
     }
@@ -395,11 +409,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
         currentAnnonce.annonceEntity.setContactByEmail(checkBoxEmail.isChecked() ? "O" : "N");
         currentAnnonce.annonceEntity.setIdCategorie(viewModel.getCurrentCategorie().getIdCategorie());
         outState.putParcelable(SAVE_ANNONCE, currentAnnonce);
-
-        // Save the uri temporary
-        if (mFileUriTemp != null && StringUtils.isNotEmpty(mFileUriTemp.toString())) {
-            outState.putParcelable(SAVE_FILE_URI_TEMP, mFileUriTemp);
-        }
 
         // Save the fragment if any
         Fragment frag = getSupportFragmentManager().findFragmentByTag(TAG_WORKING_IMAGE);
@@ -457,10 +466,13 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return true;
     }
 
-    private void defineSpinnerCategorie(ArrayList<CategorieEntity> categorieEntities) {
-        SpinnerAdapter adapter = new SpinnerAdapter(PostAnnonceActivity.this, categorieEntities);
-        spinnerCategorie.setAdapter(adapter);
-        spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+    private void defineSpinnerCategorie(List<CategorieEntity> categorieEntities) {
+        categoriesAdapter.setNavCategorieItems(categorieEntities);
+        categoriesAdapter.notifyDataSetChanged();
+
+        if (viewModel.getCurrentAnnonce() != null && viewModel.getCurrentCategorie() != null) {
+            selectCategorieInSpinner(viewModel.getCurrentCategorie().getIdCategorie());
+        }
     }
 
     private void changeUserContactMethod(UserEntity userEntity) {
@@ -481,7 +493,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
     private void initObservers() {
         // Alimentation du spinner avec la liste des catégories
-        viewModel.getListCategorie().observeOnce(this::defineSpinnerCategorie);
+        viewModel.getListCategorie().observe(this, this::defineSpinnerCategorie);
 
         // Initialise les moyens de contacts de l'utilisateur selon ses données.
         viewModel.getConnectedUser(uidUser).observe(this, this::changeUserContactMethod);
@@ -524,10 +536,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void observeAnnoncePhotos(AnnoncePhotos annoncePhotos) {
-        if (annoncePhotos != null) {
-            viewModel.setCurrentAnnonce(annoncePhotos);
-            displayCurrentAnnonce();
-        }
+        if (annoncePhotos == null) return;
+        viewModel.setCurrentAnnonce(annoncePhotos);
+        displayCurrentAnnonce();
     }
 
     private void displayPhotos(List<PhotoEntity> photoEntities) {
@@ -607,15 +618,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     }
 
     private void selectCategorieInSpinner(Long idCategorie) {
-        viewModel.getListCategorie().observeOnce(listCategorie -> {
-            if (listCategorie != null && idCategorie != null) {
-                for (CategorieEntity categorieEntity : listCategorie) {
-                    if (categorieEntity.getId().equals(idCategorie)) {
-                        spinnerCategorie.setSelection(listCategorie.indexOf(categorieEntity), true);
-                        break;
-                    }
-                }
+        int count = categoriesAdapter.getCount();
+        for (int i = 0; i < count; i++) {
+            if (((CategorieEntity) spinnerCategorie.getAdapter().getItem(i)).getId().equals(idCategorie)) {
+                spinnerCategorie.setSelection(i, true);
+                break;
             }
-        });
+        }
     }
 }

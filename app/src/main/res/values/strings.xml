@@ -209,5 +209,11 @@
     <string name="TRANSITION_PROFILE_IMAGE" translatable="false">TRANSITION_PROFILE_IMAGE</string>
     <string name="all_categories">Toutes</string>
     <string name="number_format_invalid">Le format numérique est invalide</string>
+    <string name="transition_name_annonce_zoom" translatable="false">IMAGE_ANNONCE_DETAIL_TRANSITION</string>
+    <string name="define_price_interval">Définissez un intervalle de prix</string>
+    <string name="tick_to_search_ads_with_photos">Cochez pour ne rechercher que les annonces avec photos</string>
+    <string name="select_categories">Sélectionner les catégories dans lesquelles vous voulez effectuer votre recherche</string>
+    <string name="choose">Choisir</string>
+    <string name="keywords_necessary">Les mots clés nécessaires</string>
 
 </resources>

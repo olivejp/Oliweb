@@ -58,7 +58,7 @@ public class AnnonceViewPagerAdapter extends PagerAdapter {
         View myImageLayout = inflater.inflate(R.layout.annonce_slide_view_pager, view, false);
 
         FrameLayout frameLayout = myImageLayout.findViewById(R.id.frame_slide_view_pager);
-        ImageView myImage = myImageLayout.findViewById(R.id.image);
+        ImageView myImage = myImageLayout.findViewById(R.id.image_view_annonce);
         ProgressBar progressBar = myImageLayout.findViewById(R.id.viewpager_loading_progress);
 
         String pathImage = null;
