@@ -107,4 +107,9 @@
     <string name="sort">Sort</string>
     <string name="all_categories">All</string>
     <string name="number_format_invalid">Numeric format is invalid</string>
+    <string name="define_price_interval">Define a price interval</string>
+    <string name="tick_to_search_ads_with_photos">Tick to search only ads with photos</string>
+    <string name="select_categories">Select categories in which you want to search</string>
+    <string name="choose">Choose</string>
+    <string name="keywords_necessary">Keywords necessary</string>
 </resources>
