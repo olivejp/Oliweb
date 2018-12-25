@@ -10,6 +10,7 @@
     <dimen name="annonce_detail_icon">40dp</dimen>
     <dimen name="fab_method_contact">50dp</dimen>
     <dimen name="dots_margin_bottom">20dp</dimen>
+    <dimen name="image_profile_back">200dp</dimen>
     <dimen name="img_width_height">100dp</dimen>
     <dimen name="img_width_height_mini">50dp</dimen>
     <dimen name="slide_title">28sp</dimen>
