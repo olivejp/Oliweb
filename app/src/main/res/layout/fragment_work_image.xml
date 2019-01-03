@@ -8,7 +8,7 @@
     android:clickable="true"
     android:focusable="true">
 
-    <ImageView
+    <it.sephiroth.android.library.imagezoom.ImageViewTouch
         android:id="@+id/frag_work_image_photo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
