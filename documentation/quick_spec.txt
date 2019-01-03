@@ -42,7 +42,7 @@ Pré requis pour utiliser le service de messagerie
 - Être connecté à ce compte même si l'appareil est hors connexion
 
 
-Le service d'alerte permettra de créer des alertes pour prévenir une personne qu'une currentAnnonce correspond à ces critères de recherche.
+Le service d'alerte permettra de créer des alertes pour prévenir une personne qu'une annonce correspond à ces critères de recherche.
 
 Exemple : Si je recherche un téléphone de marque Samsung pour un prix compris entre 0 et 50 000 xpf.
 Je créé donc une alerte pour la catégorie "Technologique" + avec le mot clé : "Samsung" et dont le prix est dans la fourchette 0 - 50 000.
@@ -66,3 +66,47 @@ Possibilité de changer le nombre de colonne des listes en mode portrait ou pays
 Les valeurs peuvent se modifier avec les variables :
 -column_number            : Nombre de colonne présentes dans le GridLayout principal des annonces en mode PORTRAIT
 -column_number_landscape  : Nombre de colonne présentes dans le GridLayout principal des annonces en mode PAYSAGE
+
+
+ ________________________________
+|                                |
+|        Magasin en ligne        |
+|________________________________|
+
+Les gens ne veulent pas se déplacer pour avoir leurs produits.
+
+
+Concept
+Les magasins mettent des articles en ligne pour les vendre.
+
+Features
+--------
+
+1 - Gestion des articles
+------------------------
+Un commerçant peut insérer un article dans sa base.
+Un article a une catégorie, une description, un prix.
+
+2 - Gestion des catégories
+--------------------------
+Un client peut définir une catégorie pour son magasin.
+Une catégorie porte un nom.
+Une catégorie peut regrouper un ou plusieurs articles.
+
+3 - Promotion
+-------------
+Certains articles peuvent faire l'objet de promotion événementielle.
+Une promotion peut avoir une durée limitée ou finir quand le stock est vide.
+Une promotion peut être sous la forme d'un pourcentage ou d'un prix unique.
+Une promotion peut cibler uniquement un article ou une catégorie d'article.
+
+Un magasin définit ses moyens de paiement.
+
+-Benefices pour l'entreprise
+Economies sur les frais inhérents au fait d'avoir un local et des commerciaux
+Visibilité sur un plus grand nombre d'acheteurs potentiels
+Facilité de mise en vente (quelques photos, un prix, une description, catégorisation du produit et c'est en vente)
+Facilité de suivi des stocks, des ventes, des paiements...
+
+-Benefices pour les acheteurs
+Un seul point d'acces pour rechercher

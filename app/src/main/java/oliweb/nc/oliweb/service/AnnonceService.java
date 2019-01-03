@@ -71,7 +71,7 @@ public class AnnonceService {
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnSuccess(atomicBoolean -> observer.onChanged(atomicBoolean.get() ? REMOVE_SUCCESSFUL : REMOVE_FAILED))
                             .doOnError(e -> {
-                                Log.e(TAG, e.getMessage());
+                                Log.e(TAG, e.getLocalizedMessage(), e);
                                 observer.onChanged(REMOVE_FAILED);
                             })
                             .subscribe();
@@ -80,7 +80,7 @@ public class AnnonceService {
                             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                             .doOnSuccess(annonceEntity -> observer.onChanged(ADD_SUCCESSFUL))
                             .doOnError(e -> {
-                                Log.e(TAG, e.getMessage());
+                                Log.e(TAG, e.getLocalizedMessage(), e);
                                 observer.onChanged(ADD_FAILED);
                             })
                             .subscribe();
@@ -134,11 +134,11 @@ public class AnnonceService {
         Log.d(TAG, "Starting removeFromFavorite called with annonceFull = " + annonceFull.toString());
         return Single.create(emitter ->
                 annonceWithPhotosRepository.findFavoriteAnnonceByUidAnnonce(uidUser, annonceFull.getAnnonce().getUid())
+                        .doOnError(emitter::onError)
                         .doOnComplete(() -> emitter.onSuccess(new AtomicBoolean(true)))
                         .flatMapSingle(annoncePhotos -> photoService.deleteListFromDevice(annoncePhotos.getPhotos()))
                         .map(atomicBoolean -> annonceRepository.removeFromFavorite(uidUser, annonceFull.getAnnonce().getUid()))
                         .doOnSuccess(integer -> emitter.onSuccess(new AtomicBoolean(integer >= 1)))
-                        .doOnError(emitter::onError)
                         .subscribe()
         );
     }

@@ -6,11 +6,12 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/image"
+        android:id="@+id/image_view_annonce"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
+        android:transitionName="@string/transition_name_annonce_zoom"
         android:background="@color/colorAnnonceElementBackground"
         tools:visibility="gone" />
 

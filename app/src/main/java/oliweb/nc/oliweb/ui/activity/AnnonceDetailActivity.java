@@ -28,7 +28,9 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.app.ShareCompat;
+import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
@@ -51,6 +53,7 @@ import oliweb.nc.oliweb.utility.ArgumentsChecker;
 import oliweb.nc.oliweb.utility.Utility;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
+import static androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation;
 import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.ARG_ACTION_FRAGMENT_MESSAGE;
 import static oliweb.nc.oliweb.ui.activity.MyChatsActivity.DATA_FIREBASE_USER_UID;
@@ -66,6 +69,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private static final String LOADING_DIALOG = "LOADING_DIALOG";
     public static final String ARG_ANNONCE = "ARG_ANNONCE";
     public static final String ARG_COME_FROM_CHAT_FRAGMENT = "ARG_COME_FROM_CHAT_FRAGMENT";
+    public static final String SAVE_FRAG_FROM_SAME_AUTHOR = "SAVE_FRAG_FROM_SAME_AUTHOR";
     public static final int REQUEST_CALL_PHONE_CODE = 100;
     public static final int RESULT_PHONE_CALL = 101;
 
@@ -123,6 +127,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
     private String uidUser;
     private UserEntity seller;
     private LoadingDialogFragment loadingDialogFragment;
+    private FromSameAuthorFragment fromSameAuthorFragment;
     private AnnonceDetailActivityViewModel viewModel;
 
     public AnnonceDetailActivity() {
@@ -213,7 +218,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             String uriImage = (String) v.getTag();
             Intent intent = new Intent(this, ZoomImageActivity.class);
             intent.putExtra(ZOOM_IMAGE_ACTIVITY_ARG_URI_IMAGE, uriImage);
-            startActivity(intent);
+            Pair<View, String> pairImage = new Pair<>(v, getString(R.string.transition_name_annonce_zoom));
+            ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
+            startActivity(intent, options.toBundle());
         } catch (ClassCastException e) {
             Log.e(TAG, e.getLocalizedMessage(), e);
         }
@@ -241,6 +248,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         if (params.containsKey(ARG_COME_FROM_CHAT_FRAGMENT)) {
             comeFromChatFragment = params.getBoolean(ARG_COME_FROM_CHAT_FRAGMENT);
         }
+
+        // Recuperation du fragment
+        fromSameAuthorFragment = (FromSameAuthorFragment) getSupportFragmentManager().getFragment(params, SAVE_FRAG_FROM_SAME_AUTHOR);
 
         // Récupération de l'uid de l'utilisateur connecté
         uidUser = SharedPreferencesHelper.getInstance(this).getUidFirebaseUser();
@@ -286,8 +296,8 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         }
 
         // Si la liste épurée n'est pas vide, je créé un nouveau fragment et je l'affiche.
-        if (!newList.isEmpty()) {
-            FromSameAuthorFragment fromSameAuthorFragment = FromSameAuthorFragment.newInstance(newList);
+        if (!newList.isEmpty() && fromSameAuthorFragment == null) {
+            fromSameAuthorFragment = FromSameAuthorFragment.newInstance(newList);
             getSupportFragmentManager().beginTransaction().add(R.id.from_same_salesman_fragment, fromSameAuthorFragment).commit();
         }
     }
@@ -334,6 +344,7 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(ARG_ANNONCE, annonceFull);
         outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
+        getSupportFragmentManager().putFragment(outState, SAVE_FRAG_FROM_SAME_AUTHOR, fromSameAuthorFragment);
     }
 
     @Override

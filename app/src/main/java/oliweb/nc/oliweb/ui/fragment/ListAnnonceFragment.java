@@ -92,7 +92,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private static final String SAVE_ACTUAL_SORT = "SAVE_ACTUAL_SORT";
     private static final String SAVE_IS_SEARCHING = "SAVE_IS_SEARCHING";
 
-    @BindView(R.id.swipeRefreshLayout)
+    @BindView(R.id.swipe_refresh_layout)
     SwipeRefreshLayout swipeRefreshLayout;
 
     @BindView(R.id.recycler_list_annonces)
@@ -421,7 +421,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private void displayTimeoutViews(boolean timeoutActive) {
         imageViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.INVISIBLE);
         textViewTimeout.setVisibility(timeoutActive ? View.VISIBLE : View.INVISIBLE);
-        swipeRefreshLayout.setVisibility(timeoutActive ? View.INVISIBLE : View.VISIBLE);
+        // Fix : On ne peut pas swipper si le swipeRefresh est invisible
+        // swipeRefreshLayout.setVisibility(timeoutActive ? View.INVISIBLE : View.VISIBLE);
     }
 
     private void launchNewSearch() {
