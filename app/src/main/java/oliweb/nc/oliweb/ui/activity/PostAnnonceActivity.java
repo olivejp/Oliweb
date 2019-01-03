@@ -407,7 +407,10 @@ public class PostAnnonceActivity extends AppCompatActivity {
         currentAnnonce.annonceEntity.setContactByMsg(checkBoxMsg.isChecked() ? "O" : "N");
         currentAnnonce.annonceEntity.setContactByTel(checkBoxTel.isChecked() ? "O" : "N");
         currentAnnonce.annonceEntity.setContactByEmail(checkBoxEmail.isChecked() ? "O" : "N");
-        currentAnnonce.annonceEntity.setIdCategorie(viewModel.getCurrentCategorie().getIdCategorie());
+        if (viewModel.getCurrentCategorie() != null) {
+            currentAnnonce.annonceEntity.setIdCategorie(viewModel.getCurrentCategorie().getIdCategorie());
+        }
+
         outState.putParcelable(SAVE_ANNONCE, currentAnnonce);
 
         // Save the fragment if any
