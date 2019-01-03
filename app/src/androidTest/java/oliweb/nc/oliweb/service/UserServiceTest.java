@@ -1,9 +1,6 @@
 package oliweb.nc.oliweb.service;
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import android.content.Context;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.google.firebase.auth.FirebaseUser;
 
@@ -17,6 +14,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
@@ -73,7 +73,7 @@ public class UserServiceTest {
 
     @After
     public void cleanDatabase() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        Context appContext = ApplicationProvider.getApplicationContext();
         UtilityTest.cleanBase(appContext);
         Mockito.reset(firebaseUser, firebaseUserRepository, userRepository);
     }

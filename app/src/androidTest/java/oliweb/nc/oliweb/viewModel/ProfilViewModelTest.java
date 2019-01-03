@@ -1,11 +1,7 @@
 package oliweb.nc.oliweb.viewModel;
 
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,6 +9,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import androidx.lifecycle.ViewModelProviders;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.rule.ActivityTestRule;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.UtilityTest;
 import oliweb.nc.oliweb.database.entity.UserEntity;
@@ -48,7 +48,7 @@ public class ProfilViewModelTest {
         profilActivityTestRule = new ActivityTestRule<>(ProfilActivity.class);
         ProfilActivity profilActivity = profilActivityTestRule.launchActivity(intent);
 
-        appContext = InstrumentationRegistry.getTargetContext();
+        appContext = ApplicationProvider.getApplicationContext();
         viewModel = ViewModelProviders.of(profilActivity).get(ProfilViewModel.class);
         UtilityTest.cleanBase(appContext);
     }
