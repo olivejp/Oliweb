@@ -4,6 +4,6 @@
     <item>
         <bitmap
             android:gravity="fill_vertical"
-            android:src="@drawable/clothing_leather_wooden" />
+            android:src="@drawable/clothing_leather_wooden_retouche_sans_texte" />
     </item>
 </layer-list>
