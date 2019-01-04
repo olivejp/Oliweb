@@ -1,8 +1,6 @@
 package oliweb.nc.oliweb;
 
 import android.content.Context;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +9,8 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import io.reactivex.observers.TestObserver;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -47,7 +47,7 @@ public class AnnonceRepositoryTest {
 
     @Before
     public void init() {
-        appContext = InstrumentationRegistry.getTargetContext();
+        appContext = ApplicationProvider.getApplicationContext();
         UtilityTest.cleanBase(appContext);
 
         ContextModule contextModule = new ContextModule(appContext);
