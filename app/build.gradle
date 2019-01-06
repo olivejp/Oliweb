@@ -19,8 +19,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 16
-        versionName "2.4"
+        versionCode 17
+        versionName "2.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -38,10 +38,10 @@ android {
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
         }
-//        debug{
-//            applicationIdSuffix '.debug'
-//            versionNameSuffix 'Debug'
-//        }
+        debug{
+            applicationIdSuffix '.debug'
+            versionNameSuffix 'Debug'
+        }
     }
     compileOptions {
         targetCompatibility 1.8
