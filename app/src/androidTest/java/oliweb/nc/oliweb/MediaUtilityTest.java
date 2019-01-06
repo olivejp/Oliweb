@@ -38,12 +38,8 @@ public class MediaUtilityTest {
 
     }
 
-
-    /**
-     * Delete All users when the table is empty should not throw a exception
-     */
     @Test
-    public void deleteAllTwice() {
+    public void testOnImages() {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             InputStream inputStream = appContext.getResources().getAssets().open("clothing_leather_wooden.jpg");

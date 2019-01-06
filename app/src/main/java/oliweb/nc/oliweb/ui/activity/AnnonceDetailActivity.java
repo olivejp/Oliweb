@@ -344,7 +344,9 @@ public class AnnonceDetailActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(ARG_ANNONCE, annonceFull);
         outState.putBoolean(ARG_COME_FROM_CHAT_FRAGMENT, comeFromChatFragment);
-        getSupportFragmentManager().putFragment(outState, SAVE_FRAG_FROM_SAME_AUTHOR, fromSameAuthorFragment);
+        if (fromSameAuthorFragment != null) {
+            getSupportFragmentManager().putFragment(outState, SAVE_FRAG_FROM_SAME_AUTHOR, fromSameAuthorFragment);
+        }
     }
 
     @Override

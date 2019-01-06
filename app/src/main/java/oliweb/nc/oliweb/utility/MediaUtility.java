@@ -358,7 +358,7 @@ public class MediaUtility {
         // Récupération de la longeur max depuis le remote config.
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         int longeurMax = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE));
-        int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.DECREASE_JPEG_QUALITY));
+        int decreasingQuality = safeLongToInt(remoteConfig.getLong(Constants.REMOTE_DECREASE_JPEG_QUALITY));
 
         // Récupération du EXIF du fichier pour récupérer l'orientation de l'image initiale => OK
         ExifInterface oldExif = null;

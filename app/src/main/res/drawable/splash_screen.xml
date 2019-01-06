@@ -6,4 +6,13 @@
             android:gravity="fill_vertical"
             android:src="@drawable/clothing_leather_wooden" />
     </item>
+
+    <item>
+        <bitmap
+            android:antialias="true"
+            android:dither="true"
+            android:gravity="clip_horizontal|clip_vertical|center"
+            android:src="@drawable/oliweb_title" />
+    </item>
+
 </layer-list>

@@ -3,9 +3,6 @@ package oliweb.nc.oliweb;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
-import androidx.core.util.Pair;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +11,9 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.InputStream;
 
+import androidx.core.util.Pair;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +29,7 @@ public class DeletingFileTest {
 
     @Before
     public void init() {
-        context = InstrumentationRegistry.getTargetContext();
+        context = ApplicationProvider.getApplicationContext();
     }
 
     /**
