@@ -12,6 +12,14 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="Theme.OliwebBase.Auth" parent="Theme.OliwebBase">
+        <item name="android:windowBackground">@drawable/auth_theme_screen</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AuthTheme" parent="Theme.OliwebBase.Auth"/>
+
     <style name="AppTheme" parent="Theme.OliwebBase" />
 
     <style name="AppTheme.NoActionBar" parent="Theme.OliwebBase.NoActionBar">

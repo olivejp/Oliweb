@@ -118,8 +118,8 @@ public class Utility {
                         .createSignInIntentBuilder()
                         .setIsSmartLockEnabled(false)
                         .setAvailableProviders(listProviders)
-                        .setLogo(R.mipmap.ic_banana_launcher_foreground)
-                        .setTheme(R.style.AppTheme)
+                        .setLogo(R.drawable.oliweb_title)
+                        .setTheme(R.style.AuthTheme)
                         .build(),
                 requestCode);
     }
