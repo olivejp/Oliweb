@@ -19,7 +19,6 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,7 @@ import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.UserEntity;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
-import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.AnnonceDetailActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceViewPagerAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -145,33 +144,15 @@ public class AnnonceDetailActivity extends AppCompatActivity {
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
 
-            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
-
-            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.photos);
-            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
-                @Override
-                public void getLink(Uri shortLink, Uri flowchartLink) {
-                    loadingDialogFragment.dismiss();
-                    Intent sendIntent = new Intent();
-                    String msg = getString(R.string.default_text_share_link) + shortLink;
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-                    sendIntent.setType("text/plain");
-                    startActivity(sendIntent);
-                }
-
-                @Override
-                public void getLinkError() {
-                    loadingDialogFragment.dismiss();
-                    Snackbar.make(prix, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
-                }
-            });
+            DynamicLinkService.shareDynamicLink(this, annonceFull, uidUser, loadingDialogFragment, prix);
         } else {
             Snackbar.make(prix, R.string.sign_in_required, Snackbar.LENGTH_LONG)
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(this, RC_SIGN_IN))
                     .show();
         }
     };
+
+
 
     /**
      * OnClickListener that adds an annonce and all of this photo into the favorite.
