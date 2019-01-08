@@ -2,7 +2,6 @@ package oliweb.nc.oliweb.ui.activity;
 
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,7 +10,6 @@ import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.dynamiclinks.DynamicLink;
 
 import java.util.List;
 
@@ -25,9 +23,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
-import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.ui.activity.viewmodel.FavoriteActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
@@ -83,32 +80,14 @@ public class FavoritesActivity extends AppCompatActivity {
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
-            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
             loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
             loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
 
-            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.getPhotos());
-            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
-                @Override
-                public void getLink(Uri shortLink, Uri flowchartLink) {
-                    loadingDialogFragment.dismiss();
-                    Intent sendIntent = new Intent();
-                    String msg = getString(R.string.default_text_share_link) + shortLink;
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-                    sendIntent.setType("text/plain");
-                    startActivity(sendIntent);
-                }
-
-                @Override
-                public void getLinkError() {
-                    loadingDialogFragment.dismiss();
-                    Snackbar.make(coordinatorLayout, R.string.link_share_error, Snackbar.LENGTH_LONG).show();
-                }
-            });
+            // Partage du lien dynamique
+            DynamicLinkService.shareDynamicLink(this, annonceFull, uidUser, loadingDialogFragment, coordinatorLayout);
         } else {
             Snackbar.make(coordinatorLayout, R.string.sign_in_required, Snackbar.LENGTH_LONG)
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(this, RC_SIGN_IN))

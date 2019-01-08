@@ -3,7 +3,6 @@ package oliweb.nc.oliweb.ui.activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +15,6 @@ import android.widget.Toast;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import org.apache.commons.lang3.StringUtils;
@@ -42,12 +40,11 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
-import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.viewmodel.SearchActivityViewModel;
@@ -155,28 +152,10 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
 
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
-            AnnonceFull annoncePhotos = viewHolder.getAnnonceFull();
-            AnnonceEntity annonceEntity = annoncePhotos.getAnnonce();
+            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
 
-            DynamicLink link = DynamicLinksGenerator.generateLong(uidCurrentUser, annonceEntity, annoncePhotos.getPhotos());
-            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
-                @Override
-                public void getLink(Uri shortLink, Uri flowchartLink) {
-                    loadingDialogFragment.dismiss();
-                    Intent sendIntent = new Intent();
-                    String msg = getString(R.string.default_text_share_link) + shortLink;
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-                    sendIntent.setType("text/plain");
-                    startActivity(sendIntent);
-                }
-
-                @Override
-                public void getLinkError() {
-                    loadingDialogFragment.dismiss();
-                    Snackbar.make(recyclerView, R.string.dynamic_link_failed, Snackbar.LENGTH_LONG).show();
-                }
-            });
+            // Partage du lien dynamique
+            DynamicLinkService.shareDynamicLink(this, annonceFull, uidCurrentUser, loadingDialogFragment, recyclerView);
         } else {
             Snackbar.make(recyclerView, R.string.sign_in_required, Snackbar.LENGTH_LONG).show();
         }

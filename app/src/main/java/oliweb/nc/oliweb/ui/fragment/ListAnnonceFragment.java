@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import java.util.ArrayList;
@@ -46,13 +44,12 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
-import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
-import oliweb.nc.oliweb.service.sharing.DynamicLinksGenerator;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -156,7 +153,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (uidUser != null && !uidUser.isEmpty()) {
             AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
-            AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
             // Display a loading spinner
             loadingDialogFragment = new LoadingDialogFragment();
@@ -164,25 +160,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
 
             // Génération d'un lien
-            DynamicLink link = DynamicLinksGenerator.generateLong(uidUser, annonceEntity, annonceFull.photos);
-            DynamicLinksGenerator.generateShortWithLong(link.getUri(), new DynamicLinksGenerator.DynamicLinkListener() {
-                @Override
-                public void getLink(Uri shortLink, Uri flowchartLink) {
-                    loadingDialogFragment.dismiss();
-                    Intent sendIntent = new Intent();
-                    String msg = getString(R.string.default_text_share_link) + shortLink;
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-                    sendIntent.setType("text/plain");
-                    startActivity(sendIntent);
-                }
-
-                @Override
-                public void getLinkError() {
-                    loadingDialogFragment.dismiss();
-                    Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.link_share_error, Snackbar.LENGTH_LONG).show();
-                }
-            });
+            DynamicLinkService.shareDynamicLink(appCompatActivity, annonceFull, uidUser, loadingDialogFragment, snackbarViewProvider.getSnackbarViewProvider());
         } else {
             Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.sign_in_required, Snackbar.LENGTH_LONG)
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
