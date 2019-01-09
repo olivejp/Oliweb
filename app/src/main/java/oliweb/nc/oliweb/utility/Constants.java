@@ -22,7 +22,7 @@ public class Constants {
     public static final String IMAGE_DIRECTORY_NAME = "OliwebNcImageUpload";
     public static final String CHANNEL_ID = "OLIWEB_CHANNEL_ID";
     public static final String OLIWEB_SITE = "http://oliweb-ec245.firebaseapp.com";
-    public static final String OLIWEB_ANNONCE_VIEW_PATH = "/annonces/view/";
+    public static final String OLIWEB_ANNONCE_VIEW_PATH = "/#/annonces/view/";
     public static final String OLIWEB_DYNAMIC_LINK_DOMAIN = "g2gb6.app.goo.gl";
     public static final String MAIL_MESSAGE_TYPE = "message/rfc822";
 
