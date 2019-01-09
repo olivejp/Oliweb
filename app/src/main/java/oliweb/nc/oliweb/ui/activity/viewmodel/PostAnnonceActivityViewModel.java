@@ -186,7 +186,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.currentAnnonce;
     }
 
-    public Single<AnnonceEntity> saveAnnonce(String titre, String description, int prix, String uidUser, boolean email, boolean message, boolean telephone) {
+    public Single<AnnonceEntity> saveAnnonce(String uidUser, String titre, String description, int prix, boolean email, boolean message, boolean telephone) {
         Log.d(TAG, "Starting saveAnnonce");
         if (this.currentAnnonce == null) {
             createNewAnnonce();

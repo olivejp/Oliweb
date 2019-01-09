@@ -64,7 +64,7 @@ public class PostAnnonceViewModelTest {
 
         viewModel.setCurrentCategorie(listCategorie.get(0));
 
-        TestObserver<AnnonceEntity> testSaveAnnonce = viewModel.saveAnnonce("titre", "description", 100, UID_USER, false, false, false).test();
+        TestObserver<AnnonceEntity> testSaveAnnonce = viewModel.saveAnnonce(UID_USER, "titre", "description", 100, false, false, false).test();
         UtilityTest.waitTerminalEvent(testSaveAnnonce, 5);
         testSaveAnnonce.assertNoErrors();
         testSaveAnnonce.assertValueCount(1);

@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
 import org.apache.commons.lang3.StringUtils;
@@ -75,7 +77,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private static final int REQUEST_SHOOTING_CODE = 967;
     private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 888;
     private static final String SAVE_ANNONCE = "SAVE_ANNONCE";
-    private static final String SAVE_FILE_URI_TEMP = "SAVE_FILE_URI_TEMP";
     public static final String LOADING_DIALOG = "LOADING_DIALOG";
 
     private PostAnnonceActivityViewModel viewModel;
@@ -122,6 +123,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private PostPhotoAdapter postPhotoAdapter;
     private SpinnerAdapter categoriesAdapter;
 
+    /**
+     * Si on clique sur une photo, on va ouvrir cette photo dans le fragment de mise à jour d'image.
+     */
     private View.OnClickListener onClickPhotoListener = v -> {
         PhotoEntity photoEntity = (PhotoEntity) v.getTag();
         viewModel.setUpdatedPhoto(photoEntity);
@@ -133,6 +137,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
                 .commit();
     };
 
+    /**
+     * Sur le clic prolongé d'une photo on va demander à l'utilisateur s'il veut supprimer la photo
+     */
     private View.OnLongClickListener onLongClickPhotoListener = v -> {
         if (v.getTag() != null) {
             AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
@@ -177,7 +184,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
-        // Sur l'action finale du prix on va sauvegarder l'annonce.
+        // Sur l'action finale après la saisie du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 saveAnnonce();
@@ -194,7 +201,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
             finish();
         } else {
             setTitle(mode.equals(Constants.PARAM_CRE) ? getString(R.string.post_an_ad) : getString(R.string.update_an_ad));
-
             initObservers();
             initViewModel();
         }
@@ -268,21 +274,33 @@ public class PostAnnonceActivity extends AppCompatActivity {
         boolean contactTel = checkBoxTel.isChecked();
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonce(titre, description, prix, uidUser, contactEmail, contactMsg, contactTel)
+        viewModel.saveAnnonce(uidUser, titre, description, prix, contactEmail, contactMsg, contactTel)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(annonce -> {
-                    Log.d(TAG, "saveAnnonce.doOnSuccess annonce : " + annonce);
+                    // Ajout d'un élément de conversion dans Analytics.
+                    saveEventToAnalytics();
+
                     viewModel.savePhotos(annonce.getIdAnnonce())
                             .doOnSuccess(listPhotos -> {
-                                Log.d(TAG, "savePhotos.doOnSuccess listPhotos : " + listPhotos);
                                 setResult(RESULT_OK);
                                 finish();
                             })
-                            .doOnError(exception -> Log.e(TAG, "savePhotos.doOnError " + exception.getLocalizedMessage(), exception))
+                            .doOnError(Crashlytics::logException)
                             .subscribe();
                 })
-                .doOnError(throwable -> Log.e(TAG, "saveAnnonce.doOnError " + throwable.getLocalizedMessage(), throwable))
+                .doOnError(Crashlytics::logException)
                 .subscribe();
+    }
+
+    /**
+     * Si un utilisateur poste une annonce, on le considère comme un utilisateur "régulier" de l'application.
+     */
+    private void saveEventToAnalytics() {
+        FirebaseAnalytics mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        Bundle params = new Bundle();
+        params.putString("uid_user", uidUser);
+        params.putString("uid_annonce", uidAnnonce);
+        mFirebaseAnalytics.logEvent("post_annonce", params);
     }
 
     private boolean checkIfAnnonceIsValid() {
