@@ -250,9 +250,17 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         swipeRefreshLayout.setOnRefreshListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        GlideApp.get(this).clearMemory();
+        swipeRefreshLayout.setOnRefreshListener(null);
+        clearDisposableActualSearch();
+        super.onPause();
     }
 
     @Override
@@ -323,15 +331,6 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
         if (loadingDialogFragment != null) {
             getSupportFragmentManager().putFragment(outState, SAVE_FRAGMENT_LOADING, loadingDialogFragment);
         }
-    }
-
-    @Override
-    protected void onStop() {
-        GlideApp.get(this).clearMemory();
-        recyclerView.setAdapter(null);
-        swipeRefreshLayout.setOnRefreshListener(null);
-        clearDisposableActualSearch();
-        super.onStop();
     }
 
     @Override
