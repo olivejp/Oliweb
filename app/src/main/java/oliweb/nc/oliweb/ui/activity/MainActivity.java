@@ -54,6 +54,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -98,7 +99,9 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String TAG_LIST_CATEGORY = "TAG_LIST_CATEGORY";
     public static final String SORT_DIALOG = "SORT_DIALOG";
+    public static final String ACTION_REDIRECT = "ACTION_REDIRECT";
     public static final String ACTION_CHAT = "ACTION_CHAT";
+    public static final String ACTION_ANNONCE = "ACTION_ANNONCE";
 
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
@@ -217,8 +220,20 @@ public class MainActivity extends AppCompatActivity
         initFragments(mBundle);
 
         // Recherche d'une action pour rediriger vers une activité
-        if (getIntent().getBooleanExtra(ACTION_CHAT, false) && mFirebaseAuth.getCurrentUser() != null) {
+        if (ACTION_CHAT.equals(getIntent().getStringExtra(ACTION_REDIRECT)) && mFirebaseAuth.getCurrentUser() != null) {
             callChatsActivity();
+        }
+
+        if (ACTION_ANNONCE.equals(getIntent().getStringExtra(ACTION_REDIRECT))) {
+            String uidAnnonce = getIntent().getStringExtra(MyFirebaseMessagingService.KEY_UID_ANNONCE);
+            String uidAuthor = getIntent().getStringExtra(MyFirebaseMessagingService.KEY_UID_AUTHOR);
+            viewModel.getLiveFromFirebaseByUidAnnonce(uidAnnonce).observeOnce(annoncePhotos -> {
+                if (annoncePhotos != null) {
+                    callAnnonceDetailActivity(annoncePhotos);
+                } else {
+                    Toast.makeText(this, R.string.AD_DONT_EXIST_ANYMORE, Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
