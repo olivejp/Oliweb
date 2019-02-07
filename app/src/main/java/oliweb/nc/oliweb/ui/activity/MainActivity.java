@@ -219,19 +219,20 @@ public class MainActivity extends AppCompatActivity
         // Initialisation des fragments si il y en avait
         initFragments(mBundle);
 
-        checkAction();
+        // Vérifie les actions passées dans l'Intent.
+        checkAction(getIntent());
     }
 
-    private void checkAction() {
+    private void checkAction(Intent intent) {
         // Recherche d'une action pour rediriger vers une activité
-        if (ACTION_CHAT.equals(getIntent().getStringExtra(ACTION_REDIRECT)) && mFirebaseAuth.getCurrentUser() != null) {
+        if (ACTION_CHAT.equals(intent.getStringExtra(ACTION_REDIRECT)) && mFirebaseAuth.getCurrentUser() != null) {
             callChatsActivity();
         }
 
         // L'action demandée est une redirection vers la fiche annonce
-        if (ACTION_ANNONCE.equals(getIntent().getStringExtra(ACTION_REDIRECT))) {
-            String uidAnnonce = getIntent().getStringExtra(MyFirebaseMessagingService.KEY_UID_ANNONCE);
-            String uidAuthor = getIntent().getStringExtra(MyFirebaseMessagingService.KEY_UID_AUTHOR);
+        if (ACTION_ANNONCE.equals(intent.getStringExtra(ACTION_REDIRECT))) {
+            String uidAnnonce = intent.getStringExtra(MyFirebaseMessagingService.KEY_UID_ANNONCE);
+            String uidAuthor = intent.getStringExtra(MyFirebaseMessagingService.KEY_UID_AUTHOR);
             viewModel.getLiveFromFirebaseByUidAnnonce(uidAnnonce).observeOnce(annoncePhotos -> {
                 if (annoncePhotos != null) {
                     callAnnonceDetailActivity(annoncePhotos);
