@@ -275,6 +275,8 @@ public class MediaUtility {
      */
     @Nullable
     public static Pair<Uri, File> createNewMediaFileUri(Context context, boolean externalStorage, MediaType type) {
+        Crashlytics.log("createNewMediaFileUri");
+        Crashlytics.setBool("ExternalStorage", externalStorage);
         String fileName = generateMediaName(type);
         File newFile = (externalStorage) ? createExternalMediaFile(fileName) : createInternalMediaFile(context, fileName);
         if (newFile != null) {
@@ -311,8 +313,7 @@ public class MediaUtility {
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            Log.d(TAG, "Oops! Failed create "
-                    + Constants.IMAGE_DIRECTORY_NAME + " directory");
+            Crashlytics.log(3, TAG, "Oops! Failed create " + Constants.IMAGE_DIRECTORY_NAME + " directory");
             return null;
         }
 
