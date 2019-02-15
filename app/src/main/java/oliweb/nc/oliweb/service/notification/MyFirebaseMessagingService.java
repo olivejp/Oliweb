@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -65,6 +66,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public static final String KEY_TEXT_TO_SEND = "KEY_TEXT_TO_SEND";
     public static final String KEY_CHAT_RECEIVER = "KEY_CHAT_RECEIVER";
 
+    public static final String KEY_ACTION = "KEY_ACTION";
+    public static final String KEY_UID_AUTHOR = "KEY_UID_AUTHOR";
+    public static final String KEY_UID_ANNONCE = "KEY_UID_ANNONCE";
+
+    public static final String ACTION_NOTIF_ADD_PHOTO = "NOTIF_TO_ADD_PHOTO";
+
     private MessageRepository messageRepository;
     private ChatRepository chatRepository;
     private MediaUtility mediaUtility;
@@ -86,7 +93,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Map<String, String> datas = remoteMessage.getData();
             Log.d(TAG, "Contenu des datas : " + datas.toString());
-            if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
+
+            if (datas.containsKey(KEY_ACTION) && ACTION_NOTIF_ADD_PHOTO.equals(datas.get(KEY_ACTION))) {
+                Bundle bundle = new Bundle();
+                bundle.putString(KEY_UID_ANNONCE, datas.get(KEY_UID_ANNONCE));
+                bundle.putString(KEY_UID_AUTHOR, datas.get(KEY_UID_AUTHOR));
+                notify(remoteMessage, getPendingIntent(bundle));
+            } else if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
                 Gson gson = new Gson();
                 UserEntity userEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UserEntity.class);
                 String message = remoteMessage.getNotification().getBody();
@@ -99,25 +112,34 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 userRepository.findMaybeByUid(uidUser)
                         .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                         .doOnSuccess(userReceiver -> createChatDirectReplyNotification(uidChat, uidUserSender, titreAnnonce, userEntity, message, userReceiver))
-                        .doOnComplete(() -> Log.e(TAG, "L'utilisateur receuveur n'a pas été trouvé dans la base."))
+                        .doOnComplete(() -> Log.e(TAG, "L'utilisateur receiver n'a pas été trouvé dans la base."))
                         .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
                         .subscribe();
             } else {
-                Intent resultIntent = new Intent(this, MainActivity.class);
-                resultIntent.putExtra(MainActivity.ACTION_CHAT, true);
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-                stackBuilder.addNextIntentWithParentStack(resultIntent);
-                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
-                builder.setContentTitle(remoteMessage.getNotification().getTitle());
-                builder.setContentText(remoteMessage.getNotification().getBody());
-                builder.setSmallIcon(R.mipmap.ic_banana_launcher_round);
-                builder.setContentIntent(resultPendingIntent);
-                NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+                // Mode par défaut dans le cas, où on reçoit une notification, on va ouvrir le chat
+                Bundle bundle = new Bundle();
+                bundle.putString(MainActivity.ACTION_REDIRECT, MainActivity.ACTION_CHAT);
+                notify(remoteMessage, getPendingIntent(bundle));
             }
         }
         super.onMessageReceived(remoteMessage);
+    }
+
+    private void notify(RemoteMessage remoteMessage, PendingIntent resultPendingIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
+        builder.setContentTitle(remoteMessage.getNotification().getTitle());
+        builder.setContentText(remoteMessage.getNotification().getBody());
+        builder.setSmallIcon(R.mipmap.ic_banana_launcher_round);
+        builder.setContentIntent(resultPendingIntent);
+        NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+    }
+
+    private PendingIntent getPendingIntent(Bundle bundle) {
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        resultIntent.putExtras(bundle);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**

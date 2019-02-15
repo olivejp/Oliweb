@@ -1,0 +1,14 @@
+Scénarii de relance par notification :
+
+-Une annonce a été postée sans photo il y a plus d'un jour.
+-->Lancer un cron job tout les jours à 18h.
+-->Créer une cloud function qui écoute le cron job. Quand elle est lancée, elle va récupérer toutes les annonces et toutes celles qui n'ont pas de photo et qui ont été postées il y a plus de 24 heures
+-->Je lance une notification pour encourager l'utilisateur a posté des photos dans son annonce.
+-----> Vous avez plus de chance de vendre un bien si vous partager des photos.
+
+
+-Un utilisateur s'est connecté et n'a JAMAIS posté d'annonce => On le relance pour savoir s'il n'a pas quelque chose à vendre
+-->Oliweb est une solution simple pour vendre vos biens d'occasion. Prenez une photo
+
+-Une personne a posté une annonce qui a plus de 7 jours => On le relance pour savoir si son annonce est toujours d'actualité
+-->Votre annonce {{titre.annonce}} est là depuis plus de 7 jours

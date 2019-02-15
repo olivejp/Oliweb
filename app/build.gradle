@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.firebase-perf'
-apply plugin: 'io.fabric'
+// apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
 ext {
@@ -13,6 +13,11 @@ android {
     }
     compileSdkVersion 28
     defaultConfig {
+        // Test du abiFilter par https://android.jlelse.eu/controlling-apk-size-when-using-native-libraries-45c6c0e5b70a
+        //        ndk {
+        //            abiFilters "armeabi-v7a", "x86", "arm64-v8a"
+        //        }
+
         vectorDrawables {
             useSupportLibrary true
         }
@@ -38,10 +43,10 @@ android {
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
         }
-        debug{
-            applicationIdSuffix '.debug'
-            versionNameSuffix 'Debug'
-        }
+//        debug{
+//            applicationIdSuffix '.debug'
+//            versionNameSuffix 'Debug'
+//        }
     }
     compileOptions {
         targetCompatibility 1.8
@@ -59,24 +64,24 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.vectordrawable:vectordrawable:1.0.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
-    implementation 'com.jakewharton:butterknife:9.0.0-SNAPSHOT'
-    implementation 'androidx.room:room-runtime:2.1.0-alpha03'
-    implementation 'androidx.room:room-rxjava2:2.1.0-alpha03'
-    implementation 'androidx.paging:paging-runtime:2.1.0-rc01'
+    implementation 'com.jakewharton:butterknife:10.0.0'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha04'
+    implementation 'androidx.room:room-rxjava2:2.1.0-alpha04'
+    implementation 'androidx.paging:paging-runtime:2.1.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
-    implementation 'com.google.firebase:firebase-database:16.0.5'
+    implementation 'com.google.firebase:firebase-database:16.0.6'
     implementation 'com.google.firebase:firebase-auth:16.1.0'
     implementation 'com.google.firebase:firebase-storage:16.0.5'
 
     // Ne pas toucher à la version de firebase-invites car pas rétro compatible
-    implementation 'com.google.firebase:firebase-core:16.0.6'
+    implementation 'com.google.firebase:firebase-core:16.0.7'
     implementation 'com.google.firebase:firebase-invites:16.0.6'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
-    implementation 'com.google.firebase:firebase-config:16.1.2'
+    implementation 'com.google.firebase:firebase-config:16.1.3'
     implementation 'com.google.firebase:firebase-perf:16.2.3'
     implementation 'com.firebaseui:firebase-ui-auth:4.2.0'
     implementation 'com.firebaseui:firebase-ui-database:4.2.0'
@@ -119,15 +124,15 @@ dependencies {
     androidTestImplementation 'junit:junit:4.12'
 
     testImplementation 'androidx.arch.core:core-testing:2.0.0'
-    testImplementation 'androidx.room:room-testing:2.1.0-alpha03'
+    testImplementation 'androidx.room:room-testing:2.1.0-alpha04'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.21.0'
 
     annotationProcessor 'androidx.annotation:annotation:1.0.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0-SNAPSHOT'
-    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha03'
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha04'
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.0.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0-SNAPSHOT'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
 
     // LeakCanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
