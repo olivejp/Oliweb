@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
@@ -73,8 +72,8 @@ public class AnnonceBeautyAdapter extends
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
-        RecyclerView.ViewHolder viewHolderResult = new ViewHolderBeauty(itemLayoutView);
-        ((ViewHolderBeauty) viewHolderResult).parent = parent;
+        ViewHolderBeauty viewHolderResult = new ViewHolderBeauty(itemLayoutView);
+        viewHolderResult.parent = parent;
         return viewHolderResult;
     }
 
@@ -149,14 +148,14 @@ public class AnnonceBeautyAdapter extends
             String urlPhoto = annoncePhotos.getPhotos().get(0).getFirebasePath();
 
             // Création d'une requestBuilder pour charger le thumbnail
-            RequestBuilder<Drawable> requestThumbnail = glide.load(urlPhoto).override(100, 100).diskCacheStrategy(DiskCacheStrategy.RESOURCE);
+            // RequestBuilder<Drawable> requestThumbnail = glide.load(urlPhoto).override(100, 100).diskCacheStrategy(DiskCacheStrategy.RESOURCE);
 
             // Création de la requête pour télécharger l'image
             glide.load(urlPhoto)
-                    .thumbnail(requestThumbnail)
+                    // .thumbnail(requestThumbnail)
                     .listener(new RequestListener<Drawable>() {
                         @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
                             viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
                             viewHolderBeauty.progressBar.setVisibility(View.GONE);
                             return false;
@@ -177,6 +176,7 @@ public class AnnonceBeautyAdapter extends
             viewHolderBeauty.progressBar.setVisibility(View.GONE);
             glide.load(R.mipmap.ic_banana_launcher_foreground)
                     .centerInside()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(viewHolderBeauty.imageView);
         }
     }

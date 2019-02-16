@@ -63,6 +63,9 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             if (i == R.id.annonce_delete) {
                 askToDelete((AnnoncePhotos) v.getTag());
                 return true;
+            } else if (i == R.id.annonce_share) {
+                viewModel.shareAnnonce(MyAnnoncesActivity.this, (AnnoncePhotos) v.getTag(), uidUser);
+                return true;
             } else {
                 return false;
             }
