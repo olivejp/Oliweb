@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -37,21 +38,22 @@ public class AnnonceFirebaseSenderTest {
     private static final String UID_ANNONCE = "UID";
 
     @Mock
-    private FirebaseAnnonceRepository firebaseAnnonceRepository;
+    private FirebaseAnnonceRepository mockFirebaseAnnonceRepository;
 
     @Mock
-    private AnnonceRepository annonceRepository;
+    private AnnonceRepository mockAnnonceRepository;
 
     @Mock
-    private PhotoFirebaseSender photoFirebaseSender;
+    private PhotoFirebaseSender mockPhotoFirebaseSender;
 
     @Mock
-    private AnnonceFullRepository annonceFullRepository;
+    private AnnonceFullRepository mockAnnonceFullRepository;
 
     private TestScheduler testScheduler = new TestScheduler();
 
+    @After
     private void resetMock() {
-        Mockito.reset(annonceFullRepository, annonceRepository, firebaseAnnonceRepository, photoFirebaseSender);
+        Mockito.reset(mockAnnonceFullRepository, mockAnnonceRepository, mockFirebaseAnnonceRepository, mockPhotoFirebaseSender);
     }
 
     /**
@@ -61,31 +63,31 @@ public class AnnonceFirebaseSenderTest {
      * - The annonce is marked as sending
      * - The annonce is saved in Firebase
      * - The annonce is marked as send
-     * - The  photoFirebaseSender.sendPhotosToRemote() is called one time
+     * - The  mockPhotoFirebaseSender.sendPhotosToRemote() is called one time
      */
     @Test
     public void ShouldSaveOnce() {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
-        when(annonceRepository.findMaybeByUidAndFavorite(argThat(UID_ANNONCE::equals), anyInt())).thenReturn(Maybe.just(annonceEntity));
-        when(annonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
-        when(annonceRepository.markAsSend(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SEND)));
-        when(annonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.just(annonceFull));
-        when(annonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.just(annonceFull));
-        when(firebaseAnnonceRepository.saveAnnonceToFirebase(any())).thenReturn(Single.just(UID_ANNONCE));
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(mockAnnonceRepository.findMaybeByUidAndFavorite(argThat(UID_ANNONCE::equals), anyInt())).thenReturn(Maybe.just(annonceEntity));
+        when(mockAnnonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
+        when(mockAnnonceRepository.markAsSend(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SEND)));
+        when(mockAnnonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.just(annonceFull));
+        when(mockAnnonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.just(annonceFull));
+        when(mockFirebaseAnnonceRepository.saveAnnonceToFirebase(any())).thenReturn(Single.just(UID_ANNONCE));
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsSending(any());
-        verify(annonceRepository, times(1)).markAsSend(any());
-        verify(firebaseAnnonceRepository, times(1)).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, times(1)).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsSending(any());
+        verify(mockAnnonceRepository, times(1)).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, times(1)).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, times(1)).sendPhotosToRemote(anyList());
 
         resetMock();
     }
@@ -102,19 +104,19 @@ public class AnnonceFirebaseSenderTest {
      */
     @Test
     public void ShouldMarkAsFailedToSend_When_GetUidAndTimestampFromFirebase_Fail() {
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(new AnnonceEntity());
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, never()).markAsSending(any());
-        verify(annonceRepository, never()).markAsSend(any());
-        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsFailedToSend(any());
+        verify(mockAnnonceRepository, never()).markAsSending(any());
+        verify(mockAnnonceRepository, never()).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, never()).sendPhotosToRemote(anyList());
 
         resetMock();
     }
@@ -134,20 +136,20 @@ public class AnnonceFirebaseSenderTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
-        when(annonceRepository.markAsSending(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR 2")));
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(mockAnnonceRepository.markAsSending(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR 2")));
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsSending(any());
-        verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, never()).markAsSend(any());
-        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsSending(any());
+        verify(mockAnnonceRepository, times(1)).markAsFailedToSend(any());
+        verify(mockAnnonceRepository, never()).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, never()).sendPhotosToRemote(anyList());
 
         resetMock();
     }
@@ -167,20 +169,20 @@ public class AnnonceFirebaseSenderTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
-        when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(mockAnnonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsSending(any());
-        verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, never()).markAsSend(any());
-        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsSending(any());
+        verify(mockAnnonceRepository, times(1)).markAsFailedToSend(any());
+        verify(mockAnnonceRepository, never()).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, never()).sendPhotosToRemote(anyList());
 
         resetMock();
     }
@@ -200,21 +202,21 @@ public class AnnonceFirebaseSenderTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
-        when(annonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
-        when(annonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR")));
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(mockAnnonceRepository.findMaybeByUidAndFavorite(anyString(), anyInt())).thenReturn(Maybe.empty());
+        when(mockAnnonceFullRepository.findAnnonceFullByAnnonceEntity(any())).thenReturn(Observable.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsSending(any());
-        verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, never()).markAsSend(any());
-        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsSending(any());
+        verify(mockAnnonceRepository, times(1)).markAsFailedToSend(any());
+        verify(mockAnnonceRepository, never()).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, never()).sendPhotosToRemote(anyList());
 
         resetMock();
     }
@@ -234,21 +236,21 @@ public class AnnonceFirebaseSenderTest {
         AnnonceFull annonceFull = Utility.createAnnonceFull();
         AnnonceEntity annonceEntity = annonceFull.getAnnonce();
 
-        when(firebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
-        when(annonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
-        when(annonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
+        when(mockFirebaseAnnonceRepository.getUidAndTimestampFromFirebase(any())).thenReturn(Single.just(annonceEntity));
+        when(mockAnnonceRepository.markAsSending(any())).thenReturn(Observable.just(annonceEntity.setStatutAndReturn(StatusRemote.SENDING)));
+        when(mockAnnonceFullRepository.findAnnoncesByIdAnnonce(anyLong())).thenReturn(Single.error(new FirebaseRepositoryException("TEST ERROR")));
 
-        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(firebaseAnnonceRepository, annonceRepository, photoFirebaseSender, annonceFullRepository, testScheduler);
+        AnnonceFirebaseSender annonceFirebaseSender = new AnnonceFirebaseSender(mockFirebaseAnnonceRepository, mockAnnonceRepository, mockPhotoFirebaseSender, mockAnnonceFullRepository, testScheduler);
 
         annonceFirebaseSender.processToSendAnnonceToFirebase(annonceEntity);
 
         testScheduler.triggerActions();
 
-        verify(annonceRepository, times(1)).markAsSending(any());
-        verify(annonceRepository, times(1)).markAsFailedToSend(any());
-        verify(annonceRepository, never()).markAsSend(any());
-        verify(firebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
-        verify(photoFirebaseSender, never()).sendPhotosToRemote(anyList());
+        verify(mockAnnonceRepository, times(1)).markAsSending(any());
+        verify(mockAnnonceRepository, times(1)).markAsFailedToSend(any());
+        verify(mockAnnonceRepository, never()).markAsSend(any());
+        verify(mockFirebaseAnnonceRepository, never()).saveAnnonceToFirebase(any());
+        verify(mockPhotoFirebaseSender, never()).sendPhotosToRemote(anyList());
 
         resetMock();
     }
