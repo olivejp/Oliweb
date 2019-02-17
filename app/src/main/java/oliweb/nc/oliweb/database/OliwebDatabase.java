@@ -1,14 +1,14 @@
 package oliweb.nc.oliweb.database;
 
-import androidx.sqlite.db.SupportSQLiteDatabase;
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executors;
 
+import androidx.annotation.NonNull;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 import oliweb.nc.oliweb.database.dao.AnnonceDao;
 import oliweb.nc.oliweb.database.dao.AnnonceFullDao;
 import oliweb.nc.oliweb.database.dao.AnnonceWithPhotosDao;
@@ -60,12 +60,16 @@ public abstract class OliwebDatabase extends RoomDatabase {
 
     private static CategorieEntity[] listDefaultCategories() {
         return new CategorieEntity[]{
-                new CategorieEntity("Automobile", null),
-                new CategorieEntity("Mobilier", null),
-                new CategorieEntity("Enfant", null),
-                new CategorieEntity("Sport", null),
-                new CategorieEntity("Immobilier", null),
-                new CategorieEntity("Technologie", null)
+                new CategorieEntity(1L,"Mobilier", null),
+                new CategorieEntity(2L,"Immobilier", null),
+                new CategorieEntity(3L,"Enfant", null),
+                new CategorieEntity(4L,"Automobile", null),
+                new CategorieEntity(5L,"Sport", null),
+                new CategorieEntity(6L,"Technologie", null),
+                new CategorieEntity(7L,"Vêtement", null),
+                new CategorieEntity(8L,"Jardin", null),
+                new CategorieEntity(9L,"Animal", null),
+                new CategorieEntity(10L,"Musique", null)
         };
     }
 

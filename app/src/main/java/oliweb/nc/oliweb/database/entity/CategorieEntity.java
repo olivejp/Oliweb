@@ -1,11 +1,12 @@
 package oliweb.nc.oliweb.database.entity;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import android.os.Parcel;
-import android.os.Parcelable;
-import androidx.annotation.NonNull;
 
 /**
  * Created by orlanth23 on 28/01/2018.
@@ -24,6 +25,13 @@ public class CategorieEntity extends AbstractEntity<Long> implements Parcelable 
 
     @Ignore
     public CategorieEntity(String name, String couleur) {
+        this.name = name;
+        this.couleur = couleur;
+    }
+
+    @Ignore
+    public CategorieEntity(Long idCategorie, String name, String couleur) {
+        this.idCategorie = idCategorie;
         this.name = name;
         this.couleur = couleur;
     }
