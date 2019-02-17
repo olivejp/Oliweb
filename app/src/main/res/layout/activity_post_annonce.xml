@@ -73,9 +73,13 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/input_titre_annonce"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:textColorHint="@color/colorAccent"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="100"
+                    app:errorEnabled="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/spinner_categorie">
@@ -84,7 +88,6 @@
                         android:id="@+id/edit_titre_annonce"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="5dp"
                         android:hint="@string/title"
                         android:imeOptions="actionNext"
                         android:inputType="textCapSentences|textImeMultiLine"
@@ -94,9 +97,13 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/input_description_annonce"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:textColorHint="@color/colorAccent"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="1000"
+                    app:errorEnabled="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/input_titre_annonce">
@@ -105,7 +112,6 @@
                         android:id="@+id/edit_description_annonce"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="5dp"
                         android:gravity="start"
                         android:hint="@string/description"
                         android:imeOptions="actionNext"
@@ -118,9 +124,12 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/input_prix_annonce"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:textColorHint="@color/colorAccent"
+                    app:errorEnabled="true"
+                    app:helperText="en XPF"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/input_description_annonce">
@@ -129,25 +138,12 @@
                         android:id="@+id/edit_prix_annonce"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="5dp"
                         android:ems="10"
                         android:hint="@string/price"
                         android:imeOptions="actionDone"
                         android:inputType="number"
                         android:maxLength="9" />
                 </com.google.android.material.textfield.TextInputLayout>
-
-                <TextView
-                    android:id="@+id/text_devise"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:text="en XPF"
-                    android:textSize="12sp"
-                    android:textStyle="italic"
-                    app:layout_constraintBottom_toBottomOf="@id/input_prix_annonce"
-                    app:layout_constraintEnd_toEndOf="@id/input_prix_annonce"
-                    app:layout_constraintTop_toTopOf="@id/input_prix_annonce" />
 
                 <TextView
                     android:id="@+id/text_contactez_moi"
@@ -233,13 +229,21 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
 
+        <com.google.android.material.bottomappbar.BottomAppBar
+            android:id="@+id/bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            app:backgroundTint="@color/colorPrimaryDark"
+            app:hideOnScroll="true" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_add_photo"
+            android:id="@+id/fab_save_annonce"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
             app:fabSize="normal"
-            app:srcCompat="@drawable/ic_add_a_photo_white_48dp" />
+            app:layout_anchor="@id/bar"
+            app:srcCompat="@drawable/ic_check_white_48dp" />
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </FrameLayout>

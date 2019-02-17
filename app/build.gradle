@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.firebase-perf'
-apply plugin: 'io.fabric'
+// apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 
 ext {
@@ -19,8 +19,8 @@ android {
         applicationId "oliweb.nc.oliweb"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 19
-        versionName "2.5.2"
+        versionCode 20
+        versionName "2.5.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -38,10 +38,10 @@ android {
             zipAlignEnabled true
             proguardFile 'proguard-rules.pro'
         }
-        debug{
-            applicationIdSuffix '.debug'
-            versionNameSuffix 'Debug'
-        }
+//        debug{
+//            applicationIdSuffix '.debug'
+//            versionNameSuffix 'Debug'
+//        }
     }
     compileOptions {
         targetCompatibility 1.8
@@ -59,7 +59,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.vectordrawable:vectordrawable:1.0.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
-    implementation 'com.jakewharton:butterknife:9.0.0-SNAPSHOT'
+    implementation 'com.jakewharton:butterknife:10.0.0'
     implementation 'androidx.room:room-runtime:2.1.0-alpha04'
     implementation 'androidx.room:room-rxjava2:2.1.0-alpha04'
     implementation 'androidx.paging:paging-runtime:2.1.0'
@@ -73,7 +73,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage:16.0.5'
 
     // Ne pas toucher à la version de firebase-invites car pas rétro compatible
-    implementation 'com.google.firebase:firebase-core:16.0.6'
+    implementation 'com.google.firebase:firebase-core:16.0.7'
     implementation 'com.google.firebase:firebase-invites:16.0.6'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
     implementation 'com.google.firebase:firebase-config:16.3.0'
@@ -127,7 +127,7 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0-SNAPSHOT'
     annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha04'
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.0.0'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0-SNAPSHOT'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
 
     // LeakCanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'

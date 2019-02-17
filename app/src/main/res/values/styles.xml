@@ -18,7 +18,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AuthTheme" parent="Theme.OliwebBase.Auth"/>
+    <style name="AuthTheme" parent="Theme.OliwebBase.Auth" />
 
     <style name="AppTheme" parent="Theme.OliwebBase" />
 
@@ -65,7 +65,8 @@
         <item name="actionMenuTextColor">@color/colorBottomDark</item>
         <item name="actionOverflowButtonStyle">@style/Widget.AppCompat.Light.ActionButton.Overflow
         </item>
-        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline5</item>
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline5
+        </item>
     </style>
 
     <style name="MyDialogTheme.Base" parent="Theme.MaterialComponents.Light.Dialog">

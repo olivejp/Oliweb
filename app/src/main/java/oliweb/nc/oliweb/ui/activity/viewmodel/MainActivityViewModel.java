@@ -91,7 +91,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     @Inject
     MediaUtility mediaUtility;
 
-    private UserEntity userConnected;
+    private UserEntity userActuallyConnected;
     private boolean isNetworkAvailable;
     private MutableLiveData<Integer> sorting;
     private MutableLiveData<UserEntity> liveUserConnected;
@@ -209,22 +209,22 @@ public class MainActivityViewModel extends AndroidViewModel {
         return liveUserConnected;
     }
 
-    private void setUserConnected(UserEntity user) {
-        userConnected = user;
-        liveUserConnected.postValue(userConnected);
+    private void setUserActuallyConnected(UserEntity user) {
+        userActuallyConnected = user;
+        liveUserConnected.postValue(userActuallyConnected);
     }
 
-    public UserEntity getUserConnected() {
-        return userConnected;
+    public UserEntity getUserActuallyConnected() {
+        return userActuallyConnected;
     }
 
     /**
-     * Return true if this is a disconnection
+     * Return the type of AuthEventType depending on the user actually connected and the new connection received.
      *
-     * @param firebaseUser
-     * @return
+     * @param newConnectedUser FirebaseUser
+     * @return LiveDataOnce<AuthEventType>
      */
-    public LiveDataOnce<AuthEventType> listenAuthentication(FirebaseUser firebaseUser) {
+    public LiveDataOnce<AuthEventType> getAuthEventType(FirebaseUser newConnectedUser) {
         return new CustomLiveData<AuthEventType>() {
             @Override
             public void observeOnce(Observer<AuthEventType> observer) {
@@ -232,45 +232,51 @@ public class MainActivityViewModel extends AndroidViewModel {
 
                 // We define what type of auth event just happened
                 AuthEventType authEventType;
-                if (userConnected == null) {
-                    authEventType = (firebaseUser == null) ? AuthEventType.NOTHING : AuthEventType.NEW_CONNECTION;
+                if (userActuallyConnected == null) {
+                    authEventType = (newConnectedUser == null) ? AuthEventType.NOTHING : AuthEventType.NEW_CONNECTION;
                 } else {
-                    if (firebaseUser == null) {
+                    if (newConnectedUser == null) {
                         authEventType = AuthEventType.DISCONNECT;
                     } else {
-                        authEventType = (userConnected.getUid().equals(firebaseUser.getUid())) ? AuthEventType.SAME_CONNECTION : AuthEventType.NEW_CONNECTION;
+                        authEventType = (userActuallyConnected.getUid().equals(newConnectedUser.getUid())) ? AuthEventType.SAME_CONNECTION : AuthEventType.NEW_CONNECTION;
                     }
-                }
-
-                // Discriminate the auth type and play one of the two scenario possible :
-                // DISCONNECTION
-                // NEW_CONNECTION
-                switch (authEventType) {
-                    case DISCONNECT:
-                        setUserConnected(null);
-                        stopAllServices();
-                        SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(null);
-                        break;
-                    case NEW_CONNECTION:
-                        SharedPreferencesHelper.getInstance(application).setRetrievePreviousAnnonces(true);
-                        userService.saveSingleUserFromFirebase(firebaseUser)
-                                .subscribeOn(processScheduler).observeOn(processScheduler)
-                                .doOnError(e -> Log.e(TAG, "Saving user failed", e))
-                                .doOnSuccess(userSaved -> {
-                                    setUserConnected(userSaved);
-                                    stopAllServices();
-                                    startAllServices(userSaved.getUid());
-                                    SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(userSaved.getUid());
-                                })
-                                .subscribe();
-                        break;
-                    case SAME_CONNECTION:
-                    case NOTHING:
                 }
 
                 observer.onChanged(authEventType);
             }
         };
+    }
+
+    /**
+     * Discriminate the auth type and play one of the two scenario possible :
+     * DISCONNECTION
+     * NEW_CONNECTION
+     **/
+    public void stopStartServicesOnAuthEvent(AuthEventType authEventType, FirebaseUser firebaseUser) {
+        switch (authEventType) {
+            case DISCONNECT:
+                setUserActuallyConnected(null);
+                stopAllServices();
+                SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(null);
+                break;
+            case NEW_CONNECTION:
+                SharedPreferencesHelper.getInstance(application).setRetrievePreviousAnnonces(true);
+                userService.saveSingleUserFromFirebase(firebaseUser)
+                        .subscribeOn(processScheduler).observeOn(processScheduler)
+                        .doOnError(e -> Log.e(TAG, "Saving user failed", e))
+                        .doOnSuccess(userSaved -> {
+                            setUserActuallyConnected(userSaved);
+                            stopAllServices();
+                            startAllServices(userSaved.getUid());
+                            SharedPreferencesHelper.getInstance(application).setUidFirebaseUser(userSaved.getUid());
+                        })
+                        .subscribe();
+                break;
+            case SAME_CONNECTION:
+            case NOTHING:
+            default:
+                // Do nothing for those three conditions
+        }
     }
 
     public void startAllServices(String uidUser) {

@@ -54,6 +54,7 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
@@ -98,7 +99,9 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
     public static final String TAG_LIST_CATEGORY = "TAG_LIST_CATEGORY";
     public static final String SORT_DIALOG = "SORT_DIALOG";
+    public static final String ACTION_REDIRECT = "ACTION_REDIRECT";
     public static final String ACTION_CHAT = "ACTION_CHAT";
+    public static final String ACTION_ANNONCE = "ACTION_ANNONCE";
 
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
@@ -216,9 +219,27 @@ public class MainActivity extends AppCompatActivity
         // Initialisation des fragments si il y en avait
         initFragments(mBundle);
 
+        // Vérifie les actions passées dans l'Intent.
+        checkAction(getIntent());
+    }
+
+    private void checkAction(Intent intent) {
         // Recherche d'une action pour rediriger vers une activité
-        if (getIntent().getBooleanExtra(ACTION_CHAT, false) && mFirebaseAuth.getCurrentUser() != null) {
+        if (ACTION_CHAT.equals(intent.getStringExtra(ACTION_REDIRECT)) && mFirebaseAuth.getCurrentUser() != null) {
             callChatsActivity();
+        }
+
+        // L'action demandée est une redirection vers la fiche annonce
+        if (ACTION_ANNONCE.equals(intent.getStringExtra(ACTION_REDIRECT))) {
+            String uidAnnonce = intent.getStringExtra(MyFirebaseMessagingService.KEY_UID_ANNONCE);
+            String uidAuthor = intent.getStringExtra(MyFirebaseMessagingService.KEY_UID_AUTHOR);
+            viewModel.getLiveFromFirebaseByUidAnnonce(uidAnnonce).observeOnce(annoncePhotos -> {
+                if (annoncePhotos != null) {
+                    callAnnonceDetailActivity(annoncePhotos);
+                } else {
+                    Toast.makeText(this, R.string.AD_DONT_EXIST_ANYMORE, Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
@@ -490,8 +511,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDialogPositiveClick(NoticeDialogFragment dialog) {
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            // The connected user want to retrieve his annonces not present on the device but present on the network
             SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
-            SyncService.launchSynchroFromFirebase(MainActivity.this, viewModel.getUserConnected().getUid());
+            SyncService.launchSynchroFromFirebase(MainActivity.this, viewModel.getUserActuallyConnected().getUid());
         }
         dialog.dismiss();
     }
@@ -499,6 +521,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDialogNegativeClick(NoticeDialogFragment dialog) {
         if (dialog.getTag() != null && dialog.getTag().equals(DIALOG_FIREBASE_RETRIEVE)) {
+            // The connected user DON'T want to retrieve his annonces not present on the device but present on the network
             SharedPreferencesHelper.getInstance(this).setRetrievePreviousAnnonces(false);
         }
         dialog.dismiss();
@@ -533,9 +556,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @OnClick(R.id.fab_add_annonce)
-    public void addAnnonce(View v) {
-        // L'utilisateur est bien connecté
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+    public void addAnnonce(View view) {
+        if (viewModel.getUserActuallyConnected() != null) {
             callMyAnnoncesActivity(ACTION_CODE_POST);
         } else {
             callLoginUi(this, RC_SIGN_IN_TO_POST);
@@ -570,6 +592,7 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(ARG_ANNONCE, annonceFull);
         startActivity(intent);
     }
+
 
     private void callProfilActivity() {
         String uidUser = SharedPreferencesHelper.getInstance(getApplication()).getUidFirebaseUser();
@@ -655,34 +678,43 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * On définit un listener qui va écouter toutes les connections et déconnections de Firebase
+     * Il appelle ensuite la méthode onAuthenticationEvent()
+     *
+     * @return AuthStateListener
+     */
     private FirebaseAuth.AuthStateListener defineAuthListener() {
-        return firebaseAuth -> viewModel
-                .listenAuthentication(firebaseAuth.getCurrentUser())
-                .observeOnce(authEventType -> {
-                    if (authEventType != null) {
-                        switch (authEventType) {
-                            case DISCONNECT:
-                                clearConnectedUser();
-                                break;
-                            case NEW_CONNECTION:
-                                if (firebaseAuth.getCurrentUser() != null) {
-                                    initNewConnection(firebaseAuth.getCurrentUser());
-                                }
-                                if (shouldCallAddAnnonce) {
-                                    shouldCallAddAnnonce = false;
-                                    addAnnonce(null);
-                                }
-                                break;
-                            case NOTHING:
-                            case SAME_CONNECTION:
-                            default:
-                        }
-                    }
-                });
+        return auth -> viewModel
+                .getAuthEventType(auth.getCurrentUser())
+                .observeOnce(authEventType -> onAuthenticationEvent(authEventType, auth.getCurrentUser()));
+    }
+
+    private void onAuthenticationEvent(MainActivityViewModel.AuthEventType authEventType, @Nullable FirebaseUser user) {
+        if (authEventType == null) return;
+
+        viewModel.stopStartServicesOnAuthEvent(authEventType, user);
+        switch (authEventType) {
+            case DISCONNECT:
+                clearConnectedUser();
+                break;
+            case NEW_CONNECTION:
+                if (user != null) {
+                    initNewConnection(user);
+                }
+                if (shouldCallAddAnnonce) {
+                    shouldCallAddAnnonce = false;
+                    addAnnonce(null);
+                }
+                break;
+            case NOTHING:
+            case SAME_CONNECTION:
+            default:
+        }
     }
 
     private void initNewConnection(FirebaseUser user) {
-        Crashlytics.setUserIdentifier(user.getUid());
+        Crashlytics.setUserIdentifier(user.getUid()); // Nous permet de connaître l'UID de l'utilisateur quand il y a un crash
         Snackbar.make(coordinatorLayout, R.string.welcome, Snackbar.LENGTH_LONG).setAction(R.string.show_profile, v -> callProfilActivity()).show();
         if (SharedPreferencesHelper.getInstance(this).getRetrievePreviousAnnonces()) {
             viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {

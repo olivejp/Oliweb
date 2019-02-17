@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -65,6 +66,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public static final String KEY_TEXT_TO_SEND = "KEY_TEXT_TO_SEND";
     public static final String KEY_CHAT_RECEIVER = "KEY_CHAT_RECEIVER";
 
+    public static final String KEY_ACTION = "KEY_ACTION";
+    public static final String KEY_UID_AUTHOR = "KEY_UID_AUTHOR";
+    public static final String KEY_UID_ANNONCE = "KEY_UID_ANNONCE";
+
+    public static final String ACTION_NOTIF_ADD_PHOTO = "NOTIF_TO_ADD_PHOTO";
+
     private MessageRepository messageRepository;
     private ChatRepository chatRepository;
     private MediaUtility mediaUtility;
@@ -73,51 +80,75 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
-        UtilityComponent utilityComponent = DaggerUtilityComponent.builder().utilityModule(new UtilityModule()).build();
+        // Utilisation de Dagger pour récupérer les composants nécessaires
+        getComponents();
 
+        // Si aucune notification présente, on sort tout de suite.
+        if (remoteMessage.getNotification() == null) {
+            super.onMessageReceived(remoteMessage);
+            return;
+        }
+
+        Map<String, String> datas = remoteMessage.getData();
+        Log.d(TAG, "Contenu des datas : " + datas.toString());
+        if (datas.containsKey(KEY_ACTION) && ACTION_NOTIF_ADD_PHOTO.equals(datas.get(KEY_ACTION))) {
+            Bundle bundle = new Bundle();
+            bundle.putString(KEY_UID_ANNONCE, datas.get(KEY_UID_ANNONCE));
+            bundle.putString(KEY_UID_AUTHOR, datas.get(KEY_UID_AUTHOR));
+            notify(remoteMessage, getPendingIntent(bundle));
+        } else if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
+            Gson gson = new Gson();
+            UserEntity userEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UserEntity.class);
+            String message = remoteMessage.getNotification().getBody();
+            String titreAnnonce = remoteMessage.getNotification().getTitle();
+            String uidUserSender = datas.get(KEY_CHAT_AUTHOR);
+            String receiverUid = datas.get(KEY_CHAT_RECEIVER);
+            String uidChat = datas.get(KEY_CHAT_UID);
+
+            // Recherche de l'utilisateur dans la base, puis création du direct reply
+            userRepository.findMaybeByUid(receiverUid)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .doOnSuccess(userReceiver -> createChatDirectReplyNotification(uidChat, uidUserSender, titreAnnonce, userEntity, message, userReceiver))
+                    .doOnComplete(() -> Log.e(TAG, "L'utilisateur receiver n'a pas été trouvé dans la base."))
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .subscribe();
+        } else {
+            // Mode par défaut dans le cas, où on reçoit une notification, on va ouvrir le chat
+            Bundle bundle = new Bundle();
+            bundle.putString(MainActivity.ACTION_REDIRECT, MainActivity.ACTION_CHAT);
+            notify(remoteMessage, getPendingIntent(bundle));
+        }
+        super.onMessageReceived(remoteMessage);
+    }
+
+    private void getComponents() {
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+        DatabaseRepositoriesComponent component = DaggerDatabaseRepositoriesComponent.builder().contextModule(new ContextModule(this)).build();
+        UtilityComponent utilityComponent = DaggerUtilityComponent.builder().utilityModule(new UtilityModule()).build();
         messageRepository = component.getMessageRepository();
         chatRepository = component.getChatRepository();
         mediaUtility = utilityComponent.getMediaUtility();
         userRepository = component.getUserRepository();
+    }
 
+    private void notify(RemoteMessage remoteMessage, PendingIntent resultPendingIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
         if (remoteMessage.getNotification() != null) {
-            Map<String, String> datas = remoteMessage.getData();
-            Log.d(TAG, "Contenu des datas : " + datas.toString());
-            if (datas.containsKey(KEY_ORIGIN_CHAT) && datas.containsKey(KEY_CHAT_UID) && datas.containsKey(KEY_CHAT_AUTHOR)) {
-                Gson gson = new Gson();
-                UserEntity userEntity = gson.fromJson(datas.get(KEY_CHAT_AUTHOR), UserEntity.class);
-                String message = remoteMessage.getNotification().getBody();
-                String titreAnnonce = remoteMessage.getNotification().getTitle();
-                String uidUserSender = datas.get(KEY_CHAT_AUTHOR);
-                String uidUser = datas.get(KEY_CHAT_RECEIVER);
-                String uidChat = datas.get(KEY_CHAT_UID);
-
-                // Recherche de l'utilisateur dans la base, puis création du direct reply
-                userRepository.findMaybeByUid(uidUser)
-                        .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                        .doOnSuccess(userReceiver -> createChatDirectReplyNotification(uidChat, uidUserSender, titreAnnonce, userEntity, message, userReceiver))
-                        .doOnComplete(() -> Log.e(TAG, "L'utilisateur receuveur n'a pas été trouvé dans la base."))
-                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                        .subscribe();
-            } else {
-                Intent resultIntent = new Intent(this, MainActivity.class);
-                resultIntent.putExtra(MainActivity.ACTION_CHAT, true);
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-                stackBuilder.addNextIntentWithParentStack(resultIntent);
-                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
-                builder.setContentTitle(remoteMessage.getNotification().getTitle());
-                builder.setContentText(remoteMessage.getNotification().getBody());
-                builder.setSmallIcon(R.mipmap.ic_banana_launcher_round);
-                builder.setContentIntent(resultPendingIntent);
-                NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
-            }
+            builder.setContentTitle(remoteMessage.getNotification().getTitle());
+            builder.setContentText(remoteMessage.getNotification().getBody());
+            builder.setSmallIcon(R.mipmap.ic_banana_launcher_round);
+            builder.setContentIntent(resultPendingIntent);
+            NotificationManagerCompat.from(this).notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
         }
-        super.onMessageReceived(remoteMessage);
+    }
+
+    private PendingIntent getPendingIntent(Bundle bundle) {
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        resultIntent.putExtras(bundle);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -135,13 +166,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // On va appeler un service pour enregistrer la réponse à la notification reçue
         PendingIntent pendingIntent;
-        pendingIntent = getPendingIntent(chatUid, uidUserSender, message, userReceiver);
+        pendingIntent = buildPendingIntent(chatUid, uidUserSender, message, userReceiver.getUid());
 
         // Création du Remote Input
         RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_TO_SEND).setLabel(getString(R.string.answer)).build();
 
         // Création de la personne receuveuse
-        Person receiverPerson = getPerson(userReceiver);
+        Person receiverPerson = buildPersonByUser(userReceiver);
+        Person authorPerson = buildPersonByUser(authorEntity);
 
         // Création du style de notification
         NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(receiverPerson).setConversationTitle(annonceTitre);
@@ -158,7 +190,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Récupération d'un builder de notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.CHANNEL_ID);
         builder.addAction(actionReply);
-        builder.setSmallIcon(R.drawable.ic_message_white_48dp);
+        builder.setSmallIcon(R.mipmap.ic_banana_launcher);
         builder.setLargeIcon(mediaUtility.getBitmapFromURL(authorEntity.getPhotoUrl()));
         builder.setAutoCancel(true);
         builder.setUsesChronometer(true);
@@ -176,14 +208,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .doOnComplete(() -> sendNotification(builder, messagingStyle))
                 .map(ChatEntity::getIdChat)
                 .flatMapSingle(messageRepository::getSingleByIdChat)
-                .doOnSuccess(messageEntities -> feedMessagingStyleWithMessages(authorEntity, receiverPerson, builder, messagingStyle, messageEntities))
+                .doOnSuccess(messageEntities -> feedMessagingStyleWithMessages(authorEntity.getUid(), receiverPerson, authorPerson,builder, messagingStyle, messageEntities))
                 .subscribe();
     }
 
-    private void feedMessagingStyleWithMessages(UserEntity authorEntity, Person receiverPerson, NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle, List<MessageEntity> messageEntities) {
+    private void feedMessagingStyleWithMessages(String authorUid, Person receiverPerson, Person authorPerson, NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle, List<MessageEntity> messageEntities) {
         if (!messageEntities.isEmpty()) {
             for (MessageEntity msg : messageEntities) {
-                Person author = (msg.getUidAuthor().equals(authorEntity.getUid())) ? createPersonByName(authorEntity) : receiverPerson;
+                Person author = (msg.getUidAuthor().equals(authorUid)) ? authorPerson : receiverPerson;
                 messagingStyle.addMessage(msg.getMessage(), msg.getTimestamp(), author);
             }
         }
@@ -198,16 +230,25 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .build();
     }
 
-    private Person getPerson(UserEntity userReceiver) {
-        return new Person.Builder()
-                .setName(userReceiver.getProfile())
-                .setUri(userReceiver.getPhotoUrl())
+    private Person buildPersonByUser(UserEntity user) {
+        // Recherche de l'image du user
+        IconCompat icon = null;
+        Bitmap bitmap = mediaUtility.getBitmapFromURL(user.getPhotoUrl());
+        if (bitmap != null) {
+            icon = IconCompat.createWithBitmap(bitmap);
+        }
+
+        // Création de la personne
+        Person.Builder builder = new Person.Builder()
+                .setName(user.getProfile())
                 .setBot(false)
-                .setImportant(false)
-                .build();
+                .setIcon(icon)
+                .setImportant(false);
+
+        return builder.build();
     }
 
-    private PendingIntent getPendingIntent(String chatUid, String uidUserSender, String message, UserEntity userReceiver) {
+    private PendingIntent buildPendingIntent(String chatUid, String uidUserSender, String message, String receiverUid) {
         PendingIntent pendingIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Intent intent = new Intent(this, SyncService.class);
@@ -215,7 +256,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra(ARG_UID_CHAT, chatUid);
             intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
             intent.putExtra(SyncService.ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
+            intent.putExtra(ARG_UID_USER, receiverUid);
             pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         } else {
             Intent intent = new Intent(this, MyChatsActivity.class);
@@ -223,30 +264,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra(ARG_UID_CHAT, chatUid);
             intent.putExtra(ARG_UID_USER_SENDER, uidUserSender);
             intent.putExtra(ARG_ACTION_SEND_DIRECT_MESSAGE, message);
-            intent.putExtra(ARG_UID_USER, userReceiver.getUid());
+            intent.putExtra(ARG_UID_USER, receiverUid);
             pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
         return pendingIntent;
     }
 
-    private Person createPersonByName(UserEntity user) {
-
-        // Création de la personne
-        Person.Builder builder = new Person.Builder()
-                .setName(user.getProfile())
-                .setBot(false)
-                .setImportant(false);
-
-        // Recherche de l'image du user
-        Bitmap bitmap = mediaUtility.getBitmapFromURL(user.getPhotoUrl());
-        if (bitmap != null) {
-            builder.setIcon(IconCompat.createWithBitmap(bitmap));
-        }
-        return builder.build();
-    }
-
     private void sendNotification(NotificationCompat.Builder builder, NotificationCompat.MessagingStyle messagingStyle) {
-
         builder.setSmallIcon(R.mipmap.ic_banana_launcher);
         builder.setContentTitle("Your Title");
         builder.setContentText("Your text");
@@ -255,9 +279,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } else {
             builder.setPriority(Notification.PRIORITY_MAX);
         }
-
         builder.setStyle(messagingStyle);
-
         Notification notif = builder.build();
         mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, notif);
     }

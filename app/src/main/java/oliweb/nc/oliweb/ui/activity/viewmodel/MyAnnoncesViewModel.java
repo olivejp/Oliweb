@@ -1,6 +1,7 @@
 package oliweb.nc.oliweb.ui.activity.viewmodel;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import java.util.List;
@@ -20,8 +21,10 @@ import oliweb.nc.oliweb.database.entity.AnnoncePhotos;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceWithPhotosRepository;
 import oliweb.nc.oliweb.repository.local.PhotoRepository;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.service.firebase.FirebaseRetrieverService;
 import oliweb.nc.oliweb.utility.CustomLiveData;
+import oliweb.nc.oliweb.utility.FirebaseUtilityService;
 import oliweb.nc.oliweb.utility.LiveDataOnce;
 import oliweb.nc.oliweb.utility.MediaUtility;
 
@@ -70,6 +73,10 @@ public class MyAnnoncesViewModel extends AndroidViewModel {
         liveListAnnonce.addSource(liveDataPhotos, listAnnoncePhotos -> liveListAnnonce.postValue(listAnnoncePhotos));
 
         return liveListAnnonce;
+    }
+
+    public void shareAnnonce(Context context, AnnoncePhotos annoncePhotos, String uidUser) {
+        DynamicLinkService.shareDynamicLink(context, annoncePhotos.getAnnonceEntity(), annoncePhotos.getPhotos(), uidUser, null, null);
     }
 
     public LiveData<List<AnnoncePhotos>> findAnnoncesByUidUser(String uuidUtilisateur) {

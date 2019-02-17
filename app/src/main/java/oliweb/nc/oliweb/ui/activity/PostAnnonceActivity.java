@@ -15,9 +15,11 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 
@@ -87,6 +89,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String mode;
     private Long remoteNbMaxPictures;
 
+    @BindView(R.id.fab_save_annonce)
+    FloatingActionButton fabSaveAnnonce;
+
+    @BindView(R.id.bar)
+    BottomAppBar bottomAppBar;
+
     @BindView(R.id.spinner_categorie)
     AppCompatSpinner spinnerCategorie;
 
@@ -96,11 +104,20 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @BindView(R.id.edit_titre_annonce)
     EditText textViewTitre;
 
+    @BindView(R.id.input_titre_annonce)
+    TextInputLayout textInputLayoutTitre;
+
     @BindView(R.id.edit_description_annonce)
     EditText textViewDescription;
 
+    @BindView(R.id.input_description_annonce)
+    TextInputLayout textInputLayoutDescription;
+
     @BindView(R.id.edit_prix_annonce)
     EditText textViewPrix;
+
+    @BindView(R.id.input_prix_annonce)
+    TextInputLayout textInputLayoutPrix;
 
     @BindView(R.id.checkbox_email)
     SwitchCompat checkBoxEmail;
@@ -184,14 +201,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
-        // Sur l'action finale après la saisie du prix on va sauvegarder l'annonce.
-        textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                saveAnnonce();
-                return true;
-            }
-            return false;
-        });
+
 
         manageSaveInstanceState(savedInstanceState);
 
@@ -218,6 +228,18 @@ public class PostAnnonceActivity extends AppCompatActivity {
         categoriesAdapter = new SpinnerAdapter(PostAnnonceActivity.this);
         spinnerCategorie.setAdapter(categoriesAdapter);
         spinnerCategorie.setOnItemSelectedListener(spinnerItemSelected);
+
+        // Sur l'action finale après la saisie du prix on va sauvegarder l'annonce.
+        textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveAnnonce(fabSaveAnnonce);
+                return true;
+            }
+            return false;
+        });
+
+        // Notre bottomAppBar devient notre toolbar
+        setSupportActionBar(bottomAppBar);
     }
 
     private void manageSaveInstanceState(Bundle savedInstanceState) {
@@ -248,8 +270,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
-        if (idItem == R.id.menu_post_valid) {
-            saveAnnonce();
+        if (idItem == R.id.menu_add_photo) {
+            addPhoto();
             return true;
         }
         if (idItem == android.R.id.home) {
@@ -259,7 +281,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveAnnonce() {
+    @OnClick(R.id.fab_save_annonce)
+    public void saveAnnonce(View v) {
         Log.d(TAG, "Starting saveAnnonce");
         if (!checkIfAnnonceIsValid()) {
             return;
@@ -306,22 +329,20 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private boolean checkIfAnnonceIsValid() {
         boolean isValid = true;
         if (StringUtils.isEmpty(textViewTitre.getText().toString())) {
-            textViewTitre.setError(getString(R.string.title_mandatory));
+            textInputLayoutTitre.setError(getString(R.string.title_mandatory));
             isValid = false;
         }
         if (StringUtils.isEmpty(textViewDescription.getText().toString())) {
-            textViewDescription.setError(getString(R.string.description_madatory));
+            textInputLayoutDescription.setError(getString(R.string.description_madatory));
             isValid = false;
         }
-
         String prixStr = textViewPrix.getText().toString();
         if (StringUtils.isEmpty(prixStr) || Integer.parseInt(prixStr) <= 0) {
-            textViewPrix.setError(getString(R.string.price_mandatory));
+            textInputLayoutPrix.setError(getString(R.string.price_mandatory));
             isValid = false;
         }
         if (!checkBoxTel.isChecked() && !checkBoxEmail.isChecked() && !checkBoxMsg.isChecked()) {
-            checkBoxMsg.setError("");
-            Toast.makeText(this, R.string.contact_mandatory, Toast.LENGTH_LONG).show();
+            checkBoxMsg.setError(getString(R.string.contact_mandatory));
             isValid = false;
         }
         return isValid;
@@ -445,8 +466,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-    @OnClick(R.id.fab_add_photo)
-    public void onAddPhoto(View v) {
+    public void addPhoto() {
         AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
         builder.setTitle(R.string.add_new_photo)
                 .setMessage(R.string.add_photo_question)
@@ -494,6 +514,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         if (viewModel.getCurrentAnnonce() != null && viewModel.getCurrentCategorie() != null) {
             selectCategorieInSpinner(viewModel.getCurrentCategorie().getIdCategorie());
         }
+        viewModel.setIsChipesHaveBeenInitialized(true);
     }
 
     private void changeUserContactMethod(UserEntity userEntity) {
@@ -524,6 +545,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
 
         // Montre le fragment de chargement
         viewModel.isShowLoading().observe(this, this::showLoading);
+
+        viewModel.isChipesHaveBeenInitialized().observe(this, aBoolean -> {
+            if (aBoolean && viewModel.getCurrentAnnonce() != null && viewModel.getCurrentCategorie() != null) {
+                selectCategorieInSpinner(viewModel.getCurrentCategorie().getIdCategorie());
+            }
+        });
     }
 
     private void showLoading(AtomicBoolean atomicBoolean) {

@@ -67,7 +67,7 @@
             android:name=".ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
             android:parentActivityName=".ui.activity.MyAnnoncesActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
