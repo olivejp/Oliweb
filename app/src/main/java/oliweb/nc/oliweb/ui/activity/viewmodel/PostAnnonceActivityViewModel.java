@@ -78,6 +78,8 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     private MutableLiveData<ArrayList<CategorieEntity>> listCategorie;
     private MutableLiveData<AtomicBoolean> showLoading = new MutableLiveData<>();
     private MutableLiveData<List<PhotoEntity>> liveListPhoto = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isChipesHaveBeenInitialized = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isCategorieChanged = new MutableLiveData<>();
 
     public PostAnnonceActivityViewModel(@NonNull Application application) {
         super(application);
@@ -280,10 +282,26 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
 
     public void setCurrentCategorie(CategorieEntity categorie) {
         this.currentCategorie = categorie;
+        this.setIsCategorieChanged(true);
     }
 
     public CategorieEntity getCurrentCategorie() {
         return currentCategorie;
+    }
+
+    public void setIsChipesHaveBeenInitialized(boolean isChipesHaveBeenInitialized) {
+        this.isChipesHaveBeenInitialized.setValue(isChipesHaveBeenInitialized);
+    }
+
+    public LiveData<Boolean> isChipesHaveBeenInitialized() {
+        return isChipesHaveBeenInitialized;
+    }
+    public void setIsCategorieChanged(boolean isCategorieChanged) {
+        this.isCategorieChanged.setValue(isCategorieChanged);
+    }
+
+    public LiveData<Boolean> isCategorieChanged() {
+        return isCategorieChanged;
     }
 
     private Uri generateNewUri(boolean externalStorage) {
