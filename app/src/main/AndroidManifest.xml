@@ -67,7 +67,7 @@
             android:name=".ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
             android:parentActivityName=".ui.activity.MyAnnoncesActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -228,10 +228,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity" />
         </activity>
-        <activity android:name=".ui.activity.ZoomImageActivity"
+        <activity
+            android:name=".ui.activity.ZoomImageActivity"
             android:label="@string/title_activity_shooting"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName=".ui.activity.AnnonceDetailActivity">
+            android:parentActivityName=".ui.activity.AnnonceDetailActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity" />

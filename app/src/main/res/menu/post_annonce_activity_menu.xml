@@ -2,8 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_post_valid"
-        android:icon="@drawable/ic_check_grey_900_48dp"
-        android:title="Valider"
+        android:id="@+id/menu_add_photo"
+        android:icon="@drawable/ic_add_a_photo_white_24dp"
+        android:title="Ajouter photo"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_save_draft"
+        android:icon="@drawable/ic_save_white_24dp"
+        android:title="Enregistrer brouillon"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_cancel"
+        android:icon="@drawable/ic_cancel_white_48dp"
+        android:title="Annuler"
+        app:showAsAction="never" />
 </menu>

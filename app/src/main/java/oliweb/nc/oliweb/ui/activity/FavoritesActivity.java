@@ -165,7 +165,7 @@ public class FavoritesActivity extends AppCompatActivity {
         // Init views
         setContentView(R.layout.activity_list_favorite);
         ButterKnife.bind(this);
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this, null);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
 
         RecyclerView.LayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         recyclerView.setAdapter(annonceBeautyAdapter);

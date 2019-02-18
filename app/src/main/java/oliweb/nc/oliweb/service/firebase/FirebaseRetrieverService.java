@@ -58,7 +58,8 @@ public class FirebaseRetrieverService {
     }
 
     /**
-     * Va créer un observer pour toutes les catégories
+     * Va récupérer la liste de toutes les catégories dans Firebase
+     * et va comparer si on a les mêmes noms de catégories dans la DB locale.
      */
     public void checkRemoteCategoriesEqualToLocalCategories() {
         Log.d(TAG, "Starting checkRemoteCategoriesEqualToLocalCategories");
@@ -73,27 +74,9 @@ public class FirebaseRetrieverService {
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             try {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    String categorieLibelle = data.getValue(String.class);
-                    if (categorieLibelle != null && !categorieLibelle.isEmpty()) {
-
-                        // Lecture en base pour voir si la catégorie existe déjà
-                        categorieRepository.findByLibelle(categorieLibelle)
-                                .subscribeOn(scheduler).observeOn(scheduler)
-                                .doOnComplete(() -> {
-                                    // La catégorie n'existe pas en local, on va la créer.
-                                    CategorieEntity categorieEntity = new CategorieEntity();
-                                    categorieEntity.setName(categorieLibelle);
-                                    categorieRepository.singleInsert(categorieEntity)
-                                            .subscribeOn(scheduler).observeOn(scheduler)
-                                            .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category correctly inserted."))
-                                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                            .subscribe();
-                                })
-                                .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category already exists in local DB : " + categorieEntity1))
-                                .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
-                                .subscribe();
-                    }
+                    findAndReplaceCategory(data);
                 }
+                Log.d(TAG, "Finish to checkRemoteCategoriesEqualToLocalCategories");
             } catch (Exception e1) {
                 Log.e(TAG, e1.getLocalizedMessage(), e1);
             }
@@ -101,7 +84,65 @@ public class FirebaseRetrieverService {
 
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
+            // Do nothing
+        }
 
+        /**
+         * On va rechercher la catégorie avec l'ID récupéré.
+         * Si elle n'existe pas en base, on la créée.
+         * Si elle existe en base, on va vérifier que le libellé est le même
+         * --> Si le libellé est différent, on met à jour
+         * --> Si le libellé est identique, on ne fait rien
+         *
+         * @param data DataSnapshot dans lequel on trouve le libellé de la catégorie
+         */
+        private void findAndReplaceCategory(DataSnapshot data) {
+            try {
+                String categorieLibelle = data.getValue(String.class);
+                Long idCategory = Long.valueOf(data.getKey());
+                if (categorieLibelle != null && !categorieLibelle.isEmpty()) {
+                    // Lecture en base pour voir si la catégorie existe déjà avec cet identifiant
+                    categorieRepository.findById(idCategory)
+                            .subscribeOn(scheduler).observeOn(scheduler)
+                            .doOnComplete(() -> createNewCategory(idCategory, categorieLibelle))
+                            .doOnSuccess(categorieEntity1 -> checkCategoryLibelle(categorieEntity1, categorieLibelle))
+                            .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                            .subscribe();
+                }
+            } catch (NumberFormatException e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
+            }
+        }
+
+        /**
+         * Création d'une nouvelle CategoryEntity
+         *
+         * @param idCategory Long représentant l'ID de la nouvelle CategoryEntity
+         * @param categorieLibelle String représentant le libellé de la nouvelle CategoryEntity
+         */
+        private void createNewCategory(Long idCategory, String categorieLibelle) {
+            // La catégorie n'existe pas en local, on va la créer.
+            CategorieEntity categorieEntity = new CategorieEntity();
+            categorieEntity.setIdCategorie(idCategory);
+            categorieEntity.setName(categorieLibelle);
+            categorieRepository.singleInsert(categorieEntity)
+                    .subscribeOn(scheduler).observeOn(scheduler)
+                    .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category correctly inserted ==> " + categorieLibelle))
+                    .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                    .subscribe();
+        }
+
+        private void checkCategoryLibelle(CategorieEntity oldCategory, String newCategorieLibelle) {
+            if (!newCategorieLibelle.equals(oldCategory.getName())) {
+                oldCategory.setName(newCategorieLibelle);
+                categorieRepository.singleSave(oldCategory)
+                        .subscribeOn(scheduler).observeOn(scheduler)
+                        .doOnSuccess(categorieEntity1 -> Log.d(TAG, "Category's libelle has been correctly updated ==> " + newCategorieLibelle))
+                        .doOnError(e -> Log.e(TAG, e.getLocalizedMessage(), e))
+                        .subscribe();
+            } else {
+                Log.d(TAG, "Category already exists with same libelle in local DB : " + oldCategory.getName());
+            }
         }
     };
 
