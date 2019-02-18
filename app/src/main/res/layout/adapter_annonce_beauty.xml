@@ -93,14 +93,23 @@
                     tools:background="@color/colorAccentDark"
                     tools:src="@drawable/clothing_leather_wooden" />
 
-                <com.github.mmin18.widget.RealtimeBlurView
+                <com.wonderkiln.blurkit.BlurLayout
                     android:id="@+id/blur"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:realtimeBlurRadius="10dp"
-                    app:realtimeDownsampleFactor="1"
-                    app:realtimeOverlayColor="#34FFFFFF" />
+                    app:blurRadius="12"
+                    app:downscaleFactor="0.12"
+                    app:fps="60" />
+
+                <!--<com.github.mmin18.widget.RealtimeBlurView-->
+                    <!--android:id="@+id/blur"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="50dp"-->
+                    <!--app:layout_constraintBottom_toBottomOf="parent"-->
+                    <!--app:realtimeBlurRadius="10dp"-->
+                    <!--app:realtimeDownsampleFactor="1"-->
+                    <!--app:realtimeOverlayColor="#34FFFFFF" />-->
 
 
                 <TextView
