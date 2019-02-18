@@ -63,14 +63,19 @@ public class FavoritesActivity extends AppCompatActivity {
      * OnClickListener that should open AnnonceDetailActivity
      */
     private View.OnClickListener onClickListener = (View v) -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+        AnnonceBeautyAdapter.CommonViewHolder viewHolderBeauty = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         Bundle bundle = new Bundle();
         bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnonceFull());
         intent.putExtras(bundle);
-        Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
-        ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
-        startActivity(intent, options.toBundle());
+        if (viewHolderBeauty instanceof AnnonceBeautyAdapter.ViewHolderBeauty) {
+            Pair<View, String> pairImage = new Pair<>(((AnnonceBeautyAdapter.ViewHolderBeauty) viewHolderBeauty).getImageView(), getString(R.string.image_detail_transition));
+            ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
+            startActivity(intent, options.toBundle());
+        } else {
+            startActivity(intent);
+        }
+
     };
 
     /**
@@ -78,7 +83,7 @@ public class FavoritesActivity extends AppCompatActivity {
      */
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
 
             // Display a loading spinner
@@ -103,7 +108,7 @@ public class FavoritesActivity extends AppCompatActivity {
                     .show();
             v.setEnabled(true);
         } else {
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
             viewModel.removeFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
                     .observeOnce(isRemoved -> {
                         if (isRemoved != null) {

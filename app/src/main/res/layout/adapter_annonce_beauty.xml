@@ -102,6 +102,7 @@
                     app:realtimeDownsampleFactor="1"
                     app:realtimeOverlayColor="#34FFFFFF" />
 
+
                 <TextView
                     android:id="@+id/text_prix_annonce"
                     android:layout_width="0dp"

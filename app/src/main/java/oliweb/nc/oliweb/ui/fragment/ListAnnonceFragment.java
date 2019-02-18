@@ -133,16 +133,17 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      * OnClickListener that should open AnnonceDetailActivity
      */
     private View.OnClickListener onClickListener = (View v) -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolderBeauty = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+        AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
         Intent intent = new Intent(appCompatActivity, AnnonceDetailActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelable(ARG_ANNONCE, viewHolderBeauty.getAnnonceFull());
+        bundle.putParcelable(ARG_ANNONCE, viewHolder.getAnnonceFull());
         intent.putExtras(bundle);
-        Pair<View, String> pairImage = new Pair<>(viewHolderBeauty.getImageView(), getString(R.string.image_detail_transition));
-        Pair<View, String> pairImageUser = new Pair<>(viewHolderBeauty.getImageUserBeauty(), getString(R.string.image_detail_transition_user));
-        Pair<View, String> pairImageShare = new Pair<>(viewHolderBeauty.getImageShare(), getString(R.string.image_share_transition));
-        Pair<View, String> pairImageFavorite = new Pair<>(viewHolderBeauty.getImageFavorite(), getString(R.string.image_favorite_transition));
-        ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage, pairImageUser, pairImageShare, pairImageFavorite);
+        Pair<View, String> pairImage = null;
+        if (viewHolder instanceof AnnonceBeautyAdapter.ViewHolderBeauty) {
+            pairImage = new Pair<>(((AnnonceBeautyAdapter.ViewHolderBeauty) viewHolder).getImageView(), getString(R.string.image_detail_transition));
+        }
+        Pair<View, String> pairImageUser = new Pair<>(viewHolder.getImageUserBeauty(), getString(R.string.image_detail_transition_user));
+        ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage, pairImageUser);
         startActivity(intent, options.toBundle());
     };
 
@@ -151,7 +152,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
      */
     private View.OnClickListener onClickListenerShare = v -> {
         if (uidUser != null && !uidUser.isEmpty()) {
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
 
             // Display a loading spinner
@@ -185,7 +186,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             v.setEnabled(true);
         } else {
             // User logged
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
 
             annonceFullToSaveTofavorite = viewHolder.getAnnonceFull();
             viewToEnabled = v;

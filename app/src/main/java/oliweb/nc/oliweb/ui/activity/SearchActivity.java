@@ -134,12 +134,18 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
     private Long delay;
 
     private View.OnClickListener onClickListener = (View v) -> {
-        AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+        AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
         Intent intent = new Intent(this, AnnonceDetailActivity.class);
         intent.putExtra(ARG_ANNONCE, viewHolder.getAnnonceFull());
-        Pair pairImage = new Pair<View, String>(viewHolder.getImageView(), getString(R.string.image_detail_transition));
-        ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
-        startActivity(intent, options.toBundle());
+        if (viewHolder instanceof AnnonceBeautyAdapter.ViewHolderBeauty) {
+            Pair pairImage = new Pair<View, String>(((AnnonceBeautyAdapter.ViewHolderBeauty)viewHolder).getImageView(), getString
+            (R.string.image_detail_transition));
+            ActivityOptionsCompat options = makeSceneTransitionAnimation(this, pairImage);
+            startActivity(intent, options.toBundle());
+        } else {
+            startActivity(intent);
+        }
+
     };
 
     private View.OnClickListener onClickListenerShare = v -> {
@@ -151,7 +157,7 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
             loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
 
             String uidCurrentUser = FirebaseAuth.getInstance().getUid();
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
             AnnonceFull annonceFull = viewHolder.getAnnonceFull();
 
             // Partage du lien dynamique
@@ -169,7 +175,7 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
                     .show();
             v.setEnabled(true);
         } else {
-            AnnonceBeautyAdapter.ViewHolderBeauty viewHolder = (AnnonceBeautyAdapter.ViewHolderBeauty) v.getTag();
+            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
             viewModel.addOrRemoveFromFavorite(FirebaseAuth.getInstance().getUid(), viewHolder.getAnnonceFull())
                     .observeOnce(addRemoveFromFavorite -> {
                         if (addRemoveFromFavorite != null) {

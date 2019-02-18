@@ -15,7 +15,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.github.mmin18.widget.RealtimeBlurView;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -289,14 +288,6 @@ public class AnnonceBeautyAdapter extends
         protected ViewGroup getParent() {
             return parent;
         }
-
-        public ImageView getImageFavorite() {
-            return imageFavorite;
-        }
-
-        public ImageView getImageShare() {
-            return imageShare;
-        }
     }
 
     public class ViewHolderBeauty extends CommonViewHolder {
@@ -309,9 +300,6 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.loading_progress)
         ProgressBar progressBar;
-
-        @BindView(R.id.blur)
-        RealtimeBlurView blur;
 
         ViewHolderBeauty(View itemLayoutView) {
             super(itemLayoutView);
