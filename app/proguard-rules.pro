@@ -61,3 +61,5 @@
   **[] $VALUES;
   public *;
 }
+
+-keep class android.support.v8.renderscript.** { *; }

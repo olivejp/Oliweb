@@ -16,7 +16,7 @@
         android:paddingLeft="8dp"
         android:paddingTop="24dp"
         android:paddingRight="8dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="16dp">
 
         <ImageView
             android:id="@+id/image_user_beauty"
@@ -64,83 +64,36 @@
             app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
             tools:text="2 jours" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_view_beauty"
+        <TextView
+            android:id="@+id/text_prix_annonce"
             android:layout_width="0dp"
-            android:layout_height="@dimen/annonce_image_view_adapter_element"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="0dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_user_beauty">
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_description_annonce"
+            app:layout_goneMarginBottom="50dp"
+            tools:text="400 000 XPF" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <ImageView
-                    android:id="@+id/image_view_beauty"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorAnnonceElementBackground"
-                    android:contentDescription="Image annonce"
-                    android:scaleType="centerCrop"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:background="@color/colorAccentDark"
-                    tools:src="@drawable/clothing_leather_wooden" />
-
-                <com.github.mmin18.widget.RealtimeBlurView
-                    android:id="@+id/blur"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:realtimeBlurRadius="10dp"
-                    app:realtimeDownsampleFactor="1"
-                    app:realtimeOverlayColor="#34FFFFFF" />
-
-                <TextView
-                    android:id="@+id/text_prix_annonce"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="@id/blur"
-                    app:layout_constraintEnd_toEndOf="@id/blur"
-                    app:layout_constraintStart_toStartOf="@id/blur"
-                    app:layout_constraintTop_toTopOf="@id/blur"
-                    app:layout_goneMarginBottom="50dp"
-                    tools:text="400 000 XPF" />
-
-                <TextView
-                    android:id="@+id/image_photo_number_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Chip"
-                    android:textColor="@android:color/white"
-                    app:layout_constraintBottom_toBottomOf="@id/blur"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/blur"
-                    app:layout_goneMarginBottom="50dp"
-                    tools:text="2" />
-
-                <ImageView
-                    android:id="@+id/image_photo_number"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    app:layout_constraintBottom_toBottomOf="@id/blur"
-                    app:layout_constraintRight_toLeftOf="@id/image_photo_number_text"
-                    app:layout_constraintTop_toTopOf="@id/blur"
-                    app:layout_goneMarginBottom="50dp"
-                    app:srcCompat="@drawable/ic_camera_alt_white_48dp" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/text_description_annonce"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="10dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_user_beauty"
+            tools:text="Ceci est une descrption de l'annonce. Elle peut être très longue selon les cas. Mais franchement ce la ne me dérange pas du tout de " />
 
         <ImageView
             android:id="@+id/image_more"
@@ -180,19 +133,6 @@
             app:layout_constraintRight_toLeftOf="@id/image_favorite"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_share_white_48dp" />
-
-
-        <ProgressBar
-            android:id="@+id/loading_progress"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="@id/card_view_beauty"
-            app:layout_constraintLeft_toLeftOf="@id/card_view_beauty"
-            app:layout_constraintRight_toRightOf="@id/card_view_beauty"
-            app:layout_constraintTop_toTopOf="@id/card_view_beauty"
-            tools:visibility="gone" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

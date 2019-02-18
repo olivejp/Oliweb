@@ -314,7 +314,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, null, this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
         recyclerView.setAdapter(annonceBeautyAdapter);
 
         actionBar = appCompatActivity.getSupportActionBar();

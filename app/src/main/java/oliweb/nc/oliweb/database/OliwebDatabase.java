@@ -30,7 +30,7 @@ import static oliweb.nc.oliweb.utility.Constants.OLIWEB_DATABASE;
  * Created by orlanth23 on 28/01/2018.
  */
 
-@Database(version = 28, entities = {UserEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class})
+@Database(version = 28, entities = {UserEntity.class, CategorieEntity.class, AnnonceEntity.class, PhotoEntity.class, ChatEntity.class, MessageEntity.class}, exportSchema = false)
 public abstract class OliwebDatabase extends RoomDatabase {
 
     private static OliwebDatabase instance;

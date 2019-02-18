@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity
 
     private void initRemoteConfigDefaultValues() {
         HashMap<String, Object> defaults = new HashMap<>();
-        defaults.put(Constants.REMOTE_COLUMN_NUMBER, 2);
+        defaults.put(Constants.REMOTE_COLUMN_NUMBER, 1);
         defaults.put(Constants.REMOTE_COLUMN_NUMBER_LANDSCAPE, 2);
         defaults.put(Constants.REMOTE_IMAGE_RESOLUTION_RESIZE, DEFAULT_MAX_IMG_PIXEL_SIZE);
         defaults.put(Constants.REMOTE_NUMBER_PICTURES, DEFAULT_NUMBER_PICTURES);

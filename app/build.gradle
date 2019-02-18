@@ -24,6 +24,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+
+        // Test with RealtimeBlurView
+        renderscriptTargetApi 19
+        renderscriptSupportModeEnabled true    // Enable RS support
     }
 
     buildTypes {
@@ -85,6 +89,8 @@ dependencies {
     implementation 'com.caverock:androidsvg:1.2.1'
     implementation 'com.evernote:android-job:1.2.5'
     implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.github.mmin18:realtimeblurview:1.1.2'
+
 
     // ImageZoom
     implementation 'it.sephiroth.android.library.imagezoom:imagezoom:2.3.0'

@@ -1,5 +1,6 @@
 package oliweb.nc.oliweb.ui.adapter;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.github.mmin18.widget.RealtimeBlurView;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,26 +46,44 @@ public class AnnonceBeautyAdapter extends
 
     public static final String TAG = AnnonceBeautyAdapter.class.getName();
 
+    private static final int VIEW_TYPE_NO_PHOTO = 0;
+    private static final int VIEW_TYPE_PHOTO = 1;
+
     private List<AnnonceFull> listAnnonces;
     private View.OnClickListener onClickListener;
     private View.OnClickListener onClickListenerShare;
     private View.OnClickListener onClickListenerFavorite;
     private GlideRequests glide;
+    private Context context;
 
-    public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
-                                View.OnClickListener onClickListenerShare,
-                                View.OnClickListener onClickListenerFavorite,
-                                AppCompatActivity appCompatActivity,
-                                Fragment fragment) {
+    private AnnonceBeautyAdapter(View.OnClickListener onClickListener,
+                                 View.OnClickListener onClickListenerShare,
+                                 View.OnClickListener onClickListenerFavorite) {
         this.listAnnonces = new ArrayList<>();
         this.onClickListener = onClickListener;
         this.onClickListenerShare = onClickListenerShare;
         this.onClickListenerFavorite = onClickListenerFavorite;
-        if (appCompatActivity != null) {
-            glide = GlideApp.with(appCompatActivity);
-        }
+    }
+
+    public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
+                                View.OnClickListener onClickListenerShare,
+                                View.OnClickListener onClickListenerFavorite,
+                                Fragment fragment) {
+        this(onClickListener, onClickListenerShare, onClickListenerFavorite);
         if (fragment != null) {
-            glide = GlideApp.with(fragment);
+            this.context = fragment.getContext();
+            this.glide = GlideApp.with(fragment);
+        }
+    }
+
+    public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
+                                View.OnClickListener onClickListenerShare,
+                                View.OnClickListener onClickListenerFavorite,
+                                AppCompatActivity appCompatActivity) {
+        this(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        if (appCompatActivity != null) {
+            this.context = appCompatActivity.getApplicationContext();
+            this.glide = GlideApp.with(appCompatActivity);
         }
     }
 
@@ -71,16 +91,27 @@ public class AnnonceBeautyAdapter extends
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
-        ViewHolderBeauty viewHolderResult = new ViewHolderBeauty(itemLayoutView);
-        viewHolderResult.parent = parent;
-        return viewHolderResult;
+        if (viewType == VIEW_TYPE_PHOTO) {
+            View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_beauty, parent, false);
+            ViewHolderBeauty viewHolderResult = new ViewHolderBeauty(itemLayoutView);
+            viewHolderResult.parent = parent;
+            return viewHolderResult;
+        } else {
+            View itemLayoutView = inflater.inflate(R.layout.adapter_annonce_without_photo, parent, false);
+            ViewHolderBeautyWithoutPhoto viewHolderWithouPhotoResult = new ViewHolderBeautyWithoutPhoto(itemLayoutView);
+            viewHolderWithouPhotoResult.parent = parent;
+            return viewHolderWithouPhotoResult;
+        }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AnnonceFull annoncePhotos = listAnnonces.get(position);
-        bindViewHolderBeauty(viewHolder, annoncePhotos);
+        if (getItemViewType(position) == VIEW_TYPE_PHOTO) {
+            bindViewHolderBeauty(viewHolder, annoncePhotos);
+        } else {
+            bindViewHolderBeautyWithoutPhoto(viewHolder, annoncePhotos);
+        }
     }
 
     @Override
@@ -91,94 +122,88 @@ public class AnnonceBeautyAdapter extends
     @Override
     public int getItemViewType(int position) {
         AnnonceFull annoncePhotos = listAnnonces.get(position);
-        if (annoncePhotos.getPhotos() == null || annoncePhotos.getPhotos().isEmpty() || (annoncePhotos.getPhotos().size() == 1)) {
-            return 1;
+        if (annoncePhotos.getPhotos() == null || annoncePhotos.getPhotos().isEmpty()) {
+            return VIEW_TYPE_NO_PHOTO;
         } else {
-            return 2;
+            return VIEW_TYPE_PHOTO;
         }
     }
 
-    private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
-        ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
-
+    private void bindViewHolder(CommonViewHolder commonViewHolder, AnnonceFull annoncePhotos) {
         // Chargement de l'image de l'auteur de l'annonce
         if (annoncePhotos.getUtilisateur() != null
                 && annoncePhotos.getUtilisateur().get(0) != null
                 && StringUtils.isNotBlank(annoncePhotos.getUtilisateur().get(0).getPhotoUrl())) {
 
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
-
             glide.load(urlPhoto)
                     .override(100)
-                    .error(R.drawable.ic_person_white_48dp)
+                    .error(R.drawable.ic_person_grey_900_48dp)
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .circleCrop()
-                    .into(viewHolderBeauty.imageUserBeauty);
+                    .into(commonViewHolder.imageUserBeauty);
         } else {
-            glide.load(R.drawable.ic_person_white_48dp).into(viewHolderBeauty.imageUserBeauty);
+            glide.load(R.drawable.ic_person_grey_900_48dp).into(commonViewHolder.imageUserBeauty);
         }
-
-        viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
 
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
-        viewHolderBeauty.annonceFull = annoncePhotos;
+        commonViewHolder.annonceFull = annoncePhotos;
+        commonViewHolder.cardView.setTag(commonViewHolder);
+        commonViewHolder.imageFavorite.setTag(commonViewHolder);
+        commonViewHolder.imageShare.setTag(commonViewHolder);
 
-        viewHolderBeauty.cardView.setTag(viewHolderBeauty);
-        viewHolderBeauty.imageFavorite.setTag(viewHolderBeauty);
-        viewHolderBeauty.imageShare.setTag(viewHolderBeauty);
-
-        if (onClickListener != null) viewHolderBeauty.cardView.setOnClickListener(onClickListener);
+        if (onClickListener != null) commonViewHolder.cardView.setOnClickListener(onClickListener);
         if (onClickListenerFavorite != null)
-            viewHolderBeauty.imageFavorite.setOnClickListener(onClickListenerFavorite);
+            commonViewHolder.imageFavorite.setOnClickListener(onClickListenerFavorite);
         if (onClickListenerShare != null)
-            viewHolderBeauty.imageShare.setOnClickListener(onClickListenerShare);
+            commonViewHolder.imageShare.setOnClickListener(onClickListenerShare);
 
-        boolean isFavorite = viewHolderBeauty.annonceFull.getAnnonce().isFavorite();
-        viewHolderBeauty.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);
+        boolean isFavorite = commonViewHolder.annonceFull.getAnnonce().isFavorite();
+        commonViewHolder.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);
+        commonViewHolder.textDatePublicationAnnonce.setText(Utility.howLongFromNow(commonViewHolder.annonceFull.getAnnonce().getDatePublication()));
+        commonViewHolder.textTitreAnnonce.setText(annonce.getTitre());
+        commonViewHolder.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf").trim());
+        commonViewHolder.textTitreCategorie.setText(annoncePhotos.getCategorie().get(0).getName());
+    }
 
-        viewHolderBeauty.textDatePublicationAnnonce.setText(Utility.howLongFromNow(viewHolderBeauty.annonceFull.getAnnonce().getDatePublication()));
-        viewHolderBeauty.textTitreAnnonce.setText(annonce.getTitre());
-        viewHolderBeauty.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf").trim());
-        viewHolderBeauty.textTitreCategorie.setText(annoncePhotos.getCategorie().get(0).getName());
+    private void bindViewHolderBeautyWithoutPhoto(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
+        ViewHolderBeautyWithoutPhoto holderBeautyWithoutPhoto = (ViewHolderBeautyWithoutPhoto) viewHolder;
+        bindViewHolder(holderBeautyWithoutPhoto, annoncePhotos);
+        holderBeautyWithoutPhoto.textDescriptionAnnonce.setText(annoncePhotos.getAnnonce().getDescription());
+    }
 
-        if (annoncePhotos.getPhotos() != null && !annoncePhotos.getPhotos().isEmpty()) {
-            viewHolderBeauty.imageView.setBackground(null);
-            viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
+    private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
+        ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
+        bindViewHolder(viewHolderBeauty, annoncePhotos);
 
-            String urlPhoto = annoncePhotos.getPhotos().get(0).getFirebasePath();
+        viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
+        viewHolderBeauty.imageView.setBackground(null);
+        viewHolderBeauty.imageView.setVisibility(View.INVISIBLE);
 
-            // Création d'une requestBuilder pour charger le thumbnail
-            // RequestBuilder<Drawable> requestThumbnail = glide.load(urlPhoto).override(100, 100).diskCacheStrategy(DiskCacheStrategy.RESOURCE);
+        String urlPhoto = annoncePhotos.getPhotos().get(0).getFirebasePath();
 
-            // Création de la requête pour télécharger l'image
-            glide.load(urlPhoto)
-                    // .thumbnail(requestThumbnail)
-                    .listener(new RequestListener<Drawable>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
-                            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
-                            viewHolderBeauty.progressBar.setVisibility(View.GONE);
-                            return false;
-                        }
+        // Création de la requête pour télécharger l'image
+        glide.load(urlPhoto)
+                // .thumbnail(requestThumbnail)
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
+                        viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
+                        viewHolderBeauty.progressBar.setVisibility(View.GONE);
+                        return false;
+                    }
 
-                        @Override
-                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                            viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
-                            viewHolderBeauty.progressBar.setVisibility(View.GONE);
-                            return false;
-                        }
-                    })
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .error(R.mipmap.ic_banana_launcher_foreground)
-                    .centerCrop()
-                    .into(viewHolderBeauty.imageView);
-        } else {
-            viewHolderBeauty.progressBar.setVisibility(View.GONE);
-            glide.load(R.mipmap.ic_banana_launcher_foreground)
-                    .centerInside()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(viewHolderBeauty.imageView);
-        }
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        viewHolderBeauty.imageView.setVisibility(View.VISIBLE);
+                        viewHolderBeauty.progressBar.setVisibility(View.GONE);
+                        return false;
+                    }
+                })
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .error(R.mipmap.ic_banana_launcher_foreground)
+                .centerCrop()
+                .into(viewHolderBeauty.imageView);
     }
 
     public void setListAnnonces(final List<AnnonceFull> newListAnnonces) {
@@ -218,7 +243,7 @@ public class AnnonceBeautyAdapter extends
         }
     }
 
-    public class ViewHolderBeauty extends RecyclerView.ViewHolder {
+    public abstract class CommonViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.text_categorie_annonce)
         TextView textTitreCategorie;
@@ -232,9 +257,6 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.text_date_publication_annonce)
         TextView textDatePublicationAnnonce;
 
-        @BindView(R.id.image_photo_number_text)
-        TextView textNumberPhoto;
-
         @BindView(R.id.card_view)
         FrameLayout cardView;
 
@@ -244,12 +266,6 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.image_share)
         ImageView imageShare;
 
-        @BindView(R.id.image_view_beauty)
-        ImageView imageView;
-
-        @BindView(R.id.loading_progress)
-        ProgressBar progressBar;
-
         @BindView(R.id.image_user_beauty)
         ImageView imageUserBeauty;
 
@@ -257,7 +273,7 @@ public class AnnonceBeautyAdapter extends
 
         ViewGroup parent;
 
-        ViewHolderBeauty(View itemLayoutView) {
+        CommonViewHolder(View itemLayoutView) {
             super(itemLayoutView);
             ButterKnife.bind(this, itemLayoutView);
         }
@@ -266,15 +282,11 @@ public class AnnonceBeautyAdapter extends
             return imageUserBeauty;
         }
 
-        public ImageView getImageView() {
-            return imageView;
-        }
-
         public AnnonceFull getAnnonceFull() {
             return annonceFull;
         }
 
-        public ViewGroup getParent() {
+        protected ViewGroup getParent() {
             return parent;
         }
 
@@ -284,6 +296,42 @@ public class AnnonceBeautyAdapter extends
 
         public ImageView getImageShare() {
             return imageShare;
+        }
+    }
+
+    public class ViewHolderBeauty extends CommonViewHolder {
+
+        @BindView(R.id.image_photo_number_text)
+        TextView textNumberPhoto;
+
+        @BindView(R.id.image_view_beauty)
+        ImageView imageView;
+
+        @BindView(R.id.loading_progress)
+        ProgressBar progressBar;
+
+        @BindView(R.id.blur)
+        RealtimeBlurView blur;
+
+        ViewHolderBeauty(View itemLayoutView) {
+            super(itemLayoutView);
+            ButterKnife.bind(this, itemLayoutView);
+        }
+
+        public ImageView getImageView() {
+            return imageView;
+        }
+
+    }
+
+    class ViewHolderBeautyWithoutPhoto extends CommonViewHolder {
+
+        @BindView(R.id.text_description_annonce)
+        TextView textDescriptionAnnonce;
+
+        ViewHolderBeautyWithoutPhoto(View itemLayoutView) {
+            super(itemLayoutView);
+            ButterKnife.bind(this, itemLayoutView);
         }
     }
 }
