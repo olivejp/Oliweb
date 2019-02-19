@@ -128,7 +128,7 @@ public class AnnonceBeautyAdapter extends
         }
     }
 
-    private void bindViewHolder(CommonViewHolder commonViewHolder, AnnonceFull annoncePhotos) {
+    private void bindCommonViewHolder(CommonViewHolder commonViewHolder, AnnonceFull annoncePhotos) {
         // Chargement de l'image de l'auteur de l'annonce
         if (annoncePhotos.getUtilisateur() != null
                 && annoncePhotos.getUtilisateur().get(0) != null
@@ -150,6 +150,7 @@ public class AnnonceBeautyAdapter extends
         commonViewHolder.cardView.setTag(commonViewHolder);
         commonViewHolder.imageFavorite.setTag(commonViewHolder);
         commonViewHolder.imageShare.setTag(commonViewHolder);
+        commonViewHolder.textUserProfile.setText(annoncePhotos.getUtilisateur().get(0).getProfile());
 
         if (onClickListener != null) commonViewHolder.cardView.setOnClickListener(onClickListener);
         if (onClickListenerFavorite != null)
@@ -167,13 +168,13 @@ public class AnnonceBeautyAdapter extends
 
     private void bindViewHolderBeautyWithoutPhoto(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
         ViewHolderBeautyWithoutPhoto holderBeautyWithoutPhoto = (ViewHolderBeautyWithoutPhoto) viewHolder;
-        bindViewHolder(holderBeautyWithoutPhoto, annoncePhotos);
+        bindCommonViewHolder(holderBeautyWithoutPhoto, annoncePhotos);
         holderBeautyWithoutPhoto.textDescriptionAnnonce.setText(annoncePhotos.getAnnonce().getDescription());
     }
 
     private void bindViewHolderBeauty(RecyclerView.ViewHolder viewHolder, AnnonceFull annoncePhotos) {
         ViewHolderBeauty viewHolderBeauty = (ViewHolderBeauty) viewHolder;
-        bindViewHolder(viewHolderBeauty, annoncePhotos);
+        bindCommonViewHolder(viewHolderBeauty, annoncePhotos);
 
         viewHolderBeauty.textNumberPhoto.setText(String.valueOf(annoncePhotos.photos.size()));
         viewHolderBeauty.imageView.setBackground(null);
@@ -267,6 +268,9 @@ public class AnnonceBeautyAdapter extends
 
         @BindView(R.id.image_user_beauty)
         ImageView imageUserBeauty;
+
+        @BindView(R.id.text_user_profile)
+        TextView textUserProfile;
 
         AnnonceFull annonceFull;
 

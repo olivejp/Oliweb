@@ -6,8 +6,8 @@
     style="@style/CommonAdapterBeautyFrame"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardElevation="1dp">
+    android:layout_marginBottom="4dp"
+    app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_adapter_beauty"
@@ -17,83 +17,6 @@
         android:paddingTop="24dp"
         android:paddingRight="8dp"
         android:paddingBottom="16dp">
-
-        <ImageView
-            android:id="@+id/image_user_beauty"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:contentDescription="Image user"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/avatar_photo_user" />
-
-        <TextView
-            android:id="@+id/text_categorie_annonce"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:gravity="bottom"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-            app:layout_constraintBottom_toTopOf="@id/text_titre_annonce"
-            app:layout_constraintStart_toEndOf="@id/image_user_beauty"
-            app:layout_constraintTop_toTopOf="@id/image_user_beauty"
-            tools:text="Automobile" />
-
-        <TextView
-            android:id="@+id/text_titre_annonce"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:gravity="top"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@id/text_date_publication_annonce"
-            app:layout_constraintStart_toEndOf="@id/image_user_beauty"
-            app:layout_constraintTop_toBottomOf="@id/text_categorie_annonce"
-            tools:text="A vendre plante médicinale" />
-
-        <TextView
-            android:id="@+id/text_date_publication_annonce"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            app:layout_constraintBottom_toBottomOf="@id/image_user_beauty"
-            app:layout_constraintStart_toEndOf="@id/image_user_beauty"
-            app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
-            tools:text="2 jours" />
-
-        <TextView
-            android:id="@+id/text_prix_annonce"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_description_annonce"
-            app:layout_goneMarginBottom="50dp"
-            tools:text="400 000 XPF" />
-
-        <TextView
-            android:id="@+id/text_description_annonce"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginRight="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_user_beauty"
-            tools:text="Ceci est une descrption de l'annonce. Elle peut être très longue selon les cas. Mais franchement ce la ne me dérange pas du tout de " />
 
         <ImageView
             android:id="@+id/image_more"
@@ -133,6 +56,137 @@
             app:layout_constraintRight_toLeftOf="@id/image_favorite"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_share_white_48dp" />
+
+        <ImageView
+            android:id="@+id/image_user_beauty"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:contentDescription="Image user"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/avatar_photo_user" />
+
+        <ImageView
+            android:id="@+id/icon_photo"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="2dp"
+            app:layout_constraintBottom_toBottomOf="@id/text_date_publication_annonce"
+            app:layout_constraintEnd_toStartOf="@+id/image_photo_number_text"
+            app:layout_constraintTop_toTopOf="@id/text_date_publication_annonce"
+            app:srcCompat="@drawable/ic_camera_alt_grey_800_24dp" />
+
+        <TextView
+            android:id="@+id/text_categorie_annonce"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:gravity="top"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            app:layout_constraintBottom_toBottomOf="@id/image_user_beauty"
+            app:layout_constraintEnd_toStartOf="@id/text_bullet"
+            app:layout_constraintStart_toStartOf="@id/text_user_profile"
+            app:layout_constraintTop_toBottomOf="@id/text_user_profile"
+            tools:text="Automobile" />
+
+        <TextView
+            android:id="@+id/text_bullet"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="3dp"
+            android:gravity="top"
+            android:text="\u2022"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/text_categorie_annonce"
+            app:layout_constraintEnd_toStartOf="@id/text_date_publication_annonce"
+            app:layout_constraintStart_toEndOf="@id/text_categorie_annonce"
+            app:layout_constraintTop_toTopOf="@id/text_categorie_annonce" />
+
+
+        <TextView
+            android:id="@+id/text_user_profile"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:ellipsize="end"
+            android:gravity="bottom"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            app:layout_constraintBottom_toTopOf="@id/text_categorie_annonce"
+            app:layout_constraintEnd_toStartOf="@id/image_more"
+            app:layout_constraintStart_toEndOf="@id/image_user_beauty"
+            app:layout_constraintTop_toTopOf="@id/image_user_beauty"
+            tools:text="OLIVE Jean-Paul" />
+
+        <TextView
+            android:id="@+id/text_date_publication_annonce"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="3dp"
+            android:gravity="top"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            app:layout_constraintBottom_toBottomOf="@id/text_categorie_annonce"
+            app:layout_constraintStart_toEndOf="@id/text_bullet"
+            app:layout_constraintTop_toTopOf="@id/text_categorie_annonce"
+            tools:text="2 jours" />
+
+        <TextView
+            android:id="@+id/image_photo_number_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            app:layout_constraintBottom_toBottomOf="@id/icon_photo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/icon_photo"
+            tools:text="2" />
+
+
+        <TextView
+            android:id="@+id/text_titre_annonce"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/text_description_annonce"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_user_beauty"
+            tools:text="A vendre plante médicinale" />
+
+        <TextView
+            android:id="@+id/text_description_annonce"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            app:layout_constraintEnd_toEndOf="@id/text_titre_annonce"
+            app:layout_constraintStart_toStartOf="@id/text_titre_annonce"
+            app:layout_constraintTop_toBottomOf="@id/text_titre_annonce"
+            tools:text="Ceci est une descrption de l'annonce. Elle peut être très longue selon les cas. Mais franchement ce la ne me dérange pas du tout de " />
+
+        <TextView
+            android:id="@+id/text_prix_annonce"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textColor="@color/colorAccent"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/text_titre_annonce"
+            app:layout_constraintStart_toStartOf="@id/text_titre_annonce"
+            app:layout_constraintTop_toBottomOf="@id/text_description_annonce"
+            tools:text="400 000 XPF" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
