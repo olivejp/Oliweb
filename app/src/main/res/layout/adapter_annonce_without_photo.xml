@@ -66,16 +66,6 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@drawable/avatar_photo_user" />
 
-        <ImageView
-            android:id="@+id/icon_photo"
-            android:layout_width="20dp"
-            android:layout_height="0dp"
-            android:layout_marginEnd="2dp"
-            app:layout_constraintBottom_toBottomOf="@id/text_date_publication_annonce"
-            app:layout_constraintEnd_toStartOf="@+id/image_photo_number_text"
-            app:layout_constraintTop_toTopOf="@id/text_date_publication_annonce"
-            app:srcCompat="@drawable/ic_camera_alt_grey_800_24dp" />
-
         <TextView
             android:id="@+id/text_categorie_annonce"
             android:layout_width="wrap_content"
@@ -130,18 +120,6 @@
             app:layout_constraintStart_toEndOf="@id/text_bullet"
             app:layout_constraintTop_toTopOf="@id/text_categorie_annonce"
             tools:text="2 jours" />
-
-        <TextView
-            android:id="@+id/image_photo_number_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            app:layout_constraintBottom_toBottomOf="@id/icon_photo"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/icon_photo"
-            tools:text="2" />
-
 
         <TextView
             android:id="@+id/text_titre_annonce"

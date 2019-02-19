@@ -137,12 +137,12 @@ public class AnnonceBeautyAdapter extends
             String urlPhoto = annoncePhotos.getUtilisateur().get(0).getPhotoUrl();
             glide.load(urlPhoto)
                     .override(100)
-                    .error(R.drawable.ic_person_grey_900_48dp)
+                    .error(R.drawable.ic_account_circle_grey_900_48dp)
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .circleCrop()
                     .into(commonViewHolder.imageUserBeauty);
         } else {
-            glide.load(R.drawable.ic_person_grey_900_48dp).into(commonViewHolder.imageUserBeauty);
+            glide.load(R.drawable.ic_account_circle_grey_900_48dp).into(commonViewHolder.imageUserBeauty);
         }
 
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
