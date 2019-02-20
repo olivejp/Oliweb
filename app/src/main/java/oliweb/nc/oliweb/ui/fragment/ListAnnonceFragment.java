@@ -1,10 +1,7 @@
 package oliweb.nc.oliweb.ui.fragment;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,7 +30,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
@@ -49,7 +46,6 @@ import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchHitsResult;
 import oliweb.nc.oliweb.dto.elasticsearch.ElasticsearchResult;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
-import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.EndlessRecyclerOnScrollListener;
 import oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity;
@@ -58,7 +54,6 @@ import oliweb.nc.oliweb.ui.activity.SnackbarViewProvider;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
 import oliweb.nc.oliweb.ui.dialog.ListAnnonceBottomSheetDialog;
-import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.Utility;
@@ -71,20 +66,16 @@ import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_DATE;
 import static oliweb.nc.oliweb.service.search.SearchEngine.SORT_PRICE;
 import static oliweb.nc.oliweb.ui.activity.AnnonceDetailActivity.ARG_ANNONCE;
 import static oliweb.nc.oliweb.ui.activity.FavoritesActivity.ARG_UID_USER;
-import static oliweb.nc.oliweb.ui.activity.MainActivity.RC_SIGN_IN;
+import static oliweb.nc.oliweb.ui.dialog.ListAnnonceBottomSheetDialog.ANNONCE_FULL;
 import static oliweb.nc.oliweb.ui.fragment.ListCategorieFragment.ID_ALL_CATEGORY;
 import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY;
 
 public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = ListAnnonceFragment.class.getName();
 
-    private static final String LOADING_DIALOG = "LOADING_DIALOG";
-    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
-
     private static final String SAVE_LIST_ANNONCE = "SAVE_LIST_ANNONCE";
     private static final String SAVE_SORT = "SAVE_SORT";
     private static final String SAVE_DIRECTION = "SAVE_DIRECTION";
-    private static final String SAVE_ANNONCE_FAVORITE = "SAVE_ANNONCE_FAVORITE";
     private static final String SAVE_CATEGORY_SELECTED = "SAVE_CATEGORY_SELECTED";
     private static final String SAVE_TOTAL_LOADED = "SAVE_TOTAL_LOADED";
     private static final String SAVE_ACTUAL_SORT = "SAVE_ACTUAL_SORT";
@@ -116,11 +107,8 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private int sortSelected = SORT_DATE;
     private int directionSelected;
     private ActionBar actionBar;
-    private LoadingDialogFragment loadingDialogFragment;
     private EndlessRecyclerOnScrollListener scrollListener;
     private List<String> listUidFavorites = new ArrayList<>();
-    private AnnonceFull annonceFullToSaveTofavorite;
-    private View viewToEnabled;
     private CategorieEntity categorieSelected;
     private int from = 0;
     private Long totalLoaded = 0L;
@@ -144,30 +132,15 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
             pairImage = new Pair<>(((AnnonceBeautyAdapter.ViewHolderBeauty) viewHolder).getImageView(), getString(R.string.image_detail_transition));
         }
         Pair<View, String> pairImageUser = new Pair<>(viewHolder.getImageUserBeauty(), getString(R.string.image_detail_transition_user));
-        ActivityOptionsCompat options = makeSceneTransitionAnimation(appCompatActivity, pairImage, pairImageUser);
-        startActivity(intent, options.toBundle());
-    };
 
-    /**
-     * OnClickListener that share an annonce with a DynamicLink
-     */
-    private View.OnClickListener onClickListenerShare = v -> {
-        if (uidUser != null && !uidUser.isEmpty()) {
-            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
-            AnnonceFull annonceFull = viewHolder.getAnnonceFull();
-
-            // Display a loading spinner
-            loadingDialogFragment = new LoadingDialogFragment();
-            loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
-            loadingDialogFragment.show(appCompatActivity.getSupportFragmentManager(), LOADING_DIALOG);
-
-            // Génération d'un lien
-            DynamicLinkService.shareDynamicLink(appCompatActivity, annonceFull, uidUser, loadingDialogFragment, snackbarViewProvider.getSnackbarViewProvider());
+        ActivityOptionsCompat options;
+        if (pairImage != null) {
+            options = makeSceneTransitionAnimation(appCompatActivity, pairImage, pairImageUser);
         } else {
-            Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.sign_in_required, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
-                    .show();
+            options = makeSceneTransitionAnimation(appCompatActivity, pairImageUser);
         }
+
+        startActivity(intent, options.toBundle());
     };
 
     /**
@@ -176,51 +149,14 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
     private View.OnClickListener onClickListenerMore = v -> {
         AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
         ListAnnonceBottomSheetDialog listAnnonceBottomSheetDialog = new ListAnnonceBottomSheetDialog();
-        listAnnonceBottomSheetDialog.setAnnonceFull(viewHolder.getAnnonceFull());
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(ANNONCE_FULL, viewHolder.getAnnonceFull());
+        listAnnonceBottomSheetDialog.setArguments(bundle);
         listAnnonceBottomSheetDialog.show(appCompatActivity.getSupportFragmentManager(), "TAG");
-    };
-
-    /**
-     * OnClickListener that adds an annonce and all of this photo into the favorite.
-     * This save all the photos of the annonce in the device and the annonce into the local database
-     * If the annonce was already into the database it remove all the photo from the device,
-     * delete all the photos from the database,
-     * delete the annonce from the database.
-     */
-    private View.OnClickListener onClickListenerFavorite = (View v) -> {
-        v.setEnabled(false);
-        if (uidUser == null || uidUser.isEmpty()) {
-            // User not logged
-            Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
-                    .show();
-            v.setEnabled(true);
-        } else {
-            // User logged
-            AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
-
-            annonceFullToSaveTofavorite = viewHolder.getAnnonceFull();
-            viewToEnabled = v;
-
-            // Ask for permission to write on the external storage of the device
-            if (checkPermissionMversion()) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
-            } else {
-                callAddOrRemoveFromFavorite();
-            }
-        }
     };
 
     public ListAnnonceFragment() {
         // Empty constructor
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            callAddOrRemoveFromFavorite();
-        }
     }
 
     @Override
@@ -303,7 +239,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         outState.putParcelableArrayList(SAVE_LIST_ANNONCE, annoncePhotosList);
         outState.putInt(SAVE_SORT, sortSelected);
         outState.putInt(SAVE_DIRECTION, directionSelected);
-        outState.putParcelable(SAVE_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
         outState.putParcelable(SAVE_CATEGORY_SELECTED, categorieSelected);
         outState.putLong(SAVE_TOTAL_LOADED, totalLoaded);
         outState.putInt(SAVE_ACTUAL_SORT, actualSort);
@@ -361,39 +296,6 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         return view;
     }
 
-    private boolean checkPermissionMversion() {
-        return Build.VERSION.SDK_INT >= 23 &&
-                viewModel.getMediaUtility().isExternalStorageAvailable() &&
-                viewModel.getMediaUtility().allPermissionsAreGranted(appCompatActivity.getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
-    }
-
-    private void callAddOrRemoveFromFavorite() {
-        viewModel.addOrRemoveFromFavorite(uidUser, annonceFullToSaveTofavorite).observeOnce(addRemoveFromFavorite -> {
-            if (addRemoveFromFavorite != null) {
-                switch (addRemoveFromFavorite) {
-                    case ONE_OF_YOURS:
-                        Toast.makeText(getContext(), R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
-                        break;
-                    case ADD_SUCCESSFUL:
-                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
-                                .setAction(R.string.MY_FAVORITE, v12 -> callFavoriteAnnonceActivity())
-                                .show();
-                        break;
-                    case REMOVE_SUCCESSFUL:
-                        Snackbar.make(snackbarViewProvider.getSnackbarViewProvider(), R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
-                        break;
-                    case REMOVE_FAILED:
-                        Toast.makeText(getContext(), R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (viewToEnabled != null) {
-                viewToEnabled.setEnabled(true);
-            }
-        });
-    }
 
     private void callFavoriteAnnonceActivity() {
         Intent intent = new Intent();
@@ -432,7 +334,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         if (actionBar != null) {
             actionBar.setTitle(R.string.RECENT_ADS);
         }
-        GridLayoutManager layoutManager = Utility.initGridLayout(appCompatActivity, recyclerView);
+        LinearLayoutManager layoutManager = Utility.initLinearLayout(appCompatActivity, recyclerView);
         scrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore() {

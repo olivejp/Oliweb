@@ -7,12 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="4dp"
+    android:background="?android:attr/selectableItemBackground"
     app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_adapter_beauty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?android:attr/selectableItemBackground"
         android:paddingLeft="12dp"
         android:paddingTop="18dp"
         android:paddingRight="12dp"
@@ -162,14 +164,12 @@
                     android:id="@+id/image_view_beauty"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@color/colorAnnonceElementBackground"
                     android:contentDescription="Image annonce"
                     android:scaleType="centerCrop"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:background="@color/colorAccentDark"
                     tools:src="@drawable/clothing_leather_wooden" />
 
                 <com.wonderkiln.blurkit.BlurLayout

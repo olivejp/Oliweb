@@ -35,6 +35,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.converter.DateConverter;
@@ -296,6 +297,14 @@ public class Utility {
         }
 
         return duration;
+    }
+
+    public static LinearLayoutManager initLinearLayout(Context context, RecyclerView recyclerView) {
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        return linearLayoutManager;
     }
 
     public static GridLayoutManager initGridLayout(Context context, RecyclerView recyclerView) {

@@ -1,9 +1,12 @@
 package oliweb.nc.oliweb.ui.activity;
 
+import android.Manifest;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -27,6 +30,7 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 import androidx.annotation.NonNull;
@@ -54,10 +58,13 @@ import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
 import oliweb.nc.oliweb.database.entity.UserEntity;
+import oliweb.nc.oliweb.service.firebase.DynamicLinkService;
 import oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService;
 import oliweb.nc.oliweb.service.sync.SyncService;
 import oliweb.nc.oliweb.system.broadcast.NetworkReceiver;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
+import oliweb.nc.oliweb.ui.dialog.ListAnnonceBottomSheetDialog;
+import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.NoticeDialogFragment;
 import oliweb.nc.oliweb.ui.dialog.SortDialog;
 import oliweb.nc.oliweb.ui.fragment.ListAnnonceFragment;
@@ -90,10 +97,12 @@ import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
-        implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener, SnackbarViewProvider {
+        implements NetworkReceiver.NetworkChangeListener, NavigationView.OnNavigationItemSelectedListener, NoticeDialogFragment.DialogListener, SortDialog.UpdateSortDialogListener, SnackbarViewProvider, ListAnnonceBottomSheetDialog.BottomSheetDialogListener {
 
     private static final String TAG = MainActivity.class.getName();
 
+    private static final int REQUEST_WRITE_EXTERNAL_PERMISSION_CODE = 101;
+    private static final String LOADING_DIALOG = "LOADING_DIALOG";
     public static final int RC_SIGN_IN = 1001;
     public static final int RC_SIGN_IN_TO_POST = 1002;
     public static final String TAG_LIST_ANNONCE = "TAG_LIST_ANNONCE";
@@ -105,6 +114,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG_LIST_CHAT = "TAG_LIST_CHAT";
     private static final String SAVED_DYNAMIC_LINK_PROCESSED = "SAVED_DYNAMIC_LINK_PROCESSED";
+    private static final String SAVED_ANNONCE_FAVORITE = "SAVED_ANNONCE_FAVORITE";
 
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
@@ -149,6 +159,7 @@ public class MainActivity extends AppCompatActivity
     private MainActivityViewModel viewModel;
     private boolean dynamicLinkProcessed = false;
     private boolean shouldCallAddAnnonce = false;
+    private AnnonceFull annonceFullToSaveTofavorite;
 
     private Observer<Integer> observeNumberAnnonceBadge = integer -> {
         TextView numberAnnoncesBadge = (TextView) navigationView.getMenu().findItem(R.id.nav_annonces).getActionView();
@@ -463,6 +474,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_WRITE_EXTERNAL_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            callAddOrRemoveFromFavorite(annonceFullToSaveTofavorite);
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RC_SIGN_IN && resultCode == RESULT_CANCELED) {
             Toast.makeText(this, "Connexion abandonnée", Toast.LENGTH_SHORT).show();
@@ -545,6 +564,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         outState.putBoolean(SAVED_DYNAMIC_LINK_PROCESSED, dynamicLinkProcessed);
+        outState.putParcelable(SAVED_ANNONCE_FAVORITE, annonceFullToSaveTofavorite);
 
         super.onSaveInstanceState(outState);
     }
@@ -763,5 +783,83 @@ public class MainActivity extends AppCompatActivity
     @Override
     public View getSnackbarViewProvider() {
         return findViewById(R.id.main_coordinator_layout);
+    }
+
+    private boolean checkPermissionMversion() {
+        return Build.VERSION.SDK_INT >= 23 &&
+                viewModel.getMediaUtility().isExternalStorageAvailable() &&
+                viewModel.getMediaUtility().allPermissionsAreGranted(getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
+    }
+
+    private void callAddOrRemoveFromFavorite(AnnonceFull annonceFull) {
+        viewModel.addOrRemoveFromFavorite(viewModel.getUserActuallyConnected().getUid(), annonceFull).observeOnce(addRemoveFromFavorite -> {
+            if (addRemoveFromFavorite != null) {
+                switch (addRemoveFromFavorite) {
+                    case ONE_OF_YOURS:
+                        Toast.makeText(this, R.string.action_impossible_own_this_annonce, Toast.LENGTH_LONG).show();
+                        break;
+                    case ADD_SUCCESSFUL:
+                        Snackbar.make(coordinatorLayout, R.string.AD_ADD_TO_FAVORITE, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.MY_FAVORITE, v12 -> callAddOrRemoveFromFavorite(annonceFullToSaveTofavorite))
+                                .show();
+                        break;
+                    case REMOVE_SUCCESSFUL:
+                        Snackbar.make(coordinatorLayout, R.string.annonce_remove_from_favorite, Snackbar.LENGTH_LONG).show();
+                        break;
+                    case REMOVE_FAILED:
+                        Toast.makeText(this, R.string.remove_from_favorite_failed, Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+    }
+
+    /**
+     * OnClickListener that share an annonce with a DynamicLink
+     */
+    @Override
+    public void onShareClick(AnnonceFull annonceFull) {
+        String uidUser = (viewModel.getUserActuallyConnected() != null) ? viewModel.getUserActuallyConnected().getUid() : null;
+        if (uidUser != null && !uidUser.isEmpty()) {
+            // Display a loading spinner
+            LoadingDialogFragment loadingDialogFragment = new LoadingDialogFragment();
+            loadingDialogFragment.setText(getString(R.string.dynamic_link_creation));
+            loadingDialogFragment.show(getSupportFragmentManager(), LOADING_DIALOG);
+
+            // Génération d'un lien
+            DynamicLinkService.shareDynamicLink(this, annonceFull, uidUser, loadingDialogFragment, coordinatorLayout);
+        } else {
+            Snackbar.make(coordinatorLayout, R.string.sign_in_required, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.sign_in, v1 -> Utility.signIn(this, RC_SIGN_IN))
+                    .show();
+        }
+    }
+
+    /**
+     * OnClickListener that adds an annonce and all of this photo into the favorite.
+     * This save all the photos of the annonce in the device and the annonce into the local database
+     * If the annonce was already into the database it remove all the photo from the device,
+     * delete all the photos from the database,
+     * delete the annonce from the database.
+     */
+    @Override
+    public void onFavoriteClick(AnnonceFull annonceFull) {
+        String uidUser = (viewModel.getUserActuallyConnected() != null) ? viewModel.getUserActuallyConnected().getUid() : null;
+        annonceFullToSaveTofavorite = annonceFull;
+        if (uidUser != null && !uidUser.isEmpty()) {
+
+            // Ask for permission to write on the external storage of the device
+            if (checkPermissionMversion()) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_EXTERNAL_PERMISSION_CODE);
+            } else {
+                callAddOrRemoveFromFavorite(annonceFull);
+            }
+        } else {
+            Snackbar.make(coordinatorLayout, getString(R.string.sign_in_required), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.sign_in), v1 -> Utility.signIn(this, RC_SIGN_IN))
+                    .show();
+        }
     }
 }
