@@ -57,6 +57,7 @@ import oliweb.nc.oliweb.ui.activity.FavoritesActivity;
 import oliweb.nc.oliweb.ui.activity.SnackbarViewProvider;
 import oliweb.nc.oliweb.ui.activity.viewmodel.MainActivityViewModel;
 import oliweb.nc.oliweb.ui.adapter.AnnonceBeautyAdapter;
+import oliweb.nc.oliweb.ui.dialog.ListAnnonceBottomSheetDialog;
 import oliweb.nc.oliweb.ui.dialog.LoadingDialogFragment;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.utility.Constants;
@@ -167,6 +168,16 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
                     .setAction(R.string.sign_in, v1 -> Utility.signIn(appCompatActivity, RC_SIGN_IN))
                     .show();
         }
+    };
+
+    /**
+     * OnClickListener that open the Bottom sheet
+     */
+    private View.OnClickListener onClickListenerMore = v -> {
+        AnnonceBeautyAdapter.CommonViewHolder viewHolder = (AnnonceBeautyAdapter.CommonViewHolder) v.getTag();
+        ListAnnonceBottomSheetDialog listAnnonceBottomSheetDialog = new ListAnnonceBottomSheetDialog();
+        listAnnonceBottomSheetDialog.setAnnonceFull(viewHolder.getAnnonceFull());
+        listAnnonceBottomSheetDialog.show(appCompatActivity.getSupportFragmentManager(), "TAG");
     };
 
     /**
@@ -315,7 +326,7 @@ public class ListAnnonceFragment extends Fragment implements SwipeRefreshLayout.
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
         layout.setBackgroundColor(ContextCompat.getColor(appCompatActivity, R.color.colorAccentDarker));
 
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerMore, this);
         recyclerView.setAdapter(annonceBeautyAdapter);
 
         actionBar = appCompatActivity.getSupportActionBar();

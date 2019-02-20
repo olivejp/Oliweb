@@ -1,5 +1,12 @@
 <resources>
 
+
+    <style name="BottomSheetDialogTheme" parent="BaseBottomSheetDialog">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+    </style>
+
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.OliwebBase">
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
@@ -23,5 +30,5 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <style name="MyDialogTheme" parent="MyDialogTheme.Base"/>
+    <style name="MyDialogTheme" parent="MyDialogTheme.Base" />
 </resources>

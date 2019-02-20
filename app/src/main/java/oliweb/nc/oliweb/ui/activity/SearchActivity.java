@@ -389,7 +389,7 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
     }
 
     private void initRecyclerView() {
-        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare, onClickListenerFavorite, this);
+        annonceBeautyAdapter = new AnnonceBeautyAdapter(onClickListener, onClickListenerShare,  this);
 
         GridLayoutManager layoutManager = Utility.initGridLayout(this, recyclerView);
         endlessRecyclerOnScrollListener = new EndlessRecyclerOnScrollListener(layoutManager) {

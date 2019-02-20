@@ -50,25 +50,21 @@ public class AnnonceBeautyAdapter extends
 
     private List<AnnonceFull> listAnnonces;
     private View.OnClickListener onClickListener;
-    private View.OnClickListener onClickListenerShare;
-    private View.OnClickListener onClickListenerFavorite;
+    private View.OnClickListener onClickListenerMore;
     private GlideRequests glide;
     private Context context;
 
     private AnnonceBeautyAdapter(View.OnClickListener onClickListener,
-                                 View.OnClickListener onClickListenerShare,
-                                 View.OnClickListener onClickListenerFavorite) {
+                                 View.OnClickListener onClickListenerMore) {
         this.listAnnonces = new ArrayList<>();
         this.onClickListener = onClickListener;
-        this.onClickListenerShare = onClickListenerShare;
-        this.onClickListenerFavorite = onClickListenerFavorite;
+        this.onClickListenerMore = onClickListenerMore;
     }
 
     public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
-                                View.OnClickListener onClickListenerShare,
-                                View.OnClickListener onClickListenerFavorite,
+                                View.OnClickListener onClickListenerMore,
                                 Fragment fragment) {
-        this(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        this(onClickListener, onClickListenerMore);
         if (fragment != null) {
             this.context = fragment.getContext();
             this.glide = GlideApp.with(fragment);
@@ -76,10 +72,9 @@ public class AnnonceBeautyAdapter extends
     }
 
     public AnnonceBeautyAdapter(View.OnClickListener onClickListener,
-                                View.OnClickListener onClickListenerShare,
-                                View.OnClickListener onClickListenerFavorite,
+                                View.OnClickListener onClickListenerMore,
                                 AppCompatActivity appCompatActivity) {
-        this(onClickListener, onClickListenerShare, onClickListenerFavorite);
+        this(onClickListener, onClickListenerMore);
         if (appCompatActivity != null) {
             this.context = appCompatActivity.getApplicationContext();
             this.glide = GlideApp.with(appCompatActivity);
@@ -148,18 +143,13 @@ public class AnnonceBeautyAdapter extends
         AnnonceEntity annonce = annoncePhotos.getAnnonce();
         commonViewHolder.annonceFull = annoncePhotos;
         commonViewHolder.cardView.setTag(commonViewHolder);
-        commonViewHolder.imageFavorite.setTag(commonViewHolder);
-        commonViewHolder.imageShare.setTag(commonViewHolder);
+        commonViewHolder.imageMore.setTag(commonViewHolder);
         commonViewHolder.textUserProfile.setText(annoncePhotos.getUtilisateur().get(0).getProfile());
 
         if (onClickListener != null) commonViewHolder.cardView.setOnClickListener(onClickListener);
-        if (onClickListenerFavorite != null)
-            commonViewHolder.imageFavorite.setOnClickListener(onClickListenerFavorite);
-        if (onClickListenerShare != null)
-            commonViewHolder.imageShare.setOnClickListener(onClickListenerShare);
+        if (onClickListenerMore != null)
+            commonViewHolder.imageMore.setOnClickListener(onClickListenerMore);
 
-        boolean isFavorite = commonViewHolder.annonceFull.getAnnonce().isFavorite();
-        commonViewHolder.imageFavorite.setImageResource((isFavorite) ? R.drawable.ic_favorite_red_700_48dp : R.drawable.ic_favorite_border_white_48dp);
         commonViewHolder.textDatePublicationAnnonce.setText(Utility.howLongFromNow(commonViewHolder.annonceFull.getAnnonce().getDatePublication()));
         commonViewHolder.textTitreAnnonce.setText(annonce.getTitre());
         commonViewHolder.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf").trim());
@@ -260,11 +250,8 @@ public class AnnonceBeautyAdapter extends
         @BindView(R.id.card_view)
         FrameLayout cardView;
 
-        @BindView(R.id.image_favorite)
-        ImageView imageFavorite;
-
-        @BindView(R.id.image_share)
-        ImageView imageShare;
+        @BindView(R.id.image_more)
+        ImageView imageMore;
 
         @BindView(R.id.image_user_beauty)
         ImageView imageUserBeauty;
