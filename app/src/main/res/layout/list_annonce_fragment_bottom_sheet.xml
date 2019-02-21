@@ -12,30 +12,10 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="32dp"
-        app:layout_constraintBottom_toBottomOf="@id/bottom_sheet_titre_annonce"
+        android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/bottom_sheet_titre_annonce"
+        app:layout_constraintTop_toTopOf="parent"
         tools:src="@drawable/avatar_photo_user" />
-
-    <ImageView
-        android:id="@+id/bottom_sheet_share_image"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="32dp"
-        app:layout_constraintBottom_toBottomOf="@id/share"
-        app:layout_constraintEnd_toEndOf="@id/bottom_sheet_annonce_image"
-        app:layout_constraintTop_toTopOf="@id/share"
-        app:srcCompat="@drawable/ic_share_grey_900_48dp" />
-
-    <ImageView
-        android:id="@+id/bottom_sheet_favorite_image"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="32dp"
-        app:layout_constraintBottom_toBottomOf="@id/favorite"
-        app:layout_constraintEnd_toEndOf="@id/bottom_sheet_annonce_image"
-        app:layout_constraintTop_toTopOf="@id/favorite"
-        app:srcCompat="@drawable/ic_favorite_grey_900_48dp" />
 
     <TextView
         android:id="@+id/bottom_sheet_titre_annonce"
@@ -44,56 +24,75 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="72dp"
         android:ellipsize="end"
-        android:paddingStart="10dp"
-        android:paddingTop="25dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="25dp"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/bottom_sheet_annonce_image"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Titre de mon annonce" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:background="@color/colorAccentDark"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_titre_annonce" />
+        app:layout_constraintTop_toTopOf="@id/bottom_sheet_annonce_image"
+        tools:text="A vendre : Mini ONE" />
 
     <TextView
-        android:id="@+id/share"
+        android:id="@+id/bottom_sheet_date_annonce"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:paddingStart="10dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="20dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="72dp"
+        android:ellipsize="end"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_sheet_annonce_image"
+        app:layout_constraintStart_toEndOf="@id/bottom_sheet_prix_annonce"
+        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_titre_annonce"
+        tools:text="1 sem" />
+
+    <TextView
+        android:id="@+id/bottom_sheet_description_annonce"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:ellipsize="end"
+        android:maxLines="4"
+        android:padding="2dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        app:layout_constraintEnd_toEndOf="@id/button_share"
+        app:layout_constraintStart_toStartOf="@id/button_share"
+        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_annonce_image"
+        tools:text="Ceci est la description de mon texte il ne peut pas etre trop long sinon il sera coupe et ellipsized. ce qui nest pas plus mal." />
+
+    <TextView
+        android:id="@+id/bottom_sheet_prix_annonce"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textColor="@color/colorAccent"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_sheet_annonce_image"
+        app:layout_constraintStart_toEndOf="@id/bottom_sheet_annonce_image"
+        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_titre_annonce"
+        tools:text="10 000xpf" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_share"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="32dp"
         android:text="Partager"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/bottom_sheet_titre_annonce"
-        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_titre_annonce" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_description_annonce" />
 
-    <TextView
-        android:id="@+id/favorite"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_favorite"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:paddingStart="10dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="20dp"
-        android:text="Ajouter au favoris"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:text="Ajouter aux favoris"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/bottom_sheet_titre_annonce"
-        app:layout_constraintTop_toBottomOf="@id/share" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_share" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

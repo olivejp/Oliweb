@@ -11,12 +11,14 @@ import android.widget.TextView;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.button.MaterialButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import oliweb.nc.oliweb.R;
+import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
@@ -35,11 +37,20 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
     @BindView(R.id.bottom_sheet_titre_annonce)
     TextView titreAnnonce;
 
-    @BindView(R.id.share)
-    TextView textShare;
+    @BindView(R.id.button_share)
+    MaterialButton buttonShare;
 
-    @BindView(R.id.favorite)
-    TextView textFavorite;
+    @BindView(R.id.button_favorite)
+    MaterialButton buttonFavorite;
+
+    @BindView(R.id.bottom_sheet_description_annonce)
+    TextView description;
+
+    @BindView(R.id.bottom_sheet_date_annonce)
+    TextView date;
+
+    @BindView(R.id.bottom_sheet_prix_annonce)
+    TextView prix;
 
     @Override
     public void onAttach(Context context) {
@@ -71,14 +82,17 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
                         .into(imageView);
             }
             titreAnnonce.setText(annonceFull.getAnnonce().getTitre());
+            prix.setText(annonceFull.getAnnonce().getPrix());
+            date.setText(DateConverter.convertDateToUiDate(annonceFull.getAnnonce().getDatePublication()));
+            description.setText(annonceFull.getAnnonce().getDescription());
         }
 
         if (listener != null) {
-            textFavorite.setOnClickListener(view -> {
+            buttonFavorite.setOnClickListener(view -> {
                 this.listener.onFavoriteClick(annonceFull);
                 ListAnnonceBottomSheetDialog.this.dismiss();
             });
-            textShare.setOnClickListener(view -> {
+            buttonShare.setOnClickListener(view -> {
                 this.listener.onShareClick(annonceFull);
                 ListAnnonceBottomSheetDialog.this.dismiss();
             });

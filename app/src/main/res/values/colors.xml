@@ -3,12 +3,12 @@
     <color name="colorBackgroundFloating">#efefef</color>
     <color name="colorPrimary">#efefef</color>
     <color name="colorPrimaryDark">#9e9e9e</color>
-    <color name="colorAccent">#ff7043</color>
-    <color name="colorAccentDarker">#c62828</color>
+    <color name="colorAccent">#0D6992</color>
+    <color name="colorAccentDarker">#9C27B0</color>
     <color name="colorAccentDark">#d6d6d6</color>
     <color name="colorLine">#efefef</color>
     <color name="colorLoadingBegin">#ffcc80</color>
-    <color name="colorLoadingEnd">#ef6c00</color>
+    <color name="colorLoadingEnd">#00BCD4</color>
     <color name="colorBottomDark">#263238</color>
     <color name="colorAnnonceElementBackground">#90a4ae</color>
     <color name="colorIntroText">#ffffff</color>
