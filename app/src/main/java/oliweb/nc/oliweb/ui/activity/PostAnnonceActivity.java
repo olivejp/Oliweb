@@ -89,8 +89,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String mode;
     private Long remoteNbMaxPictures;
 
-    @BindView(R.id.fab_save_annonce)
-    FloatingActionButton fabSaveAnnonce;
+    @BindView(R.id.fab_add_photo_annonce)
+    FloatingActionButton fabAddPhotoAnnonce;
 
     @BindView(R.id.bar)
     BottomAppBar bottomAppBar;
@@ -232,7 +232,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         // Sur l'action finale après la saisie du prix on va sauvegarder l'annonce.
         textViewPrix.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                saveAnnonce(fabSaveAnnonce);
+                saveAnnonce(false);
                 return true;
             }
             return false;
@@ -270,8 +270,12 @@ public class PostAnnonceActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int idItem = item.getItemId();
-        if (idItem == R.id.menu_add_photo) {
-            addPhoto();
+        if (idItem == R.id.menu_send_annonce) {
+            saveAnnonce(false);
+            return true;
+        }
+        if (idItem == R.id.menu_save_draft) {
+            saveAnnonce(true);
             return true;
         }
         if (idItem == android.R.id.home) {
@@ -281,29 +285,28 @@ public class PostAnnonceActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @OnClick(R.id.fab_save_annonce)
-    public void saveAnnonce(View v) {
+    public void saveAnnonce(boolean isDraft) {
         Log.d(TAG, "Starting saveAnnonce");
-        if (!checkIfAnnonceIsValid()) {
+        if (!isDraft && !checkIfAnnonceIsValid()) {
             return;
         }
 
         // Retrieve datas from the ui
         String titre = textViewTitre.getText().toString();
         String description = textViewDescription.getText().toString();
-        int prix = Integer.parseInt(textViewPrix.getText().toString());
+        int prix = Integer.valueOf(!textViewPrix.getText().toString().isEmpty() ? textViewPrix.getText().toString() : "0");
         boolean contactEmail = checkBoxEmail.isChecked();
         boolean contactMsg = checkBoxMsg.isChecked();
         boolean contactTel = checkBoxTel.isChecked();
 
         // Save the annonce to the local DB
-        viewModel.saveAnnonce(uidUser, titre, description, prix, contactEmail, contactMsg, contactTel)
+        viewModel.saveAnnonce(uidUser, titre, description, prix, contactEmail, contactMsg, contactTel, isDraft)
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess(annonce -> {
                     // Ajout d'un élément de conversion dans Analytics.
                     saveEventToAnalytics();
 
-                    viewModel.savePhotos(annonce.getIdAnnonce())
+                    viewModel.savePhotos(annonce.getIdAnnonce(), isDraft)
                             .doOnSuccess(listPhotos -> {
                                 setResult(RESULT_OK);
                                 finish();
@@ -466,7 +469,8 @@ public class PostAnnonceActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 
-    public void addPhoto() {
+    @OnClick(R.id.fab_add_photo_annonce)
+    public void addPhoto(View v) {
         AlertDialog.Builder builder = viewModel.getMediaUtility().getBuilder(this);
         builder.setTitle(R.string.add_new_photo)
                 .setMessage(R.string.add_photo_question)

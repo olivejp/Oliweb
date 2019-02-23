@@ -88,23 +88,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
                 .check();
     }
 
-    private void initActivity(Bundle args) {
-        uidUser = args.getString(ARG_UID_USER);
-        viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
-        viewModel.findAnnonceByUidUserAndPhotos(uidUser).observe(this, annonceWithPhotos -> {
-            if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
-                initEmptyLayout();
-            } else {
-                initLayout(annonceWithPhotos);
-            }
-        });
-
-        // On redirige tout de suite vers PostAnnonceActivity.
-        if (getIntent().getAction() != null && getIntent().getAction().equals(ACTION_CODE_POST)) {
-            callPostAnnonceCreate(null);
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.my_annonces_activity, menu);
@@ -127,31 +110,6 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         } else if (DIALOG_FIREBASE_RETRIEVE.equals(dialog.getTag())) {
             dialogPositiveRetrieve();
         }
-    }
-
-    private void dialogPositiveDelete(NoticeDialogFragment dialog) {
-        if (dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
-            long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
-            if (idAnnonce != 0) {
-                viewModel.markToDelete(idAnnonce).observeOnce(atomicBoolean ->
-                        Log.d(TAG, "Annonce successfully mark as to Delete")
-                );
-            }
-        }
-    }
-
-    private void dialogPositiveRetrieve() {
-        if (checkPermissionForMversion()) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
-        } else {
-            callForFirebaseSync();
-        }
-    }
-
-    private boolean checkPermissionForMversion() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && viewModel.getMediaUtility().isExternalStorageAvailable()
-                && !viewModel.getMediaUtility().allPermissionsAreGranted(getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     }
 
     @Override
@@ -191,6 +149,48 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
         if (requestCode == REQUEST_STORAGE_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             callForFirebaseSync();
         }
+    }
+
+    private void initActivity(Bundle args) {
+        uidUser = args.getString(ARG_UID_USER);
+        viewModel = ViewModelProviders.of(this).get(MyAnnoncesViewModel.class);
+        viewModel.findAnnonceByUidUserAndPhotos(uidUser).observe(this, annonceWithPhotos -> {
+            if (annonceWithPhotos == null || annonceWithPhotos.isEmpty()) {
+                initEmptyLayout();
+            } else {
+                initLayout(annonceWithPhotos);
+            }
+        });
+
+        // On redirige tout de suite vers PostAnnonceActivity.
+        if (getIntent().getAction() != null && getIntent().getAction().equals(ACTION_CODE_POST)) {
+            callPostAnnonceCreate(null);
+        }
+    }
+
+    private void dialogPositiveDelete(NoticeDialogFragment dialog) {
+        if (dialog.getBundle() != null && dialog.getBundle().containsKey(ARG_NOTICE_BUNDLE_ID_ANNONCE)) {
+            long idAnnonce = dialog.getBundle().getLong(ARG_NOTICE_BUNDLE_ID_ANNONCE);
+            if (idAnnonce != 0) {
+                viewModel.markToDelete(idAnnonce).observeOnce(atomicBoolean ->
+                        Log.d(TAG, "Annonce successfully mark as to Delete")
+                );
+            }
+        }
+    }
+
+    private void dialogPositiveRetrieve() {
+        if (checkPermissionForMversion()) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION_CODE);
+        } else {
+            callForFirebaseSync();
+        }
+    }
+
+    private boolean checkPermissionForMversion() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && viewModel.getMediaUtility().isExternalStorageAvailable()
+                && !viewModel.getMediaUtility().allPermissionsAreGranted(getApplicationContext(), Collections.singletonList(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     }
 
     private void initEmptyLayout() {

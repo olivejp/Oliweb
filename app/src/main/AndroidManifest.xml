@@ -67,8 +67,7 @@
             android:name=".ui.activity.PostAnnonceActivity"
             android:label="Ajouter une annonce"
             android:parentActivityName=".ui.activity.MyAnnoncesActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="stateHidden">
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.activity.MyAnnoncesActivity" />
@@ -223,7 +222,8 @@
         <activity
             android:name=".ui.activity.ShootingActivity"
             android:label="@string/title_activity_shooting"
-            android:parentActivityName=".ui.activity.PostAnnonceActivity">
+            android:parentActivityName=".ui.activity.PostAnnonceActivity"
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="oliweb.nc.oliweb.ui.activity.PostAnnonceActivity" />

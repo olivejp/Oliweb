@@ -188,7 +188,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         return this.currentAnnonce;
     }
 
-    public Single<AnnonceEntity> saveAnnonce(String uidUser, String titre, String description, int prix, boolean email, boolean message, boolean telephone) {
+    public Single<AnnonceEntity> saveAnnonce(String uidUser, String titre, String description, int prix, boolean email, boolean message, boolean telephone, boolean isDraft) {
         Log.d(TAG, "Starting saveAnnonce");
         if (this.currentAnnonce == null) {
             createNewAnnonce();
@@ -198,7 +198,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
             currentAnnonce.annonceEntity.setDescription(description);
             currentAnnonce.annonceEntity.setPrix(prix);
             currentAnnonce.annonceEntity.setIdCategorie(currentCategorie.getIdCategorie());
-            currentAnnonce.annonceEntity.setStatut(StatusRemote.TO_SEND);
+            currentAnnonce.annonceEntity.setStatut(isDraft ? StatusRemote.NOT_TO_SEND : StatusRemote.TO_SEND);
             currentAnnonce.annonceEntity.setContactByEmail(email ? "O" : "N");
             currentAnnonce.annonceEntity.setContactByTel(telephone ? "O" : "N");
             currentAnnonce.annonceEntity.setContactByMsg(message ? "O" : "N");
@@ -212,11 +212,13 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
         });
     }
 
-    public Single<List<PhotoEntity>> savePhotos(Long idAnnonce) {
+    public Single<List<PhotoEntity>> savePhotos(Long idAnnonce, boolean isDraft) {
         Log.d(TAG, "Starting savePhotos id annonce : " + idAnnonce);
         for (PhotoEntity photo : currentAnnonce.getPhotos()) {
             photo.setIdAnnonce(idAnnonce);
-            if (photo.getStatut().equals(StatusRemote.NOT_TO_SEND)) {
+            if (isDraft) {
+                photo.setStatut(StatusRemote.NOT_TO_SEND);
+            } else if (photo.getStatut().equals(StatusRemote.NOT_TO_SEND)) {
                 photo.setStatut(StatusRemote.TO_SEND);
             }
         }
@@ -296,6 +298,7 @@ public class PostAnnonceActivityViewModel extends AndroidViewModel {
     public LiveData<Boolean> isChipesHaveBeenInitialized() {
         return isChipesHaveBeenInitialized;
     }
+
     public void setIsCategorieChanged(boolean isCategorieChanged) {
         this.isCategorieChanged.setValue(isCategorieChanged);
     }

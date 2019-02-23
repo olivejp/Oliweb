@@ -19,9 +19,6 @@ public class SpinnerAdapter extends BaseAdapter {
     private AppCompatActivity appCompatActivity;
     private List<CategorieEntity> navCategorieItems;
 
-    @BindView(R.id.idCategory)
-    TextView txtidCategory;
-
     @BindView(R.id.titleCategory)
     TextView txtTitle;
 
@@ -53,11 +50,10 @@ public class SpinnerAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             LayoutInflater mInflater = appCompatActivity.getLayoutInflater();
-            convertView = mInflater.inflate(R.layout.drawer_list_categorie, null);
+            convertView = mInflater.inflate(R.layout.drawer_list_categorie, parent, false);
         }
 
         ButterKnife.bind(this, convertView);
-        txtidCategory.setText(String.valueOf(navCategorieItems.get(position).getId()));
         txtTitle.setText(navCategorieItems.get(position).getName());
         return convertView;
     }

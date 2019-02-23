@@ -82,7 +82,7 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
                         .into(imageView);
             }
             titreAnnonce.setText(annonceFull.getAnnonce().getTitre());
-            prix.setText(annonceFull.getAnnonce().getPrix());
+            prix.setText(String.valueOf(annonceFull.getAnnonce().getPrix()).concat(" xpf"));
             date.setText(DateConverter.convertDateToUiDate(annonceFull.getAnnonce().getDatePublication()));
             description.setText(annonceFull.getAnnonce().getDescription());
         }
