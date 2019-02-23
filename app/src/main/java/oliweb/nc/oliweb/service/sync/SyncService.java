@@ -1,15 +1,20 @@
 package oliweb.nc.oliweb.service.sync;
 
 import android.app.IntentService;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import io.reactivex.schedulers.Schedulers;
+import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.MessageEntity;
 import oliweb.nc.oliweb.database.entity.StatusRemote;
 import oliweb.nc.oliweb.repository.local.ChatRepository;
@@ -22,9 +27,12 @@ import oliweb.nc.oliweb.system.dagger.component.DatabaseRepositoriesComponent;
 import oliweb.nc.oliweb.system.dagger.component.FirebaseServicesComponent;
 import oliweb.nc.oliweb.system.dagger.component.ServicesComponent;
 import oliweb.nc.oliweb.system.dagger.module.ContextModule;
+import oliweb.nc.oliweb.utility.Constants;
 import oliweb.nc.oliweb.utility.helper.SharedPreferencesHelper;
 
 import static oliweb.nc.oliweb.service.notification.MyFirebaseMessagingService.KEY_TEXT_TO_SEND;
+import static oliweb.nc.oliweb.utility.Constants.CHANNEL_ID;
+import static oliweb.nc.oliweb.utility.Constants.NOTIFICATION_SYNC_ANNONCE_ID;
 
 /**
  * This class is called by SyncTask or by SyncJobCreator
@@ -95,10 +103,44 @@ public class SyncService extends IntentService {
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
         FirebaseRetrieverService firebaseRetrieverService = firebaseServicesComponent.getFirebaseRetrieverService();
+
+        // Création d'une channel UNIQUEMENT dans le cas d'une version supérieure a OREO.
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(Constants.CHANNEL_ID, Constants.OLIWEB_CHANNEL, NotificationManager.IMPORTANCE_DEFAULT);
+            if (mNotificationManager != null) {
+                mNotificationManager.createNotificationChannel(channel);
+            }
+        }
+
+        // Création d'une notification pour informer l'utilisateur que le téléchargement est en cours
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        builder.setContentTitle("Téléchargement des annonces")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Téléchargement des annonces"))
+                .setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setSmallIcon(R.drawable.ic_notifications_black_24dp);
+
+        if (mNotificationManager != null) {
+            mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+        }
+
+        // Lancement de la synchronysation
         firebaseRetrieverService.synchronize(this, uidUtilisateur)
-                .doOnNext(annonceFirebase -> Log.w(TAG, "Enregistrement de l'annonce " + annonceFirebase.getUuid() + " réussi !"))
-                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
-                .doOnComplete(() -> Log.w(TAG, "Toutes les annonces ont été récupérées !"))
+                .doOnNext(annonceFirebase -> {
+                    Log.w(TAG, "Enregistrement de l'annonce " + annonceFirebase.getUuid() + " réussi !");
+                    builder.setContentText("En cours : " + annonceFirebase.getTitre());
+                    if (mNotificationManager != null) {
+                        mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+                    }
+                })
+                .doOnError(throwable -> {
+                    Log.e(TAG, throwable.getLocalizedMessage());
+                    builder.setContentText("Téléchargement en erreur");
+                    if (mNotificationManager != null) {
+                        mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+                    }
+                })
                 .subscribe();
     }
 

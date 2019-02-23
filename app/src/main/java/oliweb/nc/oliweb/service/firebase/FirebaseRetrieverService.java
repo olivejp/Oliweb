@@ -204,27 +204,4 @@ public class FirebaseRetrieverService {
             emitter.onSuccess(annonceEntity);
         });
     }
-
-    private void countAnnonceThenInsert(Context context, AnnonceFirebase annonceDto) {
-        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
-        annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
-                .subscribeOn(scheduler).observeOn(scheduler)
-                .doOnSuccess(integer -> insertAnnonceFromFirebaseToLocal(context, annonceDto, integer))
-                .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
-                .subscribe();
-    }
-
-    private void insertAnnonceFromFirebaseToLocal(Context context, AnnonceFirebase annonceDto, Integer integer) {
-        if (integer == null || integer.equals(0)) {
-            AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
-            String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
-            annonceEntity.setUidUser(uidUtilisateur);
-
-            annonceRepository.singleSave(annonceEntity)
-                    .filter(annonceEntity1 -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
-                    .doOnSuccess(annonceEntity1 -> firebasePhotoStorage.savePhotoToLocalByListUrl(context, annonceEntity1.getIdAnnonce(), annonceDto.getPhotos()))
-                    .doOnError(throwable -> Log.e(TAG, "singleSave.doOnError " + throwable.getMessage()))
-                    .subscribe();
-        }
-    }
 }
