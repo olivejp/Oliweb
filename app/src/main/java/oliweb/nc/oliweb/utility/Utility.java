@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -60,6 +61,10 @@ public class Utility {
     private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private Utility() {
+    }
+
+    public static String getPrixFormated(Integer prixInteger) {
+        return String.valueOf(String.format(Locale.FRANCE, "%,d", prixInteger) + " xpf").trim();
     }
 
     public static int getDefaultActionBarSize(Context context) {

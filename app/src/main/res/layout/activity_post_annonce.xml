@@ -255,6 +255,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 app:backgroundTint="@color/colorPrimaryDark"
+                app:fabAlignmentMode="end"
                 app:hideOnScroll="true" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton

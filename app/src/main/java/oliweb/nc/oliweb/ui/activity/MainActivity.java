@@ -21,7 +21,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,7 +38,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityOptionsCompat;
@@ -119,9 +118,6 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.appbarlayout)
     AppBarLayout appBarLayout;
 
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
-
     @BindView(R.id.main_coordinator_layout)
     CoordinatorLayout coordinatorLayout;
 
@@ -134,8 +130,8 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.frame_category_list)
     FrameLayout frameCategoryList;
 
-    @BindView(R.id.fab_add_annonce)
-    FloatingActionButton floatingActionButton;
+    @BindView(R.id.main_activity_bar)
+    BottomAppBar bottomAppBar;
 
     SearchView searchView;
 
@@ -283,10 +279,12 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        setSupportActionBar(toolbar);
-        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        setSupportActionBar(bottomAppBar);
+
+        toggle = new ActionBarDrawerToggle(this, drawer, bottomAppBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
 
         navigationViewMenu = navigationView.getMenu();
         navigationView.setNavigationItemSelectedListener(this);
@@ -294,11 +292,6 @@ public class MainActivity extends AppCompatActivity
 
         // Observe les changements effectués sur cet utilisateur
         viewModel.getLiveUserConnected().observe(this, this::initViewsForThisUser);
-
-        // Permet de faire disparaitre la barre outil dans le cas où on scroll
-        appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) ->
-                toolbar.setVisibility((i < -220) ? View.INVISIBLE : View.VISIBLE)
-        );
     }
 
     private void initFragments(Bundle savedInstanceState) {
@@ -385,6 +378,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {
+            return true;
+        }
         if (item.getItemId() == R.id.sorting) {
             SortDialog sortDialog = new SortDialog();
             sortDialog.show(getSupportFragmentManager(), SORT_DIALOG);

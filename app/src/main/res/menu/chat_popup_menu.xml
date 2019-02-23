@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/chat_open_annonce"
-        android:icon="@drawable/ic_search_grey_900_48dp"
+        android:icon="@drawable/ic_search_white_48dp"
         android:title="Voir annonce"
         app:showAsAction="always" />
 </menu>

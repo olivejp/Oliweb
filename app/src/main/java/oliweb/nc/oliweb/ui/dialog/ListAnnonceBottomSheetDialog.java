@@ -22,6 +22,8 @@ import oliweb.nc.oliweb.database.converter.DateConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 
+import static oliweb.nc.oliweb.utility.Utility.getPrixFormated;
+
 public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
 
     private static final String TAG = ListAnnonceBottomSheetDialog.class.getName();
@@ -82,7 +84,7 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
                         .into(imageView);
             }
             titreAnnonce.setText(annonceFull.getAnnonce().getTitre());
-            prix.setText(String.valueOf(annonceFull.getAnnonce().getPrix()).concat(" xpf"));
+            prix.setText(getPrixFormated(annonceFull.annonce.getPrix()));
             date.setText(DateConverter.convertDateToUiDate(annonceFull.getAnnonce().getDatePublication()));
             description.setText(annonceFull.getAnnonce().getDescription());
         }

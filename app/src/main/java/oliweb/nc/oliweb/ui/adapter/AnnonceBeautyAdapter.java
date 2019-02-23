@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +35,8 @@ import oliweb.nc.oliweb.database.entity.AnnonceFull;
 import oliweb.nc.oliweb.ui.glide.GlideApp;
 import oliweb.nc.oliweb.ui.glide.GlideRequests;
 import oliweb.nc.oliweb.utility.Utility;
+
+import static oliweb.nc.oliweb.utility.Utility.getPrixFormated;
 
 /**
  * Created by orlanth23 on 07/02/2018.
@@ -152,7 +153,7 @@ public class AnnonceBeautyAdapter extends
 
         commonViewHolder.textDatePublicationAnnonce.setText(Utility.howLongFromNow(commonViewHolder.annonceFull.getAnnonce().getDatePublication()));
         commonViewHolder.textTitreAnnonce.setText(annonce.getTitre());
-        commonViewHolder.textPrixAnnonce.setText(String.valueOf(String.format(Locale.FRANCE, "%,d", annonce.getPrix()) + " xpf").trim());
+        commonViewHolder.textPrixAnnonce.setText(getPrixFormated(annonce.getPrix()));
         commonViewHolder.textTitreCategorie.setText(annoncePhotos.getCategorie().get(0).getName());
     }
 

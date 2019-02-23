@@ -30,34 +30,6 @@
             app:srcCompat="@drawable/ic_more_horiz_black_24dp" />
 
         <ImageView
-            android:id="@+id/image_favorite"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="5dp"
-            android:background="@drawable/drawable_ripple_red_effect"
-            android:clickable="true"
-            android:focusable="true"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_favorite_border_white_48dp" />
-
-        <ImageView
-            android:id="@+id/image_share"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="5dp"
-            android:background="@drawable/drawable_ripple_blue_effect"
-            android:clickable="true"
-            android:focusable="true"
-            android:visibility="invisible"
-            app:layout_constraintRight_toLeftOf="@id/image_favorite"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_share_white_48dp" />
-
-        <ImageView
             android:id="@+id/image_user_beauty"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -70,8 +42,8 @@
             android:id="@+id/text_categorie_annonce"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:gravity="top"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:gravity="center_vertical"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
             app:layout_constraintBottom_toBottomOf="@id/image_user_beauty"
             app:layout_constraintEnd_toStartOf="@id/text_bullet"
             app:layout_constraintStart_toStartOf="@id/text_user_profile"
@@ -83,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:layout_marginStart="3dp"
-            android:gravity="top"
+            android:gravity="center_vertical"
             android:text="\u2022"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
             android:textStyle="bold"
@@ -91,7 +63,6 @@
             app:layout_constraintEnd_toStartOf="@id/text_date_publication_annonce"
             app:layout_constraintStart_toEndOf="@id/text_categorie_annonce"
             app:layout_constraintTop_toTopOf="@id/text_categorie_annonce" />
-
 
         <TextView
             android:id="@+id/text_user_profile"
@@ -102,7 +73,7 @@
             android:ellipsize="end"
             android:gravity="bottom"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
             app:layout_constraintBottom_toTopOf="@id/text_categorie_annonce"
             app:layout_constraintEnd_toStartOf="@id/image_more"
             app:layout_constraintStart_toEndOf="@id/image_user_beauty"
@@ -114,7 +85,7 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:layout_marginStart="3dp"
-            android:gravity="top"
+            android:gravity="center_vertical"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
             app:layout_constraintBottom_toBottomOf="@id/text_categorie_annonce"
             app:layout_constraintStart_toEndOf="@id/text_bullet"
