@@ -92,7 +92,7 @@ import static oliweb.nc.oliweb.utility.Constants.REMOTE_DECREASE_JPEG_QUALITY_DE
 import static oliweb.nc.oliweb.utility.Constants.REMOTE_DELAY_DEFAULT;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
 import static oliweb.nc.oliweb.utility.Utility.callLoginUi;
-import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
+import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetrieveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MainActivity extends AppCompatActivity
@@ -736,7 +736,7 @@ public class MainActivity extends AppCompatActivity
             viewModel.shouldIAskQuestionToRetrieveData(user.getUid()).observeOnce(shouldAsk -> {
                 if (shouldAsk != null && shouldAsk.get() && !questionHasBeenAsked) {
                     questionHasBeenAsked = true;
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
+                    sendNotificationToRetrieveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             questionHasBeenAsked = false;

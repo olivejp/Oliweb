@@ -1,6 +1,5 @@
 package oliweb.nc.oliweb.repository.local;
 
-import androidx.lifecycle.LiveData;
 import android.content.Context;
 import android.util.Log;
 
@@ -11,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import androidx.lifecycle.LiveData;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -76,6 +76,10 @@ public class AnnonceRepository extends AbstractRepository<AnnonceEntity, Long> {
 
     public Single<Integer> countByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
         return this.annonceDao.existByUidUtilisateurAndUidAnnonce(uidUtilisateur, uidAnnonce);
+    }
+
+    public Maybe<AnnonceEntity> getMaybeByUidUserAndUidAnnonce(String uidUtilisateur, String uidAnnonce) {
+        return this.annonceDao.getMaybeByUidUserAndUidAnnonce(uidUtilisateur, uidAnnonce);
     }
 
     /**

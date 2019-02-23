@@ -355,7 +355,7 @@ public class Utility {
     }
 
     // TODO Permettre de paramétrer cette méthode
-    public static void sendNotificationToRetreiveData(FragmentManager fragmentManager, NoticeDialogFragment.DialogListener listener, String textToDisplay) {
+    public static void sendNotificationToRetrieveData(FragmentManager fragmentManager, NoticeDialogFragment.DialogListener listener, String textToDisplay) {
         DialogInfos dialogInfos = new DialogInfos();
         dialogInfos.setMessage(textToDisplay)
                 .setButtonType(TYPE_BOUTON_YESNO)

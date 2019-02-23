@@ -16,7 +16,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import androidx.annotation.NonNull;
+import io.reactivex.Observable;
 import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
@@ -167,30 +169,62 @@ public class FirebaseRetrieverService {
      * Lecture de toutes les annonces présentes dans Firebase pour cet utilisateur
      * et récupération de ces annonces dans la base locale
      */
-    public void synchronize(Context context, String uidUser) {
-        firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
-                .subscribeOn(scheduler).observeOn(scheduler)
-                .doOnNext(annonceDto -> {
-                    Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
-                    annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
-                            .subscribeOn(scheduler).observeOn(scheduler)
-                            .doOnSuccess(integer -> {
-                                if (integer == null || integer.equals(0)) {
-                                    AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
-                                    String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
-                                    annonceEntity.setUidUser(uidUtilisateur);
+    public Observable<AnnonceFirebase> synchronize(Context context, String uidUser) {
+        return Observable.create(emitter ->
+                firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
+                        .subscribeOn(scheduler).observeOn(scheduler)
+                        .doOnNext(annonceFirebase ->
+                                annonceRepository.getMaybeByUidUserAndUidAnnonce(uidUser, annonceFirebase.getUuid())
+                                        .subscribeOn(scheduler).observeOn(scheduler)
+                                        .switchIfEmpty(createNewAnnonceEntity(annonceFirebase))
+                                        .flatMap(annonceEntity -> annonceRepository.singleSave(annonceEntity))
+                                        .doOnSuccess(annonceEntitySaved -> {
+                                            if (annonceFirebase.getPhotos() != null && !annonceFirebase.getPhotos().isEmpty()) {
+                                                firebasePhotoStorage.saveSinglePhotoToLocalByListUrl(context, annonceEntitySaved.getIdAnnonce(), annonceFirebase.getPhotos())
+                                                        .subscribeOn(scheduler).observeOn(scheduler)
+                                                        .doOnComplete(() -> emitter.onNext(annonceFirebase))
+                                                        .subscribe();
+                                            } else {
+                                                emitter.onNext(annonceFirebase);
+                                            }
+                                        })
+                                        .doOnError(emitter::onError)
+                                        .subscribe()
+                        )
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
+    }
 
-                                    annonceRepository.singleSave(annonceEntity)
-                                            .filter(annonceEntity1 -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
-                                            .doOnSuccess(annonceEntity1 -> firebasePhotoStorage.savePhotoToLocalByListUrl(context, annonceEntity1.getIdAnnonce(), annonceDto.getPhotos()))
-                                            .doOnError(throwable -> Log.e(TAG, "singleSave.doOnError " + throwable.getMessage()))
-                                            .subscribe();
-                                }
-                            })
-                            .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
-                            .subscribe();
-                })
-                .doOnError(throwable -> Log.e(TAG, "synchronize.doOnError " + throwable.getMessage()))
+    private Single<AnnonceEntity> createNewAnnonceEntity(AnnonceFirebase annonceFirebase) {
+        return Single.create(emitter -> {
+            AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceFirebase);
+            String uidUtilisateur = annonceFirebase.getUtilisateur().getUuid();
+            annonceEntity.setUidUser(uidUtilisateur);
+            emitter.onSuccess(annonceEntity);
+        });
+    }
+
+    private void countAnnonceThenInsert(Context context, AnnonceFirebase annonceDto) {
+        Log.d(TAG, "Starting saveAnnonceDtoToLocalDb called with annonceDto = " + annonceDto.toString());
+        annonceRepository.countByUidUserAndUidAnnonce(annonceDto.getUtilisateur().getUuid(), annonceDto.getUuid())
+                .subscribeOn(scheduler).observeOn(scheduler)
+                .doOnSuccess(integer -> insertAnnonceFromFirebaseToLocal(context, annonceDto, integer))
+                .doOnError(throwable -> Log.e(TAG, "countByUidUserAndUidAnnonce.doOnError " + throwable.getMessage()))
                 .subscribe();
+    }
+
+    private void insertAnnonceFromFirebaseToLocal(Context context, AnnonceFirebase annonceDto, Integer integer) {
+        if (integer == null || integer.equals(0)) {
+            AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceDto);
+            String uidUtilisateur = annonceDto.getUtilisateur().getUuid();
+            annonceEntity.setUidUser(uidUtilisateur);
+
+            annonceRepository.singleSave(annonceEntity)
+                    .filter(annonceEntity1 -> annonceDto.getPhotos() != null && !annonceDto.getPhotos().isEmpty())
+                    .doOnSuccess(annonceEntity1 -> firebasePhotoStorage.savePhotoToLocalByListUrl(context, annonceEntity1.getIdAnnonce(), annonceDto.getPhotos()))
+                    .doOnError(throwable -> Log.e(TAG, "singleSave.doOnError " + throwable.getMessage()))
+                    .subscribe();
+        }
     }
 }

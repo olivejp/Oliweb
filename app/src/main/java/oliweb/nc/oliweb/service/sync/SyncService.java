@@ -95,7 +95,11 @@ public class SyncService extends IntentService {
 
     private void handleActionSyncFromFirebase(String uidUtilisateur) {
         FirebaseRetrieverService firebaseRetrieverService = firebaseServicesComponent.getFirebaseRetrieverService();
-        firebaseRetrieverService.synchronize(this, uidUtilisateur);
+        firebaseRetrieverService.synchronize(this, uidUtilisateur)
+                .doOnNext(annonceFirebase -> Log.w(TAG, "Enregistrement de l'annonce " + annonceFirebase.getUuid() + " réussi !"))
+                .doOnError(throwable -> Log.e(TAG, throwable.getLocalizedMessage()))
+                .doOnComplete(() -> Log.w(TAG, "Toutes les annonces ont été récupérées !"))
+                .subscribe();
     }
 
     @Override

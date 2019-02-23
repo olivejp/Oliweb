@@ -39,7 +39,7 @@ import oliweb.nc.oliweb.utility.Constants;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_KEY_MODE;
 import static oliweb.nc.oliweb.ui.activity.PostAnnonceActivity.BUNDLE_UID_USER;
 import static oliweb.nc.oliweb.utility.Utility.DIALOG_FIREBASE_RETRIEVE;
-import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetreiveData;
+import static oliweb.nc.oliweb.utility.Utility.sendNotificationToRetrieveData;
 
 @SuppressWarnings("squid:MaximumInheritanceDepth")
 public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialogFragment.DialogListener {
@@ -134,7 +134,7 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
             SyncService.launchSynchroForUser(getApplicationContext(), uidUser);
             viewModel.shouldIAskQuestionToRetreiveData(uidUser).observeOnce(atomicBoolean -> {
                 if (atomicBoolean != null && atomicBoolean.get()) {
-                    sendNotificationToRetreiveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
+                    sendNotificationToRetrieveData(getSupportFragmentManager(), this, getString(R.string.ads_found_on_network));
                 }
             });
             return true;

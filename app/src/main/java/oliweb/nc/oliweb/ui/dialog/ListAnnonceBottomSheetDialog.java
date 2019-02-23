@@ -75,6 +75,7 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
         }
 
         if (annonceFull != null) {
+
             if (annonceFull.getPhotos() != null && !annonceFull.getPhotos().isEmpty() && annonceFull.getPhotos().get(0) != null && annonceFull.getPhotos().get(0).getFirebasePath() != null && !annonceFull.getPhotos().get(0).getFirebasePath().isEmpty()) {
                 GlideApp.with(rootView)
                         .load(this.annonceFull.getPhotos().get(0).getFirebasePath())
@@ -83,21 +84,22 @@ public class ListAnnonceBottomSheetDialog extends BottomSheetDialogFragment {
                         .error(R.mipmap.ic_banana_launcher_foreground)
                         .into(imageView);
             }
+
             titreAnnonce.setText(annonceFull.getAnnonce().getTitre());
             prix.setText(getPrixFormated(annonceFull.annonce.getPrix()));
             date.setText(DateConverter.convertDateToUiDate(annonceFull.getAnnonce().getDatePublication()));
             description.setText(annonceFull.getAnnonce().getDescription());
-        }
 
-        if (listener != null) {
-            buttonFavorite.setOnClickListener(view -> {
-                this.listener.onFavoriteClick(annonceFull);
-                ListAnnonceBottomSheetDialog.this.dismiss();
-            });
-            buttonShare.setOnClickListener(view -> {
-                this.listener.onShareClick(annonceFull);
-                ListAnnonceBottomSheetDialog.this.dismiss();
-            });
+            if (listener != null) {
+                buttonFavorite.setOnClickListener(view -> {
+                    this.listener.onFavoriteClick(annonceFull);
+                    ListAnnonceBottomSheetDialog.this.dismiss();
+                });
+                buttonShare.setOnClickListener(view -> {
+                    this.listener.onShareClick(annonceFull);
+                    ListAnnonceBottomSheetDialog.this.dismiss();
+                });
+            }
         }
 
         return rootView;

@@ -2,7 +2,6 @@ package oliweb.nc.oliweb.service.firebase;
 
 import android.content.Context;
 import android.net.Uri;
-import androidx.core.util.Pair;
 import android.util.Log;
 
 import com.google.firebase.storage.FirebaseStorage;
@@ -19,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import androidx.core.util.Pair;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
@@ -117,6 +117,26 @@ public class FirebasePhotoStorage {
                 }
             }
         }
+    }
+
+    /**
+     * Pour toutes les urls passées dans la liste,
+     * On va télécharger les images sur notre device
+     *
+     * @param context
+     * @param idAnnonce
+     * @param listPhotoUrl
+     */
+    Observable<PhotoEntity> saveSinglePhotoToLocalByListUrl(Context context, final long idAnnonce, List<String> listPhotoUrl) {
+        return Observable.create(emitter ->
+                Observable.fromIterable(listPhotoUrl)
+                        .filter(s -> !s.isEmpty())
+                        .flatMapSingle(url -> downloadFileToDevice(mediaUtility.createNewImagePairUriFile(context), idAnnonce, url))
+                        .doOnNext(emitter::onNext)
+                        .doOnError(emitter::onError)
+                        .doOnComplete(emitter::onComplete)
+                        .subscribe()
+        );
     }
 
     /**

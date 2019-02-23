@@ -1,12 +1,11 @@
 package oliweb.nc.oliweb.database.dao;
 
+import java.util.List;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
 import androidx.room.Transaction;
-
-import java.util.List;
-
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -40,6 +39,10 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     @Transaction
     @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND favorite = :favorite")
     public abstract Maybe<AnnonceEntity> findMaybeByUidAndFavorite(String uidAnnonce, int favorite);
+
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND uidUser = :uidUser LIMIT 1")
+    public abstract Maybe<AnnonceEntity> getMaybeByUidUserAndUidAnnonce(String uidAnnonce, String uidUser);
 
     @Transaction
     @Query("SELECT * FROM annonce WHERE statut IN (:status)")
