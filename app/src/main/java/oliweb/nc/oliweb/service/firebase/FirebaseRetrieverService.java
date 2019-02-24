@@ -19,6 +19,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Pair;
 import io.reactivex.Emitter;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
@@ -180,10 +181,9 @@ public class FirebaseRetrieverService {
             List<AnnonceFirebase> listToReturn = new ArrayList<>();
             firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
                     .subscribeOn(scheduler).observeOn(scheduler)
-                    .toList()
-                    .flattenAsObservable(annonceFirebases -> {
-                        listToReturn.addAll(annonceFirebases);
-                        return annonceFirebases;
+                    .map(annonceFirebase -> {
+                        listToReturn.add(annonceFirebase);
+                        return annonceFirebase;
                     })
                     .flatMapMaybe(annonce -> annonceRepository.getMaybeByUidUserAndUidAnnonce(uidUser, annonce.getUuid()))
                     .doOnNext(annonceEntity -> {
@@ -209,31 +209,44 @@ public class FirebaseRetrieverService {
         return Observable.create(emitterMessage ->
                 getAnnonceToRetrieve(uidUser)
                         .subscribeOn(scheduler).observeOn(scheduler)
-                        .doOnSuccess(annonceFirebases -> synchroniseAnnonce(annonceFirebases, emitterMessage))
+                        .doOnError(emitterMessage::onError)
+                        .doOnSuccess(annonceFirebases ->
+                                synchroniseAnnonce(annonceFirebases)
+                                        .doOnNext(annonceEntity -> sendMessage(emitterMessage, annonceEntity))
+                                        .doOnError(emitterMessage::onError)
+                                        .doOnComplete(() ->
+                                                synchronisePhoto(context, uidUser, annonceFirebases)
+                                                        .doOnNext(photoEntity -> sendMessage(emitterMessage, photoEntity))
+                                                        .doOnError(emitterMessage::onError)
+                                                        .subscribe()
+                                        )
+                                        .subscribe()
+                        )
                         .subscribe()
         );
     }
 
-    private Observable<AnnonceEntity> synchroniseAnnonce(List<AnnonceFirebase> listAnnonce, Emitter<String> emitterMessage) {
+    private Observable<AnnonceEntity> synchroniseAnnonce(List<AnnonceFirebase> listAnnonce) {
         return Observable.fromIterable(listAnnonce)
                 .flatMapSingle(this::createNewAnnonceEntity)
                 .flatMapSingle(annonceRepository::singleSave);
     }
 
-    private Observable<PhotoEntity> synchronisePhoto(Context context, String uidUser, List<AnnonceFirebase> listAnnonce, Emitter<String> emitterMessage) {
+    private Observable<PhotoEntity> synchronisePhoto(Context context, String uidUser, List<AnnonceFirebase> listAnnonce) {
         return Observable.fromIterable(listAnnonce)
-                .subscribeOn(scheduler).observeOn(scheduler)
                 .filter(annonceFirebase -> annonceFirebase.getPhotos() != null && !annonceFirebase.getPhotos().isEmpty())
-                .doOnError(emitterMessage::onError)
-                .doOnNext(annonceFirebase ->
-                        annonceRepository.findByUidUserUidAnnonce(uidUser, annonceFirebase.getUuid())
-                                .flatMapObservable(annonceEntity -> firebasePhotoStorage.saveSinglePhotoToLocalByListUrl(context, annonceEntity.getIdAnnonce(), annonceFirebase.getPhotos()))
-                                .doOnNext(photoEntity -> {
-                                    sendMessage(emitterMessage, photoEntity);
-                                })
-                                .doOnError(emitterMessage::onError)
-                                .subscribe()
-                );
+                .flatMapSingle(annonceFirebase -> getPairAnnonces(uidUser, annonceFirebase))
+                .flatMap(pair -> firebasePhotoStorage.saveSinglePhotoToLocalByListUrl(context, pair.second, pair.first.getPhotos()));
+    }
+
+    private Single<Pair<AnnonceFirebase, Long>> getPairAnnonces(String uidUser, AnnonceFirebase annonceFirebase) {
+        return Single.create(emitter ->
+                annonceRepository.findByUidUserUidAnnonce(uidUser, annonceFirebase.getUuid())
+                        .subscribeOn(scheduler).observeOn(scheduler)
+                        .doOnSuccess(annonceEntity -> emitter.onSuccess(new Pair<>(annonceFirebase, annonceEntity.getId())))
+                        .doOnError(emitter::onError)
+                        .subscribe()
+        );
     }
 
     private void sendMessage(Emitter<String> emitter, AnnonceEntity annonceEntity) {

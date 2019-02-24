@@ -127,7 +127,7 @@ public class FirebasePhotoStorage {
      * @param idAnnonce
      * @param listPhotoUrl
      */
-    Observable<PhotoEntity> saveSinglePhotoToLocalByListUrl(Context context, final long idAnnonce, List<String> listPhotoUrl) {
+    Observable<PhotoEntity> saveSinglePhotoToLocalByListUrl(Context context, final Long idAnnonce, List<String> listPhotoUrl) {
         return Observable.create(emitter ->
                 Observable.fromIterable(listPhotoUrl)
                         .filter(s -> !s.isEmpty())
