@@ -80,5 +80,8 @@ public abstract class AnnonceDao implements AbstractDao<AnnonceEntity, Long> {
     @Query("DELETE FROM annonce WHERE uidUserFavorite = :uidUser AND uid = :uidAnnonce AND favorite = 1")
     public abstract int deleteFromFavorite(String uidUser, String uidAnnonce);
 
+    @Transaction
+    @Query("SELECT * FROM annonce WHERE uid = :uidAnnonce AND uidUser = :uidUser")
+    public abstract Single<AnnonceEntity> findByUidUserUidAnnonce(String uidUser, String uidAnnonce);
 
 }

@@ -9,6 +9,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -16,12 +19,14 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import androidx.annotation.NonNull;
+import io.reactivex.Emitter;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
 import oliweb.nc.oliweb.database.entity.CategorieEntity;
+import oliweb.nc.oliweb.database.entity.PhotoEntity;
 import oliweb.nc.oliweb.dto.firebase.AnnonceFirebase;
 import oliweb.nc.oliweb.repository.firebase.FirebaseAnnonceRepository;
 import oliweb.nc.oliweb.repository.local.AnnonceRepository;
@@ -166,10 +171,80 @@ public class FirebaseRetrieverService {
     }
 
     /**
+     * Doit renvoyer les annonces firebase qui ne sont pas présentes dans la base locale
+     *
+     * @return
+     */
+    private Single<List<AnnonceFirebase>> getAnnonceToRetrieve(String uidUser) {
+        return Single.create(emitter -> {
+            List<AnnonceFirebase> listToReturn = new ArrayList<>();
+            firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
+                    .subscribeOn(scheduler).observeOn(scheduler)
+                    .toList()
+                    .flattenAsObservable(annonceFirebases -> {
+                        listToReturn.addAll(annonceFirebases);
+                        return annonceFirebases;
+                    })
+                    .flatMapMaybe(annonce -> annonceRepository.getMaybeByUidUserAndUidAnnonce(uidUser, annonce.getUuid()))
+                    .doOnNext(annonceEntity -> {
+                        for (Iterator<AnnonceFirebase> iter = listToReturn.listIterator(); iter.hasNext(); ) {
+                            AnnonceFirebase a = iter.next();
+                            if (a.getUuid().equals(annonceEntity.getUid())) {
+                                iter.remove();
+                                break;
+                            }
+                        }
+                    })
+                    .doOnComplete(() -> emitter.onSuccess(listToReturn))
+                    .subscribe();
+        });
+    }
+
+    /**
      * Lecture de toutes les annonces présentes dans Firebase pour cet utilisateur
      * et récupération de ces annonces dans la base locale
+     * puis récupération des photos de chaque annonce.
      */
-    public Observable<AnnonceFirebase> synchronize(Context context, String uidUser) {
+    public Observable<String> synchronize(Context context, String uidUser) {
+        return Observable.create(emitterMessage ->
+                getAnnonceToRetrieve(uidUser)
+                        .subscribeOn(scheduler).observeOn(scheduler)
+                        .doOnSuccess(annonceFirebases -> synchroniseAnnonce(annonceFirebases, emitterMessage))
+                        .subscribe()
+        );
+    }
+
+    private Observable<AnnonceEntity> synchroniseAnnonce(List<AnnonceFirebase> listAnnonce, Emitter<String> emitterMessage) {
+        return Observable.fromIterable(listAnnonce)
+                .flatMapSingle(this::createNewAnnonceEntity)
+                .flatMapSingle(annonceRepository::singleSave);
+    }
+
+    private Observable<PhotoEntity> synchronisePhoto(Context context, String uidUser, List<AnnonceFirebase> listAnnonce, Emitter<String> emitterMessage) {
+        return Observable.fromIterable(listAnnonce)
+                .subscribeOn(scheduler).observeOn(scheduler)
+                .filter(annonceFirebase -> annonceFirebase.getPhotos() != null && !annonceFirebase.getPhotos().isEmpty())
+                .doOnError(emitterMessage::onError)
+                .doOnNext(annonceFirebase ->
+                        annonceRepository.findByUidUserUidAnnonce(uidUser, annonceFirebase.getUuid())
+                                .flatMapObservable(annonceEntity -> firebasePhotoStorage.saveSinglePhotoToLocalByListUrl(context, annonceEntity.getIdAnnonce(), annonceFirebase.getPhotos()))
+                                .doOnNext(photoEntity -> {
+                                    sendMessage(emitterMessage, photoEntity);
+                                })
+                                .doOnError(emitterMessage::onError)
+                                .subscribe()
+                );
+    }
+
+    private void sendMessage(Emitter<String> emitter, AnnonceEntity annonceEntity) {
+        emitter.onNext("Récupération de l'annonce " + annonceEntity.getTitre());
+    }
+
+    private void sendMessage(Emitter<String> emitter, PhotoEntity photoEntity) {
+        emitter.onNext("Récupération de la photo " + photoEntity.getFirebasePath());
+    }
+
+    private Observable<AnnonceFirebase> synchroniseAnnonceFirebase(Context context, String uidUser) {
         return Observable.create(emitter ->
                 firebaseAnnonceRepository.observeAllAnnonceByUidUser(uidUser)
                         .subscribeOn(scheduler).observeOn(scheduler)

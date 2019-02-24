@@ -127,9 +127,9 @@ public class SyncService extends IntentService {
 
         // Lancement de la synchronysation
         firebaseRetrieverService.synchronize(this, uidUtilisateur)
-                .doOnNext(annonceFirebase -> {
-                    Log.w(TAG, "Enregistrement de l'annonce " + annonceFirebase.getUuid() + " réussi !");
-                    builder.setContentText("En cours : " + annonceFirebase.getTitre());
+                .doOnNext(annonceEntity -> {
+                    Log.w(TAG, "Enregistrement de l'annonce " + annonceEntity.getUid() + " réussi !");
+                    builder.setContentText("En cours : " + annonceEntity.getTitre());
                     if (mNotificationManager != null) {
                         mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
                     }
@@ -139,6 +139,11 @@ public class SyncService extends IntentService {
                     builder.setContentText("Téléchargement en erreur");
                     if (mNotificationManager != null) {
                         mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
+                    }
+                })
+                .doOnComplete(() -> {
+                    if (mNotificationManager != null) {
+                        mNotificationManager.cancel(NOTIFICATION_SYNC_ANNONCE_ID);
                     }
                 })
                 .subscribe();
