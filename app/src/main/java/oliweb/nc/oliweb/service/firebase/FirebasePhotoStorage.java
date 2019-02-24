@@ -127,16 +127,10 @@ public class FirebasePhotoStorage {
      * @param idAnnonce
      * @param listPhotoUrl
      */
-    Observable<PhotoEntity> saveSinglePhotoToLocalByListUrl(Context context, final Long idAnnonce, List<String> listPhotoUrl) {
-        return Observable.create(emitter ->
-                Observable.fromIterable(listPhotoUrl)
-                        .filter(s -> !s.isEmpty())
-                        .flatMapSingle(url -> downloadFileToDevice(mediaUtility.createNewImagePairUriFile(context), idAnnonce, url))
-                        .doOnNext(emitter::onNext)
-                        .doOnError(emitter::onError)
-                        .doOnComplete(emitter::onComplete)
-                        .subscribe()
-        );
+    Observable<PhotoEntity> saveObservablePhotoToLocalByListUrl(Context context, final Long idAnnonce, List<String> listPhotoUrl) {
+        return Observable.fromIterable(listPhotoUrl)
+                .filter(s -> !s.isEmpty())
+                .flatMapSingle(url -> downloadFileToDevice(mediaUtility.createNewImagePairUriFile(context), idAnnonce, url));
     }
 
     /**
@@ -171,7 +165,7 @@ public class FirebasePhotoStorage {
         }
     }
 
-    private Single<PhotoEntity> downloadFileToDevice(Pair<Uri, File> pairUriFile, long idAnnonce, String urlPhoto) {
+    public Single<PhotoEntity> downloadFileToDevice(Pair<Uri, File> pairUriFile, long idAnnonce, String urlPhoto) {
         return downloadFileFromStorage(pairUriFile.second, urlPhoto)
                 .subscribeOn(processScheduler).observeOn(processScheduler)
                 .filter(AtomicBoolean::get)

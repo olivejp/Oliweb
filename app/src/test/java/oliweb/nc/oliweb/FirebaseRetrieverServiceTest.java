@@ -12,8 +12,10 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.lifecycle.Observer;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
 import oliweb.nc.oliweb.database.converter.AnnonceConverter;
 import oliweb.nc.oliweb.database.entity.AnnonceEntity;
@@ -42,6 +44,12 @@ public class FirebaseRetrieverServiceTest {
     public static final String UID_ANNONCE_2 = "UID2";
     public static final String UID_ANNONCE_3 = "UID3";
     public static final String UID_USER = "123";
+    public static final String TITRE_ANNONCE_1 = "Blabla";
+    public static final String TITRE_ANNONCE_2 = "Flouflou";
+    public static final String TITRE_ANNONCE_3 = "Falala";
+    public static final String DESCRIPTION_1 = "ANNONCE_1";
+    public static final String DESCRIPTION_2 = "ANNONCE_2";
+    public static final String DESCRIPTION_3 = "ANNONCE_3";
 
     @Mock
     private Context context;
@@ -74,26 +82,39 @@ public class FirebaseRetrieverServiceTest {
         // AnnonceFirebase sans photo
         AnnonceFirebase annonceFirebase1 = new AnnonceFirebase();
         annonceFirebase1.setUuid(UID_ANNONCE_1);
-        annonceFirebase1.setTitre("Blabla");
+        annonceFirebase1.setTitre(TITRE_ANNONCE_1);
+        annonceFirebase1.setDescription(DESCRIPTION_1);
         annonceFirebase1.setUtilisateur(userDto);
 
         // AnnonceFirebase sans photo
         AnnonceFirebase annonceFirebase2 = new AnnonceFirebase();
         annonceFirebase2.setUuid(UID_ANNONCE_2);
-        annonceFirebase2.setTitre("Flouflou");
+        annonceFirebase2.setTitre(TITRE_ANNONCE_2);
+        annonceFirebase2.setDescription(DESCRIPTION_2);
         annonceFirebase2.setUtilisateur(userDto);
 
         // AnnonceFirebase avec photos
         AnnonceFirebase annonceFirebase3 = new AnnonceFirebase();
         annonceFirebase3.setUuid(UID_ANNONCE_3);
-        annonceFirebase3.setTitre("Falala");
+        annonceFirebase3.setTitre(TITRE_ANNONCE_3);
+        annonceFirebase3.setDescription(DESCRIPTION_3);
         annonceFirebase3.setUtilisateur(userDto);
         annonceFirebase3.setPhotos(Arrays.asList("url1", "url2", "url3"));
 
+        // Annonce entity renvoyé après la sauvegarde de l'AnnonceDto1
+        AnnonceEntity annonceEntity1 = AnnonceConverter.convertDtoToEntity(annonceFirebase1);
+        annonceEntity1.setUidUser(UID_USER);
+        annonceEntity1.setIdAnnonce(11L);
+
+        // Annonce entity renvoyé après la sauvegarde de l'AnnonceDto2
+        AnnonceEntity annonceEntity2 = AnnonceConverter.convertDtoToEntity(annonceFirebase2);
+        annonceEntity2.setUidUser(UID_USER);
+        annonceEntity2.setIdAnnonce(22L);
+
         // Annonce entity renvoyé après la sauvegarde de l'AnnonceDto3
-        AnnonceEntity annonceEntity = AnnonceConverter.convertDtoToEntity(annonceFirebase3);
-        annonceEntity.setUidUser(UID_USER);
-        annonceEntity.setIdAnnonce(55L);
+        AnnonceEntity annonceEntity3 = AnnonceConverter.convertDtoToEntity(annonceFirebase3);
+        annonceEntity3.setUidUser(UID_USER);
+        annonceEntity3.setIdAnnonce(55L);
 
         // Firebase Annonce Repo nous renvoie trois AnnonceFirebase
         when(firebaseAnnonceRepository.observeAllAnnonceByUidUser(argThat(UID_USER::equals))).thenReturn(Observable.just(annonceFirebase1, annonceFirebase2, annonceFirebase3));
@@ -108,7 +129,31 @@ public class FirebaseRetrieverServiceTest {
         when(annonceRepository.countByUidUserAndUidAnnonce(argThat(UID_USER::equals), argThat(UID_ANNONCE_3::equals))).thenReturn(Single.just(0));
 
         // Retour d'annonceRepository après la sauvegarde du AnnonceDto3
-        when(annonceRepository.singleSave(any())).thenReturn(Single.just(annonceEntity));
+        when(annonceRepository.singleSave(any())).thenReturn(Single.just(annonceEntity3));
+
+        when(annonceRepository.findByUidUserUidAnnonce(argThat(UID_USER::equals), argThat(UID_ANNONCE_1::equals))).thenReturn(Single.just(annonceEntity1));
+        when(annonceRepository.findByUidUserUidAnnonce(argThat(UID_USER::equals), argThat(UID_ANNONCE_2::equals))).thenReturn(Single.just(annonceEntity2));
+        when(annonceRepository.findByUidUserUidAnnonce(argThat(UID_USER::equals), argThat(UID_ANNONCE_3::equals))).thenReturn(Single.just(annonceEntity3));
+    }
+
+    @Test
+    public void getShouldReturnAList() {
+        // Pour chaque lecture d'une annonce dans la base locale, je renvoie un Maybe.empty() signifiant qu'il n'existe pas dans la base locale.
+        when(annonceRepository.getMaybeByUidUserAndUidAnnonce(argThat(UID_USER::equals), any())).thenReturn(Maybe.empty());
+
+        // Création de mon service à tester
+        FirebaseRetrieverService firebaseRetrieverService = new FirebaseRetrieverService(firebaseAnnonceRepository, annonceRepository, categoryRepository, firebasePhotoStorage, testScheduler, testScheduler);
+
+        // Appel de ma fonction à tester
+        TestObserver<String> testObserver = new TestObserver<>();
+        firebaseRetrieverService.synchronize(context, UID_USER)
+                .subscribeOn(testScheduler).observeOn(testScheduler)
+                .subscribe(testObserver);
+        testScheduler.triggerActions();
+
+        verify(annonceRepository, times(1)).singleSave(argThat(annonceEntity -> annonceEntity.getTitre().equals(TITRE_ANNONCE_1) && annonceEntity.getDescription().equals(DESCRIPTION_1)));
+        verify(annonceRepository, times(1)).singleSave(argThat(annonceEntity -> annonceEntity.getTitre().equals(TITRE_ANNONCE_2) && annonceEntity.getDescription().equals(DESCRIPTION_2)));
+        verify(annonceRepository, times(1)).singleSave(argThat(annonceEntity -> annonceEntity.getTitre().equals(TITRE_ANNONCE_3) && annonceEntity.getDescription().equals(DESCRIPTION_3)));
     }
 
     @Test

@@ -115,11 +115,10 @@ public class SyncService extends IntentService {
 
         // Création d'une notification pour informer l'utilisateur que le téléchargement est en cours
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-        builder.setContentTitle("Téléchargement des annonces")
-                .setStyle(new NotificationCompat.BigTextStyle().bigText("Téléchargement des annonces"))
+        builder.setContentTitle("Téléchargement en cours")
                 .setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setSmallIcon(R.drawable.ic_notifications_black_24dp);
+                .setSmallIcon(R.drawable.ic_file_download_grey_800_48dp);
 
         if (mNotificationManager != null) {
             mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
@@ -127,9 +126,9 @@ public class SyncService extends IntentService {
 
         // Lancement de la synchronysation
         firebaseRetrieverService.synchronize(this, uidUtilisateur)
-                .doOnNext(annonceEntity -> {
-                    Log.w(TAG, "Enregistrement de l'annonce " + annonceEntity.getUid() + " réussi !");
-                    builder.setContentText("En cours : " + annonceEntity.getTitre());
+                .doOnNext(message -> {
+                    Log.w(TAG, "Nouveau message " + message);
+                    builder.setContentText(message);
                     if (mNotificationManager != null) {
                         mNotificationManager.notify(NOTIFICATION_SYNC_ANNONCE_ID, builder.build());
                     }
