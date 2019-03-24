@@ -107,7 +107,7 @@
         <item name="drawerArrowStyle">@style/WhiteDrawerIconStyle</item>
 
         <!-- Title text -->
-        <item name="android:textColorPrimary">@android:color/white</item>
+        <!--<item name="android:textColorPrimary">@android:color/white</item>-->
 
         <!-- Title color in AppCompat.Light  -->
         <item name="android:textColorPrimaryInverse">@android:color/white</item>
@@ -120,5 +120,14 @@
     <style name="WhiteDrawerIconStyle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="spinBars">true</item>
         <item name="color">@android:color/white</item>
+    </style>
+
+
+    <style name="MyToolbarTextAppearance" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">24sp</item>
     </style>
 </resources>

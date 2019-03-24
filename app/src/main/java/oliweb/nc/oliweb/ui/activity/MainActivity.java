@@ -35,7 +35,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityOptionsCompat;
@@ -131,8 +130,6 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.main_activity_bar)
     BottomAppBar bottomAppBar;
 
-    SearchView searchView;
-
     private ConstraintLayout constraintProfil;
     private ImageView profileImage;
     private TextView profileName;
@@ -214,6 +211,8 @@ public class MainActivity extends AppCompatActivity
         // Récupération dans le config remote de toutes les variables configurables
         initRemoteConfigDefaultValues();
 
+        // TODO on ne doit pas faire des appels a chaque fois qu'on arrive sur cette activité
+        // TODO voir pour ne lancer qu'une seule fois ce service.
         // Récupération de la liste des catégories dans Firebase (si on a une connexion)
         if (NetworkReceiver.checkConnection(this))
             viewModel.checkRemoteCategoriesEqualToLocalCategories();

@@ -19,8 +19,10 @@ import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -202,6 +204,17 @@ public class MyAnnoncesActivity extends AppCompatActivity implements NoticeDialo
     private void initLayout(List<AnnoncePhotos> annonceWithPhotos) {
         setContentView(R.layout.activity_my_annonces);
         RecyclerView recyclerView = findViewById(R.id.recycler_annonces);
+        Toolbar toolbar = findViewById(R.id.my_annonces_toolbar);
+        toolbar.setTitle(R.string.my_ads);
+
+        // On met notre propre Toolbar
+        setSupportActionBar(toolbar);
+
+        ActionBar action = getSupportActionBar();
+        if (action != null) {
+            action.setDisplayHomeAsUpEnabled(true);
+            action.setHomeButtonEnabled(true);
+        }
 
         FloatingActionButton fabPostAnnonce = findViewById(R.id.fab_post_annonce);
         fabPostAnnonce.setOnClickListener(this::callPostAnnonceCreate);
