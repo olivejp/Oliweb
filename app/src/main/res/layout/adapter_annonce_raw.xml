@@ -14,17 +14,18 @@
         android:id="@+id/text_id_annonce_raw"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/text_date_publication_annonce_raw"
-        style="@style/TextAppearance.MaterialComponents.Caption"
+        style="@style/TextAppearance.MaterialComponents.Body1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical|start"
-        app:layout_constraintLeft_toRightOf="@+id/text_titre_annonce_raw"
-        app:layout_constraintRight_toLeftOf="@+id/annonce_popup_menu"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw"
         tools:text="23/03/2016" />
 
     <ProgressBar
@@ -39,18 +40,19 @@
 
     <TextView
         android:id="@+id/text_titre_annonce_raw"
-        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        style="@style/TextAppearance.MaterialComponents.Headline6"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical|start"
+        app:layout_constraintEnd_toStartOf="@id/annonce_popup_menu"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/text_date_publication_annonce_raw"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="A vendre : Super affaire moto presque neuve. Super titre sur 2 lignes." />
 
     <TextView
         android:id="@+id/text_description_annonce_raw"
-        style="@style/TextAppearance.MaterialComponents.Body2"
+        style="@style/TextAppearance.MaterialComponents.Body1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ellipsize="end"
@@ -58,9 +60,10 @@
         android:maxLength="100"
         android:maxLines="3"
         android:textColor="@color/colorPrimaryDark"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/text_date_publication_annonce_raw"
-        app:layout_constraintTop_toBottomOf="@id/text_titre_annonce_raw"
+        app:layout_constraintBottom_toTopOf="@id/text_prix_annonce_raw"
+        app:layout_constraintEnd_toStartOf="@id/annonce_popup_menu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_date_publication_annonce_raw"
         tools:text="Description de mon bien à vendre !!" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -72,30 +75,33 @@
         android:focusable="true"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/text_prix_annonce_raw"
+        app:layout_constraintEnd_toStartOf="@id/text_prix_annonce_raw"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_description_annonce_raw" />
 
     <TextView
         android:id="@+id/text_prix_annonce_raw"
         style="@style/TextAppearance.MaterialComponents.Body2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="end"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="bottom"
         android:textColor="@color/colorAccent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/annonce_popup_menu"
-        app:layout_constraintTop_toBottomOf="@+id/text_description_annonce_raw"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/recycler_photos_annonce"
+        app:layout_constraintEnd_toStartOf="@id/annonce_popup_menu"
+        app:layout_constraintTop_toBottomOf="@id/text_description_annonce_raw"
         tools:text="400 000 XPF" />
 
     <ImageView
         android:id="@+id/annonce_popup_menu"
-        android:layout_width="28dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/drawable_ripple_red_effect"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_more_vert_grey_600_48dp"
+        app:srcCompat="@drawable/ic_more_vert_grey_900_24dp"
         tools:ignore="contentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
