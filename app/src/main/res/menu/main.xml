@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--<item-->
+    <!--android:id="@+id/action_search"-->
+    <!--android:icon="@drawable/ic_search_white_48dp"-->
+    <!--android:title="Recherche"-->
+    <!--app:actionViewClass="androidx.appcompat.widget.SearchView"-->
+    <!--app:showAsAction="always" />-->
     <item
         android:id="@+id/action_search"
-        android:icon="@drawable/ic_search_grey_900_48dp"
+        android:icon="@drawable/ic_search_white_48dp"
         android:title="Recherche"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always" />
     <item
         android:id="@+id/sorting"
-        android:icon="@drawable/ic_sort_grey_900_24dp"
+        android:icon="@drawable/ic_sort_white_48dp"
         android:orderInCategory="100"
         android:title="Trier"
         app:showAsAction="ifRoom" />

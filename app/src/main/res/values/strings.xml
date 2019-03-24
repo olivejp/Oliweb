@@ -215,5 +215,6 @@
     <string name="select_categories">Sélectionner les catégories dans lesquelles vous voulez effectuer votre recherche</string>
     <string name="choose">Choisir</string>
     <string name="keywords_necessary">Les mots clés nécessaires</string>
+    <string name="draft">Brouillon</string>
 
 </resources>

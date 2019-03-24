@@ -1,8 +1,6 @@
 package oliweb.nc.oliweb.ui.activity;
 
 import android.Manifest;
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -367,11 +365,12 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
 
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        if (searchManager != null && searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        }
+        // Permet de récupérer le SearchManager et de lui donner le nom de notre activity
+//        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+//        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+//        if (searchManager != null && searchView != null) {
+//            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+//        }
         return true;
     }
 
@@ -384,6 +383,10 @@ public class MainActivity extends AppCompatActivity
         if (item.getItemId() == R.id.sorting) {
             SortDialog sortDialog = new SortDialog();
             sortDialog.show(getSupportFragmentManager(), SORT_DIALOG);
+        }
+        if (item.getItemId() == R.id.action_search) {
+            Intent intent = new Intent(this, AdvancedSearchActivity.class);
+            startActivity(intent);
         }
         return true;
     }
