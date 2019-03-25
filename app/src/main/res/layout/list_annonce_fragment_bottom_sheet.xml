@@ -23,7 +23,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/button_share"
         app:layout_constraintStart_toEndOf="@id/bottom_sheet_annonce_image"
         app:layout_constraintTop_toTopOf="@id/bottom_sheet_annonce_image"
         app:layout_goneMarginStart="35dp"
@@ -48,23 +48,12 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:gravity="bottom"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="@color/colorTextDate"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bottom_sheet_titre_annonce"
             tools:text="1 sem" />
 
-        <TextView
-            android:id="@+id/bottom_sheet_prix_annonce"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="@color/colorAccent"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@id/bottom_sheet_date_annonce"
-            app:layout_constraintStart_toEndOf="@id/bottom_sheet_date_annonce"
-            app:layout_constraintTop_toTopOf="@id/bottom_sheet_date_annonce"
-            tools:text="10 000" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -90,14 +79,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="10dp"
         android:layout_marginEnd="32dp"
         android:text="Partager"
         app:backgroundTint="@color/colorAccent"
         app:icon="@drawable/ic_share_white_24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_description_annonce" />
+        app:layout_constraintTop_toBottomOf="@id/bottom_sheet_prix_annonce"
+        tools:layout_editor_absoluteY="150dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_favorite"
@@ -114,5 +103,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_share"
         app:strokeColor="@color/colorAccent" />
+
+    <TextView
+        android:id="@+id/bottom_sheet_prix_annonce"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textColor="@color/colorAccent"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/button_share"
+        app:layout_constraintEnd_toEndOf="@id/bottom_sheet_description_annonce"
+        app:layout_constraintTop_toBottomOf="@+id/bottom_sheet_description_annonce"
+        tools:text="10 000" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
