@@ -6,7 +6,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.sql.Date;
@@ -140,9 +139,6 @@ public class AnnonceRawAdapter extends
 
         if (sendingInProgress) {
             viewHolderRaw.textDatePublicationAnnonce.setText("En cours d'envoi");
-            viewHolderRaw.progressBar.setVisibility(View.VISIBLE);
-        } else {
-            viewHolderRaw.progressBar.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -239,9 +235,6 @@ public class AnnonceRawAdapter extends
 
         @BindView(R.id.normal_layout_raw)
         ConstraintLayout normalLayoutRaw;
-
-        @BindView(R.id.sending_progress)
-        ProgressBar progressBar;
 
         @BindView(R.id.recycler_photos_annonce)
         RecyclerView recyclerViewPhoto;

@@ -12,6 +12,7 @@
     <color name="colorLoadingEnd">#00BCD4</color>
     <color name="colorBottomDark">#263238</color>
     <color name="colorAnnonceElementBackground">#90a4ae</color>
+    <color name="colorTextDate">#60696F</color>
     <color name="colorIntroText">#ffffff</color>
     <color name="ic_launcher_background">#26A69A</color>
 </resources>
