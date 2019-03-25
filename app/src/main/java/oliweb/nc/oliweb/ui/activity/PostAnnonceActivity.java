@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -32,10 +31,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -88,6 +89,9 @@ public class PostAnnonceActivity extends AppCompatActivity {
     private String uidAnnonce;
     private String mode;
     private Long remoteNbMaxPictures;
+
+    @BindView(R.id.toolbar_post_annonce)
+    Toolbar toolbarPostAnnonce;
 
     @BindView(R.id.fab_add_photo_annonce)
     FloatingActionButton fabAddPhotoAnnonce;
@@ -201,7 +205,7 @@ public class PostAnnonceActivity extends AppCompatActivity {
         FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.getInstance();
         remoteNbMaxPictures = remoteConfig.getLong(REMOTE_NUMBER_PICTURES);
 
-
+        toolbarPostAnnonce.setTitle(R.string.post_an_ad);
 
         manageSaveInstanceState(savedInstanceState);
 
@@ -238,8 +242,40 @@ public class PostAnnonceActivity extends AppCompatActivity {
             return false;
         });
 
-        // Notre bottomAppBar devient notre toolbar
-        setSupportActionBar(bottomAppBar);
+        // Notre toolbar devient notre toolbar
+        setSupportActionBar(toolbarPostAnnonce);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
+        bottomAppBar.replaceMenu(R.menu.post_annonce_activity_menu);
+        bottomAppBar.setOnMenuItemClickListener(item -> {
+            int idItem = item.getItemId();
+            if (idItem == R.id.menu_send_annonce) {
+                saveAnnonce(false);
+                return true;
+            }
+            if (idItem == R.id.menu_save_draft) {
+                saveAnnonce(true);
+                return true;
+            }
+            if (idItem == android.R.id.home) {
+                onBackPressed();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void manageSaveInstanceState(Bundle savedInstanceState) {
@@ -259,30 +295,6 @@ public class PostAnnonceActivity extends AppCompatActivity {
                         .commit();
             }
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.post_annonce_activity_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int idItem = item.getItemId();
-        if (idItem == R.id.menu_send_annonce) {
-            saveAnnonce(false);
-            return true;
-        }
-        if (idItem == R.id.menu_save_draft) {
-            saveAnnonce(true);
-            return true;
-        }
-        if (idItem == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     public void saveAnnonce(boolean isDraft) {

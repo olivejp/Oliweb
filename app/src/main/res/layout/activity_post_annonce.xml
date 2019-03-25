@@ -11,16 +11,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/post_annonce_titre"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_post_annonce"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="Poster une annonce"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+            android:layout_height="?attr/actionBarSize"
             android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:titleTextAppearance="@style/MyToolbarTextAppearance" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/coordinator_post"
@@ -29,7 +28,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/post_annonce_titre">
+            app:layout_constraintTop_toBottomOf="@id/toolbar_post_annonce">
 
             <ScrollView
                 android:layout_width="match_parent"
