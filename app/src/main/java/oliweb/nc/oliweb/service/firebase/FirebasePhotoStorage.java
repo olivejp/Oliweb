@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageException;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import org.apache.commons.lang3.StringUtils;
@@ -215,11 +216,21 @@ public class FirebasePhotoStorage {
             storageReference.putFile(uriLocalFile)
                     .addOnFailureListener(e::onError)
                     .addOnSuccessListener(taskSnapshot ->
-                            storageReference.getDownloadUrl()
-                                    .addOnFailureListener(e::onError)
-                                    .addOnSuccessListener(e::onSuccess)
+                            storageReference.updateMetadata(createMetadata())
+                                    .addOnSuccessListener(command ->
+                                            storageReference.getDownloadUrl()
+                                                    .addOnFailureListener(e::onError)
+                                                    .addOnSuccessListener(e::onSuccess)
+                                    )
                     );
         });
+    }
+
+    private StorageMetadata createMetadata() {
+        return new StorageMetadata.Builder()
+                .setContentType("image/jpg")
+                .setCacheControl("max-age=2592000, public")
+                .build();
     }
 
     /**
