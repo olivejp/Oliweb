@@ -12,6 +12,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.Person;
+import androidx.core.app.RemoteInput;
+import androidx.core.app.TaskStackBuilder;
+import androidx.core.graphics.drawable.IconCompat;
+
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
@@ -19,12 +26,6 @@ import com.google.gson.Gson;
 import java.util.List;
 import java.util.Map;
 
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.core.app.Person;
-import androidx.core.app.RemoteInput;
-import androidx.core.app.TaskStackBuilder;
-import androidx.core.graphics.drawable.IconCompat;
 import io.reactivex.schedulers.Schedulers;
 import oliweb.nc.oliweb.R;
 import oliweb.nc.oliweb.database.entity.ChatEntity;
@@ -77,6 +78,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private MediaUtility mediaUtility;
     private NotificationManager mNotificationManager;
     private UserRepository userRepository;
+
+    @Override
+    public void onNewToken(String s) {
+        super.onNewToken(s);
+    }
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {

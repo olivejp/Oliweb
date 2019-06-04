@@ -69,26 +69,26 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.vectordrawable:vectordrawable:1.0.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta1'
     implementation 'com.jakewharton:butterknife:10.0.0'
-    implementation 'androidx.room:room-runtime:2.1.0-alpha04'
-    implementation 'androidx.room:room-rxjava2:2.1.0-alpha04'
+    implementation 'androidx.room:room-runtime:2.1.0-rc01'
+    implementation 'androidx.room:room-rxjava2:2.1.0-rc01'
     implementation 'androidx.paging:paging-runtime:2.1.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
-    implementation 'com.google.firebase:firebase-database:16.0.6'
-    implementation 'com.google.firebase:firebase-auth:16.1.0'
-    implementation 'com.google.firebase:firebase-storage:16.0.5'
+    implementation 'com.google.firebase:firebase-database:17.0.0'
+    implementation 'com.google.firebase:firebase-auth:17.0.0'
+    implementation 'com.google.firebase:firebase-storage:17.0.0'
 
     // Ne pas toucher à la version de firebase-invites car pas rétro compatible
-    implementation 'com.google.firebase:firebase-core:16.0.7'
-    implementation 'com.google.firebase:firebase-invites:16.0.6'
-    implementation 'com.google.firebase:firebase-messaging:17.3.4'
-    implementation 'com.google.firebase:firebase-config:16.3.0'
-    implementation 'com.google.firebase:firebase-perf:16.2.3'
+    implementation 'com.google.firebase:firebase-core:16.0.9'
+    implementation 'com.google.firebase:firebase-invites:17.0.0'
+    implementation 'com.google.firebase:firebase-messaging:18.0.0'
+    implementation 'com.google.firebase:firebase-config:17.0.0'
+    implementation 'com.google.firebase:firebase-perf:17.0.2'
     implementation 'com.firebaseui:firebase-ui-auth:4.2.0'
     implementation 'com.firebaseui:firebase-ui-database:4.2.0'
     implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
@@ -110,7 +110,7 @@ dependencies {
     // Puis aller sur chrome et taper l'url chrome://inspect/
     // Vous devez aller dans local storage et vous trouverez la DB
     implementation 'com.facebook.stetho:stetho:1.5.0'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
     implementation 'com.google.dagger:dagger:2.15'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -122,24 +122,24 @@ dependencies {
     // Dagger 2
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
 
-    androidTestImplementation 'androidx.test:core:1.1.0'
-    androidTestImplementation "androidx.test.ext:junit:1.1.0"
-    androidTestImplementation 'androidx.test:rules:1.1.1'
-    androidTestImplementation 'androidx.test:runner:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.1'
-    androidTestImplementation 'androidx.arch.core:core-testing:2.0.0'
+    androidTestImplementation 'androidx.test:core:1.2.0'
+    androidTestImplementation "androidx.test.ext:junit:1.1.1"
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.2.0'
+    androidTestImplementation 'androidx.arch.core:core-testing:2.0.1'
     androidTestImplementation 'org.mockito:mockito-android:2.21.0'
     androidTestImplementation 'junit:junit:4.12'
 
-    testImplementation 'androidx.arch.core:core-testing:2.0.0'
-    testImplementation 'androidx.room:room-testing:2.1.0-alpha04'
+    testImplementation 'androidx.arch.core:core-testing:2.0.1'
+    testImplementation 'androidx.room:room-testing:2.1.0-rc01'
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.21.0'
+    testImplementation 'org.mockito:mockito-core:2.23.4'
 
-    annotationProcessor 'androidx.annotation:annotation:1.0.1'
+    annotationProcessor 'androidx.annotation:annotation:1.0.2'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0-SNAPSHOT'
-    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha04'
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-rc01'
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.0.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
 
@@ -151,14 +151,14 @@ dependencies {
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-android-extensions'
 
-task changeToDebug << {
-    ant.replaceregexp(match:'oliweb.nc.oliweb', replace:'oliweb.nc.oliweb.debug', flags:'g', byline:true) {
-        fileset(dir: '.', includes: 'google-services.json')
-    }
-}
-
-task changeToProd << {
-    ant.replaceregexp(match:'oliweb.nc.oliweb.debug', replace:'oliweb.nc.oliweb', flags:'g', byline:true) {
-        fileset(dir: '.', includes: 'google-services.json')
-    }
-}
+//task changeToDebug << {
+//    ant.replaceregexp(match:'oliweb.nc.oliweb', replace:'oliweb.nc.oliweb.debug', flags:'g', byline:true) {
+//        fileset(dir: '.', includes: 'google-services.json')
+//    }
+//}
+//
+//task changeToProd << {
+//    ant.replaceregexp(match:'oliweb.nc.oliweb.debug', replace:'oliweb.nc.oliweb', flags:'g', byline:true) {
+//        fileset(dir: '.', includes: 'google-services.json')
+//    }
+//}

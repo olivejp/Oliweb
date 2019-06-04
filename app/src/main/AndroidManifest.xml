@@ -167,17 +167,12 @@
         <service
             android:name=".service.sync.SyncService"
             android:exported="false" />
-        <service android:name=".service.notification.MyFirebaseMessagingService">
+        <service android:name=".service.notification.MyFirebaseMessagingService"
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service android:name=".service.notification.MyFirebaseInstanceIDService">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
-            </intent-filter>
-        </service>
-
         <activity
             android:name=".ui.activity.MyChatsActivity"
             android:label="@string/title_activity_chats"
